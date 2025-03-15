@@ -1,0 +1,41 @@
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /admin
+    schedule:
+      interval: daily
+
+  - package-ecosystem: npm
+    directory: /bff
+    schedule:
+      interval: daily
+
+  - package-ecosystem: gomod
+    directory: /email-subscription
+    schedule:
+      interval: daily
+
+  - package-ecosystem: gomod
+    directory: /feed
+    schedule:
+      interval: daily
+
+  - package-ecosystem: npm
+    directory: /oms-graphql
+    schedule:
+      interval: daily
+
+  - package-ecosystem: gomod
+    directory: /oms
+    schedule:
+      interval: daily
+
+  - package-ecosystem: gomod
+    directory: /pricer
+    schedule:
+      interval: daily
+
+  - package-ecosystem: npm
+    directory: /ui
+    schedule:
+      interval: daily
