@@ -404,9 +404,9 @@ psycopg2-binary==2.9.10 \
     --hash=sha256:f8157bed2f51db683f31306aa497311b560f2265998122abe1dce6428bd86567 \
     --hash=sha256:ffe8ed017e4ed70f68b7b371d84b7d4a790368db9203dfc2d222febd3a9c8863
     # via shop-admin (pyproject.toml)
-pytz==2025.1 \
-    --hash=sha256:89dd22dca55b46eac6eda23b2d72721bf1bdfef212645d81513ef5d03038de57 \
-    --hash=sha256:c2db42be2a2518b28e65f9207c4d05e6ff547d1efa4086469ef855e4ab70178e
+pytz==2025.2 \
+    --hash=sha256:360b9e3dbb49a209c21ad61809c7fb453643e048b38924c765813546746e81c3 \
+    --hash=sha256:5ddf76296dd8c44c26eb8f4b6f35488f3ccbf6fbbd7adee0b7262d43f0ec2f00
     # via shop-admin (pyproject.toml)
 pyyaml==6.0.2 \
     --hash=sha256:01179a4a8559ab5de078078f37e5c1a30d76bb88519906844fd7bdea1b7729ff \
