@@ -1,11 +1,10 @@
 module github.com/shortlink-org/shortlink/boundaries/shop/pricer
 
 go 1.24.2
-
 require (
 	github.com/google/uuid v1.6.0
 	github.com/google/wire v0.6.0
-	github.com/open-policy-agent/opa v1.2.0
+	github.com/open-policy-agent/opa v1.3.0
 	github.com/shopspring/decimal v1.4.0
 	github.com/shortlink-org/shortlink v0.0.0-20250320185953-73466f74ab65
 	github.com/spf13/viper v1.19.0
