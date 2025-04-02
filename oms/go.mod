@@ -1,7 +1,6 @@
 module github.com/shortlink-org/shortlink/boundaries/shop/oms
 
 go 1.24.2
-
 require (
 	github.com/authzed/authzed-go v1.3.0
 	github.com/google/uuid v1.6.0
@@ -12,7 +11,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	go.opentelemetry.io/otel/trace v1.35.0
 	go.temporal.io/sdk v1.33.0
-	google.golang.org/grpc v1.71.0
+	google.golang.org/grpc v1.71.1
 	google.golang.org/protobuf v1.36.6
 )
 
