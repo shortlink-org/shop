@@ -8,7 +8,7 @@ require (
 	github.com/open-policy-agent/opa v1.2.0
 	github.com/shopspring/decimal v1.4.0
 	github.com/shortlink-org/shortlink v0.0.0-20250320185953-73466f74ab65
-	github.com/spf13/viper v1.19.0
+	github.com/spf13/viper v1.20.1
 	go.opentelemetry.io/otel/trace v1.35.0
 )
 
@@ -42,6 +42,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-redis/cache/v9 v9.0.0 // indirect
 	github.com/go-sql-driver/mysql v1.9.0 // indirect
+	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/golang-migrate/migrate/v4 v4.18.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
