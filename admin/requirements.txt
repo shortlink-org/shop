@@ -296,9 +296,9 @@ opentelemetry-instrumentation-wsgi==0.47b0 \
     --hash=sha256:4903c3d686d53ca7ab6545bb4cc42c3de8af5b2f370996e84db2cfec688860af \
     --hash=sha256:9a1a78aa2f5682fe1073c4cc77f24ef4f083b18b66bbb674a995b0b77eef1815
     # via shop-admin (pyproject.toml)
-opentelemetry-proto==1.30.0 \
-    --hash=sha256:afe5c9c15e8b68d7c469596e5b32e8fc085eb9febdd6fb4e20924a93a0389179 \
-    --hash=sha256:c6290958ff3ddacc826ca5abbeb377a31c2334387352a259ba0df37c243adc11
+opentelemetry-proto==1.32.0 \
+    --hash=sha256:f699269dc037e18fba05442580a8682c9fbd0f4c7f5addfed82c44be0c53c5ff \
+    --hash=sha256:f8b70ae52f4ef8a4e4c0760e87c9071e07ece2618c080d4839bef44c0156cd44
     # via shop-admin (pyproject.toml)
 opentelemetry-sdk==1.30.0 \
     --hash=sha256:14fe7afc090caad881addb6926cec967129bd9260c4d33ae6a217359f6b61091 \
