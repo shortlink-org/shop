@@ -3,7 +3,7 @@ module github.com/shortlink-org/shortlink/boundaries/shop/oms
 go 1.24.2
 
 require (
-	github.com/authzed/authzed-go v1.3.0
+	github.com/authzed/authzed-go v1.4.0
 	github.com/google/uuid v1.6.0
 	github.com/google/wire v0.6.0
 	github.com/shopspring/decimal v1.4.0
@@ -154,7 +154,7 @@ require (
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
 	golang.org/x/net v0.37.0 // indirect
 	golang.org/x/oauth2 v0.28.0 // indirect
-	golang.org/x/sync v0.12.0 // indirect
+	golang.org/x/sync v0.13.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
 	golang.org/x/time v0.11.0 // indirect
