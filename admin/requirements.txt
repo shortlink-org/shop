@@ -580,9 +580,9 @@ rpds-py==0.23.1 \
     --hash=sha256:fc869af5cba24d45fb0399b0cfdbcefcf6910bf4dee5d74036a57cf5264b3ff4 \
     --hash=sha256:fee513135b5a58f3bb6d89e48326cd5aa308e4bcdf2f7d59f67c861ada482bf8
     # via shop-admin (pyproject.toml)
-setuptools==76.0.0 \
-    --hash=sha256:199466a166ff664970d0ee145839f5582cb9bca7a0a3a2e795b6a9cb2308e9c6 \
-    --hash=sha256:43b4ee60e10b0d0ee98ad11918e114c70701bc6051662a9a675a0496c1a158f4
+setuptools==80.0.1 \
+    --hash=sha256:20fe373a22ef9f3925512650d1db90b1b8de01cdb6df91ab1788263139cbf9a2 \
+    --hash=sha256:f4b49d457765b3aae7cbbeb1c71f6633a61b729408c2d1a837dae064cca82ef2
     # via shop-admin (pyproject.toml)
 sqlparse==0.5.3 \
     --hash=sha256:09f67787f56a0b16ecdbde1bfc7f5d9c3371ca683cfeaa8e6ff60b4807ec9272 \
