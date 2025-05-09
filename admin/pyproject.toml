@@ -40,7 +40,7 @@ dependencies = [
   'opentelemetry-instrumentation==0.47b0',
   'opentelemetry-instrumentation-dbapi==0.47b0',
   'opentelemetry-instrumentation-django==0.47b0',
-  'opentelemetry-instrumentation-logging==0.47b0',
+  'opentelemetry-instrumentation-logging==0.54b0',
   'opentelemetry-instrumentation-requests==0.47b0',
   'opentelemetry-instrumentation-sqlite3==0.47b0',
   'opentelemetry-instrumentation-wsgi==0.47b0',
