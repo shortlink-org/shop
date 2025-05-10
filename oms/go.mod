@@ -8,7 +8,7 @@ require (
 	github.com/google/wire v0.6.0
 	github.com/shopspring/decimal v1.4.0
 	github.com/shortlink-org/shortlink v0.0.0-20250320185953-73466f74ab65
-	github.com/spf13/viper v1.19.0
+	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0
 	go.opentelemetry.io/otel/trace v1.35.0
 	go.temporal.io/sdk v1.33.0
@@ -44,6 +44,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-redis/cache/v9 v9.0.0 // indirect
 	github.com/go-sql-driver/mysql v1.9.0 // indirect
+	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-migrate/migrate/v4 v4.18.2 // indirect
 	github.com/golang/mock v1.6.0 // indirect
