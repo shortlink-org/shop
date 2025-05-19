@@ -260,9 +260,9 @@ opentelemetry-exporter-otlp-proto-common==1.30.0 \
     --hash=sha256:5468007c81aa9c44dc961ab2cf368a29d3475977df83b4e30aeed42aa7bc3b38 \
     --hash=sha256:ddbfbf797e518411857d0ca062c957080279320d6235a279f7b64ced73c13897
     # via shop-admin (pyproject.toml)
-opentelemetry-exporter-otlp-proto-grpc==1.30.0 \
-    --hash=sha256:2906bcae3d80acc54fd1ffcb9e44d324e8631058b502ebe4643ca71d1ff30830 \
-    --hash=sha256:d0f10f0b9b9a383b7d04a144d01cb280e70362cccc613987e234183fd1f01177
+opentelemetry-exporter-otlp-proto-grpc==1.33.1 \
+    --hash=sha256:345696af8dc19785fac268c8063f3dc3d5e274c774b308c634f39d9c21955728 \
+    --hash=sha256:7e8da32c7552b756e75b4f9e9c768a61eb47dee60b6550b37af541858d669ce1
     # via shop-admin (pyproject.toml)
 opentelemetry-exporter-otlp-proto-http==1.30.0 \
     --hash=sha256:9578e790e579931c5ffd50f1e6975cbdefb6a0a0a5dea127a6ae87df10e0a589 \
