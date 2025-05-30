@@ -14,7 +14,7 @@ dependencies = [
   'deprecated==1.2.18',
   'django==5.2.1',
   'django-admin-tailwind==0.0.31',
-  'django-debug-toolbar==5.0.1',
+  'django-debug-toolbar==5.2.0',
   'django-environ==0.12.0',
   'django-health-check==3.18.3',
   'django-prometheus==2.3.1',
