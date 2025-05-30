@@ -19,7 +19,7 @@ dependencies = [
   'django-health-check==3.18.3',
   'django-prometheus==2.3.1',
   'django-request-logging==0.7.5',
-  'djangorestframework==3.15.2',
+  'djangorestframework==3.16.0',
   'markdown',
   'django-filter',
   'drf-spectacular==0.28.0',
