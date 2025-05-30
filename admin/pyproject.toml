@@ -59,7 +59,7 @@ dependencies = [
   'rpds-py==0.23.1',
   'setuptools==78.1.1',
   'sqlparse==0.5.3',
-  'typing-extensions==4.12.2',
+  'typing-extensions==4.13.2',
   'uritemplate==4.1.1',
   'urllib3==2.3.0',
   'uv==0.7.8',
