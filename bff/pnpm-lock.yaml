@@ -19,7 +19,7 @@ importers:
         specifier: ^29.7.0
         version: 29.7.0
       '@types/node':
-        specifier: ^22.15.28
+        specifier: ^22.15.29
         version: 22.15.29
       '@types/node-fetch':
         specifier: ^2.6.12
