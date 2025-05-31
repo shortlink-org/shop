@@ -12,7 +12,7 @@ importers:
         specifier: ^0.184.2
         version: 0.184.2
       graphql:
-        specifier: ^16.10.0
+        specifier: ^16.11.0
         version: 16.11.0
     devDependencies:
       '@jest/globals':
