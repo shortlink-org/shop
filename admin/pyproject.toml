@@ -57,7 +57,7 @@ dependencies = [
   'referencing==0.36.2',
   'requests==2.32.3',
   'rpds-py==0.25.1',
-  'setuptools==78.1.1',
+  'setuptools==80.9.0',
   'sqlparse==0.5.3',
   'typing-extensions==4.13.2',
   'uritemplate==4.1.1',
@@ -71,7 +71,7 @@ dependencies = [
 ]
 
 [build-system]
-requires = ["setuptools~=78.1"]
+requires = ["setuptools~=80.9"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.dynamic]
