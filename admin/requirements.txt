@@ -284,9 +284,9 @@ opentelemetry-instrumentation-requests==0.54b1 \
     --hash=sha256:3eca5d697c5564af04c6a1dd23b6a3ffbaf11e64887c6051655cee03998f4654 \
     --hash=sha256:a0c4cd5d946224f336d6bd73cdabdecc6f80d5c39208f84eb96eb15f16cd41a0
     # via shop-admin (pyproject.toml)
-opentelemetry-instrumentation-sqlite3==0.47b0 \
-    --hash=sha256:00e38e9620ce547eb47ad7e4bcbe94ff4abea94d3f713c9e2740b1fa49c7137c \
-    --hash=sha256:18e3d5b307722e10ec6888d8df4b206e2ef84f16980c9db45bd657904fceb49e
+opentelemetry-instrumentation-sqlite3==0.54b0 \
+    --hash=sha256:3adc35df9a12b031bae8012a17969d7fc61bb9cfb8741ffc0ef34cc328779fd5 \
+    --hash=sha256:7e5d1418c3213d3bd481412e844e35e2f5da214aa07e218999fea76841256427
     # via shop-admin (pyproject.toml)
 opentelemetry-instrumentation-wsgi==0.47b0 \
     --hash=sha256:4903c3d686d53ca7ab6545bb4cc42c3de8af5b2f370996e84db2cfec688860af \
