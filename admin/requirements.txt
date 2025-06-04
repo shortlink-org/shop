@@ -160,9 +160,9 @@ drf-yasg==1.21.10 \
     --hash=sha256:4d832e108dfe38e365101c36123576b498487d33bf27d57d6a37efb4cc773438 \
     --hash=sha256:f86d50faee3c31fcec4545985a871f832366c7fb5b77b62c48089d56ecf4f8d4
     # via shop-admin (pyproject.toml)
-googleapis-common-protos==1.69.2 \
-    --hash=sha256:0b30452ff9c7a27d80bfc5718954063e8ab53dd3697093d3bc99581f5fd24212 \
-    --hash=sha256:3e1b904a27a33c821b4b749fd31d334c0c9c30e6113023d495e48979a3dc9c5f
+googleapis-common-protos==1.70.0 \
+    --hash=sha256:0e1b44e0ea153e6594f9f394fef15193a68aaaea2d843f83e2742717ca753257 \
+    --hash=sha256:b8bfcca8c25a2bb253e0e0b0adaf8c00773e5e6af6fd92397576680b807e0fd8
     # via shop-admin (pyproject.toml)
 grpcio==1.72.1 \
     --hash=sha256:00da930aa2711b955a538e835096aa365a4b7f2701bdc2ce1febb242a103f8a1 \
