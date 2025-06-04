@@ -2,7 +2,7 @@
   "private": true,
   "engines": {
     "node": ">=23.9.0",
-    "pnpm": ">=10.6.5"
+    "pnpm": ">=10.11.1"
   },
   "scripts": {
     "dev": "pnpm next dev",
