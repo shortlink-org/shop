@@ -42,7 +42,7 @@ dependencies = [
   'opentelemetry-instrumentation-django==0.47b0',
   'opentelemetry-instrumentation-logging==0.54b1',
   'opentelemetry-instrumentation-requests==0.54b1',
-  'opentelemetry-instrumentation-sqlite3==0.54b0',
+  'opentelemetry-instrumentation-sqlite3==0.54b1',
   'opentelemetry-instrumentation-wsgi==0.47b0',
   'opentelemetry-proto==1.33.1',
   'opentelemetry-sdk==1.30.0',
