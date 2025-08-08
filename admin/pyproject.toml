@@ -61,7 +61,7 @@ dependencies = [
   'sqlparse==0.5.3',
   'typing-extensions==4.13.2',
   'uritemplate==4.2.0',
-  'urllib3==2.4.0',
+  'urllib3==2.5.0',
   'uv==0.8.6',
   'wrapt==1.17.2',
   'zipp==3.22.0',
