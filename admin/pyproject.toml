@@ -30,7 +30,7 @@ dependencies = [
   'importlib-metadata==8.7.0', # TODO: depencies of opentelemetry-api
   'inflection==0.5.1',
   'json-log-formatter==1.1.1',
-  'jsonschema==4.24.0',
+  'jsonschema==4.25.0',
   'jsonschema-specifications==2025.4.1',
   'opentelemetry-api==1.36.0',
   'opentelemetry-exporter-otlp==1.36.0',
