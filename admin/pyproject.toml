@@ -62,7 +62,7 @@ dependencies = [
   'typing-extensions==4.14.1',
   'uritemplate==4.2.0',
   'urllib3==2.5.0',
-  'uv==0.8.9',
+  'uv==0.8.10',
   'wrapt==1.17.3',
   'zipp==3.23.0',
   'psycopg2-binary==2.9.10',
