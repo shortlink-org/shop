@@ -3,7 +3,7 @@ module github.com/shortlink-org/shortlink/boundaries/shop/oms
 go 1.25.0
 
 require (
-	github.com/authzed/authzed-go v1.4.1
+	github.com/authzed/authzed-go v1.5.0
 	github.com/google/uuid v1.6.0
 	github.com/google/wire v0.6.0
 	github.com/shopspring/decimal v1.4.0
@@ -45,7 +45,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-redis/cache/v9 v9.0.0 // indirect
 	github.com/go-sql-driver/mysql v1.9.0 // indirect
-	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
+	github.com/go-viper/mapstructure/v2 v2.3.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-migrate/migrate/v4 v4.18.2 // indirect
 	github.com/golang/mock v1.6.0 // indirect
