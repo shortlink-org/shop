@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/google/cel-go v0.26.1
 	github.com/shopspring/decimal v1.4.0
-	github.com/stretchr/testify v1.11.0
+	github.com/stretchr/testify v1.11.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 

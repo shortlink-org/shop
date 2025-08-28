@@ -9,7 +9,7 @@ require (
 	github.com/shopspring/decimal v1.4.0
 	github.com/shortlink-org/shortlink v0.0.0-20250320185953-73466f74ab65
 	github.com/spf13/viper v1.20.1
-	github.com/stretchr/testify v1.11.0
+	github.com/stretchr/testify v1.11.1
 	go.opentelemetry.io/otel/trace v1.37.0
 	go.temporal.io/sdk v1.36.0
 	google.golang.org/grpc v1.75.0
