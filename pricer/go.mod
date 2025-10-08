@@ -1,6 +1,6 @@
 module github.com/shortlink-org/shortlink/boundaries/shop/pricer
 
-go 1.25.1
+go 1.25.2
 
 require (
 	github.com/google/uuid v1.6.0
