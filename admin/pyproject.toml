@@ -49,7 +49,7 @@ dependencies = [
   'opentelemetry-semantic-conventions==0.47b0',
   'opentelemetry-util-http==0.47b0',
   'packaging==25.0',
-  'pip==25.2',
+  'pip==25.3',
   'prometheus-client==0.23.1',
   'protobuf==6.32.1', # TODO: depencies of opentelemetry-proto
   'pytz==2025.2',
@@ -62,7 +62,7 @@ dependencies = [
   'typing-extensions==4.15.0',
   'uritemplate==4.2.0',
   'urllib3==2.5.0',
-  'uv==0.8.22',
+  'uv==0.9.6',
   'wrapt==1.17.3',
   'zipp==3.23.0',
   'psycopg2-binary==2.9.11',
