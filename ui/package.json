@@ -17,19 +17,19 @@
   "dependencies": {
     "@headlessui/react": "^2.2.9",
     "@heroicons/react": "^2.2.0",
-    "@types/react-dom": "^19.1.9",
+    "@types/react-dom": "^19.2.2",
     "clsx": "^2.1.1",
     "geist": "^1.4.2",
     "next": "15.5.4",
-    "react": "19.1.1",
-    "react-dom": "19.1.1",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
     "sonner": "^2.0.7"
   },
   "devDependencies": {
     "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/typography": "^0.5.19",
     "@types/node": "22.18.10",
-    "@types/react": "19.1.14",
+    "@types/react": "19.2.3",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.6",
     "prettier": "3.6.2",
