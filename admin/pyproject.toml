@@ -54,7 +54,7 @@ dependencies = [
   'protobuf==6.32.1', # TODO: depencies of opentelemetry-proto
   'pytz==2025.2',
   'pyyaml==6.0.3',
-  'referencing==0.36.2',
+  'referencing==0.37.0',
   'requests==2.32.5',
   'rpds-py==0.27.1',
   'setuptools==80.9.0',
