@@ -139,9 +139,9 @@ django-admin-tailwind==0.0.31 \
     --hash=sha256:8acbea7a6e4a94b1650832b4de626904cc1c8ef27bc473132683a55bb3168cad \
     --hash=sha256:fa35b013fedc4d834e9cb30131dcfbb7793b71839c2e9f755dfa068fea8a976e
     # via shop-admin (pyproject.toml)
-django-debug-toolbar==6.0.0 \
-    --hash=sha256:0cf2cac5c307b77d6e143c914e5c6592df53ffe34642d93929e5ef095ae56841 \
-    --hash=sha256:6eb9fa6f4a5884bf04004700ffb5a44043f1fff38784447fc52c1633448c8c14
+django-debug-toolbar==6.1.0 \
+    --hash=sha256:e214dea4494087e7cebdcea84223819c5eb97f9de3110a3665ad673f0ba98413 \
+    --hash=sha256:e962ec350c9be8bdba918138e975a9cdb193f60ec396af2bb71b769e8e165519
     # via shop-admin (pyproject.toml)
 django-environ==0.12.0 \
     --hash=sha256:227dc891453dd5bde769c3449cf4a74b6f2ee8f7ab2361c93a07068f4179041a \
