@@ -11,7 +11,7 @@ require (
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
 	go.opentelemetry.io/otel/trace v1.38.0
-	go.temporal.io/sdk v1.37.0
+	go.temporal.io/sdk v1.38.0
 	google.golang.org/grpc v1.76.0
 	google.golang.org/protobuf v1.36.10
 )
@@ -82,7 +82,7 @@ require (
 	github.com/nats-io/nkeys v0.4.10 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.0 // indirect
-	github.com/nexus-rpc/sdk-go v0.3.0 // indirect
+	github.com/nexus-rpc/sdk-go v0.5.1 // indirect
 	github.com/onsi/ginkgo/v2 v2.23.3 // indirect
 	github.com/onsi/gomega v1.36.3 // indirect
 	github.com/ory/client-go v1.18.5 // indirect
@@ -141,7 +141,7 @@ require (
 	go.opentelemetry.io/otel/sdk v1.37.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.37.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.5.0 // indirect
-	go.temporal.io/api v1.53.0 // indirect
+	go.temporal.io/api v1.54.0 // indirect
 	go.temporal.io/sdk/contrib/opentelemetry v0.6.0 // indirect
 	go.temporal.io/sdk/contrib/tally v0.2.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
