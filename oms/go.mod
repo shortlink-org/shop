@@ -1,6 +1,6 @@
 module github.com/shortlink-org/shortlink/boundaries/shop/oms
 
-go 1.25.2
+go 1.25.4
 
 require (
 	github.com/authzed/authzed-go v1.7.0

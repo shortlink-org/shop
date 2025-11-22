@@ -1,3 +1,3 @@
 module github.com/shortlink-org/shortlink/boundaries/shop/email-subscription
 
-go 1.25.2
+go 1.25.4
