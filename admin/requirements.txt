@@ -293,9 +293,9 @@ opentelemetry-instrumentation-dbapi==0.47b0 \
     --hash=sha256:24a160029dfffdb9716ce3908f140afe7c91a4704fbe42fc623341fc5645440f \
     --hash=sha256:31fe72b7f45467592880ded77bb19aa4c04d126228684de9f0b46318325b9d50
     # via shop-admin (pyproject.toml)
-opentelemetry-instrumentation-django==0.47b0 \
-    --hash=sha256:85d5d5dd4047945917b823879933a28efddcf06d5f7fabef5ac806226602b18d \
-    --hash=sha256:f23c97ffa9b9b0d06a76e4a5296f189cc6e02f66c29a0ca30a97b0ea121a30b9
+opentelemetry-instrumentation-django==0.59b0 \
+    --hash=sha256:469c2d973619355645ec696bbc4afab836ce22cbc83236a0382c3090588f7772 \
+    --hash=sha256:a0a9eb74afc3870e72eaaa776054fbfd4d83ae306d0c5995f14414bcef2d830e
     # via shop-admin (pyproject.toml)
 opentelemetry-instrumentation-logging==0.59b0 \
     --hash=sha256:1b51116444edc74f699daf9002ded61529397100c9bc903c8b9aaa75a5218c76 \
