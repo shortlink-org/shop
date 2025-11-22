@@ -3,7 +3,7 @@ module github.com/shortlink-org/shortlink/boundaries/shop/oms
 go 1.25.2
 
 require (
-	github.com/authzed/authzed-go v1.5.0
+	github.com/authzed/authzed-go v1.7.0
 	github.com/google/uuid v1.6.0
 	github.com/google/wire v0.7.0
 	github.com/shopspring/decimal v1.4.0
@@ -17,10 +17,10 @@ require (
 )
 
 require (
-	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.6-20250613105001-9f2d3c737feb.1 // indirect
+	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.10-20250912141014-52f32327d4b0.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/IBM/sarama v1.45.1 // indirect
-	github.com/Masterminds/semver/v3 v3.3.1 // indirect
+	github.com/Masterminds/semver/v3 v3.4.0 // indirect
 	github.com/Unleash/unleash-client-go/v4 v4.3.0 // indirect
 	github.com/XSAM/otelsql v0.37.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -52,11 +52,12 @@ require (
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/google/flatbuffers v25.2.10+incompatible // indirect
+	github.com/google/pprof v0.0.0-20250820193118-f64d9cf942d6 // indirect
 	github.com/grafana/pyroscope-go v1.2.1 // indirect
 	github.com/grafana/pyroscope-go/godeltaprof v0.1.8 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.0.1 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.2 // indirect
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.0 // indirect
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.3 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
@@ -83,8 +84,8 @@ require (
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.0 // indirect
 	github.com/nexus-rpc/sdk-go v0.5.1 // indirect
-	github.com/onsi/ginkgo/v2 v2.23.3 // indirect
-	github.com/onsi/gomega v1.36.3 // indirect
+	github.com/onsi/ginkgo/v2 v2.26.0 // indirect
+	github.com/onsi/gomega v1.38.2 // indirect
 	github.com/ory/client-go v1.18.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/pierrec/lz4/v4 v4.1.22 // indirect
@@ -103,12 +104,12 @@ require (
 	github.com/redis/rueidis/rueidisotel v1.0.56 // indirect
 	github.com/robfig/cron v1.2.0 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
-	github.com/samber/lo v1.51.0 // indirect
+	github.com/samber/lo v1.52.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/cast v1.10.0 // indirect
-	github.com/spf13/cobra v1.9.1 // indirect
+	github.com/spf13/cobra v1.10.1 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
@@ -130,7 +131,7 @@ require (
 	go.mongodb.org/mongo-driver/v2 v2.1.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.60.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.60.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.61.0 // indirect
 	go.opentelemetry.io/otel v1.38.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v1.35.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.35.0 // indirect
@@ -152,7 +153,7 @@ require (
 	golang.org/x/crypto v0.43.0 // indirect
 	golang.org/x/net v0.46.1-0.20251013234738-63d1a5100f82 // indirect
 	golang.org/x/oauth2 v0.32.0 // indirect
-	golang.org/x/sync v0.17.0 // indirect
+	golang.org/x/sync v0.18.0 // indirect
 	golang.org/x/sys v0.37.0 // indirect
 	golang.org/x/text v0.30.0 // indirect
 	golang.org/x/time v0.11.0 // indirect
