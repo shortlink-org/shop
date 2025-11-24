@@ -26,7 +26,7 @@ dependencies = [
   'drf-yasg==1.21.11',
   'googleapis-common-protos==1.72.0',
   'grpcio==1.76.0',
-  'idna==3.10',
+  'idna==3.11',
   'importlib-metadata==8.7.0', # TODO: depencies of opentelemetry-api
   'inflection==0.5.1',
   'json-log-formatter==1.1.1',
