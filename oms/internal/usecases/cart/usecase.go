@@ -5,9 +5,8 @@ package cart
 
 import (
 	"github.com/authzed/authzed-go/v1"
+	logger "github.com/shortlink-org/go-sdk/logger"
 	"go.temporal.io/sdk/client"
-
-	"github.com/shortlink-org/shortlink/pkg/logger"
 )
 
 type UC struct {

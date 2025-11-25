@@ -3,12 +3,12 @@ package cart_worker
 import (
 	"context"
 
+	logger "github.com/shortlink-org/go-sdk/logger"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
 
-	"github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/queue/v1"
-	"github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/workers/cart/workflow"
-	"github.com/shortlink-org/shortlink/pkg/logger"
+	v1 "github.com/shortlink-org/shop/oms/internal/domain/queue/v1"
+	cart_workflow "github.com/shortlink-org/shop/oms/internal/workers/cart/workflow"
 )
 
 func New(ctx context.Context, c client.Client, log logger.Logger) (worker.Worker, error) {

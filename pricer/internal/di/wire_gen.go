@@ -10,24 +10,25 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/wire"
-	"github.com/shortlink-org/shortlink/boundaries/shop/pricer/internal/application"
-	"github.com/shortlink-org/shortlink/boundaries/shop/pricer/internal/di/pkg"
-	"github.com/shortlink-org/shortlink/boundaries/shop/pricer/internal/infrastructure/cli"
-	"github.com/shortlink-org/shortlink/boundaries/shop/pricer/internal/infrastructure/policy_evaluator"
-	"github.com/shortlink-org/shortlink/boundaries/shop/pricer/internal/infrastructure/rpc/run"
-	"github.com/shortlink-org/shortlink/pkg/di"
-	"github.com/shortlink-org/shortlink/pkg/di/pkg/autoMaxPro"
-	"github.com/shortlink-org/shortlink/pkg/di/pkg/config"
-	"github.com/shortlink-org/shortlink/pkg/di/pkg/context"
-	"github.com/shortlink-org/shortlink/pkg/di/pkg/logger"
-	"github.com/shortlink-org/shortlink/pkg/di/pkg/profiling"
-	"github.com/shortlink-org/shortlink/pkg/di/pkg/traicing"
-	"github.com/shortlink-org/shortlink/pkg/logger"
-	"github.com/shortlink-org/shortlink/pkg/logger/field"
+	"github.com/shortlink-org/go-sdk/config"
+	"github.com/shortlink-org/go-sdk/context"
+	"github.com/shortlink-org/go-sdk/flags"
+	"github.com/shortlink-org/go-sdk/logger"
+	"github.com/shortlink-org/go-sdk/observability/metrics"
+	"github.com/shortlink-org/go-sdk/observability/profiling"
+	"github.com/shortlink-org/go-sdk/observability/tracing"
+	"github.com/shortlink-org/shop/pricer/internal/application"
+	"github.com/shortlink-org/shop/pricer/internal/di/pkg"
+	"github.com/shortlink-org/shop/pricer/internal/infrastructure/cli"
+	"github.com/shortlink-org/shop/pricer/internal/infrastructure/policy_evaluator"
+	"github.com/shortlink-org/shop/pricer/internal/infrastructure/rpc/run"
+	"github.com/shortlink-org/shop/pricer/internal/loggeradapter"
+	logger2 "github.com/shortlink-org/shortlink/pkg/logger"
 	"github.com/shortlink-org/shortlink/pkg/observability/monitoring"
 	"github.com/shortlink-org/shortlink/pkg/rpc"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel/trace"
+	"log/slog"
 )
 
 // Injectors from wire.go:
@@ -37,31 +38,30 @@ func InitializePricerService() (*PricerService, func(), error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	logger, cleanup2, err := logger_di.New(context)
+	config, err := newGoSDKConfig()
 	if err != nil {
 		cleanup()
 		return nil, nil, err
 	}
-	configConfig, err := config.New()
+	logger, cleanup2, err := newGoSDKLogger(context, config)
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	tracerProvider, cleanup3, err := newGoSDKTracer(context, logger, config)
 	if err != nil {
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	autoMaxProAutoMaxPro, cleanup3, err := autoMaxPro.New(logger)
-	if err != nil {
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	tracerProvider, cleanup4, err := traicing_di.New(context, logger)
+	monitoring, cleanup4, err := newGoSDKMonitoring(context, logger, tracerProvider, config)
 	if err != nil {
 		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	monitoringMonitoring, cleanup5, err := monitoring.New(context, logger, tracerProvider)
+	pprofEndpoint, err := newGoSDKProfiling(context, logger, tracerProvider, config)
 	if err != nil {
 		cleanup4()
 		cleanup3()
@@ -69,16 +69,16 @@ func InitializePricerService() (*PricerService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	pprofEndpoint, err := profiling.New(context, logger)
+	loggerLogger, cleanup5, err := legacyLoggerAdapter(logger)
 	if err != nil {
-		cleanup5()
 		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	server, err := rpc.InitServer(context, logger, tracerProvider, monitoringMonitoring)
+	monitoringMonitoring := legacyMonitoringFromGoSDK(monitoring)
+	server, err := rpc.InitServer(context, loggerLogger, tracerProvider, monitoringMonitoring)
 	if err != nil {
 		cleanup5()
 		cleanup4()
@@ -118,7 +118,7 @@ func InitializePricerService() (*PricerService, func(), error) {
 	}
 	cartService := application.NewCartService(logger, discountPolicy, taxPolicy, v)
 	cliHandler := newCLIHandler(context, logger, cartService, pkg_diConfig)
-	pricerService, err := NewPricerService(logger, configConfig, autoMaxProAutoMaxPro, monitoringMonitoring, tracerProvider, pprofEndpoint, response, cartService, cliHandler)
+	pricerService, err := NewPricerService(logger, config, monitoring, tracerProvider, pprofEndpoint, response, cartService, cliHandler)
 	if err != nil {
 		cleanup5()
 		cleanup4()
@@ -140,13 +140,12 @@ func InitializePricerService() (*PricerService, func(), error) {
 
 type PricerService struct {
 	// Common
-	Log        logger.Logger
-	Config     *config.Config
-	AutoMaxPro autoMaxPro.AutoMaxPro
+	Log    logger.Logger
+	Config *config.Config
 
 	// Observability
 	Tracer        trace.TracerProvider
-	Monitoring    *monitoring.Monitoring
+	Monitoring    *metrics.Monitoring
 	PprofEndpoint profiling.PprofEndpoint
 
 	// Delivery
@@ -160,7 +159,21 @@ type PricerService struct {
 }
 
 // PricerService =======================================================================================================
-var PricerSet = wire.NewSet(di.DefaultSet, rpc.InitServer, pkg_di.ReadConfig, newDiscountPolicy,
+// CustomDefaultSet - DefaultSet with go-sdk packages (config, context, flags, profiling)
+var CustomDefaultSet = wire.NewSet(ctx.New, flags.New, legacyLoggerAdapter,
+	newGoSDKProfiling,
+)
+
+var PricerSet = wire.NewSet(
+
+	CustomDefaultSet, rpc.InitServer, pkg_di.ReadConfig, newGoSDKConfig,
+	newGoSDKLogger,
+
+	newGoSDKTracer,
+	newGoSDKMonitoring,
+	legacyMonitoringFromGoSDK,
+
+	newDiscountPolicy,
 	newTaxPolicy,
 	newPolicyNames,
 
@@ -168,6 +181,44 @@ var PricerSet = wire.NewSet(di.DefaultSet, rpc.InitServer, pkg_di.ReadConfig, ne
 
 	NewPricerService,
 )
+
+// newGoSDKConfig creates a go-sdk config instance
+func newGoSDKConfig() (*config.Config, error) {
+	return config.New()
+}
+
+// newGoSDKLogger creates a go-sdk logger instance for observability
+func newGoSDKLogger(ctx2 context.Context, cfg *config.Config) (logger.Logger, func(), error) {
+	return logger.NewDefault(ctx2, cfg)
+}
+
+// newGoSDKTracer creates a tracer using go-sdk observability
+func newGoSDKTracer(ctx2 context.Context, log logger.Logger, cfg *config.Config) (trace.TracerProvider, func(), error) {
+	return tracing.New(ctx2, log, cfg)
+}
+
+// newGoSDKMonitoring creates monitoring using go-sdk observability
+func newGoSDKMonitoring(ctx2 context.Context, log logger.Logger, tracer trace.TracerProvider, cfg *config.Config) (*metrics.Monitoring, func(), error) {
+	return metrics.New(ctx2, log, tracer, cfg)
+}
+
+// newGoSDKProfiling creates profiling endpoint using go-sdk observability
+func newGoSDKProfiling(ctx2 context.Context, log logger.Logger, tracer trace.TracerProvider, cfg *config.Config) (profiling.PprofEndpoint, error) {
+	return profiling.New(ctx2, log, tracer, cfg)
+}
+
+// legacyMonitoringFromGoSDK converts go-sdk monitoring to legacy shortlink monitoring structure.
+func legacyMonitoringFromGoSDK(modern *metrics.Monitoring) *monitoring.Monitoring {
+	if modern == nil {
+		return nil
+	}
+
+	return &monitoring.Monitoring{
+		Handler:    modern.Handler,
+		Prometheus: modern.Prometheus,
+		Metrics:    modern.Metrics,
+	}
+}
 
 // TODO: refactoring. maybe drop this function
 func NewRunRPCServer(runRPCServer *rpc.Server) (*run.Response, error) {
@@ -181,7 +232,7 @@ func newDiscountPolicy(ctx2 context.Context, log logger.Logger, cfg *pkg_di.Conf
 
 	discountEvaluator, err := policy_evaluator.NewOPAEvaluator(log, discountPolicyPath, discountQuery)
 	if err != nil {
-		log.ErrorWithContext(ctx2, "Failed to initialize Discount Policy Evaluator: %v", field.Fields{"error": err})
+		log.ErrorWithContext(ctx2, "Failed to initialize discount policy evaluator", slog.Any("error", err))
 	}
 
 	return discountEvaluator
@@ -194,7 +245,7 @@ func newTaxPolicy(ctx2 context.Context, log logger.Logger, cfg *pkg_di.Config) a
 
 	taxEvaluator, err := policy_evaluator.NewOPAEvaluator(log, taxPolicyPath, taxQuery)
 	if err != nil {
-		log.ErrorWithContext(ctx2, "Failed to initialize Tax Policy Evaluator: %v", field.Fields{"error": err})
+		log.ErrorWithContext(ctx2, "Failed to initialize tax policy evaluator", slog.Any("error", err))
 	}
 
 	return taxEvaluator
@@ -224,17 +275,20 @@ func newCLIHandler(ctx2 context.Context, log logger.Logger, cartService *applica
 	for _, cartFile := range cartFiles {
 		fmt.Printf("Processing cart file: %s\n", cartFile)
 		if err := cliHandler.Run(cartFile, discountParams, taxParams); err != nil {
-			log.ErrorWithContext(ctx2, "Error processing cart", field.Fields{"cart": cartFile, "error": err})
+			log.ErrorWithContext(ctx2, "Error processing cart", slog.String("cart_file", cartFile), slog.Any("error", err))
 		}
 	}
 
 	return cliHandler
 }
 
+func legacyLoggerAdapter(log logger.Logger) (logger2.Logger, func(), error) {
+	return loggeradapter.New(log), func() {}, nil
+}
+
 func NewPricerService(
 
-	log logger.Logger, config2 *config.Config,
-	autoMaxProcsOption autoMaxPro.AutoMaxPro, monitoring2 *monitoring.Monitoring,
+	log logger.Logger, config2 *config.Config, monitoring2 *metrics.Monitoring,
 	tracer trace.TracerProvider,
 	pprofHTTP profiling.PprofEndpoint, run2 *run.Response,
 
@@ -244,9 +298,8 @@ func NewPricerService(
 ) (*PricerService, error) {
 	return &PricerService{
 
-		Log:        log,
-		Config:     config2,
-		AutoMaxPro: autoMaxProcsOption,
+		Log:    log,
+		Config: config2,
 
 		Tracer:        tracer,
 		Monitoring:    monitoring2,

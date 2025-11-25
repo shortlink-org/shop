@@ -92,6 +92,7 @@ linters-settings:
       - standard # Standard section: captures all standard packages.
       - default # Default section: contains all imports that could not be matched to another section type.
       - prefix(github.com/shortlink-org/shortlink)
+      - prefix(github.com/shortlink-org/go-sdk)
     skip-generated: true
     custom-order: true
 
@@ -124,7 +125,7 @@ linters-settings:
   goimports:
     # Put imports beginning with prefix after 3rd-party packages.
     # It's a comma-separated list of prefixes.
-    local-prefixes: github.com/shortlink-org/shortlink
+    local-prefixes: github.com/shortlink-org/shortlink,github.com/shortlink-org/go-sdk
 
   mnd:
     # List of enabled checks, see https://github.com/tommy-muehle/go-mnd/#checks for description.

@@ -3,8 +3,8 @@ package application
 import (
 	"github.com/shopspring/decimal"
 
-	"github.com/shortlink-org/shortlink/boundaries/shop/pricer/internal/infrastructure/policy_evaluator"
-	"github.com/shortlink-org/shortlink/pkg/logger"
+	logger "github.com/shortlink-org/go-sdk/logger"
+	"github.com/shortlink-org/shop/pricer/internal/infrastructure/policy_evaluator"
 )
 
 // CartTotal represents the total calculation result

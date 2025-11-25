@@ -1,13 +1,13 @@
 package main
 
 import (
+	"log/slog"
 	"os"
 
 	"github.com/spf13/viper"
 
-	"github.com/shortlink-org/shortlink/boundaries/shop/pricer/internal/di"
-	"github.com/shortlink-org/shortlink/pkg/graceful_shutdown"
-	"github.com/shortlink-org/shortlink/pkg/logger/field"
+	"github.com/shortlink-org/go-sdk/graceful_shutdown"
+	"github.com/shortlink-org/shop/pricer/internal/di"
 )
 
 func main() {
@@ -22,7 +22,7 @@ func main() {
 
 	defer func() {
 		if r := recover(); r != nil {
-			service.Log.Error(r.(string)) //nolint:forcetypeassert // simple type assertion
+			service.Log.Error("panic recovered", slog.Any("error", r))
 		}
 	}()
 
@@ -31,9 +31,7 @@ func main() {
 
 	cleanup()
 
-	service.Log.Info("Service stopped", field.Fields{
-		"signal": signal.String(),
-	})
+	service.Log.Info("Service stopped", slog.String("signal", signal.String()))
 
 	// Exit Code 143: Graceful Termination (SIGTERM)
 	os.Exit(143) //nolint:gocritic // exit code 143 is used to indicate graceful termination

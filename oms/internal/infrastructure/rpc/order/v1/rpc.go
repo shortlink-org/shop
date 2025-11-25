@@ -5,8 +5,8 @@ Cart UC. Infrastructure layer. RPC Endpoint
 package v1
 
 import (
-	"github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/usecases/order"
-	"github.com/shortlink-org/shortlink/pkg/logger"
+	logger "github.com/shortlink-org/go-sdk/logger"
+	"github.com/shortlink-org/shop/oms/internal/usecases/order"
 	"github.com/shortlink-org/shortlink/pkg/rpc"
 )
 

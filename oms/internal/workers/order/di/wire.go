@@ -9,30 +9,35 @@ OMS Order Worker DI-package
 package oms_order_worker_di
 
 import (
+	"context"
+
 	"github.com/google/wire"
 	"go.opentelemetry.io/otel/trace"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
 
-	"github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/workers/order/order_worker"
-	"github.com/shortlink-org/shortlink/pkg/di"
-	"github.com/shortlink-org/shortlink/pkg/di/pkg/autoMaxPro"
-	"github.com/shortlink-org/shortlink/pkg/di/pkg/config"
-	"github.com/shortlink-org/shortlink/pkg/di/pkg/profiling"
+	config "github.com/shortlink-org/go-sdk/config"
+	sdkctx "github.com/shortlink-org/go-sdk/context"
+	"github.com/shortlink-org/go-sdk/flags"
+	logger "github.com/shortlink-org/go-sdk/logger"
+	"github.com/shortlink-org/go-sdk/observability/metrics"
+	profiling "github.com/shortlink-org/go-sdk/observability/profiling"
+	"github.com/shortlink-org/go-sdk/observability/tracing"
+	"github.com/shortlink-org/shop/oms/internal/loggeradapter"
+	"github.com/shortlink-org/shop/oms/internal/workers/order/order_worker"
 	"github.com/shortlink-org/shortlink/pkg/di/pkg/temporal"
-	"github.com/shortlink-org/shortlink/pkg/logger"
-	"github.com/shortlink-org/shortlink/pkg/observability/monitoring"
+	shortlogger "github.com/shortlink-org/shortlink/pkg/logger"
+	old_monitoring "github.com/shortlink-org/shortlink/pkg/observability/monitoring"
 )
 
 type OMSOrderWorkerService struct {
 	// Common
-	Log        logger.Logger
-	Config     *config.Config
-	AutoMaxPro autoMaxPro.AutoMaxPro
+	Log    logger.Logger
+	Config *config.Config
 
 	// Observability
 	Tracer        trace.TracerProvider
-	Monitoring    *monitoring.Monitoring
+	Monitoring    *metrics.Monitoring
 	PprofEndpoint profiling.PprofEndpoint
 
 	// Temporal
@@ -41,8 +46,22 @@ type OMSOrderWorkerService struct {
 }
 
 // OMSOrderWorkerService ================================================================================================
+var CustomDefaultSet = wire.NewSet(
+	sdkctx.New,
+	flags.New,
+	legacyLoggerAdapter,
+)
+
 var OMSOrderWorkerSet = wire.NewSet(
-	di.DefaultSet,
+	CustomDefaultSet,
+
+	// Config & Observability (go-sdk)
+	newGoSDKConfig,
+	newGoSDKLogger,
+	newGoSDKTracer,
+	newGoSDKProfiling,
+	newGoSDKMonitoring,
+	legacyMonitoringFromGoSDK,
 
 	// Temporal
 	temporal.New,
@@ -51,14 +70,35 @@ var OMSOrderWorkerSet = wire.NewSet(
 	NewOMSOrderWorkerService,
 )
 
+// newGoSDKConfig creates a go-sdk config instance
+func newGoSDKConfig() (*config.Config, error) {
+	return config.New()
+}
+
+// newGoSDKProfiling creates profiling endpoint using go-sdk observability
+func newGoSDKProfiling(ctx context.Context, log logger.Logger, tracer trace.TracerProvider, cfg *config.Config) (profiling.PprofEndpoint, error) {
+	return profiling.New(ctx, log, tracer, cfg)
+}
+
+func newGoSDKLogger(ctx context.Context, cfg *config.Config) (logger.Logger, func(), error) {
+	return logger.NewDefault(ctx, cfg)
+}
+
+func newGoSDKTracer(ctx context.Context, log logger.Logger, cfg *config.Config) (trace.TracerProvider, func(), error) {
+	return tracing.New(ctx, log, cfg)
+}
+
+func newGoSDKMonitoring(ctx context.Context, log logger.Logger, tracer trace.TracerProvider, cfg *config.Config) (*metrics.Monitoring, func(), error) {
+	return metrics.New(ctx, log, tracer, cfg)
+}
+
 func NewOMSOrderWorkerService(
 	// Common
 	log logger.Logger,
 	config *config.Config,
-	autoMaxPro autoMaxPro.AutoMaxPro,
 
 	// Observability
-	monitoring *monitoring.Monitoring,
+	monitoring *metrics.Monitoring,
 	tracer trace.TracerProvider,
 	pprofHTTP profiling.PprofEndpoint,
 
@@ -68,9 +108,8 @@ func NewOMSOrderWorkerService(
 ) (*OMSOrderWorkerService, error) {
 	return &OMSOrderWorkerService{
 		// Common
-		Log:        log,
-		Config:     config,
-		AutoMaxPro: autoMaxPro,
+		Log:    log,
+		Config: config,
 
 		// Observability
 		Tracer:        tracer,
@@ -81,6 +120,22 @@ func NewOMSOrderWorkerService(
 		temporalClient: temporalClient,
 		orderWorker:    OrderWorker,
 	}, nil
+}
+
+func legacyLoggerAdapter(log logger.Logger) (shortlogger.Logger, func(), error) {
+	return loggeradapter.New(log), func() {}, nil
+}
+
+func legacyMonitoringFromGoSDK(modern *metrics.Monitoring) *old_monitoring.Monitoring {
+	if modern == nil {
+		return nil
+	}
+
+	return &old_monitoring.Monitoring{
+		Handler:    modern.Handler,
+		Prometheus: modern.Prometheus,
+		Metrics:    modern.Metrics,
+	}
 }
 
 func InitializeOMSOrderWorkerService() (*OMSOrderWorkerService, func(), error) {

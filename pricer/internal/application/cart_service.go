@@ -3,12 +3,12 @@ package application
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/shopspring/decimal"
 
-	"github.com/shortlink-org/shortlink/boundaries/shop/pricer/internal/domain"
-	"github.com/shortlink-org/shortlink/pkg/logger"
-	"github.com/shortlink-org/shortlink/pkg/logger/field"
+	logger "github.com/shortlink-org/go-sdk/logger"
+	"github.com/shortlink-org/shop/pricer/internal/domain"
 )
 
 // NewCartService creates a new CartService
@@ -27,33 +27,36 @@ func (s *CartService) CalculateTotal(ctx context.Context, cart *domain.Cart, dis
 	var total CartTotal
 
 	// Evaluate Discount Policy
-	s.log.InfoWithContext(ctx, "Evaluating Discount Policy for CustomerID: %s", field.Fields{"customerID": cart.CustomerID})
+	s.log.InfoWithContext(ctx, "Evaluating discount policy", slog.Any("customer_id", cart.CustomerID))
 	totalDiscountFloat, err := s.DiscountPolicy.Evaluate(ctx, cart, discountParams)
 	if err != nil {
 		return total, fmt.Errorf("failed to evaluate discount policy: %w", err)
 	}
 
-	s.log.InfoWithContext(ctx, "Total Discount: %.2f", field.Fields{"totalDiscount": totalDiscountFloat})
+	s.log.InfoWithContext(ctx, "Discount calculated", slog.Float64("total_discount", totalDiscountFloat))
 	totalDiscount := decimal.NewFromFloat(totalDiscountFloat)
 
 	// Evaluate Tax Policy
-	s.log.InfoWithContext(ctx, "Evaluating Tax Policy for CustomerID: %s", field.Fields{"customerID": cart.CustomerID})
+	s.log.InfoWithContext(ctx, "Evaluating tax policy", slog.Any("customer_id", cart.CustomerID))
 	totalTaxFloat, err := s.TaxPolicy.Evaluate(ctx, cart, taxParams)
 	if err != nil {
 		return total, fmt.Errorf("failed to evaluate tax policy: %w", err)
 	}
 
-	s.log.InfoWithContext(ctx, "Total Tax: %.2f", field.Fields{"totalTax": totalTaxFloat})
+	s.log.InfoWithContext(ctx, "Tax calculated", slog.Float64("total_tax", totalTaxFloat))
 	totalTax := decimal.NewFromFloat(totalTaxFloat)
 
 	// Calculate Final Price
-	s.log.InfoWithContext(ctx, "Calculating Final Price for CustomerID: %s", field.Fields{"customerID": cart.CustomerID})
+	s.log.InfoWithContext(ctx, "Calculating final price", slog.Any("customer_id", cart.CustomerID))
 	finalPrice := decimal.Zero
 	for _, item := range cart.Items {
 		// Calculate per-item total: (Price + Tax - Discount) * Quantity
 		itemTotal := item.Price.Add(totalTax).Sub(totalDiscount).Mul(decimal.NewFromInt32(item.Quantity))
 		finalPrice = finalPrice.Add(itemTotal)
-		s.log.InfoWithContext(ctx, "ItemID: %s, ItemTotal: %.2f", field.Fields{"itemID": item.ProductID, "itemTotal": itemTotal})
+		s.log.InfoWithContext(ctx, "Item total calculated",
+			slog.Any("item_id", item.ProductID),
+			slog.String("item_total", itemTotal.StringFixed(2)),
+		)
 	}
 
 	// Prepare the CartTotal
@@ -64,7 +67,10 @@ func (s *CartService) CalculateTotal(ctx context.Context, cart *domain.Cart, dis
 		Policies:      s.PolicyNames,
 	}
 
-	s.log.InfoWithContext(ctx, "Final Price for CustomerID %s: %.2f", field.Fields{"customerID": cart.CustomerID, "finalPrice": finalPrice})
+	s.log.InfoWithContext(ctx, "Final price calculated",
+		slog.Any("customer_id", cart.CustomerID),
+		slog.String("final_price", finalPrice.StringFixed(2)),
+	)
 
 	return total, nil
 }
