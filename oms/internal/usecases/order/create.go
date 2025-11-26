@@ -7,9 +7,9 @@ import (
 	"github.com/google/uuid"
 	"go.temporal.io/sdk/client"
 
-	v2 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/order/v1"
-	v1 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/queue/v1"
-	order_workflow "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/workers/order/workflow"
+	v2 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
+	v1 "github.com/shortlink-org/shop/oms/internal/domain/queue/v1"
+	order_workflow "github.com/shortlink-org/shop/oms/internal/workers/order/workflow"
 )
 
 func (uc *UC) Create(ctx context.Context, orderId uuid.UUID, customerId uuid.UUID, in v2.Items) error {

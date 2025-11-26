@@ -7,8 +7,8 @@ import (
 	"github.com/shopspring/decimal"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	v2 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/order/v1"
-	v1 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/infrastructure/rpc/order/v1/model/v1"
+	v2 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
+	v1 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/model/v1"
 )
 
 func (o *OrderRPC) Create(ctx context.Context, in *v1.CreateRequest) (*emptypb.Empty, error) {

@@ -8,8 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/shortlink-org/shortlink/boundaries/shop/pricer/internal/application"
-	"github.com/shortlink-org/shortlink/boundaries/shop/pricer/internal/domain"
+	"github.com/shortlink-org/shop/pricer/internal/application"
+	"github.com/shortlink-org/shop/pricer/internal/domain"
 )
 
 // CLIHandler handles command-line interactions

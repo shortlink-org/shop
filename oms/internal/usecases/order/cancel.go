@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	domain "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/order/v1"
+	domain "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 )
 
 func (uc *UC) Cancel(ctx context.Context, orderId uuid.UUID) error {

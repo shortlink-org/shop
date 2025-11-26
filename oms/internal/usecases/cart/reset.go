@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	v1 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/cart/v1"
+	v1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
 )
 
 // Reset resets the cart.

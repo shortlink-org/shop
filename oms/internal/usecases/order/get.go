@@ -6,9 +6,9 @@ import (
 
 	"github.com/google/uuid"
 
-	v1 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/order/v1"
-	v3 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/infrastructure/rpc/order/v1/model/v1"
-	"github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/usecases/order/dto"
+	v1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
+	v3 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/model/v1"
+	"github.com/shortlink-org/shop/oms/internal/usecases/order/dto"
 )
 
 func (uc *UC) Get(ctx context.Context, orderId uuid.UUID) (*v1.OrderState, error) {

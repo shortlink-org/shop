@@ -7,8 +7,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 
-	v1 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/order/v1"
-	v3 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/infrastructure/rpc/order/v1/model/v1"
+	v1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
+	v3 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/model/v1"
 )
 
 // OrderStateToDomain converts a v3.OrderState to a v1.OrderState using the OrderStateBuilder

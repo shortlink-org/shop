@@ -1,8 +1,8 @@
 package dto
 
 import (
-	v2 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/cart/v1"
-	v1 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/infrastructure/rpc/cart/v1/model/v1"
+	v2 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
+	v1 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1/model/v1"
 )
 
 func GetResponseFromDomain(response *v2.CartState) *v1.GetResponse {

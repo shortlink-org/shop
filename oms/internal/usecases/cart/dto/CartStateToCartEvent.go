@@ -1,8 +1,8 @@
 package dto
 
 import (
-	v1 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/cart/v1"
-	v2 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/workers/cart/workflow/model/cart/v1"
+	v1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
+	v2 "github.com/shortlink-org/shop/oms/internal/workers/cart/workflow/model/cart/v1"
 )
 
 // CartStateToCartEvent converts a list of items to a cart event.

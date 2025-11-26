@@ -6,9 +6,9 @@ import (
 
 	"github.com/google/uuid"
 
-	v1 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/cart/v1"
-	v3 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/infrastructure/rpc/cart/v1/model/v1"
-	"github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/usecases/cart/dto"
+	v1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
+	v3 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1/model/v1"
+	"github.com/shortlink-org/shop/oms/internal/usecases/cart/dto"
 )
 
 // Get gets the cart.

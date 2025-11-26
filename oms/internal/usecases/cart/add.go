@@ -6,10 +6,10 @@ import (
 
 	"go.temporal.io/sdk/client"
 
-	v1 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/cart/v1"
-	v2 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/queue/v1"
-	"github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/usecases/cart/dto"
-	cart_workflow "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/workers/cart/workflow"
+	v1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
+	v2 "github.com/shortlink-org/shop/oms/internal/domain/queue/v1"
+	"github.com/shortlink-org/shop/oms/internal/usecases/cart/dto"
+	cart_workflow "github.com/shortlink-org/shop/oms/internal/workers/cart/workflow"
 )
 
 // Add adds an item to the cart.

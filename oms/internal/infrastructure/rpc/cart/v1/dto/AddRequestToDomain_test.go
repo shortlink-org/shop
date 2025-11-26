@@ -7,8 +7,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
-	domain "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/cart/v1"
-	model "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/infrastructure/rpc/cart/v1/model/v1"
+	domain "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
+	model "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1/model/v1"
 )
 
 func TestAddRequestToDomain(t *testing.T) {

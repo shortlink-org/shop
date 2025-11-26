@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	domain "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/cart/v1"
-	v1 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/cart/v1"
-	"github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/usecases/cart/dto"
+	domain "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
+	v1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
+	"github.com/shortlink-org/shop/oms/internal/usecases/cart/dto"
 )
 
 // Remove removes items from the cart.

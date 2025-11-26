@@ -1,8 +1,8 @@
 package dto
 
 import (
-	v2 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/order/v1"
-	v3 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/infrastructure/rpc/order/v1/model/v1"
+	v2 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
+	v3 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/model/v1"
 )
 
 func OrderStateToDomain(in *v2.OrderState) *v3.OrderState {

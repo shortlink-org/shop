@@ -4,10 +4,10 @@ import (
 	"github.com/google/uuid"
 	"go.temporal.io/sdk/workflow"
 
-	v2 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/cart/v1"
-	v3 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/infrastructure/rpc/cart/v1/model/v1"
-	"github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/workers/cart/workflow/dto"
-	v1 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/workers/cart/workflow/model/cart/v1"
+	v2 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
+	v3 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1/model/v1"
+	"github.com/shortlink-org/shop/oms/internal/workers/cart/workflow/dto"
+	v1 "github.com/shortlink-org/shop/oms/internal/workers/cart/workflow/model/cart/v1"
 )
 
 // Workflow is a Temporal workflow that manages the cart state.

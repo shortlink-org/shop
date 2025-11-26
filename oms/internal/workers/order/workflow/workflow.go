@@ -4,9 +4,9 @@ import (
 	"github.com/google/uuid"
 	"go.temporal.io/sdk/workflow"
 
-	v2 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/order/v1"
-	v3 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/infrastructure/rpc/order/v1/model/v1"
-	"github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/workers/order/workflow/dto"
+	v2 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
+	v3 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/model/v1"
+	"github.com/shortlink-org/shop/oms/internal/workers/order/workflow/dto"
 )
 
 // Workflow is a Temporal workflow that manages the order state.

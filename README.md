@@ -18,3 +18,4 @@
 
 - [GLOSSARY.md](./GLOSSARY.md) - Ubiquitous Language of the Shop Boundary
 - [README.md](./docs/ADR/README.md) - Architecture Decision Records
+- [Services Plan](./docs/services-plan.md) - План функциональности по сервисам

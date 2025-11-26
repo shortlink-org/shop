@@ -1,7 +1,7 @@
 package v1
 
 import (
-	v2 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/cart/v1"
+	v2 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
 )
 
 type CartEvent struct {
