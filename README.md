@@ -13,6 +13,8 @@
 | oms-graphql        | GraphQL API Bridge | Coming soon          | [docs](./oms-graphql/README.md)        | [![App Status](https://argo.shortlink.best/api/badge?name=shortlink-oms-graphql&revision=true)](https://argo.shortlink.best/applications/shortlink-oms-graphql)               |
 | pricer             | Price service      | Go                   | [docs](./pricer/README.md)             | [![App Status](https://argo.shortlink.best/api/badge?name=shortlink-pricer&revision=true)](https://argo.shortlink.best/applications/shortlink-pricer)                         |
 | ui                 | Shop service       | JS/NextJS            | [docs](./ui/README.md)                 | [![App Status](https://argo.shortlink.best/api/badge?name=shortlink-shop-ui&revision=true)](https://argo.shortlink.best/applications/shortlink-shop-ui)                       |
+| support     | Support service     | PHP                | [docs](./boundaries/delivery/support/README.md)     | [![App Status](https://argo.shortlink.best/api/badge?name=shortlink-support&revision=true)](https://argo.shortlink.best/applications/shortlink-support)         |
+| geolocation | Geolocation service | Go                 | [docs](./boundaries/delivery/geolocation/README.md) | [![App Status](https://argo.shortlink.best/api/badge?name=shortlink-geolocation&revision=true)](https://argo.shortlink.best/applications/shortlink-geolocation) |
 
 ### Docs
 
