@@ -1,0 +1,99 @@
+syntax = "proto3";
+
+package domain.delivery.common.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// Address represents a physical address with coordinates
+message Address {
+  string street = 1;
+  string city = 2;
+  string postal_code = 3;
+  string country = 4;
+  double latitude = 5;
+  double longitude = 6;
+}
+
+// Location represents a GPS location
+message Location {
+  double latitude = 1;
+  double longitude = 2;
+  double accuracy = 3; // meters
+  google.protobuf.Timestamp timestamp = 4;
+  optional double speed = 5; // km/h (optional)
+  optional double heading = 6; // degrees 0-360 (optional)
+}
+
+// DeliveryPeriod represents the desired delivery time window
+message DeliveryPeriod {
+  google.protobuf.Timestamp start_time = 1; // Start of desired delivery period
+  google.protobuf.Timestamp end_time = 2;   // End of desired delivery period
+}
+
+// PackageInfo contains package physical characteristics
+message PackageInfo {
+  double weight_kg = 1;
+  string dimensions = 2; // "LxWxH" format
+}
+
+// WorkHours represents courier working hours
+message WorkHours {
+  string start_time = 1; // "09:00" format
+  string end_time = 2;   // "18:00" format
+  repeated int32 work_days = 3; // [1,2,3,4,5] - Monday to Friday
+}
+
+// Priority levels for packages
+enum Priority {
+  PRIORITY_UNSPECIFIED = 0;
+  PRIORITY_NORMAL = 1;
+  PRIORITY_URGENT = 2;
+}
+
+// Package status
+enum PackageStatus {
+  PACKAGE_STATUS_UNSPECIFIED = 0;
+  PACKAGE_STATUS_ACCEPTED = 1;
+  PACKAGE_STATUS_IN_POOL = 2;
+  PACKAGE_STATUS_ASSIGNED = 3;
+  PACKAGE_STATUS_IN_TRANSIT = 4;
+  PACKAGE_STATUS_DELIVERED = 5;
+  PACKAGE_STATUS_NOT_DELIVERED = 6;
+  PACKAGE_STATUS_REQUIRES_HANDLING = 7;
+}
+
+// Courier status
+enum CourierStatus {
+  COURIER_STATUS_UNSPECIFIED = 0;
+  COURIER_STATUS_UNAVAILABLE = 1;
+  COURIER_STATUS_FREE = 2;
+  COURIER_STATUS_BUSY = 3;
+}
+
+// Transport type
+enum TransportType {
+  TRANSPORT_TYPE_UNSPECIFIED = 0;
+  TRANSPORT_TYPE_WALKING = 1;
+  TRANSPORT_TYPE_BICYCLE = 2;
+  TRANSPORT_TYPE_MOTORCYCLE = 3;
+  TRANSPORT_TYPE_CAR = 4;
+}
+
+// Delivery status (for deliver order)
+enum DeliveryStatus {
+  DELIVERY_STATUS_UNSPECIFIED = 0;
+  DELIVERY_STATUS_DELIVERED = 1;
+  DELIVERY_STATUS_NOT_DELIVERED = 2;
+}
+
+// Reason for not delivered
+enum NotDeliveredReason {
+  NOT_DELIVERED_REASON_UNSPECIFIED = 0;
+  NOT_DELIVERED_REASON_CUSTOMER_NOT_AVAILABLE = 1;
+  NOT_DELIVERED_REASON_WRONG_ADDRESS = 2;
+  NOT_DELIVERED_REASON_CUSTOMER_REFUSED = 3;
+  NOT_DELIVERED_REASON_ACCESS_DENIED = 4;
+  NOT_DELIVERED_REASON_PACKAGE_DAMAGED = 5;
+  NOT_DELIVERED_REASON_OTHER = 6;
+}
+

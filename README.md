@@ -15,6 +15,7 @@
 | ui                 | Shop service       | JS/NextJS            | [docs](./ui/README.md)                 | [![App Status](https://argo.shortlink.best/api/badge?name=shortlink-shop-ui&revision=true)](https://argo.shortlink.best/applications/shortlink-shop-ui)                       |
 | support     | Support service     | PHP                | [docs](./boundaries/delivery/support/README.md)     | [![App Status](https://argo.shortlink.best/api/badge?name=shortlink-support&revision=true)](https://argo.shortlink.best/applications/shortlink-support)         |
 | geolocation | Geolocation service | Go                 | [docs](./boundaries/delivery/geolocation/README.md) | [![App Status](https://argo.shortlink.best/api/badge?name=shortlink-geolocation&revision=true)](https://argo.shortlink.best/applications/shortlink-geolocation) |
+| courier-emulation | Courier emulation service | Go | [docs](./courier-emulation/README.md) | Coming soon |
 
 ### Docs
 

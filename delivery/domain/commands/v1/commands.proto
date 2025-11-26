@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+package domain.delivery.commands.v1;
+
+import "google/protobuf/timestamp.proto";
+import "domain/delivery/common/v1/common.proto";
+
+// AcceptOrderCommand - Command to accept an order from OMS
+message AcceptOrderCommand {
+  string order_id = 1;
+  string customer_id = 2;
+  domain.delivery.common.v1.Address pickup_address = 3;
+  domain.delivery.common.v1.Address delivery_address = 4;
+  domain.delivery.common.v1.DeliveryPeriod delivery_period = 5;
+  domain.delivery.common.v1.PackageInfo package_info = 6;
+  domain.delivery.common.v1.Priority priority = 7;
+}
+
+// AssignOrderCommand - Command to assign a package to a courier
+message AssignOrderCommand {
+  string package_id = 1;
+  oneof assignment_type {
+    string courier_id = 2; // Manual assignment
+    bool auto_assign = 3;   // Auto dispatch
+  }
+}
+
+// DeliverOrderCommand - Command for courier to confirm delivery
+message DeliverOrderCommand {
+  string package_id = 1;
+  string courier_id = 2;
+  domain.delivery.common.v1.DeliveryStatus status = 3;
+  string reason = 4; // Required if status is NOT_DELIVERED
+  bytes photo = 5; // Optional: delivery confirmation photo
+  bytes customer_signature = 6; // Optional: customer signature
+  domain.delivery.common.v1.Location current_location = 7; // Courier's current location after delivery
+}
+
+// UpdateCourierLocationCommand - Command to update courier location
+message UpdateCourierLocationCommand {
+  string courier_id = 1;
+  domain.delivery.common.v1.Location location = 2;
+}
+
+// RegisterCourierCommand - Command to register a new courier
+message RegisterCourierCommand {
+  string name = 1;
+  string phone = 2;
+  string email = 3;
+  domain.delivery.common.v1.TransportType transport_type = 4;
+  double max_distance_km = 5;
+  string work_zone = 6; // Region/district
+  domain.delivery.common.v1.WorkHours work_hours = 7;
+  string push_token = 8; // FCM/APNS token for notifications
+}
+
+// GetPackagePoolCommand - Command to get package pool with filters
+message GetPackagePoolCommand {
+  repeated domain.delivery.common.v1.PackageStatus status_filter = 1;
+  repeated domain.delivery.common.v1.Priority priority_filter = 2;
+  string region_filter = 3;
+  google.protobuf.Timestamp created_from = 4;
+  google.protobuf.Timestamp created_to = 5;
+  string courier_id = 6; // Filter by assigned courier
+  Pagination pagination = 7;
+  SortBy sort_by = 8;
+}
+
+// GetCourierPoolCommand - Command to get courier pool with filters
+message GetCourierPoolCommand {
+  repeated domain.delivery.common.v1.CourierStatus status_filter = 1;
+  repeated domain.delivery.common.v1.TransportType transport_type_filter = 2;
+  string zone_filter = 3;
+  bool available_only = 4; // Only FREE couriers
+  bool include_location = 5; // Include current location
+  Pagination pagination = 6;
+  SortBy sort_by = 7;
+}
+
+// Pagination
+message Pagination {
+  int32 page = 1;
+  int32 page_size = 2; // Max 100
+}
+
+// SortBy options
+enum SortBy {
+  SORT_BY_UNSPECIFIED = 0;
+  SORT_BY_CREATED_AT = 1;
+  SORT_BY_PRIORITY = 2;
+  SORT_BY_DELIVERY_PERIOD_START = 3;
+  SORT_BY_DISTANCE = 4; // Requires courier location
+  SORT_BY_NAME = 5;
+  SORT_BY_RATING = 6;
+  SORT_BY_LOAD = 7;
+  SORT_BY_SUCCESSFUL_DELIVERIES = 8;
+}
+

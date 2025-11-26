@@ -1,0 +1,112 @@
+syntax = "proto3";
+
+package domain.delivery.events.v1;
+
+import "google/protobuf/timestamp.proto";
+import "domain/delivery/common/v1/common.proto";
+
+// PackageAcceptedEvent - Event when a package is accepted into the pool
+message PackageAcceptedEvent {
+  string package_id = 1;
+  string order_id = 2;
+  string customer_id = 3;
+  domain.delivery.common.v1.PackageStatus status = 4;
+  google.protobuf.Timestamp created_at = 5;
+}
+
+// PackageAssignedEvent - Event when a package is assigned to a courier
+message PackageAssignedEvent {
+  string package_id = 1;
+  string courier_id = 2;
+  domain.delivery.common.v1.PackageStatus status = 3;
+  google.protobuf.Timestamp assigned_at = 4;
+  // Package details for courier notification
+  domain.delivery.common.v1.Address pickup_address = 5;
+  domain.delivery.common.v1.Address delivery_address = 6;
+  domain.delivery.common.v1.DeliveryPeriod delivery_period = 7;
+  string customer_phone = 8;
+}
+
+// PackageInTransitEvent - Event when package is picked up and in transit
+message PackageInTransitEvent {
+  string package_id = 1;
+  string courier_id = 2;
+  domain.delivery.common.v1.PackageStatus status = 3;
+  google.protobuf.Timestamp in_transit_at = 4;
+  domain.delivery.common.v1.Location courier_location = 5;
+}
+
+// PackageDeliveredEvent - Event when package is successfully delivered
+message PackageDeliveredEvent {
+  string package_id = 1;
+  string order_id = 2;
+  string courier_id = 3;
+  domain.delivery.common.v1.PackageStatus status = 4;
+  google.protobuf.Timestamp delivered_at = 5;
+  domain.delivery.common.v1.Location delivery_location = 6;
+  bytes photo = 7; // Optional: delivery confirmation photo
+  bytes customer_signature = 8; // Optional: customer signature
+}
+
+// PackageNotDeliveredEvent - Event when package delivery failed
+message PackageNotDeliveredEvent {
+  string package_id = 1;
+  string order_id = 2;
+  string courier_id = 3;
+  domain.delivery.common.v1.PackageStatus status = 4;
+  domain.delivery.common.v1.NotDeliveredReason reason = 5;
+  string reason_description = 6; // Additional description if reason is OTHER
+  google.protobuf.Timestamp not_delivered_at = 7;
+  domain.delivery.common.v1.Location courier_location = 8;
+}
+
+// CourierRegisteredEvent - Event when a new courier is registered
+message CourierRegisteredEvent {
+  string courier_id = 1;
+  string name = 2;
+  string email = 3;
+  string phone = 4;
+  domain.delivery.common.v1.TransportType transport_type = 5;
+  domain.delivery.common.v1.CourierStatus status = 6;
+  google.protobuf.Timestamp registered_at = 7;
+}
+
+// CourierLocationUpdatedEvent - Event when courier location is updated
+message CourierLocationUpdatedEvent {
+  string courier_id = 1;
+  domain.delivery.common.v1.Location location = 2;
+  google.protobuf.Timestamp updated_at = 3;
+}
+
+// CourierStatusChangedEvent - Event when courier status changes
+message CourierStatusChangedEvent {
+  string courier_id = 1;
+  domain.delivery.common.v1.CourierStatus old_status = 2;
+  domain.delivery.common.v1.CourierStatus new_status = 3;
+  google.protobuf.Timestamp changed_at = 4;
+  string reason = 5; // Optional reason for status change
+}
+
+// PackageRequiresHandlingEvent - Event when package requires manual handling
+message PackageRequiresHandlingEvent {
+  string package_id = 1;
+  string order_id = 2;
+  domain.delivery.common.v1.PackageStatus status = 3;
+  string reason = 4;
+  google.protobuf.Timestamp requires_handling_at = 5;
+}
+
+// Event type enum for event routing
+enum EventType {
+  EVENT_TYPE_UNSPECIFIED = 0;
+  EVENT_TYPE_PACKAGE_ACCEPTED = 1;
+  EVENT_TYPE_PACKAGE_ASSIGNED = 2;
+  EVENT_TYPE_PACKAGE_IN_TRANSIT = 3;
+  EVENT_TYPE_PACKAGE_DELIVERED = 4;
+  EVENT_TYPE_PACKAGE_NOT_DELIVERED = 5;
+  EVENT_TYPE_COURIER_REGISTERED = 6;
+  EVENT_TYPE_COURIER_LOCATION_UPDATED = 7;
+  EVENT_TYPE_COURIER_STATUS_CHANGED = 8;
+  EVENT_TYPE_PACKAGE_REQUIRES_HANDLING = 9;
+}
+
