@@ -10,8 +10,8 @@ func CartStateToDomain(in *v2.CartState) *v3.CartState {
 
 	for _, item := range in.GetItems() {
 		items = append(items, &v3.CartItem{
-			ProductId: item.GetProductId().String(),
-			Quantity:  item.GetQuantity(),
+			GoodId:   item.GetGoodId().String(),
+			Quantity: item.GetQuantity(),
 		})
 	}
 

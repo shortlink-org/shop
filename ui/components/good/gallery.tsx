@@ -2,11 +2,11 @@
 
 import { ArrowLeftIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 import { GridTileImage } from 'components/grid/tile';
-import { useProduct, useUpdateURL } from 'components/product/product-context';
+import { useGood, useUpdateURL } from 'components/good/good-context';
 import Image from 'next/image';
 
 export function Gallery({ images }: { images: { src: string; altText: string }[] }) {
-  const { state, updateImage } = useProduct();
+  const { state, updateImage } = useGood();
   const updateURL = useUpdateURL();
   const imageIndex = state.image ? parseInt(state.image) : 0;
 

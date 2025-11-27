@@ -41,7 +41,7 @@ func (m *CartState) AddItem(item CartItem) {
 
 	// if the item already exists in the cart, increment the quantity
 	for i, cartItem := range m.items {
-		if cartItem.productId == item.productId {
+		if cartItem.goodId == item.goodId {
 			m.items[i].quantity += item.quantity
 			return
 		}
@@ -57,7 +57,7 @@ func (m *CartState) RemoveItem(item CartItem) {
 
 	// if the item already exists in the cart, decrement the quantity
 	for i, cartItem := range m.items {
-		if cartItem.productId == item.productId {
+		if cartItem.goodId == item.goodId {
 			m.items[i].quantity -= item.quantity
 			if m.items[i].quantity <= 0 {
 				m.items = append(m.items[:i], m.items[i+1:]...)

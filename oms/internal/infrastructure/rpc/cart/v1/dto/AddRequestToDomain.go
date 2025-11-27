@@ -21,12 +21,12 @@ func AddRequestToDomain(r *v2.AddRequest) (*domain.CartState, error) {
 	// add item to the cart
 	for i := range r.GetItems() {
 		// string to uuid
-		productId, errParseItem := uuid.Parse(r.Items[i].ProductId)
+		goodId, errParseItem := uuid.Parse(r.Items[i].GoodId)
 		if errParseItem != nil {
-			return nil, ParseItemError{Err: errParseItem, item: r.Items[i].ProductId}
+			return nil, ParseItemError{Err: errParseItem, item: r.Items[i].GoodId}
 		}
 
-		item.AddItem(domain.NewCartItem(productId, r.Items[i].Quantity))
+		item.AddItem(domain.NewCartItem(goodId, r.Items[i].Quantity))
 	}
 
 	return item, nil

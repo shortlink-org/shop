@@ -31,12 +31,12 @@ func OrderStateToDomain(in *v3.OrderState) (*v1.OrderState, error) {
 
 	// Add items to the order
 	for _, item := range in.GetItems() {
-		productID, err := uuid.Parse(item.GetId())
+		goodID, err := uuid.Parse(item.GetId())
 		if err != nil {
 			return nil, fmt.Errorf("invalid item id: %v", err)
 		}
 		price := decimal.NewFromFloat(item.GetPrice())
-		builder.AddItem(productID, item.GetQuantity(), price)
+		builder.AddItem(goodID, item.GetQuantity(), price)
 	}
 
 	// Set the status of the order

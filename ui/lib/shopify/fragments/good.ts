@@ -1,8 +1,11 @@
 import imageFragment from './image';
 import seoFragment from './seo';
 
-const productFragment = /* GraphQL */ `
-  fragment product on Product {
+/**
+ * GraphQL fragment for Good.
+ */
+const goodFragment = /* GraphQL */ `
+  fragment good on Product {
     id
     name
     price
@@ -14,4 +17,5 @@ const productFragment = /* GraphQL */ `
   // ${seoFragment}
 `;
 
-export default productFragment;
+export default goodFragment;
+

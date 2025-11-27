@@ -10,8 +10,8 @@ func GetResponseFromDomain(response *v2.CartState) *v1.GetResponse {
 
 	for _, item := range response.GetItems() {
 		items = append(items, &v1.CartItem{
-			ProductId: item.GetProductId().String(),
-			Quantity:  item.GetQuantity(),
+			GoodId:   item.GetGoodId().String(),
+			Quantity: item.GetQuantity(),
 		})
 	}
 

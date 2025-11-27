@@ -68,7 +68,10 @@ export type Page = {
   updatedAt: string;
 };
 
-export type Product = Omit<ShopifyProduct, 'price' | 'description' | 'createdAt' | 'updatedAt'> & {
+/**
+ * Good type represents a product/item available for purchase.
+ */
+export type Good = Omit<ShopifyProduct, 'price' | 'description' | 'createdAt' | 'updatedAt'> & {
   name: string;
   price: number;
   description: string;
@@ -76,13 +79,13 @@ export type Product = Omit<ShopifyProduct, 'price' | 'description' | 'createdAt'
   updatedAt: string;
 };
 
-export type ProductOption = {
+export type GoodOption = {
   id: string;
   name: string;
   values: string[];
 };
 
-export type ProductVariant = {
+export type GoodVariant = {
   id: string;
   title: string;
   availableForSale: boolean;
@@ -92,6 +95,11 @@ export type ProductVariant = {
   }[];
   price: Money;
 };
+
+// Legacy aliases for backward compatibility (can be removed later)
+export type Product = Good;
+export type ProductOption = GoodOption;
+export type ProductVariant = GoodVariant;
 
 export type SEO = {
   title: string;

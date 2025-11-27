@@ -21,13 +21,13 @@ func RemoveRequestToDomain(r *v1.RemoveRequest) (*domain.CartState, error) {
 	// remove items from the cart
 	for i := range r.GetItems() {
 		// string to uuid
-		productId, errParseItem := uuid.Parse(r.Items[i].ProductId)
+		goodId, errParseItem := uuid.Parse(r.Items[i].GoodId)
 		if errParseItem != nil {
-			return nil, ParseItemError{Err: errParseItem, item: r.Items[i].ProductId}
+			return nil, ParseItemError{Err: errParseItem, item: r.Items[i].GoodId}
 		}
 
 		// create CartItem and remove it from the state
-		item := domain.NewCartItem(productId, r.Items[i].Quantity)
+		item := domain.NewCartItem(goodId, r.Items[i].Quantity)
 		state.AddItem(item)
 	}
 

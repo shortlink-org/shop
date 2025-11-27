@@ -1,4 +1,4 @@
-export const getProductQuery = /* GraphQL */ `
+export const getGoodQuery = /* GraphQL */ `
   query Goods_goods_retrieve(
     $id: Int!
   ) {
@@ -13,7 +13,7 @@ export const getProductQuery = /* GraphQL */ `
   }
 `;
 
-export const getProductsQuery = /* GraphQL */ `
+export const getGoodsQuery = /* GraphQL */ `
   query Goods_goods_retrieve {
     goods_goods_list {
       count
@@ -23,7 +23,7 @@ export const getProductsQuery = /* GraphQL */ `
   }
 `;
 
-export const getProductRecommendationsQuery = /* GraphQL */ `
+export const getGoodRecommendationsQuery = /* GraphQL */ `
   query Goods_goods_retrieve {
     goods_goods_list {
       count
@@ -32,3 +32,4 @@ export const getProductRecommendationsQuery = /* GraphQL */ `
     }
   }
 `;
+

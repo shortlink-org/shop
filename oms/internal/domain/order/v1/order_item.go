@@ -10,23 +10,23 @@ type Items []Item
 
 // Item represents an item in the order.
 type Item struct {
-	productId uuid.UUID
-	quantity  int32
-	price     decimal.Decimal
+	goodId   uuid.UUID
+	quantity int32
+	price    decimal.Decimal
 }
 
 // NewItem creates a new item.
-func NewItem(productId uuid.UUID, quantity int32, price decimal.Decimal) Item {
+func NewItem(goodId uuid.UUID, quantity int32, price decimal.Decimal) Item {
 	return Item{
-		productId: productId,
-		quantity:  quantity,
-		price:     price,
+		goodId:   goodId,
+		quantity: quantity,
+		price:    price,
 	}
 }
 
-// GetProductId returns the value of the productId field.
-func (m Item) GetProductId() uuid.UUID {
-	return m.productId
+// GetGoodId returns the value of the goodId field.
+func (m Item) GetGoodId() uuid.UUID {
+	return m.goodId
 }
 
 // GetQuantity returns the value of the quantity field.

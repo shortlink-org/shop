@@ -20,7 +20,7 @@
 								"body": {
 									"mode": "graphql",
 									"graphql": {
-										"query": "query GetCart($customerId: String) {\n  getCart(customerId: { customerId: $customerId }) {\n    state {\n      cartId\n      customerId\n      items {\n        productId\n        quantity\n      }\n    }\n  }\n}\n",
+										"query": "query GetCart($customerId: String) {\n  getCart(customerId: { customerId: $customerId }) {\n    state {\n      cartId\n      customerId\n      items {\n        goodId\n        quantity\n      }\n    }\n  }\n}\n",
 										"variables": "{\n    \"customerId\": \"3e173751-8840-4b0d-8065-fbea88357cc5\"\n}"
 									}
 								},
@@ -49,7 +49,7 @@
 								"body": {
 									"mode": "graphql",
 									"graphql": {
-										"query": "mutation {\n  addItem(\n    addRequest: {\n        customerId: \"3e173751-8840-4b0d-8065-fbea88357cc5\", \n        items: [\n            {\n                productId: \"3e173751-8840-4b0d-8065-fbea88357cc5\", \n                quantity: 1\n            }\n        ]\n    }\n  )\n}",
+										"query": "mutation {\n  addItem(\n    addRequest: {\n        customerId: \"3e173751-8840-4b0d-8065-fbea88357cc5\", \n        items: [\n            {\n                goodId: \"3e173751-8840-4b0d-8065-fbea88357cc5\", \n                quantity: 1\n            }\n        ]\n    }\n  )\n}",
 										"variables": "{\n    \"customerId\": \"3e173751-8840-4b0d-8065-fbea88357cc5\"\n}"
 									}
 								},
@@ -78,7 +78,7 @@
 								"body": {
 									"mode": "graphql",
 									"graphql": {
-										"query": "mutation {\n  removeItem(\n    removeRequest: {\n        customerId: \"3e173751-8840-4b0d-8065-fbea88357cc5\", \n        items: [\n            {\n                productId: \"3e173751-8840-4b0d-8065-fbea88357cc5\", \n                quantity: 1\n            }\n        ]\n    }\n  )\n}",
+										"query": "mutation {\n  removeItem(\n    removeRequest: {\n        customerId: \"3e173751-8840-4b0d-8065-fbea88357cc5\", \n        items: [\n            {\n                goodId: \"3e173751-8840-4b0d-8065-fbea88357cc5\", \n                quantity: 1\n            }\n        ]\n    }\n  )\n}",
 										"variables": "{\n    \"customerId\": \"3e173751-8840-4b0d-8065-fbea88357cc5\"\n}"
 									}
 								},

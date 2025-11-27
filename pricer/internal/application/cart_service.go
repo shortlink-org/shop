@@ -54,7 +54,7 @@ func (s *CartService) CalculateTotal(ctx context.Context, cart *domain.Cart, dis
 		itemTotal := item.Price.Add(totalTax).Sub(totalDiscount).Mul(decimal.NewFromInt32(item.Quantity))
 		finalPrice = finalPrice.Add(itemTotal)
 		s.log.InfoWithContext(ctx, "Item total calculated",
-			slog.Any("item_id", item.ProductID),
+			slog.Any("item_id", item.GoodID),
 			slog.String("item_total", itemTotal.StringFixed(2)),
 		)
 	}

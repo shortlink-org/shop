@@ -7,29 +7,29 @@ import (
 
 // CartItem represents a cart item.
 type CartItem struct {
-	// productId is the product ID
-	productId uuid.UUID
-	// quantity is the quantity of the product
+	// goodId is the good ID
+	goodId uuid.UUID
+	// quantity is the quantity of the good
 	quantity int32
-	// price is the price of the product
+	// price is the price of the good
 	price decimal.Decimal
-	// discount is the discount of the product
+	// discount is the discount of the good
 	discount decimal.Decimal
-	// tax is the tax of the product
+	// tax is the tax of the good
 	tax decimal.Decimal
 }
 
 // NewCartItem creates a new CartItem.
-func NewCartItem(productId uuid.UUID, quantity int32) CartItem {
+func NewCartItem(goodId uuid.UUID, quantity int32) CartItem {
 	return CartItem{
-		productId: productId,
-		quantity:  quantity,
+		goodId:   goodId,
+		quantity: quantity,
 	}
 }
 
-// GetProductId returns the product ID.
-func (c CartItem) GetProductId() uuid.UUID {
-	return c.productId
+// GetGoodId returns the good ID.
+func (c CartItem) GetGoodId() uuid.UUID {
+	return c.goodId
 }
 
 // GetQuantity returns the quantity.

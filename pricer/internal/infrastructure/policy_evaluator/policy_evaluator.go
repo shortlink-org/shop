@@ -87,10 +87,10 @@ func transformCartToInput(cart *domain.Cart, params map[string]interface{}) map[
 	var items []map[string]interface{}
 	for _, item := range cart.Items {
 		items = append(items, map[string]interface{}{
-			"productId": item.ProductID.String(), // Convert UUID to string
-			"quantity":  item.Quantity,
-			"price":     item.Price.InexactFloat64(), // Convert decimal to float64
-			"brand":     item.Brand,
+			"goodId":   item.GoodID.String(), // Convert UUID to string
+			"quantity": item.Quantity,
+			"price":    item.Price.InexactFloat64(), // Convert decimal to float64
+			"brand":    item.Brand,
 		})
 	}
 

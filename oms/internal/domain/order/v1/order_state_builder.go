@@ -14,7 +14,7 @@ import (
 // Error definitions
 var (
 	ErrInvalidOrderID     = errors.New("invalid order id")
-	ErrInvalidProductID   = errors.New("invalid product id")
+	ErrInvalidGoodID      = errors.New("invalid good id")
 	ErrInvalidOrderStatus = errors.New("invalid order status")
 )
 
@@ -41,12 +41,12 @@ func (b *OrderStateBuilder) SetId(id uuid.UUID) *OrderStateBuilder {
 }
 
 // AddItem adds an item to the order
-func (b *OrderStateBuilder) AddItem(productId uuid.UUID, quantity int32, price decimal.Decimal) *OrderStateBuilder {
-	if productId == uuid.Nil {
-		b.errors = errors.Join(b.errors, ErrInvalidProductID)
+func (b *OrderStateBuilder) AddItem(goodId uuid.UUID, quantity int32, price decimal.Decimal) *OrderStateBuilder {
+	if goodId == uuid.Nil {
+		b.errors = errors.Join(b.errors, ErrInvalidGoodID)
 		return b
 	}
-	item := NewItem(productId, quantity, price)
+	item := NewItem(goodId, quantity, price)
 	b.orderState.items = append(b.orderState.items, item)
 	return b
 }

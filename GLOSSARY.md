@@ -1,6 +1,15 @@
 ## Terms
 
-- **Merch**: Short for merchandise, referring to the products or goods that are being delivered.
+### Core Domain
+
+- **Good**: A product or item available for purchase in the shop catalog. This is the primary term used throughout the system to refer to merchandise/trade goods. Managed by Admin Service, displayed in UI Service, and referenced in orders and carts.
+  - **Note**: In UI layer, the TypeScript type `Product` is used for compatibility with GraphQL/Shopify API, but it represents a `Good` from the domain perspective.
+  - **Note**: `Item` in Merch Service (deprecated) refers to SKU-based inventory units, which is a different level of abstraction.
+
+- **Cart Item**: An entry in a shopping cart that references a Good with quantity and price information.
+- **Order Item**: An entry in an order that references a Good with quantity, price, and order-specific details.
+
+- **Merch**: Short for merchandise, referring to the goods that are being delivered.
 
 ### Delivery
 

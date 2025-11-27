@@ -1,8 +1,8 @@
 'use client';
 
 import clsx from 'clsx';
-import { useProduct, useUpdateURL } from 'components/product/product-context';
-import { ProductOption, ProductVariant } from 'lib/shopify/types';
+import { useGood, useUpdateURL } from 'components/good/good-context';
+import { GoodOption, GoodVariant } from 'lib/shopify/types';
 
 type Combination = {
   id: string;
@@ -14,10 +14,10 @@ export function VariantSelector({
   options,
   variants
 }: {
-  options: ProductOption[];
-  variants: ProductVariant[];
+  options: GoodOption[];
+  variants: GoodVariant[];
 }) {
-  const { state, updateOption } = useProduct();
+  const { state, updateOption } = useGood();
   const updateURL = useUpdateURL();
   const hasNoOptionsOrJustOneOption =
     !options.length || (options.length === 1 && options[0]?.values.length === 1);

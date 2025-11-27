@@ -23,18 +23,18 @@ func TestAddRequestToDomain(t *testing.T) {
 			request: &model.AddRequest{
 				CustomerId: "e2c8ba97-1a6b-4c5c-9a2a-3f4c9b9d65a1",
 				Items: []*model.CartItem{
-					{ProductId: "c5f5d6d6-98e6-4f57-b34a-48a3997f28d4", Quantity: 1},
-					{ProductId: "da3f3a3e-784d-4a9a-8cfa-6321d555d6a3", Quantity: 2},
+					{GoodId: "c5f5d6d6-98e6-4f57-b34a-48a3997f28d4", Quantity: 1},
+					{GoodId: "da3f3a3e-784d-4a9a-8cfa-6321d555d6a3", Quantity: 2},
 				},
 			},
 			expectedError: nil,
 			expectedState: func() *domain.CartState {
 				customerId, _ := uuid.Parse("e2c8ba97-1a6b-4c5c-9a2a-3f4c9b9d65a1")
-				productId1, _ := uuid.Parse("c5f5d6d6-98e6-4f57-b34a-48a3997f28d4")
-				productId2, _ := uuid.Parse("da3f3a3e-784d-4a9a-8cfa-6321d555d6a3")
+				goodId1, _ := uuid.Parse("c5f5d6d6-98e6-4f57-b34a-48a3997f28d4")
+				goodId2, _ := uuid.Parse("da3f3a3e-784d-4a9a-8cfa-6321d555d6a3")
 				state := domain.NewCartState(customerId)
-				state.AddItem(domain.NewCartItem(productId1, 1))
-				state.AddItem(domain.NewCartItem(productId2, 2))
+				state.AddItem(domain.NewCartItem(goodId1, 1))
+				state.AddItem(domain.NewCartItem(goodId2, 2))
 				return state
 			}(),
 		},
@@ -43,18 +43,18 @@ func TestAddRequestToDomain(t *testing.T) {
 			request: &model.AddRequest{
 				CustomerId: "invalid-uuid",
 				Items: []*model.CartItem{
-					{ProductId: uuid.New().String(), Quantity: 1},
+					{GoodId: uuid.New().String(), Quantity: 1},
 				},
 			},
 			expectedError: ErrInvalidCustomerId,
 			expectedState: nil,
 		},
 		{
-			name: "Invalid Product ID",
+			name: "Invalid Good ID",
 			request: &model.AddRequest{
 				CustomerId: uuid.New().String(),
 				Items: []*model.CartItem{
-					{ProductId: "invalid-uuid", Quantity: 1},
+					{GoodId: "invalid-uuid", Quantity: 1},
 				},
 			},
 			expectedError: ParseItemError{

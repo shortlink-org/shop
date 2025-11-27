@@ -6,10 +6,10 @@ import (
 )
 
 type CartItem struct {
-	ProductID uuid.UUID
-	Quantity  int32
-	Price     decimal.Decimal
-	Brand     string
+	GoodID   uuid.UUID
+	Quantity int32
+	Price    decimal.Decimal
+	Brand    string
 }
 
 type Cart struct {

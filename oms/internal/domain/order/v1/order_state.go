@@ -139,12 +139,12 @@ func (o *OrderState) UpdateOrder(ctx context.Context, items Items) error {
 	// Create a map for quick lookup of existing items.
 	itemMap := make(map[uuid.UUID]*Item)
 	for i := range o.items {
-		itemMap[o.items[i].productId] = &o.items[i]
+		itemMap[o.items[i].goodId] = &o.items[i]
 	}
 
 	// Update quantities and prices of existing items or add new items.
 	for _, item := range items {
-		if existingItem, exists := itemMap[item.productId]; exists {
+		if existingItem, exists := itemMap[item.goodId]; exists {
 			existingItem.quantity = item.quantity
 			existingItem.price = item.price
 		} else {

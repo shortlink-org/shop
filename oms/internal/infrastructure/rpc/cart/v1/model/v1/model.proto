@@ -13,8 +13,8 @@ message CartItem {
   // Field mask
   google.protobuf.FieldMask field_mask = 6;
 
-  // Product ID
-  string product_id = 1;
+  // Good ID
+  string good_id = 1;
   // Quantity
   int32 quantity = 2;
 }

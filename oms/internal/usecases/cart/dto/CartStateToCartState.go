@@ -17,12 +17,12 @@ func CartStateToCartState(cartState *v3.CartState) (*v1.CartState, error) {
 	state := v1.NewCartState(customerId)
 
 	for _, item := range cartState.GetItems() {
-		productId, err := uuid.Parse(item.GetProductId())
+		goodId, err := uuid.Parse(item.GetGoodId())
 		if err != nil {
 			return nil, err
 		}
 
-		state.AddItem(v1.NewCartItem(productId, item.GetQuantity()))
+		state.AddItem(v1.NewCartItem(goodId, item.GetQuantity()))
 	}
 
 	return state, nil

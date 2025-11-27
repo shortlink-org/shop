@@ -15,8 +15,8 @@ import (
 func TestOrderState(t *testing.T) {
 	// Define fixed UUIDs for consistency across tests.
 	fixedCustomerID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
-	fixedProductID1 := uuid.MustParse("123e4567-e89b-12d3-a456-426614174001")
-	fixedProductID2 := uuid.MustParse("123e4567-e89b-12d3-a456-426614174002")
+	fixedGoodID1 := uuid.MustParse("123e4567-e89b-12d3-a456-426614174001")
+	fixedGoodID2 := uuid.MustParse("123e4567-e89b-12d3-a456-426614174002")
 
 	// Create a background context for general use.
 	ctx := context.Background()
@@ -33,8 +33,8 @@ func TestOrderState(t *testing.T) {
 		orderState := NewOrderState(fixedCustomerID)
 
 		items := Items{
-			NewItem(fixedProductID1, 2, decimal.NewFromFloat(19.99)),
-			NewItem(fixedProductID2, 1, decimal.NewFromFloat(9.99)),
+			NewItem(fixedGoodID1, 2, decimal.NewFromFloat(19.99)),
+			NewItem(fixedGoodID2, 1, decimal.NewFromFloat(9.99)),
 		}
 
 		err := orderState.CreateOrder(ctx, items)
@@ -47,14 +47,14 @@ func TestOrderState(t *testing.T) {
 		orderState := NewOrderState(fixedCustomerID)
 
 		initialItems := Items{
-			NewItem(fixedProductID1, 2, decimal.NewFromFloat(19.99)),
+			NewItem(fixedGoodID1, 2, decimal.NewFromFloat(19.99)),
 		}
 		err := orderState.CreateOrder(ctx, initialItems)
 		require.NoError(t, err, "CreateOrder should not return an error")
 
 		updatedItems := Items{
-			NewItem(fixedProductID1, 3, decimal.NewFromFloat(29.99)),
-			NewItem(fixedProductID2, 1, decimal.NewFromFloat(9.99)),
+			NewItem(fixedGoodID1, 3, decimal.NewFromFloat(29.99)),
+			NewItem(fixedGoodID2, 1, decimal.NewFromFloat(9.99)),
 		}
 
 		err = orderState.UpdateOrder(ctx, updatedItems)
@@ -66,7 +66,7 @@ func TestOrderState(t *testing.T) {
 		orderState := NewOrderState(fixedCustomerID)
 
 		items := Items{
-			NewItem(fixedProductID1, 2, decimal.NewFromFloat(19.99)),
+			NewItem(fixedGoodID1, 2, decimal.NewFromFloat(19.99)),
 		}
 		err := orderState.CreateOrder(ctx, items)
 		require.NoError(t, err, "CreateOrder should not return an error")
@@ -80,7 +80,7 @@ func TestOrderState(t *testing.T) {
 		orderState := NewOrderState(fixedCustomerID)
 
 		items := Items{
-			NewItem(fixedProductID1, 2, decimal.NewFromFloat(19.99)),
+			NewItem(fixedGoodID1, 2, decimal.NewFromFloat(19.99)),
 		}
 		err := orderState.CreateOrder(ctx, items)
 		require.NoError(t, err, "CreateOrder should not return an error")
@@ -94,16 +94,16 @@ func TestOrderState(t *testing.T) {
 		orderState := NewOrderState(fixedCustomerID)
 
 		items := Items{
-			NewItem(fixedProductID1, 2, decimal.NewFromFloat(19.99)),
-			NewItem(fixedProductID2, 1, decimal.NewFromFloat(9.99)),
+			NewItem(fixedGoodID1, 2, decimal.NewFromFloat(19.99)),
+			NewItem(fixedGoodID2, 1, decimal.NewFromFloat(9.99)),
 		}
 
 		err := orderState.CreateOrder(ctx, items)
 		require.NoError(t, err, "CreateOrder should not return an error")
 
 		updatedItems := Items{
-			NewItem(fixedProductID1, 3, decimal.NewFromFloat(29.99)),
-			NewItem(fixedProductID2, 2, decimal.NewFromFloat(19.99)),
+			NewItem(fixedGoodID1, 3, decimal.NewFromFloat(29.99)),
+			NewItem(fixedGoodID2, 2, decimal.NewFromFloat(19.99)),
 		}
 
 		var wg sync.WaitGroup
@@ -167,7 +167,7 @@ func TestOrderState(t *testing.T) {
 
 		// Transition: Pending -> Processing
 		err := orderState.CreateOrder(ctx, Items{
-			NewItem(fixedProductID1, 2, decimal.NewFromFloat(19.99)),
+			NewItem(fixedGoodID1, 2, decimal.NewFromFloat(19.99)),
 		})
 		require.NoError(t, err, "CreateOrder should transition state to Processing")
 
@@ -217,7 +217,7 @@ func TestOrderState(t *testing.T) {
 
 		// Attempt to trigger a transition with a canceled context.
 		err := orderState.CreateOrder(ctx, Items{
-			NewItem(fixedProductID1, 1, decimal.NewFromFloat(9.99)),
+			NewItem(fixedGoodID1, 1, decimal.NewFromFloat(9.99)),
 		})
 
 		// Depending on FSM implementation, it might handle context cancellation.

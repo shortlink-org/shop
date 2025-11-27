@@ -104,7 +104,7 @@ export default function CartModal() {
                         // });
 
                         // const merchandiseUrl = createUrl(
-                        //   `/product/${item.merchandise.product.handle}`,
+                        //   `/good/${item.merchandise.product.handle}`,
                         //   new URLSearchParams(merchandiseSearchParams)
                         // );
 

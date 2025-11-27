@@ -3,7 +3,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import Grid from 'components/grid';
-import ProductGridItems from 'components/layout/product-grid-items';
+import GoodGridItems from 'components/layout/good-grid-items';
 import { defaultSort, sorting } from 'lib/constants';
 
 export async function generateMetadata({
@@ -18,7 +18,7 @@ export async function generateMetadata({
   return {
     title: collection.seo?.title || collection.title,
     description:
-      collection.seo?.description || collection.description || `${collection.title} products`
+      collection.seo?.description || collection.description || `${collection.title} goods`
   };
 }
 
@@ -31,7 +31,7 @@ export default async function CategoryPage({
 }) {
   return (
     <section>
-      <p className="py-3 text-lg">{`No products found in this collection`}</p>
+      <p className="py-3 text-lg">{`No goods found in this collection`}</p>
     </section>
   );
 }

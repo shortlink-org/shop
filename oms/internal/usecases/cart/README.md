@@ -65,7 +65,7 @@ CartWF -> Temporal : Workflow completed
 
 == Add items to cart ==
 User -> Temporal : Add(AddRequest)
-note right: AddRequest {\n user_id: string,\n item: [CartItem] {\n product_id: string,\n quantity: int32\n }\n}
+note right: AddRequest {\n user_id: string,\n item: [CartItem] {\n good_id: string,\n quantity: int32\n }\n}
 Temporal -> CartWF : Start add item workflow
 CartWF -> CartService : Add(AddRequest)
 CartService --> CartWF : Item(s) added
@@ -73,7 +73,7 @@ CartWF -> Temporal : Workflow completed
 
 == Remove items from cart ==
 User -> Temporal : Remove(RemoveRequest)
-note right: RemoveRequest {\n user_id: string,\n item: [CartItem] {\n product_id: string,\n quantity: int32\n }\n}
+note right: RemoveRequest {\n user_id: string,\n item: [CartItem] {\n good_id: string,\n quantity: int32\n }\n}
 Temporal -> CartWF : Start remove item workflow
 CartWF -> CartService : Remove(RemoveRequest)
 CartService --> CartWF : Item(s) removed

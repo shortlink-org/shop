@@ -3,8 +3,8 @@
 import { PlusIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import { addItem } from 'components/cart/actions';
-import { useProduct } from 'components/product/product-context';
-import { Product, ProductVariant } from 'lib/shopify/types';
+import { useGood } from 'components/good/good-context';
+import { Good, GoodVariant } from 'lib/shopify/types';
 import { useFormState } from 'react-dom';
 import { useCart } from './cart-context';
 
@@ -58,18 +58,18 @@ function SubmitButton({
   );
 }
 
-export function AddToCart({ product }: { product: Product }) {
+export function AddToCart({ good }: { good: Good }) {
   const { addCartItem } = useCart();
-  const { state } = useProduct();
+  const { state } = useGood();
   const [message, formAction] = useFormState(addItem, null);
 
   return (
     <form
       // action={() => {
-      //   addCartItem(product.id, product);
+      //   addCartItem(good.id, good);
       // }}
     >
-      <SubmitButton availableForSale={true} selectedVariantId={product.id} />
+      <SubmitButton availableForSale={true} selectedVariantId={good.id} />
       <p aria-live="polite" className="sr-only" role="status">
         {message}
       </p>

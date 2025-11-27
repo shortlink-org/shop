@@ -25,7 +25,7 @@
   - Реализовано через UI Service (Next.js)
   - GraphQL запрос: `goods_goods_retrieve(id: Int!)`
   - Endpoint: `/product/[id]`
-  - Функция: `getProduct(id)` в `ui/lib/shopify/index.ts`
+  - Функция: `getGood(id)` в `ui/lib/shopify/index.ts`
 
 - ✅ **Выбрать товар (добавить в корзину)**
   - Реализовано через Cart workflows

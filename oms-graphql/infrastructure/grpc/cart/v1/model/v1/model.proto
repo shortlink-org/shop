@@ -7,8 +7,8 @@ import "google/protobuf/timestamp.proto";
 
 // CartItem is the cart item message.
 message CartItem {
-  // Product ID
-  string product_id = 1;
+  // Good ID
+  string good_id = 1;
   // Quantity
   int32 quantity = 2;
 }

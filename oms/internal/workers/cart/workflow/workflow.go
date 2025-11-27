@@ -36,12 +36,12 @@ func Workflow(ctx workflow.Context, customerId uuid.UUID) error {
 		c.Receive(ctx, &request)
 
 		for _, item := range request.Items {
-			productId, err := uuid.Parse(item.ProductId)
+			goodId, err := uuid.Parse(item.GoodId)
 			if err != nil {
-				logger.Error("Invalid product ID %v", err)
+				logger.Error("Invalid good ID %v", err)
 			}
 
-			state.AddItem(v2.NewCartItem(productId, item.Quantity))
+			state.AddItem(v2.NewCartItem(goodId, item.Quantity))
 		}
 	})
 
@@ -50,12 +50,12 @@ func Workflow(ctx workflow.Context, customerId uuid.UUID) error {
 		c.Receive(ctx, &request)
 
 		for _, item := range request.Items {
-			productId, err := uuid.Parse(item.ProductId)
+			goodId, err := uuid.Parse(item.GoodId)
 			if err != nil {
-				logger.Error("Invalid product ID %v", err)
+				logger.Error("Invalid good ID %v", err)
 			}
 
-			state.RemoveItem(v2.NewCartItem(productId, item.Quantity))
+			state.RemoveItem(v2.NewCartItem(goodId, item.Quantity))
 		}
 	})
 

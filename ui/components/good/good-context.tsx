@@ -3,25 +3,25 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import React, { createContext, useContext, useMemo, useOptimistic } from 'react';
 
-type ProductState = {
+type GoodState = {
   [key: string]: string;
 } & {
   image?: string;
 };
 
-type ProductContextType = {
-  state: ProductState;
-  updateOption: (name: string, value: string) => ProductState;
-  updateImage: (index: string) => ProductState;
+type GoodContextType = {
+  state: GoodState;
+  updateOption: (name: string, value: string) => GoodState;
+  updateImage: (index: string) => GoodState;
 };
 
-const ProductContext = createContext<ProductContextType | undefined>(undefined);
+const GoodContext = createContext<GoodContextType | undefined>(undefined);
 
-export function ProductProvider({ children }: { children: React.ReactNode }) {
+export function GoodProvider({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
 
   const getInitialState = () => {
-    const params: ProductState = {};
+    const params: GoodState = {};
     for (const [key, value] of searchParams.entries()) {
       params[key] = value;
     }
@@ -30,7 +30,7 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
 
   const [state, setOptimisticState] = useOptimistic(
     getInitialState(),
-    (prevState: ProductState, update: ProductState) => ({
+    (prevState: GoodState, update: GoodState) => ({
       ...prevState,
       ...update
     })
@@ -57,13 +57,13 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     [state]
   );
 
-  return <ProductContext.Provider value={value}>{children}</ProductContext.Provider>;
+  return <GoodContext.Provider value={value}>{children}</GoodContext.Provider>;
 }
 
-export function useProduct() {
-  const context = useContext(ProductContext);
+export function useGood() {
+  const context = useContext(GoodContext);
   if (context === undefined) {
-    throw new Error('useProduct must be used within a ProductProvider');
+    throw new Error('useGood must be used within a GoodProvider');
   }
   return context;
 }
@@ -71,7 +71,7 @@ export function useProduct() {
 export function useUpdateURL() {
   const router = useRouter();
 
-  return (state: ProductState) => {
+  return (state: GoodState) => {
     const newParams = new URLSearchParams(window.location.search);
     Object.entries(state).forEach(([key, value]) => {
       newParams.set(key, value);
@@ -79,3 +79,4 @@ export function useUpdateURL() {
     router.push(`?${newParams.toString()}`, { scroll: false });
   };
 }
+

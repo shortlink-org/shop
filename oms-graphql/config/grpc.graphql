@@ -20,7 +20,7 @@ schema
 }
 
 type CartItem {
-  productId: String
+  goodId: String
   quantity: Int
 }
 
@@ -90,6 +90,6 @@ type Mutation {
 }
 
 input CartItemInput {
-  productId: String!
+  goodId: String!
   quantity: Int!
 }

@@ -11,7 +11,7 @@ export const getCartQuery = /* GraphQL */ `
         cartId
         customerId
         items {
-          productId
+          goodId
           quantity
         }
       }

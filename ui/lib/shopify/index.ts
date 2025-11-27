@@ -1,4 +1,4 @@
-import { HIDDEN_PRODUCT_TAG, SHOPIFY_GRAPHQL_API_ENDPOINT, TAGS } from 'lib/constants';
+import { HIDDEN_GOOD_TAG, SHOPIFY_GRAPHQL_API_ENDPOINT, TAGS } from 'lib/constants';
 import { isShopifyError } from 'lib/type-guards';
 import { ensureStartsWith } from 'lib/utils';
 import { revalidateTag } from 'next/cache';
@@ -19,18 +19,18 @@ import {
 import { getMenuQuery } from './queries/menu';
 import { getPageQuery, getPagesQuery } from './queries/page';
 import {
-  getProductQuery,
-  getProductRecommendationsQuery,
-  getProductsQuery
-} from './queries/product';
+  getGoodQuery,
+  getGoodRecommendationsQuery,
+  getGoodsQuery
+} from './queries/good';
 import {
   Cart,
   Collection,
   Connection,
+  Good,
   Image,
   Menu,
   Page,
-  Product,
   ShopifyAddToCartOperation,
   ShopifyCart,
   ShopifyCartOperation,
@@ -256,7 +256,7 @@ export async function getCollection(id: number): Promise<Collection | undefined>
 
 export async function getCollectionProducts({ page }: {
   page?: number;
-}): Promise<Product[]> {
+}): Promise<Good[]> {
   const res = await shopifyFetch<ShopifyCollectionProductsOperation>({
     query: getCollectionProductsQuery,
   });
@@ -338,9 +338,12 @@ export async function getPages(): Promise<Page[]> {
     : [];
 }
 
-export async function getProduct(id: number): Promise<Product | undefined> {
+/**
+ * Retrieves a Good by ID from the Admin Service.
+ */
+export async function getGood(id: number): Promise<Good | undefined> {
   const res = await shopifyFetch<ShopifyProductOperation>({
-    query: getProductQuery,
+    query: getGoodQuery,
     variables: {
       id: parseInt(id),
     },
@@ -349,9 +352,9 @@ export async function getProduct(id: number): Promise<Product | undefined> {
   return res.body.data.goods_goods_retrieve;
 }
 
-export async function getProductRecommendations(id: number): Promise<Product[]> {
+export async function getGoodRecommendations(id: number): Promise<Good[]> {
   const res = await shopifyFetch<ShopifyProductRecommendationsOperation>({
-    query: getProductRecommendationsQuery,
+    query: getGoodRecommendationsQuery,
     variables: {
       id,
     }
@@ -360,18 +363,18 @@ export async function getProductRecommendations(id: number): Promise<Product[]> 
   return res.body.data.productRecommendations;
 }
 
-export async function getProducts({
-                                    query,
-                                    reverse,
-                                    sortKey
-                                  }: {
+export async function getGoods({
+                                  query,
+                                  reverse,
+                                  sortKey
+                                }: {
   query?: string;
   reverse?: boolean;
   sortKey?: string;
-}): Promise<Product[]> {
+}): Promise<Good[]> {
   const res = await shopifyFetch<ShopifyProductsOperation>({
-    query: getProductsQuery,
-    tags: [TAGS.products],
+    query: getGoodsQuery,
+    tags: [TAGS.goods],
     variables: {
       query,
       reverse,
@@ -389,18 +392,18 @@ export async function revalidate(req: NextRequest): Promise<NextResponse> {
   // We always need to respond with a 200 status code to Shopify,
   // otherwise it will continue to retry the request.
   const collectionWebhooks = ['collections/create', 'collections/delete', 'collections/update'];
-  const productWebhooks = ['products/create', 'products/delete', 'products/update'];
+  const goodWebhooks = ['products/create', 'products/delete', 'products/update'];
   const topic = headers().get('x-shopify-topic') || 'unknown';
   const secret = req.nextUrl.searchParams.get('secret');
   const isCollectionUpdate = collectionWebhooks.includes(topic);
-  const isProductUpdate = productWebhooks.includes(topic);
+  const isGoodUpdate = goodWebhooks.includes(topic);
 
   if (!secret || secret !== process.env.SHOPIFY_REVALIDATION_SECRET) {
     console.error('Invalid revalidation secret.');
     return NextResponse.json({ status: 200 });
   }
 
-  if (!isCollectionUpdate && !isProductUpdate) {
+  if (!isCollectionUpdate && !isGoodUpdate) {
     // We don't need to revalidate anything for any other topics.
     return NextResponse.json({ status: 200 });
   }
@@ -409,8 +412,8 @@ export async function revalidate(req: NextRequest): Promise<NextResponse> {
     revalidateTag(TAGS.collections);
   }
 
-  if (isProductUpdate) {
-    revalidateTag(TAGS.products);
+  if (isGoodUpdate) {
+    revalidateTag(TAGS.goods);
   }
 
   return NextResponse.json({ status: 200, revalidated: true, now: Date.now() });

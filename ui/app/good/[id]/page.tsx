@@ -3,12 +3,12 @@ import { notFound } from 'next/navigation';
 
 import { GridTileImage } from 'components/grid/tile';
 import Footer from 'components/layout/footer';
-import { Gallery } from 'components/product/gallery';
-import { ProductProvider } from 'components/product/product-context';
-import { ProductDescription } from 'components/product/product-description';
-import { HIDDEN_PRODUCT_TAG } from 'lib/constants';
-import { getProduct, getProductRecommendations } from 'lib/shopify';
-import { Image } from 'lib/shopify/types';
+import { Gallery } from 'components/good/gallery';
+import { GoodProvider } from 'components/good/good-context';
+import { GoodDescription } from 'components/good/good-description';
+import { HIDDEN_GOOD_TAG } from 'lib/constants';
+import { getGood, getGoodRecommendations } from 'lib/shopify';
+import { Image, Good } from 'lib/shopify/types';
 import Link from 'next/link';
 import { Suspense } from 'react';
 
@@ -23,46 +23,46 @@ export async function generateMetadata({
 }: {
   params: { id: number };
 }): Promise<Metadata> {
-  console.warn('product 1', params);
+  console.warn('good 1', params);
 
-  const product = await getProduct(params.id);
+  const good = await getGood(params.id);
 
-  if (!product) return notFound();
+  if (!good) return notFound();
 
-  console.warn('product 3', product);
+  console.warn('good 3', good);
 
   return {
-    title: product.name,
-    description: product.description,
+    title: good.name,
+    description: good.description,
   };
 }
 
-export default async function ProductPage({ params }: { params: { id: number } }) {
-  const product = await getProduct(params.id);
+export default async function GoodPage({ params }: { params: { id: number } }) {
+  const good = await getGood(params.id);
 
-  if (!product) return notFound();
+  if (!good) return notFound();
 
-  const productJsonLd = {
+  const goodJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    name: product.name,
-    description: product.description,
+    name: good.name,
+    description: good.description,
     offers: {
       '@type': 'AggregateOffer',
-      priceCurrency: product.price,
-      highPrice: product.price,
-      lowPrice: product.price,
+      priceCurrency: good.price,
+      highPrice: good.price,
+      lowPrice: good.price,
     }
   };
 
-  product.images = [{}, {}, {}, {}, {}];
+  good.images = [{}, {}, {}, {}, {}];
 
   return (
-    <ProductProvider>
+    <GoodProvider>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(productJsonLd)
+          __html: JSON.stringify(goodJsonLd)
         }}
       />
       <div className="mx-auto max-w-screen-2xl px-4">
@@ -75,7 +75,7 @@ export default async function ProductPage({ params }: { params: { id: number } }
               }
             >
               <Gallery
-                images={product.images.slice(0, 5).map((image: Image) => ({
+                images={good.images.slice(0, 5).map((image: Image) => ({
                   src: "https://picsum.photos/200",
                   altText: image.altText,
                 }))}
@@ -85,42 +85,42 @@ export default async function ProductPage({ params }: { params: { id: number } }
 
           <div className='basis-full lg:basis-2/6'>
             <Suspense fallback={null}>
-              <ProductDescription product={product} />
+              <GoodDescription good={good} />
             </Suspense>
           </div>
         </div>
-        {/*<RelatedProducts id={product.id} />*/}
+        {/*<RelatedGoods id={good.id} />*/}
       </div>
       <Footer />
-    </ProductProvider>
+    </GoodProvider>
   );
 }
 
-async function RelatedProducts({ id }: { id: number }) {
-  const relatedProducts = await getProductRecommendations(id)
+async function RelatedGoods({ id }: { id: number }) {
+  const relatedGoods = await getGoodRecommendations(id)
 
-  if (!relatedProducts.length) return null
+  if (!relatedGoods.length) return null
 
   return (
     <div className='py-8'>
-      <h2 className='mb-4 text-2xl font-bold'>Related Products</h2>
+      <h2 className='mb-4 text-2xl font-bold'>Related Goods</h2>
       <ul className="flex w-full gap-4 overflow-x-auto pt-1">
-        {relatedProducts.map((product) => (
+        {relatedGoods.map((good) => (
           <li
-            key={product.name}
+            key={good.name}
             className="aspect-square w-full flex-none min-[475px]:w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5"
           >
             <Link
               className="relative h-full w-full"
-              href={`/product/${product.name}`}
+              href={`/good/${good.name}`}
               prefetch={true}
             >
               <GridTileImage
-                alt={product.name}
+                alt={good.name}
                 label={{
-                  title: product.name,
-                  amount: product.price,
-                  // currencyCode: product.priceRange.maxVariantPrice.currencyCode
+                  title: good.name,
+                  amount: good.price,
+                  // currencyCode: good.priceRange.maxVariantPrice.currencyCode
                 }}
                 src={"https://picsum.photos/200"}
                 fill
@@ -133,3 +133,4 @@ async function RelatedProducts({ id }: { id: number }) {
     </div>
   );
 }
+

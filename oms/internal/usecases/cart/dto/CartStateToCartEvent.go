@@ -19,8 +19,8 @@ func newWorkerCartItems(in v1.CartItems) []*v2.WorkerCartItem {
 
 	for i, item := range in {
 		items[i] = &v2.WorkerCartItem{
-			ProductId: item.GetProductId().String(),
-			Quantity:  item.GetQuantity(),
+			GoodId:   item.GetGoodId().String(),
+			Quantity: item.GetQuantity(),
 		}
 	}
 

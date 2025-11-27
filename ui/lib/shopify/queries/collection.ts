@@ -1,4 +1,4 @@
-import productFragment from '../fragments/product';
+import goodFragment from '../fragments/good';
 import seoFragment from '../fragments/seo';
 
 const collectionFragment = /* GraphQL */ `
