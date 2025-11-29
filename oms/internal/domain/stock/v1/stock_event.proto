@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package domain.stock.v1;
+
+option go_package = "github.com/shortlink-org/shop/oms/internal/domain/stock/v1";
+
+import "google/protobuf/timestamp.proto";
+
+// StockChangeEvent - Event when stock quantity changes
+message StockChangeEvent {
+  // good_id is the good ID (UUID as string)
+  string good_id = 1;
+  // old_quantity is the previous stock quantity
+  uint32 old_quantity = 2;
+  // new_quantity is the new stock quantity
+  uint32 new_quantity = 3;
+  // timestamp is when the stock change occurred
+  google.protobuf.Timestamp timestamp = 4;
+}
+

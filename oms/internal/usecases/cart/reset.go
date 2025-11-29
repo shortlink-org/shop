@@ -18,5 +18,8 @@ func (uc *UC) Reset(ctx context.Context, customerId uuid.UUID) error {
 		return err
 	}
 
+	// Clear index for this customer
+	uc.goodsIndex.ClearCart(customerId)
+
 	return nil
 }

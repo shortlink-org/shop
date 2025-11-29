@@ -30,5 +30,10 @@ func (uc *UC) Add(ctx context.Context, in *v1.CartState) error {
 		return err
 	}
 
+	// Update index: add goods to customer's cart index
+	for _, item := range in.GetItems() {
+		uc.goodsIndex.AddGoodToCart(item.GetGoodId(), in.GetCustomerId())
+	}
+
 	return nil
 }

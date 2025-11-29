@@ -6,6 +6,7 @@ require (
 	github.com/authzed/authzed-go v1.7.0
 	github.com/google/uuid v1.6.0
 	github.com/google/wire v0.7.0
+	github.com/gorilla/websocket v1.5.3
 	github.com/shopspring/decimal v1.4.0
 	github.com/shortlink-org/go-sdk/config v0.0.0-20251124224022-c5d4e2f9eb74
 	github.com/shortlink-org/go-sdk/context v0.0.0-20251124224022-c5d4e2f9eb74

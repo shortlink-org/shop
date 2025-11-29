@@ -19,5 +19,10 @@ func (uc *UC) Remove(ctx context.Context, in *domain.CartState) error {
 		return err
 	}
 
+	// Update index: remove goods from customer's cart index
+	for _, item := range in.GetItems() {
+		uc.goodsIndex.RemoveGoodFromCart(item.GetGoodId(), in.GetCustomerId())
+	}
+
 	return nil
 }
