@@ -18,3 +18,17 @@ enum Event {
   // Get cart
   EVENT_GET = 4;
 }
+
+// EventTopic represents event topic names following canonical naming format:
+// {service}.{aggregate}.{event}.{version}
+// For OMS Service: oms.cart.{event}.v1
+enum EventTopic {
+  // Unspecified topic
+  EVENT_TOPIC_UNSPECIFIED = 0;
+  // oms.cart.item_added.v1 - CartItemAdded event
+  EVENT_TOPIC_CART_ITEM_ADDED = 1;
+  // oms.cart.item_removed.v1 - CartItemRemoved event
+  EVENT_TOPIC_CART_ITEM_REMOVED = 2;
+  // oms.cart.reset.v1 - CartReset event
+  EVENT_TOPIC_CART_RESET = 3;
+}

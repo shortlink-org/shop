@@ -1,0 +1,139 @@
+syntax = "proto3";
+
+package domain.order.events.v1;
+
+option go_package = "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/order/v1/events/v1";
+
+import "google/protobuf/timestamp.proto";
+import "domain/order/v1/common/v1/common.proto";
+
+// OrderCreated event - canonical name: oms.order.created.v1
+// Published when a new order is created
+// Delivery information (if needed) should be handled separately by Delivery Service
+message OrderCreated {
+  // Order ID
+  string order_id = 1;
+  // Customer ID
+  string customer_id = 2;
+  // Order items
+  repeated domain.order.common.v1.OrderItem items = 3;
+  // Order status
+  domain.order.common.v1.OrderStatus status = 4;
+  // Created at timestamp
+  google.protobuf.Timestamp created_at = 5;
+  // OccurredAt is the timestamp when the event occurred
+  google.protobuf.Timestamp occurred_at = 6;
+}
+
+// OrderCancelled event - canonical name: oms.order.cancelled.v1
+// Published when an order is cancelled
+message OrderCancelled {
+  // Order ID
+  string order_id = 1;
+  // Customer ID
+  string customer_id = 2;
+  // Order status
+  domain.order.common.v1.OrderStatus status = 3;
+  // Cancellation reason (optional)
+  string reason = 4;
+  // Cancelled at timestamp
+  google.protobuf.Timestamp cancelled_at = 5;
+  // OccurredAt is the timestamp when the event occurred
+  google.protobuf.Timestamp occurred_at = 6;
+}
+
+// OrderCompleted event - canonical name: oms.order.completed.v1
+// Published when an order is completed
+message OrderCompleted {
+  // Order ID
+  string order_id = 1;
+  // Customer ID
+  string customer_id = 2;
+  // Order status
+  domain.order.common.v1.OrderStatus status = 3;
+  // Completed at timestamp
+  google.protobuf.Timestamp completed_at = 4;
+  // OccurredAt is the timestamp when the event occurred
+  google.protobuf.Timestamp occurred_at = 5;
+}
+
+// OrderDeliveryRequestedEvent - canonical name: oms.order.delivery_requested.v1
+// Event when order is created with delivery info
+// This event is published to delivery service to request package acceptance
+message OrderDeliveryRequestedEvent {
+  // Order ID
+  string order_id = 1;
+  // Customer ID
+  string customer_id = 2;
+  // Pickup address
+  domain.order.common.v1.DeliveryAddress pickup_address = 3;
+  // Delivery address
+  domain.order.common.v1.DeliveryAddress delivery_address = 4;
+  // Delivery period
+  domain.order.common.v1.DeliveryPeriod delivery_period = 5;
+  // Package info
+  domain.order.common.v1.PackageInfo package_info = 6;
+  // Priority
+  domain.order.common.v1.DeliveryPriority priority = 7;
+  // Timestamp when event was created
+  google.protobuf.Timestamp created_at = 8;
+  // OccurredAt is the timestamp when the event occurred
+  google.protobuf.Timestamp occurred_at = 9;
+}
+
+// OrderDeliveryStatusUpdatedEvent - canonical name: oms.order.delivery_status_updated.v1
+// Event when delivery status is updated
+// This event is received from delivery service
+message OrderDeliveryStatusUpdatedEvent {
+  // Order ID
+  string order_id = 1;
+  // Package ID assigned by delivery service
+  string package_id = 2;
+  // Delivery status
+  domain.order.common.v1.DeliveryStatus status = 3;
+  // Timestamp when status was updated
+  google.protobuf.Timestamp updated_at = 4;
+  // Optional: courier ID if assigned
+  string courier_id = 5;
+  // OccurredAt is the timestamp when the event occurred
+  google.protobuf.Timestamp occurred_at = 6;
+}
+
+// OrderDeliveryCompletedEvent - canonical name: oms.order.delivery_completed.v1
+// Event when delivery is completed
+// This event is received from delivery service
+message OrderDeliveryCompletedEvent {
+  // Order ID
+  string order_id = 1;
+  // Package ID
+  string package_id = 2;
+  // Courier ID
+  string courier_id = 3;
+  // Timestamp when delivery was completed
+  google.protobuf.Timestamp delivered_at = 4;
+  // Delivery location
+  domain.order.common.v1.DeliveryLocation delivery_location = 5;
+  // OccurredAt is the timestamp when the event occurred
+  google.protobuf.Timestamp occurred_at = 6;
+}
+
+// OrderDeliveryFailedEvent - canonical name: oms.order.delivery_failed.v1
+// Event when delivery failed
+// This event is received from delivery service
+message OrderDeliveryFailedEvent {
+  // Order ID
+  string order_id = 1;
+  // Package ID
+  string package_id = 2;
+  // Courier ID
+  string courier_id = 3;
+  // Reason for failure
+  domain.order.common.v1.NotDeliveredReason reason = 4;
+  // Timestamp when delivery failed
+  google.protobuf.Timestamp failed_at = 5;
+  // Optional: failure description
+  string description = 6;
+  // OccurredAt is the timestamp when the event occurred
+  google.protobuf.Timestamp occurred_at = 7;
+}
+

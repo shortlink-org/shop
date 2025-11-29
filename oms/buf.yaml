@@ -1,13 +1,13 @@
 version: v2
 modules:
   - path: internal
-    name: buf.build/shortlink-org/shortlink-shop-oms
+    name: buf.build/shortlink-org/shop-oms
 deps:
   - buf.build/googleapis/googleapis
 lint:
   use:
     - COMMENTS
-    - DEFAULT
+    - STANDARD
   except:
     - ENUM_FIRST_VALUE_ZERO
     - FIELD_NOT_REQUIRED

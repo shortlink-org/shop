@@ -1,6 +1,6 @@
 # INCLUDE ==============================================================================================================
 # Include Makefile
-include $(ROOT_DIR)/ops/Makefile/docker.mk
+-include $(ROOT_DIR)/ops/Makefile/docker.mk
 
 ### Runnings ===========================================================================================================
 up: ## Run for development mode

@@ -1,0 +1,134 @@
+syntax = "proto3";
+
+package domain.order.common.v1;
+
+option go_package = "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/order/v1/common/v1";
+
+import "google/protobuf/timestamp.proto";
+
+// OrderStatus represents the status of an order
+enum OrderStatus {
+  // Unspecified
+  ORDER_STATUS_UNSPECIFIED = 0;
+  // Order has been placed but not yet processed
+  ORDER_STATUS_PENDING = 1;
+  // Order is currently being processed
+  ORDER_STATUS_PROCESSING = 2;
+  // Order has been completed
+  ORDER_STATUS_COMPLETED = 3;
+  // Order has been cancelled
+  ORDER_STATUS_CANCELLED = 4;
+}
+
+// DeliveryPriority levels for packages
+enum DeliveryPriority {
+  // Unspecified priority
+  DELIVERY_PRIORITY_UNSPECIFIED = 0;
+  // Normal priority delivery
+  DELIVERY_PRIORITY_NORMAL = 1;
+  // Urgent priority delivery
+  DELIVERY_PRIORITY_URGENT = 2;
+}
+
+// DeliveryStatus represents delivery status
+enum DeliveryStatus {
+  // Unspecified status
+  DELIVERY_STATUS_UNSPECIFIED = 0;
+  // Package accepted by delivery service
+  DELIVERY_STATUS_ACCEPTED = 1;
+  // Package assigned to courier
+  DELIVERY_STATUS_ASSIGNED = 2;
+  // Package in transit
+  DELIVERY_STATUS_IN_TRANSIT = 3;
+  // Package delivered successfully
+  DELIVERY_STATUS_DELIVERED = 4;
+  // Package not delivered
+  DELIVERY_STATUS_NOT_DELIVERED = 5;
+}
+
+// NotDeliveredReason represents reason for not delivered
+enum NotDeliveredReason {
+  // Unspecified reason
+  NOT_DELIVERED_REASON_UNSPECIFIED = 0;
+  // Customer not available at delivery address
+  NOT_DELIVERED_REASON_CUSTOMER_NOT_AVAILABLE = 1;
+  // Wrong address provided
+  NOT_DELIVERED_REASON_WRONG_ADDRESS = 2;
+  // Customer refused the delivery
+  NOT_DELIVERED_REASON_CUSTOMER_REFUSED = 3;
+  // Access denied to delivery address
+  NOT_DELIVERED_REASON_ACCESS_DENIED = 4;
+  // Package damaged during delivery
+  NOT_DELIVERED_REASON_PACKAGE_DAMAGED = 5;
+  // Other reason (requires description)
+  NOT_DELIVERED_REASON_OTHER = 6;
+}
+
+// OrderItem represents an order item
+message OrderItem {
+  // Good ID
+  string good_id = 1;
+  // Quantity
+  int32 quantity = 2;
+  // Price per item (Decimal as string to preserve precision)
+  string price = 3;
+}
+
+// DeliveryAddress represents a physical address with coordinates
+message DeliveryAddress {
+  // street is the street address
+  string street = 1;
+  // city is the city name
+  string city = 2;
+  // postal_code is the postal/zip code
+  string postal_code = 3;
+  // country is the country name
+  string country = 4;
+  // latitude is the latitude coordinate
+  double latitude = 5;
+  // longitude is the longitude coordinate
+  double longitude = 6;
+}
+
+// DeliveryPeriod represents the desired delivery time window
+message DeliveryPeriod {
+  // start_time is the start of desired delivery period
+  google.protobuf.Timestamp start_time = 1;
+  // end_time is the end of desired delivery period
+  google.protobuf.Timestamp end_time = 2;
+}
+
+// PackageInfo contains package physical characteristics
+message PackageInfo {
+  // weight_kg is the weight of the package in kilograms
+  double weight_kg = 1;
+  // dimensions is the package dimensions in "LxWxH" format
+  string dimensions = 2;
+}
+
+// DeliveryLocation represents a GPS location
+message DeliveryLocation {
+  // latitude is the latitude coordinate
+  double latitude = 1;
+  // longitude is the longitude coordinate
+  double longitude = 2;
+  // accuracy is the accuracy in meters
+  double accuracy = 3;
+  // timestamp is when the location was recorded
+  google.protobuf.Timestamp timestamp = 4;
+}
+
+// DeliveryInfo represents delivery information
+message DeliveryInfo {
+  // Pickup address
+  DeliveryAddress pickup_address = 1;
+  // Delivery address
+  DeliveryAddress delivery_address = 2;
+  // Delivery period
+  DeliveryPeriod delivery_period = 3;
+  // Package info
+  PackageInfo package_info = 4;
+  // Priority
+  DeliveryPriority priority = 5;
+}
+

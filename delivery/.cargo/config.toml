@@ -1,0 +1,4 @@
+[registries.buf]
+index = "sparse+https://buf.build/gen/cargo/"
+credential-provider = "cargo:token"
+

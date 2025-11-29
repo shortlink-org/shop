@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package domain.order.commands.v1;
+
+option go_package = "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/order/v1/commands/v1";
+
+import "google/protobuf/timestamp.proto";
+import "domain/order/v1/common/v1/common.proto";
+
+// CreateOrderCommand - Command to create a new order
+message CreateOrderCommand {
+  // Order ID
+  string order_id = 1;
+  // Customer ID
+  string customer_id = 2;
+  // Order items
+  repeated domain.order.common.v1.OrderItem items = 3;
+}
+
+// CancelOrderCommand - Command to cancel an order
+message CancelOrderCommand {
+  // Order ID
+  string order_id = 1;
+  // Cancellation reason (optional)
+  string reason = 2;
+}
+
+// CompleteOrderCommand - Command to complete an order
+message CompleteOrderCommand {
+  // Order ID
+  string order_id = 1;
+}
+
+// UpdateOrderCommand - Command to update order items
+message UpdateOrderCommand {
+  // Order ID
+  string order_id = 1;
+  // Updated order items
+  repeated domain.order.common.v1.OrderItem items = 2;
+}
+

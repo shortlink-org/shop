@@ -1,0 +1,170 @@
+syntax = "proto3";
+
+package domain.delivery.queries.v1;
+
+option go_package = "github.com/shortlink-org/shortlink/boundaries/shop/delivery/domain/delivery/queries/v1";
+
+import "google/protobuf/timestamp.proto";
+import "domain/delivery/common/v1/common.proto";
+
+// GetPackagePoolQuery - Query to get package pool with filters
+message GetPackagePoolQuery {
+  // Status filters
+  repeated domain.delivery.common.v1.PackageStatus status_filter = 1;
+  // Priority filters
+  repeated domain.delivery.common.v1.Priority priority_filter = 2;
+  // Region filter
+  string region_filter = 3;
+  // Created from timestamp
+  google.protobuf.Timestamp created_from = 4;
+  // Created to timestamp
+  google.protobuf.Timestamp created_to = 5;
+  // Filter by assigned courier
+  string courier_id = 6;
+  // Pagination
+  Pagination pagination = 7;
+  // Sort by
+  SortBy sort_by = 8;
+}
+
+// GetCourierPoolQuery - Query to get courier pool with filters
+message GetCourierPoolQuery {
+  // Status filters
+  repeated domain.delivery.common.v1.CourierStatus status_filter = 1;
+  // Transport type filters
+  repeated domain.delivery.common.v1.TransportType transport_type_filter = 2;
+  // Zone filter
+  string zone_filter = 3;
+  // Only available couriers (FREE status)
+  bool available_only = 4;
+  // Include current location
+  bool include_location = 5;
+  // Pagination
+  Pagination pagination = 6;
+  // Sort by
+  SortBy sort_by = 7;
+}
+
+// Pagination
+message Pagination {
+  // Page number
+  int32 page = 1;
+  // Page size (max 100)
+  int32 page_size = 2;
+}
+
+// SortBy options
+enum SortBy {
+  SORT_BY_UNSPECIFIED = 0;
+  SORT_BY_CREATED_AT = 1;
+  SORT_BY_PRIORITY = 2;
+  SORT_BY_DELIVERY_PERIOD_START = 3;
+  SORT_BY_DISTANCE = 4; // Requires courier location
+  SORT_BY_NAME = 5;
+  SORT_BY_RATING = 6;
+  SORT_BY_LOAD = 7;
+  SORT_BY_SUCCESSFUL_DELIVERIES = 8;
+}
+
+// GetPackagePoolResponse - Response for GetPackagePoolQuery
+message GetPackagePoolResponse {
+  // Packages
+  repeated Package packages = 1;
+  // Total count
+  int32 total_count = 2;
+  // Pagination info
+  PaginationInfo pagination = 3;
+}
+
+// GetCourierPoolResponse - Response for GetCourierPoolQuery
+message GetCourierPoolResponse {
+  // Couriers
+  repeated Courier couriers = 1;
+  // Total count
+  int32 total_count = 2;
+  // Pagination info
+  PaginationInfo pagination = 3;
+}
+
+// PaginationInfo
+message PaginationInfo {
+  // Current page
+  int32 current_page = 1;
+  // Page size
+  int32 page_size = 2;
+  // Total pages
+  int32 total_pages = 3;
+  // Total items
+  int32 total_items = 4;
+}
+
+// Package represents a package in the system
+message Package {
+  // Package ID
+  string package_id = 1;
+  // Order ID
+  string order_id = 2;
+  // Customer ID
+  string customer_id = 3;
+  // Pickup address
+  domain.delivery.common.v1.Address pickup_address = 4;
+  // Delivery address
+  domain.delivery.common.v1.Address delivery_address = 5;
+  // Delivery period
+  domain.delivery.common.v1.DeliveryPeriod delivery_period = 6;
+  // Package info
+  domain.delivery.common.v1.PackageInfo package_info = 7;
+  // Priority
+  domain.delivery.common.v1.Priority priority = 8;
+  // Package status
+  domain.delivery.common.v1.PackageStatus status = 9;
+  // Courier ID
+  string courier_id = 10;
+  // Created at timestamp
+  google.protobuf.Timestamp created_at = 11;
+  // Assigned at timestamp
+  google.protobuf.Timestamp assigned_at = 12;
+  // Delivered at timestamp
+  google.protobuf.Timestamp delivered_at = 13;
+  // Not delivered reason
+  string not_delivered_reason = 14;
+}
+
+// Courier represents a courier in the system
+message Courier {
+  // Courier ID
+  string courier_id = 1;
+  // Courier name
+  string name = 2;
+  // Courier phone
+  string phone = 3;
+  // Courier email
+  string email = 4;
+  // Transport type
+  domain.delivery.common.v1.TransportType transport_type = 5;
+  // Max distance in km
+  double max_distance_km = 6;
+  // Courier status
+  domain.delivery.common.v1.CourierStatus status = 7;
+  // Current load
+  int32 current_load = 8;
+  // Max load
+  int32 max_load = 9;
+  // Rating
+  double rating = 10;
+  // Work hours
+  domain.delivery.common.v1.WorkHours work_hours = 11;
+  // Work zone
+  string work_zone = 12;
+  // Current location (if include_location = true)
+  domain.delivery.common.v1.Location current_location = 13;
+  // Successful deliveries count
+  int32 successful_deliveries = 14;
+  // Failed deliveries count
+  int32 failed_deliveries = 15;
+  // Created at timestamp
+  google.protobuf.Timestamp created_at = 16;
+  // Last active at timestamp
+  google.protobuf.Timestamp last_active_at = 17;
+}
+

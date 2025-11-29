@@ -70,13 +70,19 @@ func NewOrderState(customerId uuid.UUID) *OrderState {
 }
 
 // onEnterState is the callback executed when entering a new state.
+// Domain layer should not depend on infrastructure (logging, stdout, etc.).
+// State transitions are pure domain logic; logging should be handled at the application layer.
 func (o *OrderState) onEnterState(ctx context.Context, from, to fsm.State, event fsm.Event) {
-	fmt.Printf("Order %s entered state '%s' due to event '%s'\n", o.id, to, event)
+	// Domain layer should not perform side effects like logging.
+	// State transition validation is handled before FSM transition in domain methods.
+	// Any logging/observability should be implemented at the application/infrastructure layer.
 }
 
 // onExitState is the callback executed when exiting a state.
+// Domain layer should not depend on infrastructure (logging, stdout, etc.).
 func (o *OrderState) onExitState(ctx context.Context, from, to fsm.State, event fsm.Event) {
-	fmt.Printf("Order %s exited state '%s' due to event '%s'\n", o.id, from, event)
+	// Domain layer should not perform side effects like logging.
+	// Any logging/observability should be implemented at the application/infrastructure layer.
 }
 
 // GetOrderID returns the unique identifier of the order.
@@ -106,6 +112,11 @@ func (o *OrderState) GetStatus() OrderStatus {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
+	return o.getStatusUnlocked()
+}
+
+// getStatusUnlocked returns the current status without locking (for internal use).
+func (o *OrderState) getStatusUnlocked() OrderStatus {
 	currentState := o.fsm.GetCurrentState()
 	for k, v := range OrderStatus_name {
 		if v == currentState.String() {
@@ -117,51 +128,105 @@ func (o *OrderState) GetStatus() OrderStatus {
 }
 
 // CreateOrder initializes the order with the provided items and transitions it to Processing state.
-func (o *OrderState) CreateOrder(ctx context.Context, items Items) error {
+// Domain layer should not depend on context.Context from application layer.
+// We use context.Background() internally for FSM, keeping domain pure.
+func (o *OrderState) CreateOrder(items Items) error {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
+	// Validate items before creating order (invariant: order must have valid items)
+	if err := ValidateOrderItems(items); err != nil {
+		return fmt.Errorf("cannot create order: %w", err)
+	}
+
+	// Create a defensive copy to prevent external modification
+	itemsCopy := make(Items, len(items))
+	copy(itemsCopy, items)
+
+	// Validate state transition before triggering FSM event
+	// (invariant: items must be valid before transitioning to PROCESSING)
+	currentStatus := o.getStatusUnlocked()
+	if err := ValidateOrderStateTransition(currentStatus, OrderStatus_ORDER_STATUS_PROCESSING, itemsCopy); err != nil {
+		return err
+	}
+
 	// Trigger the transition event to Processing.
-	err := o.fsm.TriggerEvent(ctx, fsm.Event(OrderStatus_ORDER_STATUS_PENDING.String()))
+	// Use context.Background() to keep domain layer independent of application context
+	err := o.fsm.TriggerEvent(context.Background(), fsm.Event(OrderStatus_ORDER_STATUS_PENDING.String()))
 	if err != nil {
 		return err
 	}
 
-	o.items = items
+	// Set items after successful transition (invariant: items are set only after validation)
+	o.items = itemsCopy
 	return nil
 }
 
 // UpdateOrder updates the order's items. It modifies existing items and adds new ones as needed.
-func (o *OrderState) UpdateOrder(ctx context.Context, items Items) error {
+// Domain layer should not depend on context.Context from application layer.
+func (o *OrderState) UpdateOrder(items Items) error {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
-	// Create a map for quick lookup of existing items.
-	itemMap := make(map[uuid.UUID]*Item)
+	// Cannot update order in terminal states
+	currentStatus := o.getStatusUnlocked()
+	if currentStatus == OrderStatus_ORDER_STATUS_COMPLETED || currentStatus == OrderStatus_ORDER_STATUS_CANCELLED {
+		return fmt.Errorf("cannot update order in %s state", currentStatus)
+	}
+
+	// Create a map for quick lookup of existing item indices.
+	itemIndexMap := make(map[uuid.UUID]int)
 	for i := range o.items {
-		itemMap[o.items[i].goodId] = &o.items[i]
+		itemIndexMap[o.items[i].goodId] = i
+	}
+
+	// Create updated items list
+	updatedItems := make(Items, 0, len(o.items)+len(items))
+
+	// First, update existing items
+	for i := range o.items {
+		updatedItems = append(updatedItems, o.items[i])
 	}
 
 	// Update quantities and prices of existing items or add new items.
 	for _, item := range items {
-		if existingItem, exists := itemMap[item.goodId]; exists {
-			existingItem.quantity = item.quantity
-			existingItem.price = item.price
+		if idx, exists := itemIndexMap[item.goodId]; exists {
+			// Validate updated item
+			if err := ValidateOrderItem(item); err != nil {
+				return fmt.Errorf("cannot update item %s: %w", item.goodId, err)
+			}
+			// Update existing item by index
+			updatedItems[idx].quantity = item.quantity
+			updatedItems[idx].price = item.price
 		} else {
-			o.items = append(o.items, item)
+			// Validate new item before adding
+			if err := ValidateOrderItem(item); err != nil {
+				return fmt.Errorf("cannot add item %s: %w", item.goodId, err)
+			}
+			// Append new items
+			updatedItems = append(updatedItems, item)
 		}
 	}
 
+	// Validate the resulting items list (invariant: order must have valid items)
+	if err := ValidateOrderItems(updatedItems); err != nil {
+		return fmt.Errorf("cannot update order: %w", err)
+	}
+
+	// Set updated items
+	o.items = updatedItems
 	return nil
 }
 
 // CancelOrder transitions the order to the Cancelled state.
-func (o *OrderState) CancelOrder(ctx context.Context) error {
+// Domain layer should not depend on context.Context from application layer.
+func (o *OrderState) CancelOrder() error {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
 	// Trigger the transition event to Cancel.
-	err := o.fsm.TriggerEvent(ctx, fsm.Event(OrderStatus_ORDER_STATUS_CANCELLED.String()))
+	// Use context.Background() to keep domain layer independent of application context
+	err := o.fsm.TriggerEvent(context.Background(), fsm.Event(OrderStatus_ORDER_STATUS_CANCELLED.String()))
 	if err != nil {
 		return err
 	}
@@ -170,12 +235,26 @@ func (o *OrderState) CancelOrder(ctx context.Context) error {
 }
 
 // CompleteOrder transitions the order to the Completed state.
-func (o *OrderState) CompleteOrder(ctx context.Context) error {
+// Domain layer should not depend on context.Context from application layer.
+func (o *OrderState) CompleteOrder() error {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
+	currentStatus := o.getStatusUnlocked()
+
+	// Validate state transition (invariant: can only complete orders in PROCESSING state)
+	if currentStatus != OrderStatus_ORDER_STATUS_PROCESSING {
+		return fmt.Errorf("cannot complete order in %s state, must be PROCESSING", currentStatus)
+	}
+
+	// Validate items before completing (invariant: order must have valid items to complete)
+	if err := ValidateOrderItems(o.items); err != nil {
+		return fmt.Errorf("cannot complete order with invalid items: %w", err)
+	}
+
 	// Trigger the transition event to Complete.
-	err := o.fsm.TriggerEvent(ctx, fsm.Event(OrderStatus_ORDER_STATUS_COMPLETED.String()))
+	// Use context.Background() to keep domain layer independent of application context
+	err := o.fsm.TriggerEvent(context.Background(), fsm.Event(OrderStatus_ORDER_STATUS_COMPLETED.String()))
 	if err != nil {
 		return err
 	}

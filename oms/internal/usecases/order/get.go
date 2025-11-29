@@ -14,7 +14,7 @@ import (
 func (uc *UC) Get(ctx context.Context, orderId uuid.UUID) (*v1.OrderState, error) {
 	workflowId := fmt.Sprintf("order-%s", orderId.String())
 
-	resp, err := uc.temporalClient.QueryWorkflow(ctx, workflowId, "", v1.Event_EVENT_GET.String(), nil)
+	resp, err := uc.temporalClient.QueryWorkflow(ctx, workflowId, "", v1.WorkflowQueryGet, nil)
 	if err != nil {
 		return nil, err
 	}

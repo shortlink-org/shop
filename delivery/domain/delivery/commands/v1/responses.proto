@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package domain.delivery.commands.v1;
+
+option go_package = "github.com/shortlink-org/shortlink/boundaries/shop/delivery/domain/delivery/commands/v1";
+
+import "google/protobuf/timestamp.proto";
+import "domain/delivery/common/v1/common.proto";
+
+// AcceptOrderResponse - Response for AcceptOrderCommand
+message AcceptOrderResponse {
+  // Package ID
+  string package_id = 1;
+  // Package status
+  domain.delivery.common.v1.PackageStatus status = 2;
+  // Created at timestamp
+  google.protobuf.Timestamp created_at = 3;
+}
+
+// AssignOrderResponse - Response for AssignOrderCommand
+message AssignOrderResponse {
+  // Package ID
+  string package_id = 1;
+  // Courier ID
+  string courier_id = 2;
+  // Assigned at timestamp
+  google.protobuf.Timestamp assigned_at = 3;
+  // Package status
+  domain.delivery.common.v1.PackageStatus status = 4;
+}
+
+// DeliverOrderResponse - Response for DeliverOrderCommand
+message DeliverOrderResponse {
+  // Package ID
+  string package_id = 1;
+  // Package status
+  domain.delivery.common.v1.PackageStatus status = 2;
+  // Updated at timestamp
+  google.protobuf.Timestamp updated_at = 3;
+}
+
+// UpdateCourierLocationResponse - Response for UpdateCourierLocationCommand
+message UpdateCourierLocationResponse {
+  // Courier ID
+  string courier_id = 1;
+  // Updated at timestamp
+  google.protobuf.Timestamp updated_at = 2;
+  // Location saved flag
+  bool location_saved = 3;
+}
+
+// RegisterCourierResponse - Response for RegisterCourierCommand
+message RegisterCourierResponse {
+  // Courier ID
+  string courier_id = 1;
+  // Courier status
+  domain.delivery.common.v1.CourierStatus status = 2;
+  // Temporary password for first login
+  string temporary_password = 3;
+  // Created at timestamp
+  google.protobuf.Timestamp created_at = 4;
+}
+

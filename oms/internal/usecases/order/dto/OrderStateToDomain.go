@@ -1,7 +1,6 @@
 package dto
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -39,8 +38,9 @@ func OrderStateToDomain(in *v3.OrderState) (*v1.OrderState, error) {
 		builder.AddItem(goodID, item.GetQuantity(), price)
 	}
 
-	// Set the status of the order
-	builder.SetStatus(context.TODO(), in.GetStatus())
+	// Set the status by replaying events (preserves FSM invariants)
+	// Domain layer no longer depends on context.Context
+	builder.SetStatus(in.GetStatus())
 
 	// Build the OrderState
 	orderState, err := builder.Build()

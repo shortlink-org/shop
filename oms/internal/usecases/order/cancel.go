@@ -12,7 +12,7 @@ import (
 func (uc *UC) Cancel(ctx context.Context, orderId uuid.UUID) error {
 	workflowId := fmt.Sprintf("order-%s", orderId.String())
 
-	err := uc.temporalClient.SignalWorkflow(ctx, workflowId, "", domain.Event_EVENT_CANCEL.String(), nil)
+	err := uc.temporalClient.SignalWorkflow(ctx, workflowId, "", domain.WorkflowSignalCancel, nil)
 	if err != nil {
 		return err
 	}

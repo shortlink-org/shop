@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package domain.delivery.commands.v1;
+
+import "google/protobuf/timestamp.proto";
+import "domain/delivery/common/v1/common.proto";
+
+// AcceptOrderCommand - Command to accept an order from OMS
+message AcceptOrderCommand {
+  // Order ID
+  string order_id = 1;
+  // Customer ID
+  string customer_id = 2;
+  // Pickup address
+  domain.delivery.common.v1.Address pickup_address = 3;
+  // Delivery address
+  domain.delivery.common.v1.Address delivery_address = 4;
+  // Delivery period
+  domain.delivery.common.v1.DeliveryPeriod delivery_period = 5;
+  // Package info
+  domain.delivery.common.v1.PackageInfo package_info = 6;
+  // Priority
+  domain.delivery.common.v1.Priority priority = 7;
+}
+
+// AssignOrderCommand - Command to assign a package to a courier
+message AssignOrderCommand {
+  // Package ID
+  string package_id = 1;
+  // Assignment type
+  oneof assignment_type {
+    // Manual assignment - courier ID
+    string courier_id = 2;
+    // Auto dispatch
+    bool auto_assign = 3;
+  }
+}
+
+// DeliverOrderCommand - Command for courier to confirm delivery
+message DeliverOrderCommand {
+  // Package ID
+  string package_id = 1;
+  // Courier ID
+  string courier_id = 2;
+  // Delivery status
+  domain.delivery.common.v1.DeliveryStatus status = 3;
+  // Reason (required if status is NOT_DELIVERED)
+  string reason = 4;
+  // Optional: delivery confirmation photo
+  bytes photo = 5;
+  // Optional: customer signature
+  bytes customer_signature = 6;
+  // Courier's current location after delivery
+  domain.delivery.common.v1.Location current_location = 7;
+}
+
+// UpdateCourierLocationCommand - Command to update courier location
+message UpdateCourierLocationCommand {
+  // Courier ID
+  string courier_id = 1;
+  // Courier location
+  domain.delivery.common.v1.Location location = 2;
+}
+
+// RegisterCourierCommand - Command to register a new courier
+message RegisterCourierCommand {
+  // Courier name
+  string name = 1;
+  // Courier phone
+  string phone = 2;
+  // Courier email
+  string email = 3;
+  // Transport type
+  domain.delivery.common.v1.TransportType transport_type = 4;
+  // Max distance in km
+  double max_distance_km = 5;
+  // Work zone (region/district)
+  string work_zone = 6;
+  // Work hours
+  domain.delivery.common.v1.WorkHours work_hours = 7;
+  // FCM/APNS token for notifications
+  string push_token = 8;
+}
+

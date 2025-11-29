@@ -1,10 +1,10 @@
 package v1
 
-import (
-	v2 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
-)
-
+// OrderEvent represents an order event in workflow.
+// Note: This is a legacy structure. Use domain event messages (OrderCreated, OrderCancelled, etc.) instead.
 type OrderEvent struct {
-	Event v2.Event
+	// EventType is the type of event (e.g., "order.created", "order.cancelled")
+	EventType string
+	// Items are the order items
 	Items []*WorkerOrderItem
 }

@@ -1,0 +1,176 @@
+syntax = "proto3";
+
+package domain.delivery.events.v1;
+
+import "google/protobuf/timestamp.proto";
+import "domain/delivery/common/v1/common.proto";
+
+// PackageAcceptedEvent - canonical name: delivery.package.accepted.v1
+// Event when a package is accepted into the pool
+message PackageAcceptedEvent {
+  // Package ID
+  string package_id = 1;
+  // Order ID
+  string order_id = 2;
+  // Customer ID
+  string customer_id = 3;
+  // Package status
+  domain.delivery.common.v1.PackageStatus status = 4;
+  // Created at timestamp
+  google.protobuf.Timestamp created_at = 5;
+  // OccurredAt is the timestamp when the event occurred
+  google.protobuf.Timestamp occurred_at = 6;
+}
+
+// PackageAssignedEvent - canonical name: delivery.package.assigned.v1
+// Event when a package is assigned to a courier
+message PackageAssignedEvent {
+  // Package ID
+  string package_id = 1;
+  // Courier ID
+  string courier_id = 2;
+  // Package status
+  domain.delivery.common.v1.PackageStatus status = 3;
+  // Assigned at timestamp
+  google.protobuf.Timestamp assigned_at = 4;
+  // Package details for courier notification
+  domain.delivery.common.v1.Address pickup_address = 5;
+  domain.delivery.common.v1.Address delivery_address = 6;
+  domain.delivery.common.v1.DeliveryPeriod delivery_period = 7;
+  // Customer phone
+  string customer_phone = 8;
+  // OccurredAt is the timestamp when the event occurred
+  google.protobuf.Timestamp occurred_at = 9;
+}
+
+// PackageInTransitEvent - canonical name: delivery.package.in_transit.v1
+// Event when package is picked up and in transit
+message PackageInTransitEvent {
+  // Package ID
+  string package_id = 1;
+  // Courier ID
+  string courier_id = 2;
+  // Package status
+  domain.delivery.common.v1.PackageStatus status = 3;
+  // In transit at timestamp
+  google.protobuf.Timestamp in_transit_at = 4;
+  // Courier location
+  domain.delivery.common.v1.Location courier_location = 5;
+  // OccurredAt is the timestamp when the event occurred
+  google.protobuf.Timestamp occurred_at = 6;
+}
+
+// PackageDeliveredEvent - canonical name: delivery.package.delivered.v1
+// Event when package is successfully delivered
+message PackageDeliveredEvent {
+  // Package ID
+  string package_id = 1;
+  // Order ID
+  string order_id = 2;
+  // Courier ID
+  string courier_id = 3;
+  // Package status
+  domain.delivery.common.v1.PackageStatus status = 4;
+  // Delivered at timestamp
+  google.protobuf.Timestamp delivered_at = 5;
+  // Delivery location
+  domain.delivery.common.v1.Location delivery_location = 6;
+  // Optional: delivery confirmation photo
+  bytes photo = 7;
+  // Optional: customer signature
+  bytes customer_signature = 8;
+  // OccurredAt is the timestamp when the event occurred
+  google.protobuf.Timestamp occurred_at = 9;
+}
+
+// PackageNotDeliveredEvent - canonical name: delivery.package.not_delivered.v1
+// Event when package delivery failed
+message PackageNotDeliveredEvent {
+  // Package ID
+  string package_id = 1;
+  // Order ID
+  string order_id = 2;
+  // Courier ID
+  string courier_id = 3;
+  // Package status
+  domain.delivery.common.v1.PackageStatus status = 4;
+  // Not delivered reason
+  domain.delivery.common.v1.NotDeliveredReason reason = 5;
+  // Additional description if reason is OTHER
+  string reason_description = 6;
+  // Not delivered at timestamp
+  google.protobuf.Timestamp not_delivered_at = 7;
+  // Courier location
+  domain.delivery.common.v1.Location courier_location = 8;
+  // OccurredAt is the timestamp when the event occurred
+  google.protobuf.Timestamp occurred_at = 9;
+}
+
+// CourierRegisteredEvent - canonical name: delivery.courier.registered.v1
+// Event when a new courier is registered
+message CourierRegisteredEvent {
+  // Courier ID
+  string courier_id = 1;
+  // Courier name
+  string name = 2;
+  // Courier email
+  string email = 3;
+  // Courier phone
+  string phone = 4;
+  // Transport type
+  domain.delivery.common.v1.TransportType transport_type = 5;
+  // Courier status
+  domain.delivery.common.v1.CourierStatus status = 6;
+  // Registered at timestamp
+  google.protobuf.Timestamp registered_at = 7;
+  // OccurredAt is the timestamp when the event occurred
+  google.protobuf.Timestamp occurred_at = 8;
+}
+
+// CourierLocationUpdatedEvent - canonical name: delivery.courier.location_updated.v1
+// Event when courier location is updated
+message CourierLocationUpdatedEvent {
+  // Courier ID
+  string courier_id = 1;
+  // Courier location
+  domain.delivery.common.v1.Location location = 2;
+  // Updated at timestamp
+  google.protobuf.Timestamp updated_at = 3;
+  // OccurredAt is the timestamp when the event occurred
+  google.protobuf.Timestamp occurred_at = 4;
+}
+
+// CourierStatusChangedEvent - canonical name: delivery.courier.status_changed.v1
+// Event when courier status changes
+message CourierStatusChangedEvent {
+  // Courier ID
+  string courier_id = 1;
+  // Old status
+  domain.delivery.common.v1.CourierStatus old_status = 2;
+  // New status
+  domain.delivery.common.v1.CourierStatus new_status = 3;
+  // Changed at timestamp
+  google.protobuf.Timestamp changed_at = 4;
+  // Optional reason for status change
+  string reason = 5;
+  // OccurredAt is the timestamp when the event occurred
+  google.protobuf.Timestamp occurred_at = 6;
+}
+
+// PackageRequiresHandlingEvent - canonical name: delivery.package.requires_handling.v1
+// Event when package requires manual handling
+message PackageRequiresHandlingEvent {
+  // Package ID
+  string package_id = 1;
+  // Order ID
+  string order_id = 2;
+  // Package status
+  domain.delivery.common.v1.PackageStatus status = 3;
+  // Reason for manual handling
+  string reason = 4;
+  // Requires handling at timestamp
+  google.protobuf.Timestamp requires_handling_at = 5;
+  // OccurredAt is the timestamp when the event occurred
+  google.protobuf.Timestamp occurred_at = 6;
+}
+

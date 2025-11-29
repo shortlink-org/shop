@@ -14,7 +14,7 @@ func Workflow(ctx workflow.Context, orderId, customerId uuid.UUID, in v2.Items) 
 	state := v2.NewOrderState(customerId)
 
 	// Set up query handler for getting order state
-	err := workflow.SetQueryHandler(ctx, v2.Event_EVENT_GET.String(), func() (*v3.OrderState, error) {
+	err := workflow.SetQueryHandler(ctx, v2.WorkflowQueryGet, func() (*v3.OrderState, error) {
 		return dto.OrderStateToDomain(state), nil
 	})
 	if err != nil {
@@ -24,8 +24,8 @@ func Workflow(ctx workflow.Context, orderId, customerId uuid.UUID, in v2.Items) 
 	// https://docs.temporal.io/docs/concepts/workflows/#workflows-have-options
 	logger := workflow.GetLogger(ctx)
 
-	cancelOrderChannel := workflow.GetSignalChannel(ctx, v2.Event_EVENT_CANCEL.String())
-	completeOrderChannel := workflow.GetSignalChannel(ctx, v2.Event_EVENT_COMPLETE.String())
+	cancelOrderChannel := workflow.GetSignalChannel(ctx, v2.WorkflowSignalCancel)
+	completeOrderChannel := workflow.GetSignalChannel(ctx, v2.WorkflowSignalComplete)
 
 	selector := workflow.NewSelector(ctx)
 

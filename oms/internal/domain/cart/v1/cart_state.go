@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/google/uuid"
@@ -24,9 +25,16 @@ func NewCartState(customerId uuid.UUID) *CartState {
 	}
 }
 
-// GetItems returns the value of the items field.
+// GetItems returns a copy of the cart items.
 func (m *CartState) GetItems() CartItems {
-	return m.items
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	// Return a copy to prevent external modification and race conditions
+	itemsCopy := make(CartItems, len(m.items))
+	copy(itemsCopy, m.items)
+
+	return itemsCopy
 }
 
 // GetCustomerId returns the value of the customerId field.
@@ -35,35 +43,62 @@ func (m *CartState) GetCustomerId() uuid.UUID {
 }
 
 // AddItem adds an item to the cart.
-func (m *CartState) AddItem(item CartItem) {
+// If the item already exists, it increments the quantity immutably.
+func (m *CartState) AddItem(item CartItem) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	// if the item already exists in the cart, increment the quantity
+	// Validate item before adding
+	if !item.IsValid() {
+		return fmt.Errorf("invalid cart item: goodId=%s, quantity=%d", item.GetGoodId(), item.GetQuantity())
+	}
+
+	// Check if the item already exists in the cart
 	for i, cartItem := range m.items {
-		if cartItem.goodId == item.goodId {
-			m.items[i].quantity += item.quantity
-			return
+		if cartItem.GetGoodId() == item.GetGoodId() {
+			// Create a new item with updated quantity (immutable update)
+			updatedItem, err := cartItem.WithQuantity(cartItem.GetQuantity() + item.GetQuantity())
+			if err != nil {
+				return fmt.Errorf("failed to update item quantity: %w", err)
+			}
+			m.items[i] = updatedItem
+			return nil
 		}
 	}
 
+	// Item doesn't exist, add it
 	m.items = append(m.items, item)
+	return nil
 }
 
 // RemoveItem removes an item from the cart.
-func (m *CartState) RemoveItem(item CartItem) {
+// If the item exists, it decrements the quantity immutably.
+func (m *CartState) RemoveItem(item CartItem) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	// if the item already exists in the cart, decrement the quantity
+	// Find the item in the cart
 	for i, cartItem := range m.items {
-		if cartItem.goodId == item.goodId {
-			m.items[i].quantity -= item.quantity
-			if m.items[i].quantity <= 0 {
+		if cartItem.GetGoodId() == item.GetGoodId() {
+			newQuantity := cartItem.GetQuantity() - item.GetQuantity()
+			if newQuantity <= 0 {
+				// Remove the item completely
 				m.items = append(m.items[:i], m.items[i+1:]...)
+				return nil
 			}
+			
+			// Create a new item with updated quantity (immutable update)
+			updatedItem, err := cartItem.WithQuantity(newQuantity)
+			if err != nil {
+				return fmt.Errorf("failed to update item quantity: %w", err)
+			}
+			m.items[i] = updatedItem
+			return nil
 		}
 	}
+
+	// Item not found, nothing to remove
+	return nil
 }
 
 // Reset resets the cart.

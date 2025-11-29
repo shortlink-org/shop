@@ -37,7 +37,7 @@ func TestOrderState(t *testing.T) {
 			NewItem(fixedGoodID2, 1, decimal.NewFromFloat(9.99)),
 		}
 
-		err := orderState.CreateOrder(ctx, items)
+		err := orderState.CreateOrder(items)
 		require.NoError(t, err, "CreateOrder should not return an error")
 		require.Equal(t, OrderStatus_ORDER_STATUS_PROCESSING, orderState.GetStatus(), "Status should transition to Processing")
 		require.Equal(t, items, orderState.GetItems(), "Items should match the created items")
@@ -49,7 +49,7 @@ func TestOrderState(t *testing.T) {
 		initialItems := Items{
 			NewItem(fixedGoodID1, 2, decimal.NewFromFloat(19.99)),
 		}
-		err := orderState.CreateOrder(ctx, initialItems)
+		err := orderState.CreateOrder(initialItems)
 		require.NoError(t, err, "CreateOrder should not return an error")
 
 		updatedItems := Items{
@@ -57,7 +57,7 @@ func TestOrderState(t *testing.T) {
 			NewItem(fixedGoodID2, 1, decimal.NewFromFloat(9.99)),
 		}
 
-		err = orderState.UpdateOrder(ctx, updatedItems)
+		err = orderState.UpdateOrder(updatedItems)
 		require.NoError(t, err, "UpdateOrder should not return an error")
 		require.Equal(t, updatedItems, orderState.GetItems(), "Items should reflect the updates")
 	})
@@ -68,10 +68,10 @@ func TestOrderState(t *testing.T) {
 		items := Items{
 			NewItem(fixedGoodID1, 2, decimal.NewFromFloat(19.99)),
 		}
-		err := orderState.CreateOrder(ctx, items)
+		err := orderState.CreateOrder(items)
 		require.NoError(t, err, "CreateOrder should not return an error")
 
-		err = orderState.CancelOrder(ctx)
+		err = orderState.CancelOrder()
 		require.NoError(t, err, "CancelOrder should not return an error")
 		require.Equal(t, OrderStatus_ORDER_STATUS_CANCELLED, orderState.GetStatus(), "Status should transition to Cancelled")
 	})
@@ -82,10 +82,10 @@ func TestOrderState(t *testing.T) {
 		items := Items{
 			NewItem(fixedGoodID1, 2, decimal.NewFromFloat(19.99)),
 		}
-		err := orderState.CreateOrder(ctx, items)
+		err := orderState.CreateOrder(items)
 		require.NoError(t, err, "CreateOrder should not return an error")
 
-		err = orderState.CompleteOrder(ctx)
+		err = orderState.CompleteOrder()
 		require.NoError(t, err, "CompleteOrder should not return an error")
 		require.Equal(t, OrderStatus_ORDER_STATUS_COMPLETED, orderState.GetStatus(), "Status should transition to Completed")
 	})
@@ -98,7 +98,7 @@ func TestOrderState(t *testing.T) {
 			NewItem(fixedGoodID2, 1, decimal.NewFromFloat(9.99)),
 		}
 
-		err := orderState.CreateOrder(ctx, items)
+		err := orderState.CreateOrder(items)
 		require.NoError(t, err, "CreateOrder should not return an error")
 
 		updatedItems := Items{
@@ -109,10 +109,10 @@ func TestOrderState(t *testing.T) {
 		var wg sync.WaitGroup
 		wg.Add(2)
 
-		// Use separate contexts for each goroutine to simulate independent operations.
+		// Simulate concurrent operations
 		go func() {
 			defer wg.Done()
-			err := orderState.UpdateOrder(ctx, updatedItems)
+			err := orderState.UpdateOrder(updatedItems)
 			// It's possible that UpdateOrder happens before or after CancelOrder.
 			// Depending on the FSM, updating after cancellation might fail or be allowed.
 			// Here, we assume it succeeds or fails gracefully.
@@ -123,7 +123,7 @@ func TestOrderState(t *testing.T) {
 
 		go func() {
 			defer wg.Done()
-			err := orderState.CancelOrder(ctx)
+			err := orderState.CancelOrder()
 			if err != nil {
 				t.Logf("CancelOrder encountered an error: %v", err)
 			}
@@ -166,7 +166,7 @@ func TestOrderState(t *testing.T) {
 		})
 
 		// Transition: Pending -> Processing
-		err := orderState.CreateOrder(ctx, Items{
+		err := orderState.CreateOrder(Items{
 			NewItem(fixedGoodID1, 2, decimal.NewFromFloat(19.99)),
 		})
 		require.NoError(t, err, "CreateOrder should transition state to Processing")
@@ -184,7 +184,7 @@ func TestOrderState(t *testing.T) {
 		callbackMu.Unlock()
 
 		// Transition: Processing -> Completed
-		err = orderState.CompleteOrder(ctx)
+		err = orderState.CompleteOrder()
 		require.NoError(t, err, "CompleteOrder should transition state to Completed")
 
 		// Verify callbacks.
@@ -199,41 +199,15 @@ func TestOrderState(t *testing.T) {
 		orderState := NewOrderState(fixedCustomerID)
 
 		// Attempt to cancel the order while it's in Pending state.
-		err := orderState.CancelOrder(ctx)
+		err := orderState.CancelOrder()
 		require.NoError(t, err, "CancelOrder should transition state to Cancelled from Pending")
 
 		// Attempt to complete a Cancelled order.
-		err = orderState.CompleteOrder(ctx)
+		err = orderState.CompleteOrder()
 		require.Error(t, err, "CompleteOrder should return an error when transitioning from Cancelled")
 		require.Equal(t, OrderStatus_ORDER_STATUS_CANCELLED, orderState.GetStatus(), "Status should remain Cancelled after invalid transition")
 	})
 
-	t.Run("ContextCancellation", func(t *testing.T) {
-		orderState := NewOrderState(fixedCustomerID)
-
-		// Create a context that gets canceled immediately.
-		ctx, cancel := context.WithCancel(context.Background())
-		cancel()
-
-		// Attempt to trigger a transition with a canceled context.
-		err := orderState.CreateOrder(ctx, Items{
-			NewItem(fixedGoodID1, 1, decimal.NewFromFloat(9.99)),
-		})
-
-		// Depending on FSM implementation, it might handle context cancellation.
-		// For this example, assuming FSM.TriggerEvent checks for context cancellation.
-		// If FSM.TriggerEvent does not handle it, the transition occurs.
-		// Adjust the assertion based on actual FSM behavior.
-
-		// Since the context was canceled, and assuming FSM.TriggerEvent respects it:
-		if err != nil {
-			require.Error(t, err, "CreateOrder should return an error when context is canceled")
-			require.Equal(t, OrderStatus_ORDER_STATUS_PENDING, orderState.GetStatus(), "Status should remain Pending after canceled context")
-			require.Empty(t, orderState.GetItems(), "Items should not be added after canceled context")
-		} else {
-			// If FSM.TriggerEvent does not respect context cancellation, the transition occurs.
-			require.Equal(t, OrderStatus_ORDER_STATUS_PROCESSING, orderState.GetStatus(), "Status should transition to Processing despite canceled context")
-			require.Equal(t, 1, len(orderState.GetItems()), "Items should be added despite canceled context")
-		}
-	})
+	// ContextCancellation test removed: domain layer no longer depends on context.Context
+	// Domain methods use context.Background() internally for FSM, keeping domain pure
 }

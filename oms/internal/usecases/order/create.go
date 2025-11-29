@@ -9,6 +9,7 @@ import (
 
 	v2 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 	v1 "github.com/shortlink-org/shop/oms/internal/domain/queue/v1"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/temporal"
 	order_workflow "github.com/shortlink-org/shop/oms/internal/workers/order/workflow"
 )
 
@@ -17,7 +18,7 @@ func (uc *UC) Create(ctx context.Context, orderId uuid.UUID, customerId uuid.UUI
 
 	_, err := uc.temporalClient.ExecuteWorkflow(ctx, client.StartWorkflowOptions{
 		ID:        workflowId,
-		TaskQueue: v1.ORDER_TASK_QUEUE,
+		TaskQueue: temporal.GetQueueName(v1.OrderTaskQueue),
 	}, order_workflow.Workflow, orderId, customerId, in)
 	if err != nil {
 		return err

@@ -1,13 +1,14 @@
 version: v2
 modules:
-  - path: domain
-    name: buf.build/shortlink-org/delivery
+  - path: .
+    name: buf.build/shortlink-org/shop-delivery
 deps:
   - buf.build/googleapis/googleapis
+  - buf.build/shortlink-org/shop-oms
 lint:
   use:
     - COMMENTS
-    - DEFAULT
+    - STANDARD
   except:
     - ENUM_FIRST_VALUE_ZERO
     - FIELD_NOT_REQUIRED

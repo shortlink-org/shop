@@ -8,12 +8,13 @@ import (
 	"go.temporal.io/sdk/worker"
 
 	v1 "github.com/shortlink-org/shop/oms/internal/domain/queue/v1"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/temporal"
 	cart_workflow "github.com/shortlink-org/shop/oms/internal/workers/cart/workflow"
 )
 
 func New(ctx context.Context, c client.Client, log logger.Logger) (worker.Worker, error) {
 	// This worker hosts both Worker and Activity functions
-	w := worker.New(c, v1.CART_TASK_QUEUE, worker.Options{})
+	w := worker.New(c, temporal.GetQueueName(v1.CartTaskQueue), worker.Options{})
 
 	w.RegisterWorkflow(cart_workflow.Workflow)
 

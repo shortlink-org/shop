@@ -7,7 +7,7 @@ option go_package = "github.com/shortlink-org/shortlink/boundaries/shop/oms/inte
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/field_mask.proto";
-import "domain/order/v1/event.proto";
+import "domain/order/v1/common/v1/common.proto";
 
 // Define the Order message
 message OrderState {
@@ -18,7 +18,7 @@ message OrderState {
   // List of items in the order
   repeated OrderItem items = 3;
   // Current status of the order
-  domain.order.v1.OrderStatus status = 4;
+  domain.order.common.v1.OrderStatus status = 4;
   // Timestamp for when the order was created
   google.protobuf.Timestamp created_at = 5;
   // Timestamp for when the order was last updated
