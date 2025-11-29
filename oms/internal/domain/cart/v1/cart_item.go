@@ -36,3 +36,8 @@ func (c CartItem) GetGoodId() uuid.UUID {
 func (c CartItem) GetQuantity() int32 {
 	return c.quantity
 }
+
+// GetPrice returns the price.
+func (c CartItem) GetPrice() decimal.Decimal {
+	return c.price
+}
