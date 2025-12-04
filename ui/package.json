@@ -19,7 +19,7 @@
     "@heroicons/react": "^2.2.0",
     "@types/react-dom": "^19.2.3",
     "clsx": "^2.1.1",
-    "geist": "^1.4.2",
+    "geist": "^1.5.1",
     "next": "16.0.7",
     "react": "19.2.0",
     "react-dom": "19.2.0",
