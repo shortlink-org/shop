@@ -1,14 +1,17 @@
 package v1
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+	"github.com/shortlink-org/shop/oms/internal/domain/order/v1/vo/address"
+)
 
 // DeliveryInfo represents delivery information for an order.
 // This is a value object that aggregates delivery-related data.
 type DeliveryInfo struct {
 	// pickupAddress is the address where the package will be picked up
-	pickupAddress *DeliveryAddress
+	pickupAddress address.Address
 	// deliveryAddress is the address where the package should be delivered
-	deliveryAddress *DeliveryAddress
+	deliveryAddress address.Address
 	// deliveryPeriod is the desired delivery time window
 	deliveryPeriod DeliveryPeriod
 	// packageInfo contains physical characteristics of the package
@@ -30,15 +33,15 @@ const (
 
 // NewDeliveryInfo creates a new DeliveryInfo value object.
 func NewDeliveryInfo(
-	pickupAddress *DeliveryAddress,
-	deliveryAddress *DeliveryAddress,
+	pickupAddr address.Address,
+	deliveryAddr address.Address,
 	deliveryPeriod DeliveryPeriod,
 	packageInfo PackageInfo,
 	priority DeliveryPriority,
 ) DeliveryInfo {
 	return DeliveryInfo{
-		pickupAddress:   pickupAddress,
-		deliveryAddress: deliveryAddress,
+		pickupAddress:   pickupAddr,
+		deliveryAddress: deliveryAddr,
 		deliveryPeriod:  deliveryPeriod,
 		packageInfo:     packageInfo,
 		priority:        priority,
@@ -46,12 +49,12 @@ func NewDeliveryInfo(
 }
 
 // GetPickupAddress returns the pickup address.
-func (d DeliveryInfo) GetPickupAddress() *DeliveryAddress {
+func (d DeliveryInfo) GetPickupAddress() address.Address {
 	return d.pickupAddress
 }
 
 // GetDeliveryAddress returns the delivery address.
-func (d DeliveryInfo) GetDeliveryAddress() *DeliveryAddress {
+func (d DeliveryInfo) GetDeliveryAddress() address.Address {
 	return d.deliveryAddress
 }
 
@@ -82,8 +85,8 @@ func (d DeliveryInfo) GetPriority() DeliveryPriority {
 
 // IsValid checks if the delivery info is valid.
 func (d DeliveryInfo) IsValid() bool {
-	return d.pickupAddress != nil && IsDeliveryAddressValid(d.pickupAddress) &&
-		d.deliveryAddress != nil && IsDeliveryAddressValid(d.deliveryAddress) &&
+	return d.pickupAddress.IsValid() &&
+		d.deliveryAddress.IsValid() &&
 		d.deliveryPeriod.IsValid() &&
 		d.packageInfo.IsValid()
 }
