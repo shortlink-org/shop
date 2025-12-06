@@ -1,0 +1,15 @@
+# Cursor AI Rules
+
+## Git Commit Messages
+- Always use English for git commit messages
+- Follow conventional commit format: `type(scope): description`
+- Examples: `feat: add feature`, `fix: resolve bug`, `refactor: improve code`
+
+## Code Style
+- Follow existing code style and patterns in the repository
+- Maintain consistency with project conventions
+
+## Language
+- Use English for code comments, documentation, and git commits
+- User communication can be in Russian if preferred
+
