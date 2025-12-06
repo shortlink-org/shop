@@ -14,7 +14,7 @@ src/domain/
 │   │   └── events.proto
 │   └── queries/v1/      # Запросы (Queries)
 │       └── queries.proto
-├── value_objects/       # Rust value objects
+├── vo/                  # Rust value objects
 │   └── location.rs      # Location value object
 └── mod.rs              # Модуль домена
 ```
@@ -148,8 +148,7 @@ src/
     │   ├── commands::v1::*    # Commands
     │   ├── events::v1::*      # Events
     │   └── queries::v1::*     # Queries
-    ├── value_objects/         # Rust value objects
-    │   └── location::*        # Location value object
+    ├── vo::*                  # Value objects (vo::location::*)
     └── mod.rs
 ```
 

@@ -58,7 +58,7 @@ impl Location {
     /// # Examples
     ///
     /// ```
-    /// use crate::domain::value_objects::location::{Location, LocationError};
+    /// use crate::domain::vo::location::{Location, LocationError};
     ///
     /// let location = Location::new(55.7558, 37.6173, 10.0)?;
     /// # Ok::<(), LocationError>(())
@@ -114,7 +114,7 @@ impl Location {
     /// # Examples
     ///
     /// ```
-    /// use crate::domain::value_objects::location::Location;
+    /// use crate::domain::vo::location::Location;
     ///
     /// let moscow = Location::new(55.7558, 37.6173, 10.0).unwrap();
     /// let spb = Location::new(59.9343, 30.3351, 10.0).unwrap();

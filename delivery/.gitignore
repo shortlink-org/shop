@@ -1,10 +1,13 @@
 # Rust
 /target/
+*.rlib
 **/*.rs.bk
 Cargo.lock
 
-# Generated code
-src/domain/
+# Generated code from proto (only generated .rs files, not proto files)
+src/domain/delivery/**/*.rs
+!src/domain/vo/
+!src/domain/*.rs
 
 # IDE
 .idea/
