@@ -1,6 +1,7 @@
 # Rust
 /target/
 *.rlib
+lib
 **/*.rs.bk
 Cargo.lock
 
