@@ -1,14 +1,20 @@
 use std::fmt;
 
+/// Constants for location validation bounds
+pub const MIN_LATITUDE: f64 = -90.0;
+pub const MAX_LATITUDE: f64 = 90.0;
+pub const MIN_LONGITUDE: f64 = -180.0;
+pub const MAX_LONGITUDE: f64 = 180.0;
+
 /// Location represents a GPS location as a value object.
 /// 
 /// A value object is immutable and defined by its attributes.
 /// Two locations are considered equal if they have the same latitude and longitude.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Location {
-    /// Latitude in degrees (-90.0 to 90.0)
+    /// Latitude in degrees (MIN_LATITUDE to MAX_LATITUDE)
     latitude: f64,
-    /// Longitude in degrees (-180.0 to 180.0)
+    /// Longitude in degrees (MIN_LONGITUDE to MAX_LONGITUDE)
     longitude: f64,
     /// Accuracy in meters (must be positive)
     accuracy: f64,
@@ -16,9 +22,9 @@ pub struct Location {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum LocationError {
-    /// Latitude is out of valid range (-90.0 to 90.0)
+    /// Latitude is out of valid range (MIN_LATITUDE to MAX_LATITUDE)
     InvalidLatitude(f64),
-    /// Longitude is out of valid range (-180.0 to 180.0)
+    /// Longitude is out of valid range (MIN_LONGITUDE to MAX_LONGITUDE)
     InvalidLongitude(f64),
     /// Accuracy must be positive
     InvalidAccuracy(f64),
@@ -28,10 +34,10 @@ impl fmt::Display for LocationError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             LocationError::InvalidLatitude(lat) => {
-                write!(f, "Invalid latitude: {}. Must be between -90.0 and 90.0", lat)
+                write!(f, "Invalid latitude: {}. Must be between {} and {}", lat, MIN_LATITUDE, MAX_LATITUDE)
             }
             LocationError::InvalidLongitude(lon) => {
-                write!(f, "Invalid longitude: {}. Must be between -180.0 and 180.0", lon)
+                write!(f, "Invalid longitude: {}. Must be between {} and {}", lon, MIN_LONGITUDE, MAX_LONGITUDE)
             }
             LocationError::InvalidAccuracy(acc) => {
                 write!(f, "Invalid accuracy: {}. Must be positive", acc)
@@ -47,8 +53,8 @@ impl Location {
     ///
     /// # Arguments
     ///
-    /// * `latitude` - Latitude in degrees (-90.0 to 90.0)
-    /// * `longitude` - Longitude in degrees (-180.0 to 180.0)
+    /// * `latitude` - Latitude in degrees (MIN_LATITUDE to MAX_LATITUDE)
+    /// * `longitude` - Longitude in degrees (MIN_LONGITUDE to MAX_LONGITUDE)
     /// * `accuracy` - Accuracy in meters (must be positive)
     ///
     /// # Errors
@@ -64,11 +70,11 @@ impl Location {
     /// # Ok::<(), LocationError>(())
     /// ```
     pub fn new(latitude: f64, longitude: f64, accuracy: f64) -> Result<Self, LocationError> {
-        if !(-90.0..=90.0).contains(&latitude) {
+        if !(MIN_LATITUDE..=MAX_LATITUDE).contains(&latitude) {
             return Err(LocationError::InvalidLatitude(latitude));
         }
 
-        if !(-180.0..=180.0).contains(&longitude) {
+        if !(MIN_LONGITUDE..=MAX_LONGITUDE).contains(&longitude) {
             return Err(LocationError::InvalidLongitude(longitude));
         }
 
@@ -167,19 +173,19 @@ mod tests {
 
     #[test]
     fn test_location_creation_invalid_latitude() {
-        let location = Location::new(91.0, 37.6173, 10.0);
+        let location = Location::new(MAX_LATITUDE + 1.0, 37.6173, 10.0);
         assert!(matches!(location, Err(LocationError::InvalidLatitude(_))));
 
-        let location = Location::new(-91.0, 37.6173, 10.0);
+        let location = Location::new(MIN_LATITUDE - 1.0, 37.6173, 10.0);
         assert!(matches!(location, Err(LocationError::InvalidLatitude(_))));
     }
 
     #[test]
     fn test_location_creation_invalid_longitude() {
-        let location = Location::new(55.7558, 181.0, 10.0);
+        let location = Location::new(55.7558, MAX_LONGITUDE + 1.0, 10.0);
         assert!(matches!(location, Err(LocationError::InvalidLongitude(_))));
 
-        let location = Location::new(55.7558, -181.0, 10.0);
+        let location = Location::new(55.7558, MIN_LONGITUDE - 1.0, 10.0);
         assert!(matches!(location, Err(LocationError::InvalidLongitude(_))));
     }
 
@@ -227,11 +233,203 @@ mod tests {
 
     #[test]
     fn test_boundary_values() {
-        // Test boundary values
+        // Test boundary values using constants
+        assert!(Location::new(MAX_LATITUDE, 0.0, 1.0).is_ok());
+        assert!(Location::new(MIN_LATITUDE, 0.0, 1.0).is_ok());
+        assert!(Location::new(0.0, MAX_LONGITUDE, 1.0).is_ok());
+        assert!(Location::new(0.0, MIN_LONGITUDE, 1.0).is_ok());
+    }
+
+    #[test]
+    fn test_special_coordinates() {
+        // Equator (latitude = 0)
+        assert!(Location::new(0.0, 0.0, 1.0).is_ok());
+        
+        // Prime meridian (longitude = 0)
+        assert!(Location::new(0.0, 0.0, 1.0).is_ok());
+        
+        // North pole
         assert!(Location::new(90.0, 0.0, 1.0).is_ok());
+        
+        // South pole
         assert!(Location::new(-90.0, 0.0, 1.0).is_ok());
+        
+        // Date line (longitude = 180/-180)
         assert!(Location::new(0.0, 180.0, 1.0).is_ok());
         assert!(Location::new(0.0, -180.0, 1.0).is_ok());
+    }
+
+    #[test]
+    fn test_multiple_invalid_parameters() {
+        // Multiple invalid parameters - should return first error encountered (latitude)
+        let location = Location::new(MAX_LATITUDE + 1.0, MAX_LONGITUDE + 1.0, -1.0);
+        assert!(matches!(location, Err(LocationError::InvalidLatitude(_))));
+    }
+
+    #[test]
+    fn test_equality_ignores_accuracy() {
+        // Two locations with same lat/lon but different accuracy should be equal
+        let loc1 = Location::new(55.7558, 37.6173, 10.0).unwrap();
+        let loc2 = Location::new(55.7558, 37.6173, 100.0).unwrap();
+        
+        assert_eq!(loc1, loc2);
+        assert_eq!(loc1.latitude(), loc2.latitude());
+        assert_eq!(loc1.longitude(), loc2.longitude());
+        assert_ne!(loc1.accuracy(), loc2.accuracy());
+    }
+
+    #[test]
+    fn test_distance_zero() {
+        // Distance to self should be zero
+        let loc = Location::new(55.7558, 37.6173, 10.0).unwrap();
+        assert_eq!(loc.distance_to(&loc), 0.0);
+    }
+
+    #[test]
+    fn test_distance_same_coordinates() {
+        // Distance between two locations with same coordinates should be zero
+        let loc1 = Location::new(55.7558, 37.6173, 10.0).unwrap();
+        let loc2 = Location::new(55.7558, 37.6173, 20.0).unwrap();
+        assert_eq!(loc1.distance_to(&loc2), 0.0);
+    }
+
+    #[test]
+    fn test_distance_antipodal_points() {
+        // Distance between antipodal points (opposite sides of Earth)
+        let loc1 = Location::new(0.0, 0.0, 10.0).unwrap();
+        let loc2 = Location::new(0.0, 180.0, 10.0).unwrap();
+        let distance = loc1.distance_to(&loc2);
+        
+        // Should be approximately half the Earth's circumference (~20,000 km)
+        assert!((19000.0..21000.0).contains(&distance));
+    }
+
+    #[test]
+    fn test_distance_symmetry() {
+        // Distance from A to B should equal distance from B to A
+        let moscow = Location::new(55.7558, 37.6173, 10.0).unwrap();
+        let spb = Location::new(59.9343, 30.3351, 10.0).unwrap();
+        
+        assert_eq!(moscow.distance_to(&spb), spb.distance_to(&moscow));
+    }
+
+    #[test]
+    fn test_is_within_distance_zero_distance() {
+        // Location should be within any positive distance from itself
+        let loc = Location::new(55.7558, 37.6173, 10.0).unwrap();
+        assert!(loc.is_within_distance(&loc, 0.0));
+        assert!(loc.is_within_distance(&loc, 1.0));
+        assert!(loc.is_within_distance(&loc, 1000.0));
+    }
+
+    #[test]
+    fn test_is_within_distance_exact_boundary() {
+        // Test exact boundary case
+        let loc1 = Location::new(55.7558, 37.6173, 10.0).unwrap();
+        let loc2 = Location::new(55.7560, 37.6175, 10.0).unwrap();
+        
+        let distance = loc1.distance_to(&loc2);
+        assert!(loc1.is_within_distance(&loc2, distance));
+        assert!(loc1.is_within_distance(&loc2, distance + 0.1));
+        assert!(!loc1.is_within_distance(&loc2, distance - 0.1));
+    }
+
+    #[test]
+    fn test_error_display_invalid_latitude() {
+        let err = LocationError::InvalidLatitude(95.0);
+        let display = format!("{}", err);
+        assert!(display.contains("Invalid latitude"));
+        assert!(display.contains("95"));
+        assert!(display.contains(&MIN_LATITUDE.to_string()));
+        assert!(display.contains(&MAX_LATITUDE.to_string()));
+    }
+
+    #[test]
+    fn test_error_display_invalid_longitude() {
+        let err = LocationError::InvalidLongitude(185.0);
+        let display = format!("{}", err);
+        assert!(display.contains("Invalid longitude"));
+        assert!(display.contains("185"));
+        assert!(display.contains(&MIN_LONGITUDE.to_string()));
+        assert!(display.contains(&MAX_LONGITUDE.to_string()));
+    }
+
+    #[test]
+    fn test_error_display_invalid_accuracy() {
+        let err = LocationError::InvalidAccuracy(-5.0);
+        let display = format!("{}", err);
+        assert!(display.contains("Invalid accuracy"));
+        assert!(display.contains("-5"));
+        assert!(display.contains("positive"));
+    }
+
+    #[test]
+    fn test_clone() {
+        let loc1 = Location::new(55.7558, 37.6173, 10.0).unwrap();
+        let loc2 = loc1.clone();
+        
+        assert_eq!(loc1, loc2);
+        assert_eq!(loc1.latitude(), loc2.latitude());
+        assert_eq!(loc1.longitude(), loc2.longitude());
+        assert_eq!(loc1.accuracy(), loc2.accuracy());
+    }
+
+    #[test]
+    fn test_copy() {
+        // Test that Location implements Copy
+        let loc1 = Location::new(55.7558, 37.6173, 10.0).unwrap();
+        let loc2 = loc1; // This should copy, not move
+        
+        // Both should be valid
+        assert_eq!(loc1.latitude(), loc2.latitude());
+        assert_eq!(loc1.longitude(), loc2.longitude());
+    }
+
+    #[test]
+    fn test_debug() {
+        let loc = Location::new(55.7558, 37.6173, 10.0).unwrap();
+        let debug_str = format!("{:?}", loc);
+        assert!(debug_str.contains("Location"));
+    }
+
+    #[test]
+    fn test_accuracy_edge_cases() {
+        // Very small positive accuracy should be valid
+        assert!(Location::new(0.0, 0.0, 0.0001).is_ok());
+        
+        // Large accuracy should be valid
+        assert!(Location::new(0.0, 0.0, 1_000_000.0).is_ok());
+        
+        // Negative accuracy should be invalid
+        assert!(matches!(
+            Location::new(0.0, 0.0, -0.0001),
+            Err(LocationError::InvalidAccuracy(_))
+        ));
+    }
+
+    #[test]
+    fn test_distance_precision() {
+        // Test that distance calculation maintains reasonable precision
+        let loc1 = Location::new(55.7558, 37.6173, 10.0).unwrap();
+        let loc2 = Location::new(55.7558001, 37.6173001, 10.0).unwrap();
+        
+        let distance = loc1.distance_to(&loc2);
+        // Should be very small but non-zero
+        assert!(distance > 0.0);
+        assert!(distance < 0.1); // Less than 100 meters
+    }
+
+    #[test]
+    fn test_getters() {
+        let latitude = 55.7558;
+        let longitude = 37.6173;
+        let accuracy = 10.0;
+        
+        let loc = Location::new(latitude, longitude, accuracy).unwrap();
+        
+        assert_eq!(loc.latitude(), latitude);
+        assert_eq!(loc.longitude(), longitude);
+        assert_eq!(loc.accuracy(), accuracy);
     }
 }
 
