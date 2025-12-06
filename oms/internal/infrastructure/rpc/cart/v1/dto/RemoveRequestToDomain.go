@@ -1,6 +1,8 @@
 package dto
 
 import (
+	"fmt"
+
 	"github.com/google/uuid"
 
 	domain "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
@@ -27,8 +29,14 @@ func RemoveRequestToDomain(r *v1.RemoveRequest) (*domain.CartState, error) {
 		}
 
 		// create CartItem and remove it from the state
-		item := domain.NewCartItem(goodId, r.Items[i].Quantity)
-		state.AddItem(item)
+		item, err := domain.NewCartItem(goodId, r.Items[i].Quantity)
+		if err != nil {
+			return nil, fmt.Errorf("invalid cart item %+v: %w", r.Items[i], err)
+		}
+
+		if err := state.AddItem(item); err != nil {
+			return nil, fmt.Errorf("failed to stage cart item removal %+v: %w", r.Items[i], err)
+		}
 	}
 
 	return state, nil

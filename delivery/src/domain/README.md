@@ -3,14 +3,20 @@
 ## Структура
 
 ```
-domain/
-├── common/v1/          # Общие типы и enums
-│   └── common.proto
-├── commands/v1/        # Команды (CQRS)
-│   ├── commands.proto
-│   └── responses.proto
-└── events/v1/          # События (Event Sourcing)
-    └── events.proto
+src/domain/
+├── delivery/            # Protobuf определения
+│   ├── common/v1/       # Общие типы и enums
+│   │   └── common.proto
+│   ├── commands/v1/     # Команды (CQRS)
+│   │   ├── commands.proto
+│   │   └── responses.proto
+│   ├── events/v1/       # События (Event Sourcing)
+│   │   └── events.proto
+│   └── queries/v1/      # Запросы (Queries)
+│       └── queries.proto
+├── value_objects/       # Rust value objects
+│   └── location.rs      # Location value object
+└── mod.rs              # Модуль домена
 ```
 
 ## Общие типы (common/v1)
@@ -137,10 +143,13 @@ fn handle_package_assigned(event: PackageAssignedEvent) {
 ```
 src/
 └── domain/
-    ├── delivery/
+    ├── delivery/              # Сгенерированный код из proto
     │   ├── common::v1::*      # Address, Location, Priority, etc.
     │   ├── commands::v1::*    # Commands
-    │   └── events::v1::*      # Events
+    │   ├── events::v1::*      # Events
+    │   └── queries::v1::*     # Queries
+    ├── value_objects/         # Rust value objects
+    │   └── location::*        # Location value object
     └── mod.rs
 ```
 

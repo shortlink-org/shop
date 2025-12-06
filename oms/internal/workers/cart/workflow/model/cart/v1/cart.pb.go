@@ -85,8 +85,8 @@ const file_workers_cart_workflow_model_cart_v1_cart_proto_rawDesc = "" +
 	".workers/cart/workflow/model/cart/v1/cart.proto\x12#workers.cart.workflow.model.cart.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"E\n" +
 	"\x0eWorkerCartItem\x12\x17\n" +
 	"\agood_id\x18\x01 \x01(\tR\x06goodId\x12\x1a\n" +
-	"\bquantity\x18\x02 \x01(\x05R\bquantityB\xcc\x02\n" +
-	"'com.workers.cart.workflow.model.cart.v1B\tCartProtoP\x01Zcgithub.com/shortlink-org/shortlink/boundaries/shop/oms/internal/workers/cart/workflow/model/cart/v1\xa2\x02\x05WCWMC\xaa\x02#Workers.Cart.Workflow.Model.Cart.V1\xca\x02#Workers\\Cart\\Workflow\\Model\\Cart\\V1\xe2\x02/Workers\\Cart\\Workflow\\Model\\Cart\\V1\\GPBMetadata\xea\x02(Workers::Cart::Workflow::Model::Cart::V1b\x06proto3"
+	"\bquantity\x18\x02 \x01(\x05R\bquantityB\xb7\x02\n" +
+	"'com.workers.cart.workflow.model.cart.v1B\tCartProtoP\x01ZNgithub.com/shortlink-org/shop/oms/internal/workers/cart/workflow/model/cart/v1\xa2\x02\x05WCWMC\xaa\x02#Workers.Cart.Workflow.Model.Cart.V1\xca\x02#Workers\\Cart\\Workflow\\Model\\Cart\\V1\xe2\x02/Workers\\Cart\\Workflow\\Model\\Cart\\V1\\GPBMetadata\xea\x02(Workers::Cart::Workflow::Model::Cart::V1b\x06proto3"
 
 var (
 	file_workers_cart_workflow_model_cart_v1_cart_proto_rawDescOnce sync.Once

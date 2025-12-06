@@ -6,15 +6,17 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
+
+	pricing "github.com/shortlink-org/shop/oms/internal/domain/pricing"
 )
 
 // CartItem validation errors
 var (
-	ErrCartItemGoodIdZero     = errors.New("cart item good ID cannot be zero")
-	ErrCartItemQuantityZero   = errors.New("cart item quantity must be greater than zero")
-	ErrCartItemPriceNegative  = errors.New("cart item price cannot be negative")
-	ErrCartItemDiscountNegative = errors.New("cart item discount cannot be negative")
-	ErrCartItemTaxNegative    = errors.New("cart item tax cannot be negative")
+	ErrCartItemGoodIdZero           = errors.New("cart item good ID cannot be zero")
+	ErrCartItemQuantityZero         = errors.New("cart item quantity must be greater than zero")
+	ErrCartItemPriceNegative        = errors.New("cart item price cannot be negative")
+	ErrCartItemDiscountNegative     = errors.New("cart item discount cannot be negative")
+	ErrCartItemTaxNegative          = errors.New("cart item tax cannot be negative")
 	ErrCartItemDiscountExceedsPrice = errors.New("cart item discount cannot exceed price")
 )
 
@@ -77,7 +79,7 @@ func NewCartItemWithPricing(
 		return CartItem{}, ErrCartItemTaxNegative
 	}
 	if discount.GreaterThan(price) {
-		return CartItem{}, fmt.Errorf("%w: discount %.2f exceeds price %.2f", ErrCartItemDiscountExceedsPrice, discount, price)
+		return CartItem{}, fmt.Errorf("%w: discount %s exceeds price %s", ErrCartItemDiscountExceedsPrice, discount.String(), price.String())
 	}
 
 	return CartItem{
@@ -101,7 +103,7 @@ func (c CartItem) WithQuantity(quantity int32) (CartItem, error) {
 	if quantity <= 0 {
 		return CartItem{}, ErrCartItemQuantityZero
 	}
-	
+
 	return CartItem{
 		goodId:   c.goodId,
 		quantity: quantity,
@@ -109,6 +111,20 @@ func (c CartItem) WithQuantity(quantity int32) (CartItem, error) {
 		discount: c.discount,
 		tax:      c.tax,
 	}, nil
+}
+
+// WithPricePolicy applies the provided PricePolicy to the item and returns a new priced item.
+func (c CartItem) WithPricePolicy(policy pricing.PricePolicy) (CartItem, error) {
+	if policy == nil {
+		policy = pricing.NoopPricePolicy{}
+	}
+
+	quote, err := policy.Quote(c.goodId, c.quantity)
+	if err != nil {
+		return CartItem{}, err
+	}
+
+	return NewCartItemWithPricing(c.goodId, c.quantity, quote.UnitPrice, quote.Discount, quote.Tax)
 }
 
 // GetGoodId returns the good ID.

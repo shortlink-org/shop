@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 )
 
@@ -68,7 +69,7 @@ func ValidateOrderItems(items Items) error {
 
 // ValidateOrderItem validates a single order item.
 func ValidateOrderItem(item Item) error {
-	if item.GetGoodId().IsZero() {
+	if item.GetGoodId() == uuid.Nil {
 		return fmt.Errorf("%w: good ID is zero", ErrOrderItemInvalid)
 	}
 

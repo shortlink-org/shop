@@ -38,10 +38,19 @@ func Workflow(ctx workflow.Context, customerId uuid.UUID) error {
 		for _, item := range request.Items {
 			goodId, err := uuid.Parse(item.GoodId)
 			if err != nil {
-				logger.Error("Invalid good ID %v", err)
+				logger.Error("Invalid good ID", "good_id", item.GoodId, "error", err)
+				continue
 			}
 
-			state.AddItem(v2.NewCartItem(goodId, item.Quantity))
+			cartItem, err := v2.NewCartItem(goodId, item.Quantity)
+			if err != nil {
+				logger.Error("Invalid cart item", "good_id", item.GoodId, "error", err)
+				continue
+			}
+
+			if err := state.AddItem(cartItem); err != nil {
+				logger.Error("Failed to add item to cart", "good_id", item.GoodId, "error", err)
+			}
 		}
 	})
 
@@ -52,10 +61,19 @@ func Workflow(ctx workflow.Context, customerId uuid.UUID) error {
 		for _, item := range request.Items {
 			goodId, err := uuid.Parse(item.GoodId)
 			if err != nil {
-				logger.Error("Invalid good ID %v", err)
+				logger.Error("Invalid good ID", "good_id", item.GoodId, "error", err)
+				continue
 			}
 
-			state.RemoveItem(v2.NewCartItem(goodId, item.Quantity))
+			cartItem, err := v2.NewCartItem(goodId, item.Quantity)
+			if err != nil {
+				logger.Error("Invalid cart item", "good_id", item.GoodId, "error", err)
+				continue
+			}
+
+			if err := state.RemoveItem(cartItem); err != nil {
+				logger.Error("Failed to remove item from cart", "good_id", item.GoodId, "error", err)
+			}
 		}
 	})
 

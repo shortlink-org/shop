@@ -59,12 +59,23 @@ func (uc *UC) HandleStockChange(ctx context.Context, goodId uuid.UUID, newQuanti
 			"good_id", goodId.String(),
 			"quantity", itemQuantity)
 
-		removeRequest := &domain.CartState{
-			Items: []domain.CartItem{
-				domain.NewCartItem(goodId, itemQuantity),
-			},
+		removeRequest := domain.NewCartState(customerId)
+		cartItem, err := domain.NewCartItem(goodId, itemQuantity)
+		if err != nil {
+			uc.log.Warn("Failed to construct cart item for removal",
+				"customer_id", customerId.String(),
+				"good_id", goodId.String(),
+				"error", err)
+			continue
 		}
-		removeRequest.SetCustomerId(customerId)
+
+		if err := removeRequest.AddItem(cartItem); err != nil {
+			uc.log.Warn("Failed to stage cart item removal",
+				"customer_id", customerId.String(),
+				"good_id", goodId.String(),
+				"error", err)
+			continue
+		}
 
 		err = uc.Remove(ctx, removeRequest)
 		if err != nil {
@@ -91,5 +102,3 @@ func (uc *UC) HandleStockChange(ctx context.Context, goodId uuid.UUID, newQuanti
 
 	return nil
 }
-
-

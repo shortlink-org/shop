@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -22,14 +23,18 @@ type OrderState struct {
 	customerId uuid.UUID
 	// fsm is the finite state machine for the order status
 	fsm *fsm.FSM
+	// domainEvents stores domain events that occurred during aggregate operations
+	// Events are collected here and can be retrieved by application layer for publishing
+	domainEvents []DomainEvent
 }
 
 // NewOrderState creates a new OrderState instance with the given customer ID.
 func NewOrderState(customerId uuid.UUID) *OrderState {
 	order := &OrderState{
-		id:         uuid.New(),
-		items:      make(Items, 0),
-		customerId: customerId,
+		id:           uuid.New(),
+		items:        make(Items, 0),
+		customerId:   customerId,
+		domainEvents: make([]DomainEvent, 0),
 	}
 
 	// Initialize the FSM with the initial state.
@@ -70,12 +75,45 @@ func NewOrderState(customerId uuid.UUID) *OrderState {
 }
 
 // onEnterState is the callback executed when entering a new state.
-// Domain layer should not depend on infrastructure (logging, stdout, etc.).
-// State transitions are pure domain logic; logging should be handled at the application layer.
+// This is where we generate domain events based on state transitions.
 func (o *OrderState) onEnterState(ctx context.Context, from, to fsm.State, event fsm.Event) {
-	// Domain layer should not perform side effects like logging.
-	// State transition validation is handled before FSM transition in domain methods.
-	// Any logging/observability should be implemented at the application/infrastructure layer.
+	// Convert FSM state to OrderStatus
+	toStatus := o.fsmStateToOrderStatus(to)
+	
+	// Generate domain events based on state transitions
+	now := time.Now()
+	switch toStatus {
+	case OrderStatus_ORDER_STATUS_PROCESSING:
+		// OrderCreated event - when transitioning to PROCESSING from PENDING
+		if o.fsmStateToOrderStatus(from) == OrderStatus_ORDER_STATUS_PENDING {
+			// Create a copy of items for the event
+			itemsCopy := make(Items, len(o.items))
+			copy(itemsCopy, o.items)
+			o.addDomainEvent(&OrderCreatedEvent{
+				OrderID:    o.id,
+				CustomerID: o.customerId,
+				Items:      itemsCopy,
+				Status:     toStatus,
+				OccurredAt: now,
+			})
+		}
+	case OrderStatus_ORDER_STATUS_CANCELLED:
+		// OrderCancelled event
+		o.addDomainEvent(&OrderCancelledEvent{
+			OrderID:    o.id,
+			CustomerID: o.customerId,
+			Status:     toStatus,
+			OccurredAt: now,
+		})
+	case OrderStatus_ORDER_STATUS_COMPLETED:
+		// OrderCompleted event
+		o.addDomainEvent(&OrderCompletedEvent{
+			OrderID:    o.id,
+			CustomerID: o.customerId,
+			Status:     toStatus,
+			OccurredAt: now,
+		})
+	}
 }
 
 // onExitState is the callback executed when exiting a state.
@@ -117,14 +155,43 @@ func (o *OrderState) GetStatus() OrderStatus {
 
 // getStatusUnlocked returns the current status without locking (for internal use).
 func (o *OrderState) getStatusUnlocked() OrderStatus {
-	currentState := o.fsm.GetCurrentState()
+	return o.fsmStateToOrderStatus(o.fsm.GetCurrentState())
+}
+
+// fsmStateToOrderStatus converts FSM state to OrderStatus enum
+func (o *OrderState) fsmStateToOrderStatus(state fsm.State) OrderStatus {
 	for k, v := range OrderStatus_name {
-		if v == currentState.String() {
+		if v == state.String() {
 			return OrderStatus(k)
 		}
 	}
-
 	return OrderStatus_ORDER_STATUS_UNSPECIFIED
+}
+
+// addDomainEvent adds a domain event to the aggregate's event list
+func (o *OrderState) addDomainEvent(event DomainEvent) {
+	o.domainEvents = append(o.domainEvents, event)
+}
+
+// GetDomainEvents returns all domain events that occurred during aggregate operations
+// Application layer should call this after aggregate operations to publish events
+// and then call ClearDomainEvents() to reset the list
+func (o *OrderState) GetDomainEvents() []DomainEvent {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	
+	// Return a copy to prevent external modification
+	eventsCopy := make([]DomainEvent, len(o.domainEvents))
+	copy(eventsCopy, o.domainEvents)
+	return eventsCopy
+}
+
+// ClearDomainEvents clears the domain events list
+// Should be called by application layer after publishing events
+func (o *OrderState) ClearDomainEvents() {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	o.domainEvents = o.domainEvents[:0]
 }
 
 // CreateOrder initializes the order with the provided items and transitions it to Processing state.

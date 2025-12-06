@@ -3,6 +3,8 @@ package v1
 import (
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
+
+	pricing "github.com/shortlink-org/shop/oms/internal/domain/pricing"
 )
 
 // Items represent a list of order items.
@@ -37,4 +39,22 @@ func (m Item) GetQuantity() int32 {
 // GetPrice returns the value of the price field.
 func (m Item) GetPrice() decimal.Decimal {
 	return m.price
+}
+
+// WithPricePolicy applies a price policy and returns a new priced item.
+func (m Item) WithPricePolicy(policy pricing.PricePolicy) (Item, error) {
+	if policy == nil {
+		policy = pricing.NoopPricePolicy{}
+	}
+
+	quote, err := policy.Quote(m.goodId, m.quantity)
+	if err != nil {
+		return Item{}, err
+	}
+
+	return Item{
+		goodId:   m.goodId,
+		quantity: m.quantity,
+		price:    quote.FinalUnitPrice(),
+	}, nil
 }

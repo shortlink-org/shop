@@ -7,7 +7,7 @@
 package v1
 
 import (
-	v1 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/order/v1/common/v1"
+	v1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -775,8 +775,8 @@ const file_domain_order_v1_events_v1_events_proto_rawDesc = "" +
 	"\tfailed_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\bfailedAt\x12 \n" +
 	"\vdescription\x18\x06 \x01(\tR\vdescription\x12;\n" +
 	"\voccurred_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"occurredAtB\xff\x01\n" +
-	"\x1acom.domain.order.events.v1B\vEventsProtoP\x01ZYgithub.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/order/v1/events/v1\xa2\x02\x03DOE\xaa\x02\x16Domain.Order.Events.V1\xca\x02\x16Domain\\Order\\Events\\V1\xe2\x02\"Domain\\Order\\Events\\V1\\GPBMetadata\xea\x02\x19Domain::Order::Events::V1b\x06proto3"
+	"occurredAtB\xea\x01\n" +
+	"\x1acom.domain.order.events.v1B\vEventsProtoP\x01ZDgithub.com/shortlink-org/shop/oms/internal/domain/order/v1/events/v1\xa2\x02\x03DOE\xaa\x02\x16Domain.Order.Events.V1\xca\x02\x16Domain\\Order\\Events\\V1\xe2\x02\"Domain\\Order\\Events\\V1\\GPBMetadata\xea\x02\x19Domain::Order::Events::V1b\x06proto3"
 
 var (
 	file_domain_order_v1_events_v1_events_proto_rawDescOnce sync.Once

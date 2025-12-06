@@ -85,9 +85,9 @@ const file_workers_order_workflow_model_order_v1_order_proto_rawDesc = "" +
 	"1workers/order/workflow/model/order/v1/order.proto\x12%workers.order.workflow.model.order.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"H\n" +
 	"\x0fWorkerOrderItem\x12\x19\n" +
 	"\border_id\x18\x01 \x01(\tR\aorderId\x12\x1a\n" +
-	"\bquantity\x18\x02 \x01(\x05R\bquantityB\xd9\x02\n" +
+	"\bquantity\x18\x02 \x01(\x05R\bquantityB\xc4\x02\n" +
 	")com.workers.order.workflow.model.order.v1B\n" +
-	"OrderProtoP\x01Zegithub.com/shortlink-org/shortlink/boundaries/shop/oms/internal/workers/order/workflow/model/order/v1\xa2\x02\x05WOWMO\xaa\x02%Workers.Order.Workflow.Model.Order.V1\xca\x02%Workers\\Order\\Workflow\\Model\\Order\\V1\xe2\x021Workers\\Order\\Workflow\\Model\\Order\\V1\\GPBMetadata\xea\x02*Workers::Order::Workflow::Model::Order::V1b\x06proto3"
+	"OrderProtoP\x01ZPgithub.com/shortlink-org/shop/oms/internal/workers/order/workflow/model/order/v1\xa2\x02\x05WOWMO\xaa\x02%Workers.Order.Workflow.Model.Order.V1\xca\x02%Workers\\Order\\Workflow\\Model\\Order\\V1\xe2\x021Workers\\Order\\Workflow\\Model\\Order\\V1\\GPBMetadata\xea\x02*Workers::Order::Workflow::Model::Order::V1b\x06proto3"
 
 var (
 	file_workers_order_workflow_model_order_v1_order_proto_rawDescOnce sync.Once

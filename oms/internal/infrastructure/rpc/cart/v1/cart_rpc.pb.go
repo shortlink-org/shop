@@ -7,7 +7,7 @@
 package v1
 
 import (
-	v1 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/infrastructure/rpc/cart/v1/model/v1"
+	v1 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1/model/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
@@ -33,8 +33,8 @@ const file_infrastructure_rpc_cart_v1_cart_rpc_proto_rawDesc = "" +
 	"\x03Add\x12/.infrastructure.rpc.cart.v1.model.v1.AddRequest\x1a\x16.google.protobuf.Empty\x12T\n" +
 	"\x06Remove\x122.infrastructure.rpc.cart.v1.model.v1.RemoveRequest\x1a\x16.google.protobuf.Empty\x12h\n" +
 	"\x03Get\x12/.infrastructure.rpc.cart.v1.model.v1.GetRequest\x1a0.infrastructure.rpc.cart.v1.model.v1.GetResponse\x12R\n" +
-	"\x05Reset\x121.infrastructure.rpc.cart.v1.model.v1.ResetRequest\x1a\x16.google.protobuf.EmptyB\x95\x02\n" +
-	"\x1ecom.infrastructure.rpc.cart.v1B\fCartRpcProtoP\x01ZZgithub.com/shortlink-org/shortlink/boundaries/shop/oms/internal/infrastructure/rpc/cart/v1\xa2\x02\x03IRC\xaa\x02\x1aInfrastructure.Rpc.Cart.V1\xca\x02\x1aInfrastructure\\Rpc\\Cart\\V1\xe2\x02&Infrastructure\\Rpc\\Cart\\V1\\GPBMetadata\xea\x02\x1dInfrastructure::Rpc::Cart::V1b\x06proto3"
+	"\x05Reset\x121.infrastructure.rpc.cart.v1.model.v1.ResetRequest\x1a\x16.google.protobuf.EmptyB\x80\x02\n" +
+	"\x1ecom.infrastructure.rpc.cart.v1B\fCartRpcProtoP\x01ZEgithub.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1\xa2\x02\x03IRC\xaa\x02\x1aInfrastructure.Rpc.Cart.V1\xca\x02\x1aInfrastructure\\Rpc\\Cart\\V1\xe2\x02&Infrastructure\\Rpc\\Cart\\V1\\GPBMetadata\xea\x02\x1dInfrastructure::Rpc::Cart::V1b\x06proto3"
 
 var file_infrastructure_rpc_cart_v1_cart_rpc_proto_goTypes = []any{
 	(*v1.AddRequest)(nil),    // 0: infrastructure.rpc.cart.v1.model.v1.AddRequest

@@ -13,6 +13,6 @@ proto-lock: ## Lock proto dependencies
 proto-generate: ## Generate proto-files
 	# domain --------------------------------------------------------------------------------------
 	@buf generate \
-		--path=domain/delivery \
+		--path=src/domain/delivery \
 		--template=ops/proto/domain.buf.gen.yaml
 

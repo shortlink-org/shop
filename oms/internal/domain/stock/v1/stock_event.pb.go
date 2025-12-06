@@ -104,8 +104,8 @@ const file_domain_stock_v1_stock_event_proto_rawDesc = "" +
 	"\agood_id\x18\x01 \x01(\tR\x06goodId\x12!\n" +
 	"\fold_quantity\x18\x02 \x01(\rR\voldQuantity\x12!\n" +
 	"\fnew_quantity\x18\x03 \x01(\rR\vnewQuantity\x128\n" +
-	"\ttimestamp\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\ttimestampB\xd5\x01\n" +
-	"\x13com.domain.stock.v1B\x0fStockEventProtoP\x01ZOgithub.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/stock/v1\xa2\x02\x03DSX\xaa\x02\x0fDomain.Stock.V1\xca\x02\x0fDomain\\Stock\\V1\xe2\x02\x1bDomain\\Stock\\V1\\GPBMetadata\xea\x02\x11Domain::Stock::V1b\x06proto3"
+	"\ttimestamp\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\ttimestampB\xc0\x01\n" +
+	"\x13com.domain.stock.v1B\x0fStockEventProtoP\x01Z:github.com/shortlink-org/shop/oms/internal/domain/stock/v1\xa2\x02\x03DSX\xaa\x02\x0fDomain.Stock.V1\xca\x02\x0fDomain\\Stock\\V1\xe2\x02\x1bDomain\\Stock\\V1\\GPBMetadata\xea\x02\x11Domain::Stock::V1b\x06proto3"
 
 var (
 	file_domain_stock_v1_stock_event_proto_rawDescOnce sync.Once

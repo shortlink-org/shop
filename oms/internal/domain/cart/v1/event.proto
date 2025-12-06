@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package domain.cart.v1;
 
-option go_package = "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/cart/v1";
+option go_package = "github.com/shortlink-org/shop/oms/internal/domain/cart/v1";
 
 // Cart event
 enum Event {

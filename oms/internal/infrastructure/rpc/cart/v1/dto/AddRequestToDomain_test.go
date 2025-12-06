@@ -33,8 +33,10 @@ func TestAddRequestToDomain(t *testing.T) {
 				goodId1, _ := uuid.Parse("c5f5d6d6-98e6-4f57-b34a-48a3997f28d4")
 				goodId2, _ := uuid.Parse("da3f3a3e-784d-4a9a-8cfa-6321d555d6a3")
 				state := domain.NewCartState(customerId)
-				state.AddItem(domain.NewCartItem(goodId1, 1))
-				state.AddItem(domain.NewCartItem(goodId2, 2))
+				item1, _ := domain.NewCartItem(goodId1, 1)
+				_ = state.AddItem(item1)
+				item2, _ := domain.NewCartItem(goodId2, 2)
+				_ = state.AddItem(item2)
 				return state
 			}(),
 		},

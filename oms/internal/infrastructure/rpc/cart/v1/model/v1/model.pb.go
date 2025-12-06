@@ -465,9 +465,9 @@ const file_infrastructure_rpc_cart_v1_model_v1_model_proto_rawDesc = "" +
 	"\x05state\x18\x01 \x01(\v2..infrastructure.rpc.cart.v1.model.v1.CartStateR\x05state\"/\n" +
 	"\fResetRequest\x12\x1f\n" +
 	"\vcustomer_id\x18\x01 \x01(\tR\n" +
-	"customerIdB\xcd\x02\n" +
+	"customerIdB\xb8\x02\n" +
 	"'com.infrastructure.rpc.cart.v1.model.v1B\n" +
-	"ModelProtoP\x01Zcgithub.com/shortlink-org/shortlink/boundaries/shop/oms/internal/infrastructure/rpc/cart/v1/model/v1\xa2\x02\x05IRCVM\xaa\x02#Infrastructure.Rpc.Cart.V1.Model.V1\xca\x02#Infrastructure\\Rpc\\Cart\\V1\\Model\\V1\xe2\x02/Infrastructure\\Rpc\\Cart\\V1\\Model\\V1\\GPBMetadata\xea\x02(Infrastructure::Rpc::Cart::V1::Model::V1b\x06proto3"
+	"ModelProtoP\x01ZNgithub.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1/model/v1\xa2\x02\x05IRCVM\xaa\x02#Infrastructure.Rpc.Cart.V1.Model.V1\xca\x02#Infrastructure\\Rpc\\Cart\\V1\\Model\\V1\xe2\x02/Infrastructure\\Rpc\\Cart\\V1\\Model\\V1\\GPBMetadata\xea\x02(Infrastructure::Rpc::Cart::V1::Model::V1b\x06proto3"
 
 var (
 	file_infrastructure_rpc_cart_v1_model_v1_model_proto_rawDescOnce sync.Once

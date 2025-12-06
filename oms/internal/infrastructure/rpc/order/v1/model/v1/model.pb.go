@@ -7,7 +7,7 @@
 package v1
 
 import (
-	v1 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/order/v1/common/v1"
+	v1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	_ "google.golang.org/protobuf/types/known/emptypb"
@@ -451,9 +451,9 @@ const file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDesc = "" +
 	"\vupdate_mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskR\n" +
 	"updateMask\"\x1f\n" +
 	"\rCancelRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02idB\xd3\x02\n" +
+	"\x02id\x18\x01 \x01(\tR\x02idB\xbe\x02\n" +
 	"(com.infrastructure.rpc.order.v1.model.v1B\n" +
-	"ModelProtoP\x01Zdgithub.com/shortlink-org/shortlink/boundaries/shop/oms/internal/infrastructure/rpc/order/v1/model/v1\xa2\x02\x05IROVM\xaa\x02$Infrastructure.Rpc.Order.V1.Model.V1\xca\x02$Infrastructure\\Rpc\\Order\\V1\\Model\\V1\xe2\x020Infrastructure\\Rpc\\Order\\V1\\Model\\V1\\GPBMetadata\xea\x02)Infrastructure::Rpc::Order::V1::Model::V1b\x06proto3"
+	"ModelProtoP\x01ZOgithub.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/model/v1\xa2\x02\x05IROVM\xaa\x02$Infrastructure.Rpc.Order.V1.Model.V1\xca\x02$Infrastructure\\Rpc\\Order\\V1\\Model\\V1\xe2\x020Infrastructure\\Rpc\\Order\\V1\\Model\\V1\\GPBMetadata\xea\x02)Infrastructure::Rpc::Order::V1::Model::V1b\x06proto3"
 
 var (
 	file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescOnce sync.Once

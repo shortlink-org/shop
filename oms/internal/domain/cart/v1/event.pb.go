@@ -157,9 +157,9 @@ const file_domain_cart_v1_event_proto_rawDesc = "" +
 	"\x17EVENT_TOPIC_UNSPECIFIED\x10\x00\x12\x1f\n" +
 	"\x1bEVENT_TOPIC_CART_ITEM_ADDED\x10\x01\x12!\n" +
 	"\x1dEVENT_TOPIC_CART_ITEM_REMOVED\x10\x02\x12\x1a\n" +
-	"\x16EVENT_TOPIC_CART_RESET\x10\x03B\xca\x01\n" +
+	"\x16EVENT_TOPIC_CART_RESET\x10\x03B\xb5\x01\n" +
 	"\x12com.domain.cart.v1B\n" +
-	"EventProtoP\x01ZNgithub.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/cart/v1\xa2\x02\x03DCX\xaa\x02\x0eDomain.Cart.V1\xca\x02\x0eDomain\\Cart\\V1\xe2\x02\x1aDomain\\Cart\\V1\\GPBMetadata\xea\x02\x10Domain::Cart::V1b\x06proto3"
+	"EventProtoP\x01Z9github.com/shortlink-org/shop/oms/internal/domain/cart/v1\xa2\x02\x03DCX\xaa\x02\x0eDomain.Cart.V1\xca\x02\x0eDomain\\Cart\\V1\xe2\x02\x1aDomain\\Cart\\V1\\GPBMetadata\xea\x02\x10Domain::Cart::V1b\x06proto3"
 
 var (
 	file_domain_cart_v1_event_proto_rawDescOnce sync.Once

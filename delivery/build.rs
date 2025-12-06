@@ -6,16 +6,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .extern_path(".google.protobuf", "::pbjson_types")
         .compile_protos(
             &[
-                "domain/common/v1/common.proto",
-                "domain/commands/v1/commands.proto",
-                "domain/commands/v1/responses.proto",
-                "domain/events/v1/events.proto",
+                "src/domain/delivery/common/v1/common.proto",
+                "src/domain/delivery/commands/v1/commands.proto",
+                "src/domain/delivery/commands/v1/responses.proto",
+                "src/domain/delivery/events/v1/events.proto",
+                "src/domain/delivery/queries/v1/queries.proto",
             ],
-            &["domain"],
+            &["src/domain"],
         )?;
     
     // Tell Cargo to rerun this build script if proto files change
-    println!("cargo:rerun-if-changed=domain/");
+    println!("cargo:rerun-if-changed=src/domain/delivery/");
     
     Ok(())
 }

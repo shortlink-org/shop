@@ -47,6 +47,13 @@ func (b *OrderStateBuilder) AddItem(goodId uuid.UUID, quantity int32, price deci
 		return b
 	}
 	item := NewItem(goodId, quantity, price)
+	
+	// Validate item before adding to maintain invariants
+	if err := ValidateOrderItem(item); err != nil {
+		b.errors = errors.Join(b.errors, fmt.Errorf("invalid item %s: %w", goodId, err))
+		return b
+	}
+	
 	b.orderState.items = append(b.orderState.items, item)
 	return b
 }

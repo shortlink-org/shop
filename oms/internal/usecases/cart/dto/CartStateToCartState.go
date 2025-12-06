@@ -1,6 +1,8 @@
 package dto
 
 import (
+	"fmt"
+
 	"github.com/google/uuid"
 
 	v1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
@@ -22,7 +24,14 @@ func CartStateToCartState(cartState *v3.CartState) (*v1.CartState, error) {
 			return nil, err
 		}
 
-		state.AddItem(v1.NewCartItem(goodId, item.GetQuantity()))
+		cartItem, err := v1.NewCartItem(goodId, item.GetQuantity())
+		if err != nil {
+			return nil, fmt.Errorf("invalid cart item %+v: %w", item, err)
+		}
+
+		if err := state.AddItem(cartItem); err != nil {
+			return nil, fmt.Errorf("failed to add cart item %+v: %w", item, err)
+		}
 	}
 
 	return state, nil

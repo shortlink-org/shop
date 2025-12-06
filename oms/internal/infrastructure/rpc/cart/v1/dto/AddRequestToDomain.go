@@ -1,6 +1,8 @@
 package dto
 
 import (
+	"fmt"
+
 	"github.com/google/uuid"
 
 	domain "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
@@ -26,7 +28,14 @@ func AddRequestToDomain(r *v2.AddRequest) (*domain.CartState, error) {
 			return nil, ParseItemError{Err: errParseItem, item: r.Items[i].GoodId}
 		}
 
-		item.AddItem(domain.NewCartItem(goodId, r.Items[i].Quantity))
+		cartItem, err := domain.NewCartItem(goodId, r.Items[i].Quantity)
+		if err != nil {
+			return nil, fmt.Errorf("invalid cart item %+v: %w", r.Items[i], err)
+		}
+
+		if err := item.AddItem(cartItem); err != nil {
+			return nil, fmt.Errorf("failed to add cart item %+v: %w", r.Items[i], err)
+		}
 	}
 
 	return item, nil

@@ -751,8 +751,8 @@ const file_domain_order_v1_common_v1_common_proto_rawDesc = "" +
 	"%NOT_DELIVERED_REASON_CUSTOMER_REFUSED\x10\x03\x12&\n" +
 	"\"NOT_DELIVERED_REASON_ACCESS_DENIED\x10\x04\x12(\n" +
 	"$NOT_DELIVERED_REASON_PACKAGE_DAMAGED\x10\x05\x12\x1e\n" +
-	"\x1aNOT_DELIVERED_REASON_OTHER\x10\x06B\xff\x01\n" +
-	"\x1acom.domain.order.common.v1B\vCommonProtoP\x01ZYgithub.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/order/v1/common/v1\xa2\x02\x03DOC\xaa\x02\x16Domain.Order.Common.V1\xca\x02\x16Domain\\Order\\Common\\V1\xe2\x02\"Domain\\Order\\Common\\V1\\GPBMetadata\xea\x02\x19Domain::Order::Common::V1b\x06proto3"
+	"\x1aNOT_DELIVERED_REASON_OTHER\x10\x06B\xea\x01\n" +
+	"\x1acom.domain.order.common.v1B\vCommonProtoP\x01ZDgithub.com/shortlink-org/shop/oms/internal/domain/order/v1/common/v1\xa2\x02\x03DOC\xaa\x02\x16Domain.Order.Common.V1\xca\x02\x16Domain\\Order\\Common\\V1\xe2\x02\"Domain\\Order\\Common\\V1\\GPBMetadata\xea\x02\x19Domain::Order::Common::V1b\x06proto3"
 
 var (
 	file_domain_order_v1_common_v1_common_proto_rawDescOnce sync.Once

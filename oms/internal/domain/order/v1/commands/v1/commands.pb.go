@@ -7,7 +7,7 @@
 package v1
 
 import (
-	v1 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/order/v1/common/v1"
+	v1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	_ "google.golang.org/protobuf/types/known/timestamppb"
@@ -260,8 +260,8 @@ const file_domain_order_v1_commands_v1_commands_proto_rawDesc = "" +
 	"\border_id\x18\x01 \x01(\tR\aorderId\"h\n" +
 	"\x12UpdateOrderCommand\x12\x19\n" +
 	"\border_id\x18\x01 \x01(\tR\aorderId\x127\n" +
-	"\x05items\x18\x02 \x03(\v2!.domain.order.common.v1.OrderItemR\x05itemsB\x8d\x02\n" +
-	"\x1ccom.domain.order.commands.v1B\rCommandsProtoP\x01Z[github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/order/v1/commands/v1\xa2\x02\x03DOC\xaa\x02\x18Domain.Order.Commands.V1\xca\x02\x18Domain\\Order\\Commands\\V1\xe2\x02$Domain\\Order\\Commands\\V1\\GPBMetadata\xea\x02\x1bDomain::Order::Commands::V1b\x06proto3"
+	"\x05items\x18\x02 \x03(\v2!.domain.order.common.v1.OrderItemR\x05itemsB\xf8\x01\n" +
+	"\x1ccom.domain.order.commands.v1B\rCommandsProtoP\x01ZFgithub.com/shortlink-org/shop/oms/internal/domain/order/v1/commands/v1\xa2\x02\x03DOC\xaa\x02\x18Domain.Order.Commands.V1\xca\x02\x18Domain\\Order\\Commands\\V1\xe2\x02$Domain\\Order\\Commands\\V1\\GPBMetadata\xea\x02\x1bDomain::Order::Commands::V1b\x06proto3"
 
 var (
 	file_domain_order_v1_commands_v1_commands_proto_rawDescOnce sync.Once

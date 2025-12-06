@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package domain.order.commands.v1;
 
-option go_package = "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/domain/order/v1/commands/v1";
+option go_package = "github.com/shortlink-org/shop/oms/internal/domain/order/v1/commands/v1";
 
 import "google/protobuf/timestamp.proto";
 import "domain/order/v1/common/v1/common.proto";

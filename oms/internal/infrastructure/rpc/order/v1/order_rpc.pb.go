@@ -7,7 +7,7 @@
 package v1
 
 import (
-	v1 "github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/infrastructure/rpc/order/v1/model/v1"
+	v1 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/model/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
@@ -32,8 +32,8 @@ const file_infrastructure_rpc_order_v1_order_rpc_proto_rawDesc = "" +
 	"\fOrderService\x12U\n" +
 	"\x06Create\x123.infrastructure.rpc.order.v1.model.v1.CreateRequest\x1a\x16.google.protobuf.Empty\x12j\n" +
 	"\x03Get\x120.infrastructure.rpc.order.v1.model.v1.GetRequest\x1a1.infrastructure.rpc.order.v1.model.v1.GetResponse\x12U\n" +
-	"\x06Cancel\x123.infrastructure.rpc.order.v1.model.v1.CancelRequest\x1a\x16.google.protobuf.EmptyB\x9c\x02\n" +
-	"\x1fcom.infrastructure.rpc.order.v1B\rOrderRpcProtoP\x01Z[github.com/shortlink-org/shortlink/boundaries/shop/oms/internal/infrastructure/rpc/order/v1\xa2\x02\x03IRO\xaa\x02\x1bInfrastructure.Rpc.Order.V1\xca\x02\x1bInfrastructure\\Rpc\\Order\\V1\xe2\x02'Infrastructure\\Rpc\\Order\\V1\\GPBMetadata\xea\x02\x1eInfrastructure::Rpc::Order::V1b\x06proto3"
+	"\x06Cancel\x123.infrastructure.rpc.order.v1.model.v1.CancelRequest\x1a\x16.google.protobuf.EmptyB\x87\x02\n" +
+	"\x1fcom.infrastructure.rpc.order.v1B\rOrderRpcProtoP\x01ZFgithub.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1\xa2\x02\x03IRO\xaa\x02\x1bInfrastructure.Rpc.Order.V1\xca\x02\x1bInfrastructure\\Rpc\\Order\\V1\xe2\x02'Infrastructure\\Rpc\\Order\\V1\\GPBMetadata\xea\x02\x1eInfrastructure::Rpc::Order::V1b\x06proto3"
 
 var file_infrastructure_rpc_order_v1_order_rpc_proto_goTypes = []any{
 	(*v1.CreateRequest)(nil), // 0: infrastructure.rpc.order.v1.model.v1.CreateRequest

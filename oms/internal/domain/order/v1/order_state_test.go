@@ -18,9 +18,6 @@ func TestOrderState(t *testing.T) {
 	fixedGoodID1 := uuid.MustParse("123e4567-e89b-12d3-a456-426614174001")
 	fixedGoodID2 := uuid.MustParse("123e4567-e89b-12d3-a456-426614174002")
 
-	// Create a background context for general use.
-	ctx := context.Background()
-
 	t.Run("NewOrderState", func(t *testing.T) {
 		orderState := NewOrderState(fixedCustomerID)
 
