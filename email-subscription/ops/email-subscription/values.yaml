@@ -1,0 +1,103 @@
+# Common default values for shop email-subscription service.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# -- Pods Service Account
+# @ignored ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+serviceAccount:
+  create: true
+
+# ==============================================================================
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: cert-manager-production
+    nginx.ingress.kubernetes.io/enable-owasp-core-rules: 'true'
+    nginx.ingress.kubernetes.io/enable-opentelemetry: 'true'
+
+  hostname: shop.shortlink.best
+  paths:
+    - path: /subscription
+      service:
+        name: shop-email-subscription
+        port: 8000
+
+  tls:
+    - secretName: shop-tls
+      hosts:
+        - shop.shortlink.best
+
+deploy:
+  replicaCount: 1
+
+  imagePullSecrets: []
+
+  env:
+    OTEL_EXPORTER_OTLP_ENDPOINT: http://grafana-tempo.grafana:4317
+
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+
+  # -- Annotations to be added to controller pods
+  annotations: {}
+
+  image:
+    repository: registry.gitlab.com/shortlink-org/shop/email-subscription
+    tag: latest
+    # -- Global imagePullPolicy
+    # Default: 'Always' if image tag is 'latest', else 'IfNotPresent'
+    # Ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+    pullPolicy: Always
+
+  # -- define a liveness probe that checks every 5 seconds, starting after 5 seconds
+  livenessProbe:
+    enabled: true
+    httpGet:
+      path: /live
+      port: 8000
+
+  # -- define a readiness probe that checks every 5 seconds, starting after 5 seconds
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /ready
+      port: 8000
+
+service:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8000
+      protocol: TCP
+      public: true
+
+# ==============================================================================
+# Prometheus Operator ServiceMonitor configuration
+monitoring:
+  enabled: true
+
+# ==============================================================================
+# PodDisruptionBudget
+podDisruptionBudget:
+  enabled: false
+
+# ==============================================================================
+# NetworkPolicy
+networkPolicy:
+  enabled: false
+  policyTypes:
+    - Ingress
+  ingress:
+    from:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: nginx-ingress
+    ports:
+      - protocol: TCP
+        port: 8000
