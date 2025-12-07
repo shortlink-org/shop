@@ -1,0 +1,111 @@
+# Common default values for shop feed service.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# -- Pods Service Account
+# @ignored ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+serviceAccount:
+  create: true
+
+# ==============================================================================
+ingress:
+  enabled: true
+  # type ingress-controller: istio, cilium, nginx
+  ingressClassName: istio
+  istio:
+    match:
+      - uri:
+          prefix: /shop.feed.v1.FeedService/
+    route:
+      destination:
+        port: 50051
+
+# ==============================================================================
+deploy:
+  # type: Deployment, Rollout, StatefulSet
+  type: Deployment
+
+  image:
+    repository: registry.gitlab.com/shortlink-org/shop/feed
+    tag: latest
+    # -- Global imagePullPolicy
+    # Default: 'Always' if image tag is 'latest', else 'IfNotPresent'
+    # Ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+    pullPolicy: Always
+
+  resources:
+    # -- We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    limits:
+      cpu: 200m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+  env:
+    TRACER_URI: grafana-tempo.grafana:4317
+    GRPC_CLIENT_HOST: istio-ingress.istio-ingress
+    GRPC_CLIENT_TIMEOUT: 15s
+
+  # -- define a liveness probe that checks every 5 seconds, starting after 5 seconds
+  livenessProbe:
+    enabled: true
+    httpGet:
+      path: /live
+      port: 9090
+
+  # -- define a readiness probe that checks every 5 seconds, starting after 5 seconds
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /ready
+      port: 9090
+
+service:
+  type: ClusterIP
+  ports:
+    - name: grpc
+      port: 50051
+      protocol: TCP
+      public: true
+    - name: metrics
+      port: 9090
+      protocol: TCP
+      public: true
+
+# ==============================================================================
+# Prometheus Operator ServiceMonitor configuration
+monitoring:
+  enabled: true
+
+# ==============================================================================
+# PodDisruptionBudget
+podDisruptionBudget:
+  enabled: false
+
+# ==============================================================================
+# NetworkPolicy
+networkPolicy:
+  enabled: false
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: shortlink
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-system
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-ingress
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: prometheus-operator
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: grafana
+  policyTypes:
+    - Ingress
