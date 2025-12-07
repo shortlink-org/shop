@@ -14,7 +14,7 @@ import (
 )
 
 // Add adds an item to the cart.
-func (uc *UC) Add(ctx context.Context, in *v1.CartState) error {
+func (uc *UC) Add(ctx context.Context, in *v1.State) error {
 	workflowId := fmt.Sprintf("cart-%s", in.GetCustomerId().String())
 
 	_, err := uc.temporalClient.ExecuteWorkflow(ctx, client.StartWorkflowOptions{

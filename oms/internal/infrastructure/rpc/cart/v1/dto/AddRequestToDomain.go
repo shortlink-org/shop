@@ -6,11 +6,12 @@ import (
 	"github.com/google/uuid"
 
 	domain "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
+	itemv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/item/v1"
 	v2 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1/model/v1"
 )
 
 // AddRequestToDomain converts an AddRequest to a domain model
-func AddRequestToDomain(r *v2.AddRequest) (*domain.CartState, error) {
+func AddRequestToDomain(r *v2.AddRequest) (*domain.State, error) {
 	// string to uuid
 	customerId, err := uuid.Parse(r.CustomerId)
 	if err != nil {
@@ -18,7 +19,7 @@ func AddRequestToDomain(r *v2.AddRequest) (*domain.CartState, error) {
 	}
 
 	// create a domain model
-	item := domain.NewCartState(customerId)
+	item := domain.New(customerId)
 
 	// add item to the cart
 	for i := range r.GetItems() {
@@ -28,7 +29,7 @@ func AddRequestToDomain(r *v2.AddRequest) (*domain.CartState, error) {
 			return nil, ParseItemError{Err: errParseItem, item: r.Items[i].GoodId}
 		}
 
-		cartItem, err := domain.NewCartItem(goodId, r.Items[i].Quantity)
+		cartItem, err := itemv1.NewItem(goodId, r.Items[i].Quantity)
 		if err != nil {
 			return nil, fmt.Errorf("invalid cart item %+v: %w", r.Items[i], err)
 		}

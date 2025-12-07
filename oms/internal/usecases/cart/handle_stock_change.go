@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	domain "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
+	itemv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/item/v1"
 )
 
 // HandleStockChange handles stock change events and removes out-of-stock items from carts
@@ -59,8 +60,8 @@ func (uc *UC) HandleStockChange(ctx context.Context, goodId uuid.UUID, newQuanti
 			"good_id", goodId.String(),
 			"quantity", itemQuantity)
 
-		removeRequest := domain.NewCartState(customerId)
-		cartItem, err := domain.NewCartItem(goodId, itemQuantity)
+		removeRequest := domain.New(customerId)
+		cartItem, err := itemv1.NewItem(goodId, itemQuantity)
 		if err != nil {
 			uc.log.Warn("Failed to construct cart item for removal",
 				"customer_id", customerId.String(),

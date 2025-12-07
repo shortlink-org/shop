@@ -12,7 +12,7 @@ import (
 )
 
 // Get gets the cart.
-func (uc *UC) Get(ctx context.Context, customerId uuid.UUID) (*v1.CartState, error) {
+func (uc *UC) Get(ctx context.Context, customerId uuid.UUID) (*v1.State, error) {
 	workflowId := fmt.Sprintf("cart-%s", customerId)
 
 	resp, err := uc.temporalClient.QueryWorkflow(ctx, workflowId, "", v1.Event_EVENT_GET.String(), nil)

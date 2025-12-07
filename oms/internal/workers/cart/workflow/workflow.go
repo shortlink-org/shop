@@ -5,6 +5,7 @@ import (
 	"go.temporal.io/sdk/workflow"
 
 	v2 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
+	itemv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/item/v1"
 	v3 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1/model/v1"
 	"github.com/shortlink-org/shop/oms/internal/workers/cart/workflow/dto"
 	v1 "github.com/shortlink-org/shop/oms/internal/workers/cart/workflow/model/cart/v1"
@@ -12,7 +13,7 @@ import (
 
 // Workflow is a Temporal workflow that manages the cart state.
 func Workflow(ctx workflow.Context, customerId uuid.UUID) error {
-	state := v2.NewCartState(customerId)
+	state := v2.New(customerId)
 
 	// Set up query handler for getting cart state
 	err := workflow.SetQueryHandler(ctx, v2.Event_EVENT_GET.String(), func() (*v3.CartState, error) {
@@ -42,7 +43,7 @@ func Workflow(ctx workflow.Context, customerId uuid.UUID) error {
 				continue
 			}
 
-			cartItem, err := v2.NewCartItem(goodId, item.Quantity)
+			cartItem, err := itemv1.NewItem(goodId, item.Quantity)
 			if err != nil {
 				logger.Error("Invalid cart item", "good_id", item.GoodId, "error", err)
 				continue
@@ -65,7 +66,7 @@ func Workflow(ctx workflow.Context, customerId uuid.UUID) error {
 				continue
 			}
 
-			cartItem, err := v2.NewCartItem(goodId, item.Quantity)
+			cartItem, err := itemv1.NewItem(goodId, item.Quantity)
 			if err != nil {
 				logger.Error("Invalid cart item", "good_id", item.GoodId, "error", err)
 				continue

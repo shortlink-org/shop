@@ -18,7 +18,7 @@ type StockCartService struct {
 // CartRepository defines the interface for cart repository operations needed by the domain service
 type CartRepository interface {
 	// GetCart retrieves a cart by customer ID
-	GetCart(ctx context.Context, customerId uuid.UUID) (*CartState, error)
+	GetCart(ctx context.Context, customerId uuid.UUID) (*State, error)
 	// RemoveItemFromCart removes an item from a cart
 	RemoveItemFromCart(ctx context.Context, customerId uuid.UUID, goodId uuid.UUID, quantity int32) error
 }

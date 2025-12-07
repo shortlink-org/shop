@@ -5,7 +5,7 @@ import (
 	v3 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1/model/v1"
 )
 
-func CartStateToDomain(in *v2.CartState) *v3.CartState {
+func CartStateToDomain(in *v2.State) *v3.CartState {
 	items := make([]*v3.CartItem, 0, len(in.GetItems()))
 
 	for _, item := range in.GetItems() {

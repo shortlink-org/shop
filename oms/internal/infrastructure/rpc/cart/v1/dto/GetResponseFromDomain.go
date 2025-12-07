@@ -5,7 +5,7 @@ import (
 	v1 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1/model/v1"
 )
 
-func GetResponseFromDomain(response *v2.CartState) *v1.GetResponse {
+func GetResponseFromDomain(response *v2.State) *v1.GetResponse {
 	items := make([]*v1.CartItem, 0, len(response.GetItems()))
 
 	for _, item := range response.GetItems() {

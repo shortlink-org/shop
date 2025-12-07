@@ -10,7 +10,7 @@ import (
 )
 
 // Remove removes items from the cart.
-func (uc *UC) Remove(ctx context.Context, in *domain.CartState) error {
+func (uc *UC) Remove(ctx context.Context, in *domain.State) error {
 	workflowId := fmt.Sprintf("cart-%s", in.GetCustomerId().String())
 
 	request := dto.CartStateToCartEvent(in, v1.Event_EVENT_REMOVE)

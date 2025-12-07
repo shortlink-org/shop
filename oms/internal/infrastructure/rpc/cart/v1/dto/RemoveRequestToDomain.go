@@ -6,11 +6,12 @@ import (
 	"github.com/google/uuid"
 
 	domain "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
+	itemv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/item/v1"
 	v1 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1/model/v1"
 )
 
 // RemoveRequestToDomain converts a RemoveRequest to a domain model
-func RemoveRequestToDomain(r *v1.RemoveRequest) (*domain.CartState, error) {
+func RemoveRequestToDomain(r *v1.RemoveRequest) (*domain.State, error) {
 	// string to uuid
 	customerId, err := uuid.Parse(r.CustomerId)
 	if err != nil {
@@ -18,7 +19,7 @@ func RemoveRequestToDomain(r *v1.RemoveRequest) (*domain.CartState, error) {
 	}
 
 	// create a domain model
-	state := domain.NewCartState(customerId)
+	state := domain.New(customerId)
 
 	// remove items from the cart
 	for i := range r.GetItems() {
@@ -29,7 +30,7 @@ func RemoveRequestToDomain(r *v1.RemoveRequest) (*domain.CartState, error) {
 		}
 
 		// create CartItem and remove it from the state
-		item, err := domain.NewCartItem(goodId, r.Items[i].Quantity)
+		item, err := itemv1.NewItem(goodId, r.Items[i].Quantity)
 		if err != nil {
 			return nil, fmt.Errorf("invalid cart item %+v: %w", r.Items[i], err)
 		}

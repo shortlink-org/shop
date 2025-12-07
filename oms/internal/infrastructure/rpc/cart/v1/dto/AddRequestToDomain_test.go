@@ -16,7 +16,7 @@ func TestAddRequestToDomain(t *testing.T) {
 		name          string
 		request       *model.AddRequest
 		expectedError error
-		expectedState *domain.CartState
+		expectedState *domain.State
 	}{
 		{
 			name: "Valid AddRequest",
@@ -28,14 +28,14 @@ func TestAddRequestToDomain(t *testing.T) {
 				},
 			},
 			expectedError: nil,
-			expectedState: func() *domain.CartState {
+			expectedState: func() *domain.State {
 				customerId, _ := uuid.Parse("e2c8ba97-1a6b-4c5c-9a2a-3f4c9b9d65a1")
 				goodId1, _ := uuid.Parse("c5f5d6d6-98e6-4f57-b34a-48a3997f28d4")
 				goodId2, _ := uuid.Parse("da3f3a3e-784d-4a9a-8cfa-6321d555d6a3")
-				state := domain.NewCartState(customerId)
-				item1, _ := domain.NewCartItem(goodId1, 1)
+				state := domain.New(customerId)
+				item1, _ := itemv1.NewItem(goodId1, 1)
 				_ = state.AddItem(item1)
-				item2, _ := domain.NewCartItem(goodId2, 2)
+				item2, _ := itemv1.NewItem(goodId2, 2)
 				_ = state.AddItem(item2)
 				return state
 			}(),

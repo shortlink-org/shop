@@ -12,7 +12,7 @@ import (
 
 // CartRepository defines the interface for cart repository operations
 type CartRepository interface {
-	GetCart(ctx context.Context, customerId uuid.UUID) (*cartDomain.CartState, error)
+	GetCart(ctx context.Context, customerId uuid.UUID) (*cartDomain.State, error)
 }
 
 // StockChecker defines the interface for checking stock availability
