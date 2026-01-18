@@ -51,3 +51,7 @@ temp/
 # OS
 .DS_Store
 Thumbs.db
+
+# Helm
+**/ops/**/charts/*.tgz
+**/ops/**/Chart.lock
