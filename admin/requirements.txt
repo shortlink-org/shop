@@ -151,9 +151,9 @@ django-filter==25.2 \
     --hash=sha256:760e984a931f4468d096f5541787efb8998c61217b73006163bf2f9523fe8f23 \
     --hash=sha256:9c0f8609057309bba611062fe1b720b4a873652541192d232dd28970383633e3
     # via shop-admin (pyproject.toml)
-django-health-check==3.20.0 \
-    --hash=sha256:bcb2b8f36f463cead0564a028345c5b17e2a2d18e9cc88ecd611b13a26521926 \
-    --hash=sha256:cd69ac5facf73fe7241d9492d939b57bd20e24f46c4edea91e6a900bf22c2d8e
+django-health-check==3.20.8 \
+    --hash=sha256:89f06fd3ecfefb13a8444cbc49508c76f1f49c816624026f720a28e0e67a458c \
+    --hash=sha256:bbb7286af4b4e2079d262eeb3e68014c8980f8fcfbd295bca1ec31cbf827b83c
     # via shop-admin (pyproject.toml)
 django-ory-auth @ git+https://github.com/micro-company/django_ory_auth@5ce24ac73dd843b7555348f2419f33c156060117
     # via shop-admin (pyproject.toml)
