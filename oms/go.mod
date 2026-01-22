@@ -1,6 +1,6 @@
 module github.com/shortlink-org/shop/oms
 
-go 1.25.4
+go 1.25.6
 
 require (
 	github.com/authzed/authzed-go v1.7.0
