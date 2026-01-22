@@ -177,9 +177,9 @@ drf-spectacular==0.28.0 \
     --hash=sha256:2c778a47a40ab2f5078a7c42e82baba07397bb35b074ae4680721b2805943061 \
     --hash=sha256:856e7edf1056e49a4245e87a61e8da4baff46c83dbc25be1da2df77f354c7cb4
     # via shop-admin (pyproject.toml)
-drf-yasg==1.21.11 \
-    --hash=sha256:0190b3de884aa593a39c75e6daba2ae69f285f0691de1eb0e3f4c6307faa1817 \
-    --hash=sha256:ec741f313b3b5f0b5fc8c1e1b6ed323c34f1f492a41fe7cc7421d8c6de9753e4
+drf-yasg==1.21.14 \
+    --hash=sha256:68d62d5f7505611ba9577115c83b36211cc20d9748a50ce95a44abe411727d10 \
+    --hash=sha256:725ddda28aec7efc4cab985290fe790c8565e665017f7c80211d288a35821c70
     # via shop-admin (pyproject.toml)
 googleapis-common-protos==1.72.0 \
     --hash=sha256:4299c5a82d5ae1a9702ada957347726b167f9f8d1fc352477702a1e851ff4038 \

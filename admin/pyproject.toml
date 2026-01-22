@@ -23,7 +23,7 @@ dependencies = [
   'markdown',
   'django-filter',
   'drf-spectacular==0.28.0',
-  'drf-yasg==1.21.11',
+  'drf-yasg==1.21.14',
   'googleapis-common-protos==1.72.0',
   'grpcio==1.76.0',
   'idna==3.11',
