@@ -2,7 +2,7 @@
 name = "shop_admin"
 description = "This service is responsible for the administration of the shop."
 readme = "README.md"
-requires-python = ">=3.13.7"
+requires-python = ">=3.13"
 dynamic = ["version"]
 
 dependencies = [
@@ -17,7 +17,7 @@ dependencies = [
   'django-debug-toolbar==6.2.0',
   'django-environ==0.12.0',
   'django-health-check==3.20.8',
-  'django-prometheus==2.4.1',
+  'django-prometheus @ git+https://github.com/django-commons/django-prometheus@master',
   'django-request-logging==0.7.5',
   'djangorestframework==3.16.1',
   'markdown',
@@ -107,6 +107,12 @@ select = [
   "I",      # isort
 ]
 
+[tool.ruff.lint.per-file-ignores]
+# Django manage.py pattern uses import inside try/except
+"src/manage.py" = ["PLC0415"]
+"src/made.py" = ["PLC0415"]
+"src/migration.py" = ["PLC0415"]
+
 [tool.ruff.lint.isort]
 no-lines-before = ["standard-library", "local-folder"]
 known-third-party = []
@@ -114,3 +120,14 @@ known-local-folder = ["src"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+[tool.ty]
+# ty type checker configuration
+# https://docs.astral.sh/ty/
+
+[tool.ty.environment]
+python-version = "3.13"
+
+[tool.ty.rules]
+# Enable strict type checking
+unresolved-import = "error"

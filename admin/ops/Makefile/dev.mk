@@ -1,35 +1,59 @@
-# ADMIN TASKS ==========================================================================================================
-dep: ## Install dependencies
-	# Create a virtual environment at .venv
-	uv venv
+# DEVELOPMENT TASKS ====================================================================================================
 
-	# Install dependencies
+##@ Development
+
+.PHONY: dep
+dep: ## Install dependencies
+	uv venv
 	uv pip install -r pyproject.toml --no-deps
 
+.PHONY: lock
 lock: ## Lock dependencies
 	-rm requirements.txt
-	@uv pip compile pyproject.toml --generate-hashes -o requirements.txt --no-deps
+	uv pip compile pyproject.toml --generate-hashes -o requirements.txt --no-deps
 
-run: ## Run server
-	@python src/manage.py runserver
+.PHONY: run
+run: ## Run development server
+	.venv/bin/python src/manage.py runserver
 
+.PHONY: test
 test: ## Run tests
-	@pytest --fixtures tests
+	.venv/bin/pytest --fixtures tests
 
-lint: ## Run linter
-	@uvx ruff format
-	@uvx ruff check --fix .
+##@ Code Quality
 
-# MIGRATION TASKS ======================================================================================================
-migrate: ## Run migrations
-	@python src/migration.py migrate
+.PHONY: lint
+lint: ## Run linter (ruff format + check)
+	uvx ruff format
+	uvx ruff check --fix .
 
-dump: ## Dump migrations
-	@python src/migration.py dumpdata goods.good > fixtures/good.json
+.PHONY: typecheck
+typecheck: ## Run type checker (ty)
+	uvx ty check --python .venv/bin/python src/
 
-restore: ## Restore migrations
-	@python src/migration.py loaddata fixtures/good.json
+.PHONY: check
+check: lint typecheck ## Run all code quality checks
 
-# STATIC TASKS =========================================================================================================
+##@ Database
+
+.PHONY: migrate
+migrate: ## Run database migrations
+	.venv/bin/python src/migration.py migrate
+
+.PHONY: makemigrations
+makemigrations: ## Create new migrations
+	.venv/bin/python src/migration.py makemigrations
+
+.PHONY: dump
+dump: ## Dump fixtures to JSON
+	.venv/bin/python src/migration.py dumpdata goods.good > fixtures/good.json
+
+.PHONY: restore
+restore: ## Restore fixtures from JSON
+	.venv/bin/python src/migration.py loaddata fixtures/good.json
+
+##@ Static Files
+
+.PHONY: static
 static: ## Collect static files
-	@python src/made.py collectstatic
+	.venv/bin/python src/made.py collectstatic

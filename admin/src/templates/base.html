@@ -8,8 +8,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="{% static 'images/favicons/favicon.ico' %}">
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS (CSP nonce for security) -->
+    <script src="https://cdn.tailwindcss.com" nonce="{{ csp_nonce }}"></script>
 
     {% block css %}
     <!-- Your project-specific CSS -->
@@ -17,7 +17,7 @@
     {% endblock %}
     {% block javascript %}
     <!-- Project-specific Javascript -->
-    <script defer src="{% static 'js/project.js' %}"></script>
+    <script defer src="{% static 'js/project.js' %}" nonce="{{ csp_nonce }}"></script>
     {% endblock javascript %}
 </head>
 <body class="bg-gray-50 text-gray-800">
