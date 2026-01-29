@@ -36,6 +36,18 @@ check: lint typecheck ## Run all code quality checks
 
 ##@ Database
 
+.PHONY: db-up
+db-up: ## Start local PostgreSQL and Redis
+	docker compose up -d
+
+.PHONY: db-down
+db-down: ## Stop local PostgreSQL and Redis
+	docker compose down
+
+.PHONY: db-logs
+db-logs: ## Show database logs
+	docker compose logs -f
+
 .PHONY: migrate
 migrate: ## Run database migrations
 	.venv/bin/python src/migration.py migrate

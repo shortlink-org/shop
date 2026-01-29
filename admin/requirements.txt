@@ -127,11 +127,11 @@ charset-normalizer==3.4.4 \
     --hash=sha256:faa3a41b2b66b6e50f84ae4a68c64fcd0c44355741c6374813a800cd6695db9e \
     --hash=sha256:fd44c878ea55ba351104cb93cc85e74916eb8fa440ca7903e57575e97394f608
     # via shop-admin (pyproject.toml)
-Deprecated==1.2.18 \
+deprecated==1.2.18 \
     --hash=sha256:422b6f6d859da6f2ef57857761bfb392480502a64c3028ca9bbe86085d72115d \
     --hash=sha256:bd5011788200372a32418f888e326a09ff80d0214bd961147cfed01b5c018eec
     # via shop-admin (pyproject.toml)
-Django==6.0.1 \
+django==6.0.1 \
     --hash=sha256:a92a4ff14f664a896f9849009cb8afaca7abe0d6fc53325f3d1895a15253433d \
     --hash=sha256:ed76a7af4da21551573b3d9dfc1f53e20dd2e6c7d70a3adc93eedb6338130a5f
     # via shop-admin (pyproject.toml)
@@ -157,9 +157,7 @@ django-health-check==3.20.8 \
     # via shop-admin (pyproject.toml)
 django-ory-auth @ git+https://github.com/micro-company/django_ory_auth@5ce24ac73dd843b7555348f2419f33c156060117
     # via shop-admin (pyproject.toml)
-django-prometheus==2.4.1 \
-    --hash=sha256:073628243d2a6de6a8a8c20e5b512872dfb85d66e1b60b28bcf1eca0155dad95 \
-    --hash=sha256:7fe5af7f7c9ad9cd8a429fe0f3f1bf651f0e244f77162147869eab7ec09cc5e7
+django-prometheus @ git+https://github.com/django-commons/django-prometheus@ea2d559476675a688f82cc37fac22b796ec7bcba
     # via shop-admin (pyproject.toml)
 django-redis==6.0.0 \
     --hash=sha256:20bf0063a8abee567eb5f77f375143c32810c8700c0674ced34737f8de4e36c0 \
@@ -260,7 +258,7 @@ inflection==0.5.1 \
     --hash=sha256:1a29730d366e996aaacffb2f1f1cb9593dc38e2ddd30c91250c6dde09ea9b417 \
     --hash=sha256:f38b2b640938a4f35ade69ac3d053042959b62a0f1076a5bbaa1b9526605a8a2
     # via shop-admin (pyproject.toml)
-JSON-log-formatter==1.1.1 \
+json-log-formatter==1.1.1 \
     --hash=sha256:0815e3b4469e5c79cf3f6dc8a0613ba6601f4a7464f85ba03655cfa6e3e17d10
     # via shop-admin (pyproject.toml)
 jsonschema==4.25.1 \
@@ -271,7 +269,7 @@ jsonschema-specifications==2025.9.1 \
     --hash=sha256:98802fee3a11ee76ecaca44429fda8a41bff98b00a0f2838151b113f210cc6fe \
     --hash=sha256:b540987f239e745613c7a9176f3edb72b832a4ac465cf02712288397832b5e8d
     # via shop-admin (pyproject.toml)
-Markdown==3.10.1 \
+markdown==3.10.1 \
     --hash=sha256:1c19c10bd5c14ac948c53d0d762a04e2fa35a6d58a6b7b1e6bfcbe6fefc0001a \
     --hash=sha256:867d788939fe33e4b736426f5b9f651ad0c0ae0ecf89df0ca5d1176c70812fe3
     # via shop-admin (pyproject.toml)
@@ -299,9 +297,9 @@ opentelemetry-instrumentation==0.59b0 \
     --hash=sha256:44082cc8fe56b0186e87ee8f7c17c327c4c2ce93bdbe86496e600985d74368ee \
     --hash=sha256:6010f0faaacdaf7c4dff8aac84e226d23437b331dcda7e70367f6d73a7db1adc
     # via shop-admin (pyproject.toml)
-opentelemetry-instrumentation-dbapi==0.47b0 \
-    --hash=sha256:24a160029dfffdb9716ce3908f140afe7c91a4704fbe42fc623341fc5645440f \
-    --hash=sha256:31fe72b7f45467592880ded77bb19aa4c04d126228684de9f0b46318325b9d50
+opentelemetry-instrumentation-dbapi==0.59b0 \
+    --hash=sha256:672d59caa06754b42d4e722644d9fcd00a1f9f862e9ea5cef6d4da454515ac67 \
+    --hash=sha256:c50112ae1cdb7f55bddcf57eca96aaa0f2dd78732be2b00953183439a4740493
     # via shop-admin (pyproject.toml)
 opentelemetry-instrumentation-django==0.59b0 \
     --hash=sha256:469c2d973619355645ec696bbc4afab836ce22cbc83236a0382c3090588f7772 \
@@ -311,17 +309,17 @@ opentelemetry-instrumentation-logging==0.59b0 \
     --hash=sha256:1b51116444edc74f699daf9002ded61529397100c9bc903c8b9aaa75a5218c76 \
     --hash=sha256:fdd4eddbd093fc421df8f7d356ecb15b320a1f3396b56bce5543048a5c457eea
     # via shop-admin (pyproject.toml)
-opentelemetry-instrumentation-requests==0.60b1 \
-    --hash=sha256:9a1063c16c44a3ba6e81870c4fa42a0fac3ecef5a4d60a11d0976eec9046f3d4 \
-    --hash=sha256:eec9fac3fab84737f663a2e08b12cb095b4bd67643b24587a8ecfa3cf4d0ca4c
+opentelemetry-instrumentation-requests==0.59b0 \
+    --hash=sha256:9af2ffe3317f03074d7f865919139e89170b6763a0251b68c25e8e64e04b3400 \
+    --hash=sha256:d43121532877e31a46c48649279cec2504ee1e0ceb3c87b80fe5ccd7eafc14c1
     # via shop-admin (pyproject.toml)
 opentelemetry-instrumentation-sqlite3==0.59b0 \
     --hash=sha256:7b9989d805336a1e78a907b3863376cf4ff1dc96dd8a9e0d385f6bb3686c27ac \
     --hash=sha256:ec13867102687426b835f6c499a287ee2f4195abfba85d372e011a795661914c
     # via shop-admin (pyproject.toml)
-opentelemetry-instrumentation-wsgi==0.47b0 \
-    --hash=sha256:4903c3d686d53ca7ab6545bb4cc42c3de8af5b2f370996e84db2cfec688860af \
-    --hash=sha256:9a1a78aa2f5682fe1073c4cc77f24ef4f083b18b66bbb674a995b0b77eef1815
+opentelemetry-instrumentation-wsgi==0.59b0 \
+    --hash=sha256:f271076e56c22da1d0d3404519ba4a1891b39ee3d470ca7ece7332d57cbaa6b9 \
+    --hash=sha256:ff0c3df043bd3653ad6a543cb2a1e666fbd4d63efffa04fa9d9090cef462e798
     # via shop-admin (pyproject.toml)
 opentelemetry-proto==1.39.1 \
     --hash=sha256:22cdc78efd3b3765d09e68bfbd010d4fc254c9818afd0b6b423387d9dee46007 \
@@ -424,7 +422,7 @@ pytz==2025.2 \
     --hash=sha256:360b9e3dbb49a209c21ad61809c7fb453643e048b38924c765813546746e81c3 \
     --hash=sha256:5ddf76296dd8c44c26eb8f4b6f35488f3ccbf6fbbd7adee0b7262d43f0ec2f00
     # via shop-admin (pyproject.toml)
-PyYAML==6.0.3 \
+pyyaml==6.0.3 \
     --hash=sha256:00c4bdeba853cc34e7dd471f16b4114f4162dc03e6b7afcc2128711f0eca823c \
     --hash=sha256:0150219816b6a1fa26fb4699fb7daa9caf09eb1999f3b70fb6e786805e80375a \
     --hash=sha256:02893d100e99e03eda1c8fd5c441d8c60103fd175728e23e431db1b589cf5ab3 \
