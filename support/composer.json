@@ -15,7 +15,7 @@
         }
     ],
     "require-dev": {
-        "behat/behat": "^3.19.0",
+        "behat/behat": "^3.29.0",
         "rector/rector": "^2.3.5"
     },
     "require": {
