@@ -6,6 +6,6 @@ metadata:
     argocd.argoproj.io/sync-wave: "-1"
     argocd.argoproj.io/compare-options: IgnoreExtraneous
 stringData:
-  password: "Z3JhZmFuYS1wYXNzd29yZA==" # grafana-password
+  password: "grafana-password"
   verifier: ""
 type: Opaque

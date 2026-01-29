@@ -1,19 +1,19 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: shortlink-postgres-datasource
+  name: shop-postgres-datasource
   labels:
     grafana_datasource: 'true'
 stringData:
   postgres.yaml: |-
     apiVersion: 1
     datasources:
-      - name: PostgreSQL (shortlink)
+      - name: PostgreSQL (shop)
         type: postgres
-        uid: shortlink-postgres-datasource
-        url: shortlink-postgres-pgbouncer.shortlink:5432
+        uid: shop-postgres-datasource
+        url: shop-postgres-pgbouncer.shortlink-shop:5432
         user: grafana
-        database: link
+        database: shop
         access: proxy
         basicAuth: false
         editable: false
@@ -22,7 +22,7 @@ stringData:
           maxIdleConns: 100
           maxIdleConnsAuto: true
           maxOpenConns: 100
-          postgresVersion: 1600
+          postgresVersion: 1800
           sslmode: require
           timescaledb: true
         secureJsonData:
