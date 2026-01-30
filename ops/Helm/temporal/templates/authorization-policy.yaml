@@ -1,0 +1,25 @@
+{{- if .Values.authorizationPolicy.enabled }}
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: temporal-web-require-jwt
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: temporal
+    app.kubernetes.io/component: web
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: temporal
+      app.kubernetes.io/component: web
+  action: ALLOW
+  rules:
+    # Allow health checks without JWT
+    - to:
+        - operation:
+            paths: ["/healthz", "/health"]
+    # Require valid JWT for all other requests
+    - from:
+        - source:
+            requestPrincipals: ["*"]
+{{- end }}
