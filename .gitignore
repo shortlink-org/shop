@@ -40,6 +40,17 @@ tmp/
 temp/
 *.tmp
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+*.egg
+.venv/
+venv/
+.python-version
+
 # Environment files
 .env
 .env.local
