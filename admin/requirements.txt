@@ -329,9 +329,9 @@ opentelemetry-sdk==1.39.1 \
     --hash=sha256:4d5482c478513ecb0a5d938dcc61394e647066e0cc2676bee9f3af3f3f45f01c \
     --hash=sha256:cf4d4563caf7bff906c9f7967e2be22d0d6b349b908be0d90fb21c8e9c995cc6
     # via shop-admin (pyproject.toml)
-opentelemetry-semantic-conventions==0.59b0 \
-    --hash=sha256:35d3b8833ef97d614136e253c1da9342b4c3c083bbaf29ce31d572a1c3825eed \
-    --hash=sha256:7a6db3f30d70202d5bf9fa4b69bc866ca6a30437287de6c510fb594878aed6b0
+opentelemetry-semantic-conventions==0.60b1 \
+    --hash=sha256:87c228b5a0669b748c76d76df6c364c369c28f1c465e50f661e39737e84bc953 \
+    --hash=sha256:9fa8c8b0c110da289809292b0591220d3a7b53c1526a23021e977d68597893fb
     # via shop-admin (pyproject.toml)
 opentelemetry-util-http==0.59b0 \
     --hash=sha256:6d036a07563bce87bf521839c0671b507a02a0d39d7ea61b88efa14c6e25355d \
