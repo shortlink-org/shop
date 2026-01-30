@@ -1,0 +1,9 @@
+# Binary
+courier-emulation
+
+# OSRM generated files
+data/*.osrm
+data/*.osrm.*
+
+# OSM source files (large)
+data/*.osm.pbf

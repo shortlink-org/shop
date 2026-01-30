@@ -1,0 +1,30 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test files
+*_test.go
+tests/
+
+# Documentation
+*.md
+!README.md
+docs/
+
+# OSRM data (large files)
+data/*.osrm*
+data/*.osm.pbf
+
+# Build artifacts
+bin/
+dist/
