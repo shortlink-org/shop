@@ -5,6 +5,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
+  image: registry.developers.crunchydata.com/crunchydata/crunchy-postgres-gis:ubi9-18-3.5-0
   postgresVersion: 18
   metadata:
     annotations:
@@ -116,7 +117,6 @@ spec:
           synchronous_commit: 'on'
           # Partitioning
           enable_partition_pruning: 'on'
-          # TODO: enabled pgrouting,timescaledb,postgis,pgmonitor_bgw
           shared_preload_libraries: pg_stat_statements,auto_explain,pgaudit,pg_prewarm,uuid-ossp,pg_partman_bgw
           pgmonitor_bgw.dbname: postgres,shop
           pgmonitor_bgw.role: "postgres"

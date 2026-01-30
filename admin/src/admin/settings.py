@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.gis",  # GeoDjango
     "django_prometheus",
     "debug_toolbar",
     "django_ory_auth",
@@ -59,7 +60,9 @@ INSTALLED_APPS = [
     "health_check.cache",
     "health_check.contrib.migrations",
     "rest_framework",
+    "mapwidgets",  # Django Map Widgets for GeoDjango
     "domain.goods",
+    "domain.offices",
     "drf_spectacular",
 ]
 
@@ -116,11 +119,23 @@ CSRF_TRUSTED_ORIGINS = [
 # https://docs.djangoproject.com/en/6.0/howto/csp/
 SECURE_CSP = {
     "default-src": [CSP.SELF],
-    "script-src": [CSP.SELF, CSP.NONCE, CSP.UNSAFE_EVAL, "https://cdn.tailwindcss.com", "https://cdn.jsdelivr.net"],
+    "script-src": [
+        CSP.SELF,
+        CSP.NONCE,
+        CSP.UNSAFE_EVAL,
+        "https://cdn.tailwindcss.com",
+        "https://cdn.jsdelivr.net",
+        "https://unpkg.com",  # Leaflet
+    ],
     "style-src": [CSP.SELF, CSP.UNSAFE_INLINE],  # Tailwind requires unsafe-inline for styles
-    "img-src": [CSP.SELF, "data:", "https:"],
+    "img-src": [
+        CSP.SELF,
+        "data:",
+        "https:",
+        "https://*.tile.openstreetmap.org",  # OSM tiles
+    ],
     "font-src": [CSP.SELF, "https://fonts.gstatic.com"],
-    "connect-src": [CSP.SELF],
+    "connect-src": [CSP.SELF, "https://*.tile.openstreetmap.org"],
     "frame-ancestors": [CSP.SELF],
     "base-uri": [CSP.SELF],
     "form-action": [CSP.SELF],
@@ -136,7 +151,7 @@ SECURE_CSP = {
 
 DATABASES = {
     "default": {
-        "ENGINE": "django_prometheus.db.backends.postgresql",  # Prometheus metrics for DB queries
+        "ENGINE": "django.contrib.gis.db.backends.postgis",  # PostGIS for GeoDjango
         "NAME": env("POSTGRES_DB", default="shortlink"),
         "USER": env("POSTGRES_USER", default="postgres"),
         "PASSWORD": env("POSTGRES_PASSWORD", default="shortlink"),
@@ -307,5 +322,29 @@ SPECTACULAR_SETTINGS = {
     "REDOC_UI_SETTINGS": {
         "pathInMiddlePanel": True,
         "hideDownloadButton": True,
+    },
+}
+
+# Django Map Widgets configuration
+# https://django-map-widgets.readthedocs.io/
+MAP_WIDGETS = {
+    "Leaflet": {
+        "PointField": {
+            "interactive": {
+                "mapOptions": {
+                    "zoom": 13,
+                    "center": [52.52, 13.405],  # Berlin center
+                    "scrollWheelZoom": True,
+                },
+                "tileLayer": {
+                    "urlTemplate": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                    "options": {
+                        "maxZoom": 19,
+                        "attribution": '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                    },
+                },
+                "markerFitZoom": 15,
+            },
+        },
     },
 }

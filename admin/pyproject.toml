@@ -69,6 +69,7 @@ dependencies = [
   'redis',
   'django-redis',
   "mimesis>=19.1.0",
+  "django-map-widgets>=0.5.1",
 ]
 
 [build-system]
@@ -89,6 +90,7 @@ unsafe-fixes = true
 line-length = 120
 extend-exclude = [
   "src/domain/goods/migrations/*",
+  "src/domain/offices/migrations/*",
   "tests/*",
 ]
 exclude = [".venv", "*_pb2.py", "*_pb2_grpc.py", "*_pb2.pyi"]

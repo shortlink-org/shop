@@ -11,6 +11,9 @@ data:
     CREATE SCHEMA AUTHORIZATION shop;
     ALTER DATABASE shop OWNER TO shop;
 
+    -- Enable PostGIS extension for geospatial features (offices, delivery tracking)
+    CREATE EXTENSION IF NOT EXISTS postgis;
+
     GRANT CONNECT ON DATABASE shop TO grafana;
     GRANT USAGE ON SCHEMA shop TO grafana;
     ALTER DEFAULT PRIVILEGES FOR ROLE shop IN SCHEMA shop GRANT SELECT ON TABLES TO grafana;
