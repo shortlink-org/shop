@@ -21,37 +21,6 @@ impl fmt::Display for CourierStatus {
     }
 }
 
-/// Transport type for courier
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum TransportType {
-    Walking,
-    Bicycle,
-    Motorcycle,
-    Car,
-}
-
-impl TransportType {
-    /// Get average speed in km/h for this transport type
-    pub fn average_speed_kmh(&self) -> f64 {
-        match self {
-            TransportType::Walking => 5.0,
-            TransportType::Bicycle => 15.0,
-            TransportType::Motorcycle => 40.0,
-            TransportType::Car => 30.0, // Lower due to traffic
-        }
-    }
-
-    /// Get maximum recommended distance in km
-    pub fn max_recommended_distance_km(&self) -> f64 {
-        match self {
-            TransportType::Walking => 3.0,
-            TransportType::Bicycle => 10.0,
-            TransportType::Motorcycle => 30.0,
-            TransportType::Car => 50.0,
-        }
-    }
-}
-
 /// Courier capacity management
 #[derive(Debug, Clone, PartialEq)]
 pub struct CourierCapacity {
@@ -149,12 +118,6 @@ mod tests {
         assert!(CourierStatus::Free.can_accept_assignment());
         assert!(!CourierStatus::Unavailable.can_accept_assignment());
         assert!(!CourierStatus::Busy.can_accept_assignment());
-    }
-
-    #[test]
-    fn test_transport_speeds() {
-        assert!(TransportType::Car.average_speed_kmh() > TransportType::Walking.average_speed_kmh());
-        assert!(TransportType::Motorcycle.average_speed_kmh() > TransportType::Bicycle.average_speed_kmh());
     }
 
     #[test]

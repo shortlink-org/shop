@@ -4,8 +4,9 @@
 //! This is a domain service because it operates on multiple aggregates
 //! (Package and Courier) and contains complex business rules.
 
-use crate::domain::model::courier::{CourierCapacity, CourierStatus, TransportType};
+use crate::domain::model::courier::{CourierCapacity, CourierStatus};
 use crate::domain::model::vo::location::Location;
+use crate::domain::model::vo::TransportType;
 
 /// Courier data needed for dispatch decision
 #[derive(Debug, Clone)]
@@ -114,20 +115,14 @@ impl DispatchService {
         // Return the best candidate
         candidates.first().map(|(idx, distance)| {
             let courier = &couriers[*idx];
-            let estimated_minutes = Self::estimate_arrival_time(*distance, courier.transport_type);
-            
+            let estimated_minutes = courier.transport_type.calculate_travel_time_minutes(*distance);
+
             DispatchResult {
                 courier_id: courier.id.clone(),
                 distance_to_pickup_km: *distance,
                 estimated_arrival_minutes: estimated_minutes,
             }
         })
-    }
-
-    /// Estimate arrival time based on distance and transport type
-    fn estimate_arrival_time(distance_km: f64, transport: TransportType) -> f64 {
-        let speed_kmh = transport.average_speed_kmh();
-        (distance_km / speed_kmh) * 60.0 // Convert to minutes
     }
 
     /// Validate if a specific courier can be assigned to a package
