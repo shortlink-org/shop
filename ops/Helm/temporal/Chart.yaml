@@ -1,7 +1,7 @@
 apiVersion: v2
 appVersion: "1.0.0"
 name: temporal
-version: 0.2.2
+version: 0.3.0
 kubeVersion: ">= 1.30.0 || >= v1.30.0-0"
 keywords:
   - temporal
@@ -10,7 +10,6 @@ maintainers:
   - email: batazor111@gmail.com
     name: batazor
     url: batazor.ru
-engine: gotpl
 type: application
 deprecated: false
 dependencies:
