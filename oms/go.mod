@@ -17,6 +17,7 @@ require (
 	github.com/shortlink-org/go-sdk/grpc v0.0.0-20260130191740-6ca93b747e53
 	github.com/shortlink-org/go-sdk/logger v0.0.0-20260130191740-6ca93b747e53
 	github.com/shortlink-org/go-sdk/observability v0.0.0-20260130191740-6ca93b747e53
+	github.com/shortlink-org/go-sdk/specification v0.0.0-20260130191740-6ca93b747e53
 	github.com/shortlink-org/go-sdk/temporal v0.0.0-20260130191740-6ca93b747e53
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
@@ -115,5 +116,6 @@ replace (
 	github.com/shortlink-org/go-sdk/http => ../../go-sdk/http
 	github.com/shortlink-org/go-sdk/logger => ../../go-sdk/logger
 	github.com/shortlink-org/go-sdk/observability => ../../go-sdk/observability
+	github.com/shortlink-org/go-sdk/specification => ../../go-sdk/specification
 	github.com/shortlink-org/go-sdk/temporal => ../../go-sdk/temporal
 )

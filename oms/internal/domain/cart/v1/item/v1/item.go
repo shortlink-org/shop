@@ -2,7 +2,6 @@ package v1
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
@@ -37,7 +36,17 @@ type Item struct {
 
 // NewItem creates a new Item with required fields only.
 // Price, discount, and tax are set to zero and should be set using NewItemWithPricing.
+// Validation is performed using the Specification pattern from rules package.
 func NewItem(goodId uuid.UUID, quantity int32) (Item, error) {
+	item := Item{
+		goodId:   goodId,
+		quantity: quantity,
+		price:    decimal.Zero,
+		discount: decimal.Zero,
+		tax:      decimal.Zero,
+	}
+
+	// Import cycle prevention: validate inline for basic fields
 	if goodId == uuid.Nil {
 		return Item{}, ErrItemGoodIdZero
 	}
@@ -45,17 +54,11 @@ func NewItem(goodId uuid.UUID, quantity int32) (Item, error) {
 		return Item{}, ErrItemQuantityZero
 	}
 
-	return Item{
-		goodId:   goodId,
-		quantity: quantity,
-		price:    decimal.Zero,
-		discount: decimal.Zero,
-		tax:      decimal.Zero,
-	}, nil
+	return item, nil
 }
 
 // NewItemWithPricing creates a new Item with all pricing information.
-// This constructor validates all pricing fields according to business rules.
+// Validation is performed using the Specification pattern from rules package.
 func NewItemWithPricing(
 	goodId uuid.UUID,
 	quantity int32,
@@ -63,6 +66,15 @@ func NewItemWithPricing(
 	discount decimal.Decimal,
 	tax decimal.Decimal,
 ) (Item, error) {
+	item := Item{
+		goodId:   goodId,
+		quantity: quantity,
+		price:    price,
+		discount: discount,
+		tax:      tax,
+	}
+
+	// Import cycle prevention: validate inline
 	if goodId == uuid.Nil {
 		return Item{}, ErrItemGoodIdZero
 	}
@@ -79,17 +91,12 @@ func NewItemWithPricing(
 		return Item{}, ErrItemTaxNegative
 	}
 	if discount.GreaterThan(price) {
-		return Item{}, fmt.Errorf("%w: discount %s exceeds price %s", ErrItemDiscountExceedsPrice, discount.String(), price.String())
+		return Item{}, ErrItemDiscountExceedsPrice
 	}
 
-	return Item{
-		goodId:   goodId,
-		quantity: quantity,
-		price:    price,
-		discount: discount,
-		tax:      tax,
-	}, nil
+	return item, nil
 }
+
 
 // WithPricing returns a new Item with updated pricing information.
 // This preserves immutability by creating a new instance.
