@@ -2,6 +2,26 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+# ==============================================================================
+# HTTPRoute: Istio Gateway → Temporal Web UI
+httpRoute:
+  enabled: true
+  parentRefs:
+    - name: external-gateway
+      namespace: istio-ingress
+      sectionName: https
+  hostnames:
+    - temporal.shortlink.best
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: temporal-web
+          port: 8080
+
+# ==============================================================================
 temporal:
   enabled: true
 
@@ -63,20 +83,9 @@ temporal:
         cpu: "200m"
         memory: "256Mi"
 
+    # Disable built-in ingress - using Istio Gateway instead
     ingress:
-      enabled: true
-      annotations:
-        cert-manager.io/cluster-issuer: cert-manager-production
-        nginx.ingress.kubernetes.io/enable-owasp-core-rules: "true"
-        nginx.ingress.kubernetes.io/enable-opentelemetry: "true"
-
-      hosts:
-        - "temporal.shortlink.best"
-
-      tls:
-        - secretName: temporal-tls
-          hosts:
-            - "temporal.shortlink.best"
+      enabled: false
 
   elasticsearch:
     enabled: true
