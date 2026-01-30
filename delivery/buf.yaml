@@ -1,6 +1,6 @@
 version: v2
 modules:
-  - path: src/domain/delivery
+  - path: src/domain/model/delivery
     name: buf.build/shortlink-org/shop-delivery
 deps:
   - buf.build/googleapis/googleapis

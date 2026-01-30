@@ -3,7 +3,7 @@ syntax = "proto3";
 package domain.delivery.events.v1;
 
 import "google/protobuf/timestamp.proto";
-import "domain/delivery/common/v1/common.proto";
+import "delivery/common/v1/common.proto";
 
 // PackageAcceptedEvent - canonical name: delivery.package.accepted.v1
 // Event when a package is accepted into the pool

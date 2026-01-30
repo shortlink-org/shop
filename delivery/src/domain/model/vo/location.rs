@@ -64,7 +64,7 @@ impl Location {
     /// # Examples
     ///
     /// ```
-    /// use crate::domain::vo::location::{Location, LocationError};
+    /// use delivery::domain::model::vo::location::{Location, LocationError};
     ///
     /// let location = Location::new(55.7558, 37.6173, 10.0)?;
     /// # Ok::<(), LocationError>(())
@@ -120,7 +120,7 @@ impl Location {
     /// # Examples
     ///
     /// ```
-    /// use crate::domain::vo::location::Location;
+    /// use delivery::domain::model::vo::location::Location;
     ///
     /// let moscow = Location::new(55.7558, 37.6173, 10.0).unwrap();
     /// let spb = Location::new(59.9343, 30.3351, 10.0).unwrap();
@@ -267,12 +267,13 @@ mod tests {
     }
 
     #[test]
-    fn test_equality_ignores_accuracy() {
-        // Two locations with same lat/lon but different accuracy should be equal
+    fn test_equality_includes_accuracy() {
+        // Two locations with same lat/lon but different accuracy should NOT be equal
+        // (all fields matter for value object equality)
         let loc1 = Location::new(55.7558, 37.6173, 10.0).unwrap();
         let loc2 = Location::new(55.7558, 37.6173, 100.0).unwrap();
         
-        assert_eq!(loc1, loc2);
+        assert_ne!(loc1, loc2);
         assert_eq!(loc1.latitude(), loc2.latitude());
         assert_eq!(loc1.longitude(), loc2.longitude());
         assert_ne!(loc1.accuracy(), loc2.accuracy());

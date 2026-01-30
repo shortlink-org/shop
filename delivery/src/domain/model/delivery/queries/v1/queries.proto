@@ -5,7 +5,7 @@ package domain.delivery.queries.v1;
 option go_package = "github.com/shortlink-org/shortlink/boundaries/shop/delivery/domain/delivery/queries/v1";
 
 import "google/protobuf/timestamp.proto";
-import "domain/delivery/common/v1/common.proto";
+import "delivery/common/v1/common.proto";
 
 // GetPackagePoolQuery - Query to get package pool with filters
 message GetPackagePoolQuery {

@@ -5,7 +5,7 @@ package domain.delivery.commands.v1;
 option go_package = "github.com/shortlink-org/shortlink/boundaries/shop/delivery/domain/delivery/commands/v1";
 
 import "google/protobuf/timestamp.proto";
-import "domain/delivery/common/v1/common.proto";
+import "delivery/common/v1/common.proto";
 
 // AcceptOrderResponse - Response for AcceptOrderCommand
 message AcceptOrderResponse {

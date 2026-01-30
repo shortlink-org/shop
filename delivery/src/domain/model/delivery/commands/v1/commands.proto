@@ -3,7 +3,7 @@ syntax = "proto3";
 package domain.delivery.commands.v1;
 
 import "google/protobuf/timestamp.proto";
-import "domain/delivery/common/v1/common.proto";
+import "delivery/common/v1/common.proto";
 
 // AcceptOrderCommand - Command to accept an order from OMS
 message AcceptOrderCommand {
