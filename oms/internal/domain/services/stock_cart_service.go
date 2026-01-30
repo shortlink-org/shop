@@ -1,10 +1,12 @@
-package v1
+package services
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/google/uuid"
+
+	cart "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
 )
 
 // StockCartService is a domain service that handles stock-related operations for carts.
@@ -18,7 +20,7 @@ type StockCartService struct {
 // CartRepository defines the interface for cart repository operations needed by the domain service
 type CartRepository interface {
 	// GetCart retrieves a cart by customer ID
-	GetCart(ctx context.Context, customerId uuid.UUID) (*State, error)
+	GetCart(ctx context.Context, customerId uuid.UUID) (*cart.State, error)
 	// RemoveItemFromCart removes an item from a cart
 	RemoveItemFromCart(ctx context.Context, customerId uuid.UUID, goodId uuid.UUID, quantity int32) error
 }
