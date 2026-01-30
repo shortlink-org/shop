@@ -17,8 +17,8 @@ type CartContextType = {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-function calculateItemCost(quantity: number, price: string): string {
-  return (Number(price) * quantity).toString();
+function calculateItemCost(quantity: number, price: number): number {
+  return price * quantity;
 }
 
 function updateCartItem(item: CartItem, updateType: UpdateType): CartItem | null {
@@ -27,8 +27,8 @@ function updateCartItem(item: CartItem, updateType: UpdateType): CartItem | null
   const newQuantity = updateType === 'plus' ? item.quantity + 1 : item.quantity - 1;
   if (newQuantity === 0) return null;
 
-  const singleItemAmount = Number(100) / item.quantity;
-  const newTotalAmount = calculateItemCost(newQuantity, singleItemAmount.toString());
+  const singleItemAmount = Number(item.cost.totalAmount.amount) / item.quantity;
+  const newTotalAmount = calculateItemCost(newQuantity, singleItemAmount);
 
   return {
     ...item,
@@ -36,6 +36,7 @@ function updateCartItem(item: CartItem, updateType: UpdateType): CartItem | null
     cost: {
       ...item.cost,
       totalAmount: {
+        ...item.cost.totalAmount,
         amount: newTotalAmount
       }
     }
@@ -67,7 +68,6 @@ function createOrUpdateCartItem(
         id: good.id,
         handle: good.name,
         title: good.name,
-        // featuredImage: good.name
       }
     }
   };
@@ -75,15 +75,15 @@ function createOrUpdateCartItem(
 
 function updateCartTotals(lines: CartItem[]): Pick<Cart, 'totalQuantity' | 'cost'> {
   const totalQuantity = lines.reduce((sum, item) => sum + item.quantity, 0);
-  const totalAmount = lines.reduce((sum, item) => sum + Number(100), 0);
+  const totalAmount = lines.reduce((sum, item) => sum + Number(item.cost.totalAmount.amount), 0);
   const currencyCode = lines[0]?.cost.totalAmount.currencyCode ?? 'USD';
 
   return {
     totalQuantity,
     cost: {
-      subtotalAmount: { amount: 100, currencyCode },
-      totalAmount: { amount: 100, currencyCode },
-      totalTaxAmount: { amount: '0', currencyCode }
+      subtotalAmount: { amount: totalAmount, currencyCode },
+      totalAmount: { amount: totalAmount, currencyCode },
+      totalTaxAmount: { amount: 0, currencyCode }
     }
   };
 }
@@ -95,9 +95,9 @@ function createEmptyCart(): Cart {
     totalQuantity: 0,
     lines: [],
     cost: {
-      subtotalAmount: { amount: '0', currencyCode: 'USD' },
-      totalAmount: { amount: '0', currencyCode: 'USD' },
-      totalTaxAmount: { amount: '0', currencyCode: 'USD' }
+      subtotalAmount: { amount: 0, currencyCode: 'USD' },
+      totalAmount: { amount: 0, currencyCode: 'USD' },
+      totalTaxAmount: { amount: 0, currencyCode: 'USD' }
     }
   };
 }
@@ -108,7 +108,7 @@ function cartReducer(state: Cart | undefined, action: CartAction): Cart {
   switch (action.type) {
     case 'UPDATE_ITEM': {
       const { merchandiseId, updateType } = action.payload;
-      const updatedLines = currentCart.items
+      const updatedLines = currentCart.lines
         .map((item) =>
           item.id === merchandiseId ? updateCartItem(item, updateType) : item
         )
@@ -121,7 +121,7 @@ function cartReducer(state: Cart | undefined, action: CartAction): Cart {
           totalQuantity: 0,
           cost: {
             ...currentCart.cost,
-            totalAmount: { amount: '0' }
+            totalAmount: { amount: 0, currencyCode: 'USD' }
           }
         };
       }
@@ -131,14 +131,12 @@ function cartReducer(state: Cart | undefined, action: CartAction): Cart {
     case 'ADD_ITEM': {
       const { variant, good } = action.payload;
 
-      console.warn('ADD_ITEM', variant, product);
-
-      const existingItem = currentCart.items.find((item) => item.id === variant.id);
+      const existingItem = currentCart.lines.find((item) => item.merchandise.id === variant.id);
       const updatedItem = createOrUpdateCartItem(existingItem, variant, good);
 
       const updatedLines = existingItem
-        ? currentCart.items.map((item) => (item.id === variant.id ? updatedItem : item))
-        : [...currentCart.items, updatedItem];
+        ? currentCart.lines.map((item) => (item.merchandise.id === variant.id ? updatedItem : item))
+        : [...currentCart.lines, updatedItem];
 
       return { ...currentCart, ...updateCartTotals(updatedLines), lines: updatedLines };
     }

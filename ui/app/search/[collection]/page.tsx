@@ -6,12 +6,11 @@ import Grid from 'components/grid';
 import GoodGridItems from 'components/layout/good-grid-items';
 import { defaultSort, sorting } from 'lib/constants';
 
-export async function generateMetadata({
-  params
-}: {
-  params: { collection: string };
+export async function generateMetadata(props: {
+  params: Promise<{ collection: string }>;
 }): Promise<Metadata> {
-  const collection = await getCollection(params.collection);
+  const params = await props.params;
+  const collection = await getCollection(Number(params.collection));
 
   if (!collection) return notFound();
 
@@ -22,12 +21,9 @@ export async function generateMetadata({
   };
 }
 
-export default async function CategoryPage({
-  params,
-  searchParams
-}: {
-  params: { collection: string };
-  searchParams?: { [key: string]: string | string[] | undefined };
+export default async function CategoryPage(props: {
+  params: Promise<{ collection: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   return (
     <section>

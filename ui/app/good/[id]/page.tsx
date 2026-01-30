@@ -2,34 +2,24 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { GridTileImage } from 'components/grid/tile';
-import Footer from 'components/layout/footer';
 import { Gallery } from 'components/good/gallery';
 import { GoodProvider } from 'components/good/good-context';
 import { GoodDescription } from 'components/good/good-description';
-import { HIDDEN_GOOD_TAG } from 'lib/constants';
 import { getGood, getGoodRecommendations } from 'lib/shopify';
-import { Image, Good } from 'lib/shopify/types';
+import { Image } from 'lib/shopify/types';
 import Link from 'next/link';
 import { Suspense } from 'react';
-
-// DOCS: https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#experimental_ppr
-export const experimental_ppr = true
 
 // DOCS: https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#dynamic
 export const dynamic = 'force-dynamic'
 
-export async function generateMetadata({
-  params
-}: {
-  params: { id: number };
+export async function generateMetadata(props: {
+  params: Promise<{ id: string }>;
 }): Promise<Metadata> {
-  console.warn('good 1', params);
-
-  const good = await getGood(params.id);
+  const params = await props.params;
+  const good = await getGood(Number(params.id));
 
   if (!good) return notFound();
-
-  console.warn('good 3', good);
 
   return {
     title: good.name,
@@ -37,8 +27,9 @@ export async function generateMetadata({
   };
 }
 
-export default async function GoodPage({ params }: { params: { id: number } }) {
-  const good = await getGood(params.id);
+export default async function GoodPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
+  const good = await getGood(Number(params.id));
 
   if (!good) return notFound();
 
@@ -55,7 +46,14 @@ export default async function GoodPage({ params }: { params: { id: number } }) {
     }
   };
 
-  good.images = [{}, {}, {}, {}, {}];
+  // Mock images for demo
+  const images: Image[] = [
+    { url: 'https://picsum.photos/600/600?random=1', altText: good.name, width: 600, height: 600 },
+    { url: 'https://picsum.photos/600/600?random=2', altText: good.name, width: 600, height: 600 },
+    { url: 'https://picsum.photos/600/600?random=3', altText: good.name, width: 600, height: 600 },
+    { url: 'https://picsum.photos/600/600?random=4', altText: good.name, width: 600, height: 600 },
+    { url: 'https://picsum.photos/600/600?random=5', altText: good.name, width: 600, height: 600 },
+  ];
 
   return (
     <GoodProvider>
@@ -75,8 +73,8 @@ export default async function GoodPage({ params }: { params: { id: number } }) {
               }
             >
               <Gallery
-                images={good.images.slice(0, 5).map((image: Image) => ({
-                  src: "https://picsum.photos/200",
+                images={images.slice(0, 5).map((image: Image) => ({
+                  src: image.url,
                   altText: image.altText,
                 }))}
               />
@@ -91,7 +89,6 @@ export default async function GoodPage({ params }: { params: { id: number } }) {
         </div>
         {/*<RelatedGoods id={good.id} />*/}
       </div>
-      <Footer />
     </GoodProvider>
   );
 }
@@ -120,7 +117,6 @@ async function RelatedGoods({ id }: { id: number }) {
                 label={{
                   title: good.name,
                   amount: good.price,
-                  // currencyCode: good.priceRange.maxVariantPrice.currencyCode
                 }}
                 src={"https://picsum.photos/200"}
                 fill
@@ -133,4 +129,3 @@ async function RelatedGoods({ id }: { id: number }) {
     </div>
   );
 }
-

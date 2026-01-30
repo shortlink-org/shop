@@ -30,12 +30,6 @@ module.exports = {
     },
   },
   experimental: {
-    ppr: 'incremental',
-    forceSwcTransforms: true,
-    swcTraceProfiling: true,
-    instrumentationHook: false,
     webVitalsAttribution: ['CLS', 'FCP', 'FID', 'INP', 'LCP', 'TTFB'],
-    turbo: {},
-    // typedRoutes: true,
   },
 };

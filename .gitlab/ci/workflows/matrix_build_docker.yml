@@ -1,0 +1,51 @@
+# NOTE:
+# APPLICATION     - Name application
+# REGISTRY_IMAGE  - Registry image
+# WORKDIR         - Working directory
+# DOCKERFILE_PATH - Path to Dockerfile
+# DOCKERFILE_ARGS - Additional Docker build arguments
+
+.matrix_build_docker:
+  parallel:
+    matrix:
+      # OMS - Order Management System (Go)
+      - APPLICATION: oms
+        REGISTRY_IMAGE: $CI_REGISTRY_IMAGE/$APPLICATION
+        WORKDIR: $APPLICATION
+        DOCKERFILE_PATH: ops/dockerfile/Dockerfile
+
+      # Admin Panel (Python/Django)
+      - APPLICATION: admin
+        REGISTRY_IMAGE: $CI_REGISTRY_IMAGE/$APPLICATION
+        WORKDIR: $APPLICATION
+        DOCKERFILE_PATH: ops/dockerfile/Dockerfile
+
+      # BFF - Backend for Frontend (TypeScript/WunderGraph)
+      - APPLICATION: bff
+        REGISTRY_IMAGE: $CI_REGISTRY_IMAGE/$APPLICATION
+        WORKDIR: $APPLICATION
+        DOCKERFILE_PATH: ops/Dockerfile
+
+      # Feed Service (Go)
+      - APPLICATION: feed
+        REGISTRY_IMAGE: $CI_REGISTRY_IMAGE/$APPLICATION
+        WORKDIR: $APPLICATION
+        DOCKERFILE_PATH: ops/dockerfile/Dockerfile
+
+      # Pricer Service (Go)
+      - APPLICATION: pricer
+        REGISTRY_IMAGE: $CI_REGISTRY_IMAGE/$APPLICATION
+        WORKDIR: $APPLICATION
+        DOCKERFILE_PATH: ops/dockerfile/Dockerfile
+
+      # Delivery Service (Rust)
+      - APPLICATION: delivery
+        REGISTRY_IMAGE: $CI_REGISTRY_IMAGE/$APPLICATION
+        WORKDIR: $APPLICATION
+        DOCKERFILE_PATH: ops/dockerfile/Dockerfile
+
+      # UI - Shop Frontend (React/Next.js)
+      - APPLICATION: ui
+        REGISTRY_IMAGE: $CI_REGISTRY_IMAGE/$APPLICATION
+        WORKDIR: $APPLICATION
+        DOCKERFILE_PATH: ops/Dockerfile

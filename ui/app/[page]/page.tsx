@@ -4,12 +4,10 @@ import Prose from 'components/prose';
 import type { Page } from 'lib/shopify/types';
 import { notFound } from 'next/navigation';
 
-export async function generateMetadata({
-  params
-}: {
-  params: { page: string };
+export async function generateMetadata(props: {
+  params: Promise<{ page: string }>;
 }): Promise<Metadata> {
-  // const page: Page = await getPage(params.page);
+  const params = await props.params;
   const page: Page = {
     id: "1",
     title: "Sample Title",
@@ -37,8 +35,8 @@ export async function generateMetadata({
   };
 }
 
-export default async function Page({ params }: { params: { page: string } }) {
-  // const page = await getPage(params.page);
+export default async function Page(props: { params: Promise<{ page: string }> }) {
+  const params = await props.params;
   const page: Page = {
     id: "1",
     title: "Sample Title",

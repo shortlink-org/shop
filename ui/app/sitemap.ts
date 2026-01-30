@@ -30,14 +30,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const productsPromise = getGoods({}).then((products) =>
     products.map((product) => ({
-      url: `${baseUrl}/good/${product.handle}`,
+      url: `${baseUrl}/good/${product.id}`,
       lastModified: product.updatedAt
     }))
   );
 
   const pagesPromise = getPages().then((pages) =>
     pages.map((page) => ({
-      url: `${baseUrl}/${page.handle}`,
+      url: `${baseUrl}/page/${page.id}`,
       lastModified: page.updatedAt
     }))
   );

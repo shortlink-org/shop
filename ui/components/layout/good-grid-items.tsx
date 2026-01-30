@@ -7,20 +7,19 @@ export default function GoodGridItems({ goods }: { goods: Good[] }) {
   return (
     <>
       {goods.map((good) => (
-        <Grid.Item key={good.handle} className="animate-fadeIn">
+        <Grid.Item key={good.id} className="animate-fadeIn">
           <Link
             className="relative inline-block h-full w-full"
-            href={`/good/${good.handle}`}
+            href={`/good/${good.id}`}
             prefetch={true}
           >
             <GridTileImage
-              alt={good.title}
+              alt={good.name}
               label={{
-                title: good.title,
-                amount: good.priceRange.maxVariantPrice.amount,
-                currencyCode: good.priceRange.maxVariantPrice.currencyCode
+                title: good.name,
+                amount: good.price,
               }}
-              src={good.featuredImage?.url}
+              src="https://picsum.photos/400"
               fill
               sizes="(min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
             />

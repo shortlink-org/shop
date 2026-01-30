@@ -1,0 +1,26 @@
+# NOTE:
+# HELM_CHART_NAME - Helm chart name
+# HELM_CHART_PATH - Path to Helm chart directory
+
+.matrix_build_helm:
+  parallel:
+    matrix:
+      # Common infrastructure chart
+      - HELM_CHART_NAME: common
+        HELM_CHART_PATH: ops/Helm/$HELM_CHART_NAME
+
+      # Temporal infrastructure
+      - HELM_CHART_NAME: temporal
+        HELM_CHART_PATH: ops/Helm/$HELM_CHART_NAME
+
+      # OMS - Order Management System
+      - HELM_CHART_NAME: oms
+        HELM_CHART_PATH: oms/ops/$HELM_CHART_NAME
+
+      # Admin Panel
+      - HELM_CHART_NAME: admin
+        HELM_CHART_PATH: admin/ops/Helm
+
+      # BFF - Backend for Frontend
+      - HELM_CHART_NAME: bff
+        HELM_CHART_PATH: bff/ops/Helm

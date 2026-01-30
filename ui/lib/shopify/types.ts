@@ -244,7 +244,10 @@ export type ShopifyPagesOperation = {
 };
 
 export type ShopifyProductOperation = {
-  data: { product: ShopifyProduct };
+  data: { 
+    product: ShopifyProduct;
+    goods_goods_retrieve: ShopifyProduct;
+  };
   variables: {
     id: number;
   };
@@ -262,6 +265,7 @@ export type ShopifyProductRecommendationsOperation = {
 export type ShopifyProductsOperation = {
   data: {
     products: Connection<ShopifyProduct>;
+    results: ShopifyProduct[];
   };
   variables: {
     query?: string;
