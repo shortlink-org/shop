@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: postgres-dashboard
+  name: temporal-dashboard
   labels:
     grafana_dashboard: "true"
   annotations:

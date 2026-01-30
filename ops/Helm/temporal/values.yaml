@@ -13,6 +13,16 @@ temporal:
   server:
     replicaCount: 1
 
+    # Resource configuration for Temporal server components
+    # Requests are minimal for development, limits prevent runaway usage
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "128Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+
     config:
       persistence: {}
 
@@ -44,6 +54,15 @@ temporal:
           enabled: true
 
   web:
+    # Resource configuration for Temporal Web UI
+    resources:
+      requests:
+        cpu: "25m"
+        memory: "64Mi"
+      limits:
+        cpu: "200m"
+        memory: "256Mi"
+
     ingress:
       enabled: true
       annotations:
@@ -63,6 +82,15 @@ temporal:
     enabled: true
     replicas: 1
 
+    # Resource configuration for Elasticsearch (visibility store)
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "512Mi"
+      limits:
+        cpu: "1000m"
+        memory: "2Gi"
+
   cassandra:
     enabled: true
 
@@ -72,6 +100,15 @@ temporal:
 
     config:
       cluster_size: 1
+
+    # Resource configuration for Cassandra (workflow persistence)
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "512Mi"
+      limits:
+        cpu: "1000m"
+        memory: "2Gi"
 
     exporter:
       enabled: false
