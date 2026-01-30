@@ -5,6 +5,11 @@
 - Follow conventional commit format: `type(scope): description`
 - Examples: `feat: add feature`, `fix: resolve bug`, `refactor: improve code`
 - **NEVER commit automatically** - only commit when explicitly requested by user
+- **NEVER use `git commit --amend`** - always create new commits for fixes
+- **NEVER use `git push --force` or `git push -f`** - extremely dangerous
+- **NEVER run `git push` without explicit user permission** - always ask first
+- **NEVER run `git reset --hard` on remote branches** - data loss risk
+- **NEVER run destructive git commands** (rebase, force push, hard reset) without asking
 
 ## Code Style
 - Follow existing code style and patterns in the repository
