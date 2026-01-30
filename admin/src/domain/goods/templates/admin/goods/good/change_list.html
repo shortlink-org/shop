@@ -1,0 +1,25 @@
+{% extends "admin/change_list.html" %}
+{% load i18n %}
+
+{% block object-tools-items %}
+{{ block.super }}
+<li>
+    <a href="{% url 'admin:goods_good_generate' %}" 
+       style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+              color: white; 
+              padding: 8px 16px; 
+              border-radius: 6px; 
+              text-decoration: none; 
+              font-weight: 600;
+              display: inline-flex;
+              align-items: center;
+              gap: 6px;
+              box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+              transition: all 0.2s ease;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3v3m6.366-.366-2.12 2.12M21 12h-3m.366 6.366-2.12-2.12M12 21v-3m-6.366.366 2.12-2.12M3 12h3m-.366-6.366 2.12 2.12"/>
+        </svg>
+        Generate Goods
+    </a>
+</li>
+{% endblock %}

@@ -9,6 +9,12 @@
 - Follow existing code style and patterns in the repository
 - Maintain consistency with project conventions
 
+## Python
+- Always use `uv` for Python package management and running scripts
+- Use `uv run` to execute Python commands (e.g., `uv run python manage.py migrate`)
+- Use `uv add` to install dependencies
+- Use `uv sync` to sync dependencies from pyproject.toml
+
 ## Language
 - Use English for code comments, documentation, and git commits
 - User communication can be in Russian if preferred

@@ -25,7 +25,7 @@
 
 ### 3. HTTP endpoint для получения событий (`internal/infrastructure/http/stock_event.go`)
 
-HTTP endpoint `POST /stock-changes` для получения событий от внешних сервисов (например, от Merch Service через Dapr).
+HTTP endpoint `POST /stock-changes` для получения событий от внешних сервисов (например, от Inventory Service через Kafka).
 
 **Формат запроса:**
 ```json
@@ -74,7 +74,7 @@ cartService.SetNotifier(notifier)
 
 ### 3. Подписка на события
 
-Настроить подписку на события `stockchanges` от Merch Service (через Dapr pub/sub или Kafka). При получении события вызывать HTTP endpoint `/stock-changes` или напрямую метод `HandleStockChange`.
+Настроить подписку на события `stockchanges` от Inventory Service (через Kafka). При получении события вызывать HTTP endpoint `/stock-changes` или напрямую метод `HandleStockChange`.
 
 ## Использование
 

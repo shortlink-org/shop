@@ -648,10 +648,6 @@ end note
 **Feed Service:**
 - [ADR-0001: Init Feed Service](../feed/docs/ADR/decisions/0001-init.md) - Инициализация Feed Service для генерации фидов
 
-**Merch Service:**
-- [ADR-0001: Init](../merch/docs/ADR/decisions/0001-init.md) - Инициализация Merch Service
-- [ADR-0002: Use Dapr](../merch/docs/ADR/decisions/0002-use-dapr.md) - Использование Dapr для Merch Service
-
 **OMS-GraphQL:**
 - [ADR-0001: Init project](../oms-graphql/docs/ADR/decisions/0001-init-project.md) - Инициализация OMS GraphQL API Bridge
 

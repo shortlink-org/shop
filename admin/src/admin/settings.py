@@ -17,6 +17,9 @@ from django.utils.csp import CSP
 
 env = environ.Env()
 
+# Read .env file if it exists
+environ.Env.read_env(os.path.join(Path(__file__).resolve().parent.parent, ".env"))
+
 ORY_SDK_URL = env("ORY_SDK_URL", default="http://127.0.0.1:4433")
 ORY_UI_URL = env("ORY_UI_URL", default="http://127.0.0.1:3000/next/auth")
 LOGIN_URL = env("LOGIN_URL", default="http://127.0.0.1:3000/next/auth/login")
@@ -90,7 +93,7 @@ TEMPLATES = [
                 "django.template.context_processors.csp",  # CSP nonce context processor (Django 6.0+)
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "django_ory_auth.context.processor",
+                "admin.ory_context.processor",
             ],
         },
     },
@@ -100,10 +103,12 @@ WSGI_APPLICATION = "admin.wsgi.application"
 
 
 # CSRF
-CSRF_COOKIE_DOMAIN = env("CSRF_COOKIE_DOMAIN", default="http://127.0.0.1")
-CSRF_COOKIE_SECURE = env("CSRF_COOKIE_SECURE", default=True)
+CSRF_COOKIE_DOMAIN = env("CSRF_COOKIE_DOMAIN", default=None)
+CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", default=False)
 CSRF_TRUSTED_ORIGINS = [
-    CSRF_COOKIE_DOMAIN,
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
+    "https://shortlink.best",
 ]
 
 # Content Security Policy (CSP)
@@ -111,7 +116,7 @@ CSRF_TRUSTED_ORIGINS = [
 # https://docs.djangoproject.com/en/6.0/howto/csp/
 SECURE_CSP = {
     "default-src": [CSP.SELF],
-    "script-src": [CSP.SELF, CSP.NONCE, "https://cdn.tailwindcss.com"],
+    "script-src": [CSP.SELF, CSP.NONCE, CSP.UNSAFE_EVAL, "https://cdn.tailwindcss.com", "https://cdn.jsdelivr.net"],
     "style-src": [CSP.SELF, CSP.UNSAFE_INLINE],  # Tailwind requires unsafe-inline for styles
     "img-src": [CSP.SELF, "data:", "https:"],
     "font-src": [CSP.SELF, "https://fonts.gstatic.com"],
@@ -137,6 +142,9 @@ DATABASES = {
         "PASSWORD": env("POSTGRES_PASSWORD", default="shortlink"),
         "HOST": env("POSTGRES_HOST", default="localhost"),
         "PORT": env("POSTGRES_PORT", default="5432"),
+        "OPTIONS": {
+            "sslmode": env("POSTGRES_SSLMODE", default="prefer"),
+        },
     }
 }
 
@@ -174,7 +182,8 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = [
-    "django_ory_auth.backend.OryBackend",
+    "django.contrib.auth.backends.ModelBackend",  # Django default (for local admin)
+    "django_ory_auth.backend.OryBackend",  # Ory Kratos
 ]
 
 
@@ -216,8 +225,11 @@ DEBUG_TOOLBAR_CONFIG = {
 }
 
 # Prometheus
-PROMETHEUS_METRICS_EXPORT_PORT = 9090
-PROMETHEUS_METRICS_EXPORT_ADDRESS = "0.0.0.0"  # all addresses
+# Only export metrics when running server (not management commands)
+import sys
+_is_runserver = len(sys.argv) > 1 and sys.argv[1] == "runserver"
+PROMETHEUS_METRICS_EXPORT_PORT = 9090 if _is_runserver else None
+PROMETHEUS_METRICS_EXPORT_ADDRESS = "0.0.0.0" if _is_runserver else ""
 PROMETHEUS_EXPORT_MIGRATIONS = False
 
 # Logging

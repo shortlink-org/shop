@@ -1,9 +1,9 @@
 [project]
 name = "shop_admin"
+version = "0.1.0"
 description = "This service is responsible for the administration of the shop."
 readme = "README.md"
 requires-python = ">=3.13"
-dynamic = ["version"]
 
 dependencies = [
   "django-ory-auth @ git+https://github.com/micro-company/django_ory_auth@master",
@@ -37,17 +37,17 @@ dependencies = [
   'opentelemetry-exporter-otlp-proto-common==1.39.1',
   'opentelemetry-exporter-otlp-proto-grpc==1.39.1',
   'opentelemetry-exporter-otlp-proto-http==1.39.1',
-  'opentelemetry-instrumentation==0.59b0',
-  'opentelemetry-instrumentation-dbapi==0.59b0',
-  'opentelemetry-instrumentation-django==0.59b0',
-  'opentelemetry-instrumentation-logging==0.59b0',
-  'opentelemetry-instrumentation-requests==0.59b0',
-  'opentelemetry-instrumentation-sqlite3==0.59b0',
-  'opentelemetry-instrumentation-wsgi==0.59b0',
+  'opentelemetry-instrumentation==0.60b1',
+  'opentelemetry-instrumentation-dbapi==0.60b1',
+  'opentelemetry-instrumentation-django==0.60b1',
+  'opentelemetry-instrumentation-logging==0.60b1',
+  'opentelemetry-instrumentation-requests==0.60b1',
+  'opentelemetry-instrumentation-sqlite3==0.60b1',
+  'opentelemetry-instrumentation-wsgi==0.60b1',
   'opentelemetry-proto==1.39.1',
   'opentelemetry-sdk==1.39.1',
-  'opentelemetry-semantic-conventions==0.59b0',
-  'opentelemetry-util-http==0.59b0',
+  'opentelemetry-semantic-conventions==0.60b1',
+  'opentelemetry-util-http==0.60b1',
   'packaging==25.0',
   'pip==25.3',
   'prometheus-client==0.24.1',
@@ -63,22 +63,23 @@ dependencies = [
   'uritemplate==4.2.0',
   'urllib3==2.6.3',
   'uv==0.9.26',
-  'wrapt==2.0.1',
+  'wrapt>=1.10,<2',
   'zipp==3.23.0',
   'psycopg2-binary==2.9.11',
   'redis',
-  'django-redis'
+  'django-redis',
+  "mimesis>=19.1.0",
 ]
 
 [build-system]
 requires = ["setuptools~=80.9"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools.dynamic]
-version = {attr = "src._version.__version__"}
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.setuptools.package-data]
-"src" = ["py.typed"]
+"*" = ["py.typed"]
 
 [tool.pytest.ini_options]
 addopts = "-ra -q --cov-report term-missing --cov libname --fixtures tests"
