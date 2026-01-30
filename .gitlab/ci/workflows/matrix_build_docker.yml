@@ -44,6 +44,12 @@
         WORKDIR: $APPLICATION
         DOCKERFILE_PATH: ops/dockerfile/Dockerfile
 
+      # Courier Emulation Service (Go)
+      - APPLICATION: courier-emulation
+        REGISTRY_IMAGE: $CI_REGISTRY_IMAGE/$APPLICATION
+        WORKDIR: $APPLICATION
+        DOCKERFILE_PATH: ops/dockerfile/Dockerfile
+
       # UI - Shop Frontend (React/Next.js)
       - APPLICATION: ui
         REGISTRY_IMAGE: $CI_REGISTRY_IMAGE/$APPLICATION

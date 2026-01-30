@@ -24,3 +24,7 @@
       # BFF - Backend for Frontend
       - HELM_CHART_NAME: bff
         HELM_CHART_PATH: bff/ops/Helm
+
+      # Courier Emulation Service
+      - HELM_CHART_NAME: courier-emulation
+        HELM_CHART_PATH: courier-emulation/ops/Helm/$HELM_CHART_NAME
