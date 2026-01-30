@@ -3,6 +3,16 @@
 # Declare variables to be passed into your templates.
 
 # ==============================================================================
+# Service configuration (required for shortlink-template)
+service:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      public: true
+
+# ==============================================================================
 # HTTPRoute: Istio Gateway → Temporal Web UI
 httpRoute:
   enabled: true
