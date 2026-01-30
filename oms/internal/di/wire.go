@@ -16,24 +16,21 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"go.temporal.io/sdk/client"
 
+	"github.com/shortlink-org/go-sdk/auth/permission"
 	config "github.com/shortlink-org/go-sdk/config"
 	sdkctx "github.com/shortlink-org/go-sdk/context"
 	"github.com/shortlink-org/go-sdk/flags"
+	grpc "github.com/shortlink-org/go-sdk/grpc"
 	logger "github.com/shortlink-org/go-sdk/logger"
 	"github.com/shortlink-org/go-sdk/observability/metrics"
 	profiling "github.com/shortlink-org/go-sdk/observability/profiling"
 	"github.com/shortlink-org/go-sdk/observability/tracing"
+	"github.com/shortlink-org/go-sdk/temporal"
 	cartRPC "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1"
 	orderRPC "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/run"
-	"github.com/shortlink-org/shop/oms/internal/loggeradapter"
 	"github.com/shortlink-org/shop/oms/internal/usecases/cart"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order"
-	"github.com/shortlink-org/shortlink/pkg/di/pkg/permission"
-	"github.com/shortlink-org/shortlink/pkg/di/pkg/temporal"
-	shortlogger "github.com/shortlink-org/shortlink/pkg/logger"
-	old_monitoring "github.com/shortlink-org/shortlink/pkg/observability/monitoring"
-	"github.com/shortlink-org/shortlink/pkg/rpc"
 )
 
 type OMSService struct {
@@ -66,24 +63,22 @@ type OMSService struct {
 var CustomDefaultSet = wire.NewSet(
 	sdkctx.New,
 	flags.New,
-	legacyLoggerAdapter, // Adapts go-sdk logger for legacy shortlink components
 	newGoSDKProfiling,
 	permission.New, // For authzed.Client
 )
 
 var OMSSet = wire.NewSet(
-	// Common (custom DefaultSet with legacy monitoring for rpc)
+	// Common (custom DefaultSet)
 	CustomDefaultSet,
-	rpc.InitServer,
+	newGRPCServer,
 
 	// Config & Observability (go-sdk)
 	newGoSDKConfig,
 	newGoSDKLogger,
 
-	// Observability (go-sdk) - for OMSService
+	// Observability (go-sdk)
 	newGoSDKTracer,
 	newGoSDKMonitoring,
-	legacyMonitoringFromGoSDK,
 
 	// Delivery
 	cartRPC.New,
@@ -100,8 +95,13 @@ var OMSSet = wire.NewSet(
 	NewOMSService,
 )
 
-// TODO: refactoring. maybe drop this function
-func NewRunRPCServer(runRPCServer *rpc.Server, _ *cartRPC.CartRPC) (*run.Response, error) {
+// newGRPCServer creates a gRPC server using go-sdk/grpc
+func newGRPCServer(ctx context.Context, log logger.Logger, tracer trace.TracerProvider, monitoring *metrics.Monitoring, cfg *config.Config) (*grpc.Server, error) {
+	return grpc.InitServer(ctx, log, tracer, monitoring.Prometheus, nil, cfg)
+}
+
+// NewRunRPCServer starts the gRPC server
+func NewRunRPCServer(runRPCServer *grpc.Server, _ *cartRPC.CartRPC) (*run.Response, error) {
 	return run.Run(runRPCServer)
 }
 
@@ -177,20 +177,4 @@ func NewOMSService(
 
 func InitializeOMSService() (*OMSService, func(), error) {
 	panic(wire.Build(OMSSet))
-}
-
-func legacyLoggerAdapter(log logger.Logger) (shortlogger.Logger, func(), error) {
-	return loggeradapter.New(log), func() {}, nil
-}
-
-func legacyMonitoringFromGoSDK(modern *metrics.Monitoring) *old_monitoring.Monitoring {
-	if modern == nil {
-		return nil
-	}
-
-	return &old_monitoring.Monitoring{
-		Handler:    modern.Handler,
-		Prometheus: modern.Prometheus,
-		Metrics:    modern.Metrics,
-	}
 }

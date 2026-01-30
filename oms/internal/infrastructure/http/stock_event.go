@@ -1,8 +1,8 @@
 package http
 
 import (
-	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -40,14 +40,14 @@ func (h *StockChangeHandler) Handle(w http.ResponseWriter, r *http.Request) {
 
 	var req StockChangeRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.log.Warn("Failed to decode stock change request", logger.Error(err))
+		h.log.Warn("Failed to decode stock change request", slog.String("error", err.Error()))
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
 	goodId, err := uuid.Parse(req.GoodID)
 	if err != nil {
-		h.log.Warn("Invalid good ID in stock change request", logger.String("good_id", req.GoodID), logger.Error(err))
+		h.log.Warn("Invalid good ID in stock change request", slog.String("good_id", req.GoodID), slog.String("error", err.Error()))
 		http.Error(w, "Invalid good_id", http.StatusBadRequest)
 		return
 	}
@@ -55,7 +55,7 @@ func (h *StockChangeHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	// Handle stock change - remove item from carts if stock is zero
 	ctx := r.Context()
 	if err := h.cartService.HandleStockChange(ctx, goodId, req.NewQuantity); err != nil {
-		h.log.Error("Failed to handle stock change", logger.Error(err))
+		h.log.Error("Failed to handle stock change", slog.String("error", err.Error()))
 		// Don't return error to caller - event was received, processing may continue
 		// In production, you might want to return 202 Accepted and process asynchronously
 	}

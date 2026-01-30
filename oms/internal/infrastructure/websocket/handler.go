@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -44,7 +45,7 @@ func (h *Handler) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// Upgrade connection to websocket
 	conn, err := h.notifier.Upgrade(w, r)
 	if err != nil {
-		h.log.Warn("Failed to upgrade connection", "error", err)
+		h.log.Warn("Failed to upgrade connection", slog.String("error", err.Error()))
 		return
 	}
 

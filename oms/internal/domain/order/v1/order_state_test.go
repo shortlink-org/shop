@@ -9,7 +9,7 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
 
-	"github.com/shortlink-org/shortlink/pkg/fsm"
+	"github.com/shortlink-org/go-sdk/fsm"
 )
 
 func TestOrderState(t *testing.T) {

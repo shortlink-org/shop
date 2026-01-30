@@ -23,11 +23,8 @@ import (
 	"github.com/shortlink-org/go-sdk/observability/metrics"
 	profiling "github.com/shortlink-org/go-sdk/observability/profiling"
 	"github.com/shortlink-org/go-sdk/observability/tracing"
-	"github.com/shortlink-org/shop/oms/internal/loggeradapter"
+	"github.com/shortlink-org/go-sdk/temporal"
 	"github.com/shortlink-org/shop/oms/internal/workers/cart/cart_worker"
-	"github.com/shortlink-org/shortlink/pkg/di/pkg/temporal"
-	shortlogger "github.com/shortlink-org/shortlink/pkg/logger"
-	old_monitoring "github.com/shortlink-org/shortlink/pkg/observability/monitoring"
 )
 
 type OMSCartWorkerService struct {
@@ -49,7 +46,6 @@ type OMSCartWorkerService struct {
 var CustomDefaultSet = wire.NewSet(
 	sdkctx.New,
 	flags.New,
-	legacyLoggerAdapter,
 )
 
 var OMSCartWorkerSet = wire.NewSet(
@@ -61,7 +57,6 @@ var OMSCartWorkerSet = wire.NewSet(
 	newGoSDKTracer,
 	newGoSDKProfiling,
 	newGoSDKMonitoring,
-	legacyMonitoringFromGoSDK,
 
 	// Temporal
 	temporal.New,
@@ -94,7 +89,7 @@ func newGoSDKMonitoring(ctx context.Context, log logger.Logger, tracer trace.Tra
 func NewOMSCartWorkerService(
 	// Common
 	log logger.Logger,
-	config *config.Config,
+	cfg *config.Config,
 
 	// Observability
 	monitoring *metrics.Monitoring,
@@ -108,7 +103,7 @@ func NewOMSCartWorkerService(
 	return &OMSCartWorkerService{
 		// Common
 		Log:    log,
-		Config: config,
+		Config: cfg,
 
 		// Observability
 		Tracer:        tracer,
@@ -119,22 +114,6 @@ func NewOMSCartWorkerService(
 		temporalClient: temporalClient,
 		cartWorker:     cartWorker,
 	}, nil
-}
-
-func legacyLoggerAdapter(log logger.Logger) (shortlogger.Logger, func(), error) {
-	return loggeradapter.New(log), func() {}, nil
-}
-
-func legacyMonitoringFromGoSDK(modern *metrics.Monitoring) *old_monitoring.Monitoring {
-	if modern == nil {
-		return nil
-	}
-
-	return &old_monitoring.Monitoring{
-		Handler:    modern.Handler,
-		Prometheus: modern.Prometheus,
-		Metrics:    modern.Metrics,
-	}
 }
 
 func InitializeOMSCartWorkerService() (*OMSCartWorkerService, func(), error) {

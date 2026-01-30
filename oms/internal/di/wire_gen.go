@@ -10,24 +10,21 @@ import (
 	"context"
 	"github.com/authzed/authzed-go/v1"
 	"github.com/google/wire"
+	"github.com/shortlink-org/go-sdk/auth/permission"
 	"github.com/shortlink-org/go-sdk/config"
 	"github.com/shortlink-org/go-sdk/context"
 	"github.com/shortlink-org/go-sdk/flags"
+	"github.com/shortlink-org/go-sdk/grpc"
 	"github.com/shortlink-org/go-sdk/logger"
 	"github.com/shortlink-org/go-sdk/observability/metrics"
 	"github.com/shortlink-org/go-sdk/observability/profiling"
 	"github.com/shortlink-org/go-sdk/observability/tracing"
+	"github.com/shortlink-org/go-sdk/temporal"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1"
 	v1_2 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/run"
-	"github.com/shortlink-org/shop/oms/internal/loggeradapter"
 	"github.com/shortlink-org/shop/oms/internal/usecases/cart"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order"
-	"github.com/shortlink-org/shortlink/pkg/di/pkg/permission"
-	"github.com/shortlink-org/shortlink/pkg/di/pkg/temporal"
-	logger2 "github.com/shortlink-org/shortlink/pkg/logger"
-	"github.com/shortlink-org/shortlink/pkg/observability/monitoring"
-	"github.com/shortlink-org/shortlink/pkg/rpc"
 	"go.opentelemetry.io/otel/trace"
 	"go.temporal.io/sdk/client"
 )
@@ -70,7 +67,7 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	loggerLogger, cleanup5, err := legacyLoggerAdapter(logger)
+	client, err := permission.New(logger, tracerProvider, monitoring, config)
 	if err != nil {
 		cleanup4()
 		cleanup3()
@@ -78,28 +75,16 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	monitoringMonitoring := legacyMonitoringFromGoSDK(monitoring)
-	client, err := permission.New(context, loggerLogger, tracerProvider, monitoringMonitoring)
+	server, err := newGRPCServer(context, logger, tracerProvider, monitoring, config)
 	if err != nil {
-		cleanup5()
 		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	server, err := rpc.InitServer(context, loggerLogger, tracerProvider, monitoringMonitoring)
+	clientClient, err := temporal.New(logger, config, tracerProvider, monitoring)
 	if err != nil {
-		cleanup5()
-		cleanup4()
-		cleanup3()
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	clientClient, err := temporal.New(loggerLogger, monitoringMonitoring)
-	if err != nil {
-		cleanup5()
 		cleanup4()
 		cleanup3()
 		cleanup2()
@@ -108,7 +93,6 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	}
 	uc, err := cart.New(logger, client, clientClient)
 	if err != nil {
-		cleanup5()
 		cleanup4()
 		cleanup3()
 		cleanup2()
@@ -117,7 +101,6 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	}
 	cartRPC, err := v1.New(server, logger, uc)
 	if err != nil {
-		cleanup5()
 		cleanup4()
 		cleanup3()
 		cleanup2()
@@ -126,7 +109,6 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	}
 	response, err := NewRunRPCServer(server, cartRPC)
 	if err != nil {
-		cleanup5()
 		cleanup4()
 		cleanup3()
 		cleanup2()
@@ -135,7 +117,6 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	}
 	orderUC, err := order.New(logger, client, clientClient)
 	if err != nil {
-		cleanup5()
 		cleanup4()
 		cleanup3()
 		cleanup2()
@@ -144,7 +125,6 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	}
 	orderRPC, err := v1_2.New(server, logger, orderUC)
 	if err != nil {
-		cleanup5()
 		cleanup4()
 		cleanup3()
 		cleanup2()
@@ -153,7 +133,6 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	}
 	omsService, err := NewOMSService(logger, config, monitoring, tracerProvider, pprofEndpoint, client, response, cartRPC, orderRPC, clientClient)
 	if err != nil {
-		cleanup5()
 		cleanup4()
 		cleanup3()
 		cleanup2()
@@ -161,7 +140,6 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		return nil, nil, err
 	}
 	return omsService, func() {
-		cleanup5()
 		cleanup4()
 		cleanup3()
 		cleanup2()
@@ -198,22 +176,27 @@ type OMSService struct {
 
 // OMSService ==========================================================================================================
 // CustomDefaultSet - DefaultSet with go-sdk packages (config, context, flags, profiling)
-var CustomDefaultSet = wire.NewSet(ctx.New, flags.New, legacyLoggerAdapter,
-	newGoSDKProfiling, permission.New,
-)
+var CustomDefaultSet = wire.NewSet(ctx.New, flags.New, newGoSDKProfiling, permission.New)
 
 var OMSSet = wire.NewSet(
 
-	CustomDefaultSet, rpc.InitServer, newGoSDKConfig,
+	CustomDefaultSet,
+	newGRPCServer,
+
+	newGoSDKConfig,
 	newGoSDKLogger,
 
 	newGoSDKTracer,
-	newGoSDKMonitoring,
-	legacyMonitoringFromGoSDK, v1.New, v1_2.New, NewRunRPCServer, cart.New, order.New, temporal.New, NewOMSService,
+	newGoSDKMonitoring, v1.New, v1_2.New, NewRunRPCServer, cart.New, order.New, temporal.New, NewOMSService,
 )
 
-// TODO: refactoring. maybe drop this function
-func NewRunRPCServer(runRPCServer *rpc.Server, _ *v1.CartRPC) (*run.Response, error) {
+// newGRPCServer creates a gRPC server using go-sdk/grpc
+func newGRPCServer(ctx2 context.Context, log logger.Logger, tracer trace.TracerProvider, monitoring *metrics.Monitoring, cfg *config.Config) (*grpc.Server, error) {
+	return grpc.InitServer(ctx2, log, tracer, monitoring.Prometheus, nil, cfg)
+}
+
+// NewRunRPCServer starts the gRPC server
+func NewRunRPCServer(runRPCServer *grpc.Server, _ *v1.CartRPC) (*run.Response, error) {
 	return run.Run(runRPCServer)
 }
 
@@ -271,20 +254,4 @@ func NewOMSService(
 
 		temporalClient: temporalClient,
 	}, nil
-}
-
-func legacyLoggerAdapter(log logger.Logger) (logger2.Logger, func(), error) {
-	return loggeradapter.New(log), func() {}, nil
-}
-
-func legacyMonitoringFromGoSDK(modern *metrics.Monitoring) *monitoring.Monitoring {
-	if modern == nil {
-		return nil
-	}
-
-	return &monitoring.Monitoring{
-		Handler:    modern.Handler,
-		Prometheus: modern.Prometheus,
-		Metrics:    modern.Metrics,
-	}
 }

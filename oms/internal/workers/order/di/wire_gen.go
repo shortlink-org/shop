@@ -16,11 +16,8 @@ import (
 	"github.com/shortlink-org/go-sdk/observability/metrics"
 	"github.com/shortlink-org/go-sdk/observability/profiling"
 	"github.com/shortlink-org/go-sdk/observability/tracing"
-	"github.com/shortlink-org/shop/oms/internal/loggeradapter"
+	"github.com/shortlink-org/go-sdk/temporal"
 	"github.com/shortlink-org/shop/oms/internal/workers/order/order_worker"
-	"github.com/shortlink-org/shortlink/pkg/di/pkg/temporal"
-	logger2 "github.com/shortlink-org/shortlink/pkg/logger"
-	"github.com/shortlink-org/shortlink/pkg/observability/monitoring"
 	"go.opentelemetry.io/otel/trace"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
@@ -64,18 +61,8 @@ func InitializeOMSOrderWorkerService() (*OMSOrderWorkerService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	loggerLogger, cleanup5, err := legacyLoggerAdapter(logger)
+	client, err := temporal.New(logger, config, tracerProvider, monitoring)
 	if err != nil {
-		cleanup4()
-		cleanup3()
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	monitoringMonitoring := legacyMonitoringFromGoSDK(monitoring)
-	client, err := temporal.New(loggerLogger, monitoringMonitoring)
-	if err != nil {
-		cleanup5()
 		cleanup4()
 		cleanup3()
 		cleanup2()
@@ -84,7 +71,6 @@ func InitializeOMSOrderWorkerService() (*OMSOrderWorkerService, func(), error) {
 	}
 	worker, err := order_worker.New(context, client, logger)
 	if err != nil {
-		cleanup5()
 		cleanup4()
 		cleanup3()
 		cleanup2()
@@ -93,7 +79,6 @@ func InitializeOMSOrderWorkerService() (*OMSOrderWorkerService, func(), error) {
 	}
 	omsOrderWorkerService, err := NewOMSOrderWorkerService(logger, config, monitoring, tracerProvider, pprofEndpoint, client, worker)
 	if err != nil {
-		cleanup5()
 		cleanup4()
 		cleanup3()
 		cleanup2()
@@ -101,7 +86,6 @@ func InitializeOMSOrderWorkerService() (*OMSOrderWorkerService, func(), error) {
 		return nil, nil, err
 	}
 	return omsOrderWorkerService, func() {
-		cleanup5()
 		cleanup4()
 		cleanup3()
 		cleanup2()
@@ -127,7 +111,7 @@ type OMSOrderWorkerService struct {
 }
 
 // OMSOrderWorkerService ================================================================================================
-var CustomDefaultSet = wire.NewSet(ctx.New, flags.New, legacyLoggerAdapter)
+var CustomDefaultSet = wire.NewSet(ctx.New, flags.New)
 
 var OMSOrderWorkerSet = wire.NewSet(
 	CustomDefaultSet,
@@ -136,8 +120,7 @@ var OMSOrderWorkerSet = wire.NewSet(
 	newGoSDKLogger,
 	newGoSDKTracer,
 	newGoSDKProfiling,
-	newGoSDKMonitoring,
-	legacyMonitoringFromGoSDK, temporal.New, order_worker.New, NewOMSOrderWorkerService,
+	newGoSDKMonitoring, temporal.New, order_worker.New, NewOMSOrderWorkerService,
 )
 
 // newGoSDKConfig creates a go-sdk config instance
@@ -164,41 +147,26 @@ func newGoSDKMonitoring(ctx2 context.Context, log logger.Logger, tracer trace.Tr
 
 func NewOMSOrderWorkerService(
 
-	log logger.Logger, config2 *config.Config,
+	log logger.Logger,
+	cfg *config.Config,
 
 	monitoring *metrics.Monitoring,
 	tracer trace.TracerProvider,
 	pprofHTTP profiling.PprofEndpoint,
 
 	temporalClient client.Client,
-	OrderWorker worker.Worker,
+	orderWorker worker.Worker,
 ) (*OMSOrderWorkerService, error) {
 	return &OMSOrderWorkerService{
 
 		Log:    log,
-		Config: config2,
+		Config: cfg,
 
 		Tracer:        tracer,
 		Monitoring:    monitoring,
 		PprofEndpoint: pprofHTTP,
 
 		temporalClient: temporalClient,
-		orderWorker:    OrderWorker,
+		orderWorker:    orderWorker,
 	}, nil
-}
-
-func legacyLoggerAdapter(log logger.Logger) (logger2.Logger, func(), error) {
-	return loggeradapter.New(log), func() {}, nil
-}
-
-func legacyMonitoringFromGoSDK(modern *metrics.Monitoring) *monitoring.Monitoring {
-	if modern == nil {
-		return nil
-	}
-
-	return &monitoring.Monitoring{
-		Handler:    modern.Handler,
-		Prometheus: modern.Prometheus,
-		Metrics:    modern.Metrics,
-	}
 }

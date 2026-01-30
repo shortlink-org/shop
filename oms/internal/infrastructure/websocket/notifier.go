@@ -2,12 +2,13 @@ package websocket
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"sync"
 
 	"github.com/google/uuid"
-	logger "github.com/shortlink-org/go-sdk/logger"
 	"github.com/gorilla/websocket"
+	logger "github.com/shortlink-org/go-sdk/logger"
 )
 
 // Notification represents a notification message to be sent to clients
@@ -56,7 +57,7 @@ func (n *Notifier) RegisterConnection(customerId uuid.UUID, conn *websocket.Conn
 	}
 
 	n.connections[customerId] = conn
-	n.log.Info("WebSocket connection registered", "customer_id", customerId.String())
+	n.log.Info("WebSocket connection registered", slog.String("customer_id", customerId.String()))
 
 	// Start ping/pong handler
 	go n.handleConnection(customerId, conn)
@@ -70,7 +71,7 @@ func (n *Notifier) UnregisterConnection(customerId uuid.UUID) {
 	if conn, exists := n.connections[customerId]; exists {
 		_ = conn.Close()
 		delete(n.connections, customerId)
-		n.log.Info("WebSocket connection unregistered", "customer_id", customerId.String())
+		n.log.Info("WebSocket connection unregistered", slog.String("customer_id", customerId.String()))
 	}
 }
 
@@ -81,7 +82,7 @@ func (n *Notifier) NotifyStockDepleted(customerId uuid.UUID, goodId uuid.UUID) e
 	n.mu.RUnlock()
 
 	if !exists {
-		n.log.Warn("No websocket connection found for customer", "customer_id", customerId.String())
+		n.log.Warn("No websocket connection found for customer", slog.String("customer_id", customerId.String()))
 		return nil // Not an error - customer might not be connected
 	}
 
@@ -103,17 +104,17 @@ func (n *Notifier) NotifyStockDepleted(customerId uuid.UUID, goodId uuid.UUID) e
 	defer n.mu.Unlock()
 
 	if err := conn.WriteMessage(websocket.TextMessage, data); err != nil {
-		n.log.Warn("Failed to send notification", 
-			"customer_id", customerId.String(),
-			"error", err)
+		n.log.Warn("Failed to send notification",
+			slog.String("customer_id", customerId.String()),
+			slog.String("error", err.Error()))
 		// Remove connection on error
 		delete(n.connections, customerId)
 		return err
 	}
 
 	n.log.Info("Stock depletion notification sent",
-		"customer_id", customerId.String(),
-		"good_id", goodId.String())
+		slog.String("customer_id", customerId.String()),
+		slog.String("good_id", goodId.String()))
 
 	return nil
 }
@@ -131,7 +132,7 @@ func (n *Notifier) handleConnection(customerId uuid.UUID, conn *websocket.Conn) 
 		messageType, _, err := conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				n.log.Warn("WebSocket error", "error", err)
+				n.log.Warn("WebSocket error", slog.String("error", err.Error()))
 			}
 			break
 		}

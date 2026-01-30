@@ -2,6 +2,7 @@ package cart
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/google/uuid"
 
@@ -16,12 +17,12 @@ func (uc *UC) HandleStockChange(ctx context.Context, goodId uuid.UUID, newQuanti
 		return nil
 	}
 
-	uc.log.Info("Stock depleted for good", "good_id", goodId.String())
+	uc.log.Info("Stock depleted for good", slog.String("good_id", goodId.String()))
 
 	// Get all customers that have this good in their cart using the index
 	customerIds := uc.goodsIndex.GetCustomersWithGood(goodId)
 	if len(customerIds) == 0 {
-		uc.log.Info("No carts found with the out-of-stock item", "good_id", goodId.String())
+		uc.log.Info("No carts found with the out-of-stock item", slog.String("good_id", goodId.String()))
 		return nil
 	}
 
@@ -31,9 +32,9 @@ func (uc *UC) HandleStockChange(ctx context.Context, goodId uuid.UUID, newQuanti
 		cartState, err := uc.Get(ctx, customerId)
 		if err != nil {
 			uc.log.Warn("Failed to get cart state",
-				"customer_id", customerId.String(),
-				"good_id", goodId.String(),
-				"error", err)
+				slog.String("customer_id", customerId.String()),
+				slog.String("good_id", goodId.String()),
+				slog.String("error", err.Error()))
 			continue
 		}
 
@@ -56,34 +57,34 @@ func (uc *UC) HandleStockChange(ctx context.Context, goodId uuid.UUID, newQuanti
 
 		// Remove the item from cart
 		uc.log.Info("Removing out-of-stock item from cart",
-			"customer_id", customerId.String(),
-			"good_id", goodId.String(),
-			"quantity", itemQuantity)
+			slog.String("customer_id", customerId.String()),
+			slog.String("good_id", goodId.String()),
+			slog.Int("quantity", int(itemQuantity)))
 
 		removeRequest := domain.New(customerId)
 		cartItem, err := itemv1.NewItem(goodId, itemQuantity)
 		if err != nil {
 			uc.log.Warn("Failed to construct cart item for removal",
-				"customer_id", customerId.String(),
-				"good_id", goodId.String(),
-				"error", err)
+				slog.String("customer_id", customerId.String()),
+				slog.String("good_id", goodId.String()),
+				slog.String("error", err.Error()))
 			continue
 		}
 
 		if err := removeRequest.AddItem(cartItem); err != nil {
 			uc.log.Warn("Failed to stage cart item removal",
-				"customer_id", customerId.String(),
-				"good_id", goodId.String(),
-				"error", err)
+				slog.String("customer_id", customerId.String()),
+				slog.String("good_id", goodId.String()),
+				slog.String("error", err.Error()))
 			continue
 		}
 
 		err = uc.Remove(ctx, removeRequest)
 		if err != nil {
 			uc.log.Warn("Failed to remove item from cart",
-				"customer_id", customerId.String(),
-				"good_id", goodId.String(),
-				"error", err)
+				slog.String("customer_id", customerId.String()),
+				slog.String("good_id", goodId.String()),
+				slog.String("error", err.Error()))
 			continue
 		}
 
@@ -94,9 +95,9 @@ func (uc *UC) HandleStockChange(ctx context.Context, goodId uuid.UUID, newQuanti
 		if uc.notifier != nil {
 			if err := uc.notifier.NotifyStockDepleted(customerId, goodId); err != nil {
 				uc.log.Warn("Failed to send websocket notification",
-					"customer_id", customerId.String(),
-					"good_id", goodId.String(),
-					"error", err)
+					slog.String("customer_id", customerId.String()),
+					slog.String("good_id", goodId.String()),
+					slog.String("error", err.Error()))
 			}
 		}
 	}

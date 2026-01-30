@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/shortlink-org/shortlink/pkg/fsm"
+	"github.com/shortlink-org/go-sdk/fsm"
 )
 
 // OrderState represents the order state.

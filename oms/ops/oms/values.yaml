@@ -1,0 +1,172 @@
+# Common default values for OMS.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# -- Pods Service Account
+# @ignored ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+serviceAccount:
+  create: true
+
+# ==============================================================================
+# Istio RequestAuthentication for JWT validation
+# ref: https://istio.io/latest/docs/reference/config/security/request_authentication/
+requestAuthentication:
+  enabled: true
+  issuer: "https://shortlink.best"
+  jwksUri: "http://oathkeeper-api.auth.svc.cluster.local:4456/.well-known/jwks.json"
+  forwardOriginalToken: true
+
+# ==============================================================================
+# Istio AuthorizationPolicy to require valid JWT
+# ref: https://istio.io/latest/docs/reference/config/security/authorization-policy/
+authorizationPolicy:
+  enabled: true
+
+# ==============================================================================
+# GRPCRoute configuration
+grpcRoute:
+  enabled: true
+  parentRefs:
+    - name: internal-gateway
+      namespace: istio-ingress
+      sectionName: grpc
+  rules:
+    # Cart service
+    - matches:
+        - method:
+            service: infrastructure.rpc.cart.v1.CartService
+      backendRefs:
+        - name: shortlink-shop-oms
+          port: 50051
+    # Order service
+    - matches:
+        - method:
+            service: infrastructure.rpc.order.v1.OrderService
+      backendRefs:
+        - name: shortlink-shop-oms
+          port: 50051
+    # gRPC reflection
+    - matches:
+        - method:
+            service: grpc.reflection.v1.ServerReflection
+      backendRefs:
+        - name: shortlink-shop-oms
+          port: 50051
+
+# ==============================================================================
+deploy:
+  # type: Deployment, Rollout, StatefulSet
+  type: Rollout
+
+  image:
+    repository: registry.gitlab.com/shortlink-org/shortlink/oms
+    tag: latest
+    # -- Global imagePullPolicy
+    # Default: 'Always' if image tag is 'latest', else 'IfNotPresent'
+    # Ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+    pullPolicy: Always
+
+  resources:
+    # -- We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+
+  env:
+    TRACER_URI: grafana-tempo.grafana:4317
+
+    GRPC_CLIENT_HOST: internal-gateway-istio.istio-ingress.svc.cluster.local
+    GRPC_CLIENT_TIMEOUT: 15s
+    GRPC_CLIENT_TLS_ENABLED: "true"
+    GRPC_CLIENT_CERT_PATH: /etc/grpc/ca/ca.crt
+
+    # Temporal configuration
+    TEMPORAL_HOST: temporal-frontend.temporal.svc.cluster.local:7233
+    TEMPORAL_NAMESPACE: default
+
+    # -- Default store config
+    STORE_TYPE: postgres
+    STORE_REDIS_URI: redis-master.shortlink-shop:6379
+
+  envSecret:
+    - name: STORE_POSTGRES_URI
+      secretKeyRef:
+        name: shortlink-shop-postgres-pguser-oms
+        key: uri
+
+  # -- define a liveness probe that checks every 5 seconds, starting after 5 seconds
+  livenessProbe:
+    enabled: true
+    httpGet:
+      path: /live
+      port: 9090
+
+  # -- define a readiness probe that checks every 5 seconds, starting after 5 seconds
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /ready
+      port: 9090
+
+  volumes:
+    - name: grpc-ca
+      type: configMap
+      configMapName: root-ca-bundle
+      mountPath: /etc/grpc/ca
+      readOnly: true
+      items:
+        - key: ca.crt
+          path: ca.crt
+
+service:
+  type: ClusterIP
+  ports:
+    - name: grpc
+      port: 50051
+      protocol: TCP
+      public: true
+    - name: metrics
+      port: 9090
+      protocol: TCP
+      public: true
+
+# ==============================================================================
+# Prometheus Operator ServiceMonitor configuration
+monitoring:
+  enabled: true
+
+# ==============================================================================
+# PodDisruptionBudget
+podDisruptionBudget:
+  enabled: false
+
+# ==============================================================================
+# NetworkPolicy
+networkPolicy:
+  enabled: true
+
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: shortlink-shop
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-system
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-ingress
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: prometheus-operator
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: temporal
+  policyTypes:
+    - Ingress
