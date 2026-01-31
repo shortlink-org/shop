@@ -20,7 +20,8 @@ const OrderWorkflowName = "OrderWorkflow"
 
 // Create creates a new order and persists it to the database.
 // For complex order processing (sagas), a Temporal workflow is started.
-func (uc *UC) Create(ctx context.Context, orderID uuid.UUID, customerID uuid.UUID, items v2.Items) error {
+// deliveryInfo is optional (nil = self-pickup).
+func (uc *UC) Create(ctx context.Context, orderID uuid.UUID, customerID uuid.UUID, items v2.Items, deliveryInfo *v2.DeliveryInfo) error {
 	// Begin transaction
 	ctx, err := uc.uow.Begin(ctx)
 	if err != nil {
@@ -37,7 +38,12 @@ func (uc *UC) Create(ctx context.Context, orderID uuid.UUID, customerID uuid.UUI
 		return err
 	}
 
-	// 3. Persist to database
+	// 3. Set delivery info if provided
+	if deliveryInfo != nil {
+		order.SetDeliveryInfo(*deliveryInfo)
+	}
+
+	// 4. Persist to database
 	if err := uc.orderRepo.Save(ctx, order); err != nil {
 		return err
 	}
@@ -47,14 +53,14 @@ func (uc *UC) Create(ctx context.Context, orderID uuid.UUID, customerID uuid.UUI
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
-	// 4. Start Temporal workflow for order processing (saga pattern)
+	// 5. Start Temporal workflow for order processing (saga pattern)
 	// Note: We use workflow name string to avoid import cycle.
 	// The workflow is registered in the worker with this name.
 	workflowID := fmt.Sprintf("order-%s", orderID.String())
 	_, err = uc.temporalClient.ExecuteWorkflow(ctx, client.StartWorkflowOptions{
 		ID:        workflowID,
 		TaskQueue: temporal.GetQueueName(v1.OrderTaskQueue),
-	}, OrderWorkflowName, orderID, customerID, items)
+	}, OrderWorkflowName, orderID, customerID, items, deliveryInfo)
 	if err != nil {
 		// Order is persisted, but workflow failed to start
 		// TODO: Consider compensation or retry logic
@@ -69,7 +75,8 @@ func (uc *UC) Create(ctx context.Context, orderID uuid.UUID, customerID uuid.UUI
 
 // CreateInDB creates an order directly in the database without starting a workflow.
 // This is used by Temporal activities when the workflow orchestration calls this.
-func (uc *UC) CreateInDB(ctx context.Context, orderID uuid.UUID, customerID uuid.UUID, items v2.Items) error {
+// deliveryInfo is optional (nil = self-pickup).
+func (uc *UC) CreateInDB(ctx context.Context, orderID uuid.UUID, customerID uuid.UUID, items v2.Items, deliveryInfo *v2.DeliveryInfo) error {
 	// Begin transaction
 	ctx, err := uc.uow.Begin(ctx)
 	if err != nil {
@@ -86,7 +93,12 @@ func (uc *UC) CreateInDB(ctx context.Context, orderID uuid.UUID, customerID uuid
 		return err
 	}
 
-	// 3. Persist to database
+	// 3. Set delivery info if provided
+	if deliveryInfo != nil {
+		order.SetDeliveryInfo(*deliveryInfo)
+	}
+
+	// 4. Persist to database
 	if err := uc.orderRepo.Save(ctx, order); err != nil {
 		return err
 	}

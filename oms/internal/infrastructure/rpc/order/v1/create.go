@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	v2 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/dto"
 	v1 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/model/v1"
 )
 
@@ -37,7 +38,10 @@ func (o *OrderRPC) Create(ctx context.Context, in *v1.CreateRequest) (*emptypb.E
 		items = append(items, v2.NewItem(productID, item.GetQuantity(), price))
 	}
 
-	err = o.orderService.Create(ctx, orderId, customerId, items)
+	// Convert proto DeliveryInfo to domain DeliveryInfo
+	deliveryInfo := dto.ProtoDeliveryInfoToDomain(in.GetDeliveryInfo())
+
+	err = o.orderService.Create(ctx, orderId, customerId, items, deliveryInfo)
 	if err != nil {
 		return nil, err
 	}

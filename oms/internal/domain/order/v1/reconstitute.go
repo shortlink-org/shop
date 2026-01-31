@@ -11,13 +11,14 @@ import (
 // Reconstitute creates an OrderState from persisted data.
 // This is used by the repository to rebuild the aggregate from the database.
 // It bypasses validation since the data is already validated when it was saved.
-func Reconstitute(id uuid.UUID, customerId uuid.UUID, items Items, status OrderStatus, version int) *OrderState {
+func Reconstitute(id uuid.UUID, customerId uuid.UUID, items Items, status OrderStatus, version int, deliveryInfo *DeliveryInfo) *OrderState {
 	order := &OrderState{
 		id:           id,
 		items:        items,
 		customerId:   customerId,
 		version:      version,
 		domainEvents: make([]DomainEvent, 0),
+		deliveryInfo: deliveryInfo,
 	}
 
 	// Initialize FSM with the persisted state

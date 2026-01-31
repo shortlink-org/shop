@@ -12,13 +12,17 @@ import (
 )
 
 type Querier interface {
+	DeleteOrderDeliveryInfo(ctx context.Context, orderID uuid.UUID) error
 	DeleteOrderItems(ctx context.Context, orderID uuid.UUID) error
 	GetOrder(ctx context.Context, id uuid.UUID) (OmsOrder, error)
+	GetOrderDeliveryInfo(ctx context.Context, orderID uuid.UUID) (OmsOrderDeliveryInfo, error)
 	GetOrderItems(ctx context.Context, orderID uuid.UUID) ([]GetOrderItemsRow, error)
 	InsertOrder(ctx context.Context, arg InsertOrderParams) error
+	InsertOrderDeliveryInfo(ctx context.Context, arg InsertOrderDeliveryInfoParams) error
 	InsertOrderItem(ctx context.Context, arg InsertOrderItemParams) error
 	ListOrdersByCustomer(ctx context.Context, customerID uuid.UUID) ([]OmsOrder, error)
 	UpdateOrder(ctx context.Context, arg UpdateOrderParams) (pgconn.CommandTag, error)
+	UpdateOrderDeliveryInfo(ctx context.Context, arg UpdateOrderDeliveryInfoParams) error
 }
 
 var _ Querier = (*Queries)(nil)

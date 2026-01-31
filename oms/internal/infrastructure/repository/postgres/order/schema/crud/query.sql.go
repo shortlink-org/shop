@@ -10,8 +10,19 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shopspring/decimal"
 )
+
+const deleteOrderDeliveryInfo = `-- name: DeleteOrderDeliveryInfo :exec
+DELETE FROM oms.order_delivery_info
+WHERE order_id = $1
+`
+
+func (q *Queries) DeleteOrderDeliveryInfo(ctx context.Context, orderID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteOrderDeliveryInfo, orderID)
+	return err
+}
 
 const deleteOrderItems = `-- name: DeleteOrderItems :exec
 DELETE FROM oms.order_items
@@ -39,6 +50,45 @@ func (q *Queries) GetOrder(ctx context.Context, id uuid.UUID) (OmsOrder, error) 
 		&i.Version,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getOrderDeliveryInfo = `-- name: GetOrderDeliveryInfo :one
+SELECT 
+    order_id,
+    pickup_street, pickup_city, pickup_postal_code, pickup_country, pickup_latitude, pickup_longitude,
+    delivery_street, delivery_city, delivery_postal_code, delivery_country, delivery_latitude, delivery_longitude,
+    period_start, period_end,
+    weight_kg, dimensions,
+    priority, package_id
+FROM oms.order_delivery_info
+WHERE order_id = $1
+`
+
+func (q *Queries) GetOrderDeliveryInfo(ctx context.Context, orderID uuid.UUID) (OmsOrderDeliveryInfo, error) {
+	row := q.db.QueryRow(ctx, getOrderDeliveryInfo, orderID)
+	var i OmsOrderDeliveryInfo
+	err := row.Scan(
+		&i.OrderID,
+		&i.PickupStreet,
+		&i.PickupCity,
+		&i.PickupPostalCode,
+		&i.PickupCountry,
+		&i.PickupLatitude,
+		&i.PickupLongitude,
+		&i.DeliveryStreet,
+		&i.DeliveryCity,
+		&i.DeliveryPostalCode,
+		&i.DeliveryCountry,
+		&i.DeliveryLatitude,
+		&i.DeliveryLongitude,
+		&i.PeriodStart,
+		&i.PeriodEnd,
+		&i.WeightKg,
+		&i.Dimensions,
+		&i.Priority,
+		&i.PackageID,
 	)
 	return i, err
 }
@@ -88,6 +138,71 @@ type InsertOrderParams struct {
 
 func (q *Queries) InsertOrder(ctx context.Context, arg InsertOrderParams) error {
 	_, err := q.db.Exec(ctx, insertOrder, arg.ID, arg.CustomerID, arg.Status)
+	return err
+}
+
+const insertOrderDeliveryInfo = `-- name: InsertOrderDeliveryInfo :exec
+INSERT INTO oms.order_delivery_info (
+    order_id,
+    pickup_street, pickup_city, pickup_postal_code, pickup_country, pickup_latitude, pickup_longitude,
+    delivery_street, delivery_city, delivery_postal_code, delivery_country, delivery_latitude, delivery_longitude,
+    period_start, period_end,
+    weight_kg, dimensions,
+    priority, package_id
+) VALUES (
+    $1,
+    $2, $3, $4, $5, $6, $7,
+    $8, $9, $10, $11, $12, $13,
+    $14, $15,
+    $16, $17,
+    $18, $19
+)
+`
+
+type InsertOrderDeliveryInfoParams struct {
+	OrderID            uuid.UUID
+	PickupStreet       pgtype.Text
+	PickupCity         pgtype.Text
+	PickupPostalCode   pgtype.Text
+	PickupCountry      pgtype.Text
+	PickupLatitude     pgtype.Numeric
+	PickupLongitude    pgtype.Numeric
+	DeliveryStreet     string
+	DeliveryCity       string
+	DeliveryPostalCode pgtype.Text
+	DeliveryCountry    string
+	DeliveryLatitude   pgtype.Numeric
+	DeliveryLongitude  pgtype.Numeric
+	PeriodStart        pgtype.Timestamptz
+	PeriodEnd          pgtype.Timestamptz
+	WeightKg           pgtype.Numeric
+	Dimensions         pgtype.Text
+	Priority           string
+	PackageID          pgtype.UUID
+}
+
+func (q *Queries) InsertOrderDeliveryInfo(ctx context.Context, arg InsertOrderDeliveryInfoParams) error {
+	_, err := q.db.Exec(ctx, insertOrderDeliveryInfo,
+		arg.OrderID,
+		arg.PickupStreet,
+		arg.PickupCity,
+		arg.PickupPostalCode,
+		arg.PickupCountry,
+		arg.PickupLatitude,
+		arg.PickupLongitude,
+		arg.DeliveryStreet,
+		arg.DeliveryCity,
+		arg.DeliveryPostalCode,
+		arg.DeliveryCountry,
+		arg.DeliveryLatitude,
+		arg.DeliveryLongitude,
+		arg.PeriodStart,
+		arg.PeriodEnd,
+		arg.WeightKg,
+		arg.Dimensions,
+		arg.Priority,
+		arg.PackageID,
+	)
 	return err
 }
 
@@ -167,4 +282,62 @@ func (q *Queries) UpdateOrder(ctx context.Context, arg UpdateOrderParams) (pgcon
 		arg.Version,
 		arg.Version_2,
 	)
+}
+
+const updateOrderDeliveryInfo = `-- name: UpdateOrderDeliveryInfo :exec
+UPDATE oms.order_delivery_info
+SET 
+    pickup_street = $2, pickup_city = $3, pickup_postal_code = $4, pickup_country = $5, pickup_latitude = $6, pickup_longitude = $7,
+    delivery_street = $8, delivery_city = $9, delivery_postal_code = $10, delivery_country = $11, delivery_latitude = $12, delivery_longitude = $13,
+    period_start = $14, period_end = $15,
+    weight_kg = $16, dimensions = $17,
+    priority = $18, package_id = $19
+WHERE order_id = $1
+`
+
+type UpdateOrderDeliveryInfoParams struct {
+	OrderID            uuid.UUID
+	PickupStreet       pgtype.Text
+	PickupCity         pgtype.Text
+	PickupPostalCode   pgtype.Text
+	PickupCountry      pgtype.Text
+	PickupLatitude     pgtype.Numeric
+	PickupLongitude    pgtype.Numeric
+	DeliveryStreet     string
+	DeliveryCity       string
+	DeliveryPostalCode pgtype.Text
+	DeliveryCountry    string
+	DeliveryLatitude   pgtype.Numeric
+	DeliveryLongitude  pgtype.Numeric
+	PeriodStart        pgtype.Timestamptz
+	PeriodEnd          pgtype.Timestamptz
+	WeightKg           pgtype.Numeric
+	Dimensions         pgtype.Text
+	Priority           string
+	PackageID          pgtype.UUID
+}
+
+func (q *Queries) UpdateOrderDeliveryInfo(ctx context.Context, arg UpdateOrderDeliveryInfoParams) error {
+	_, err := q.db.Exec(ctx, updateOrderDeliveryInfo,
+		arg.OrderID,
+		arg.PickupStreet,
+		arg.PickupCity,
+		arg.PickupPostalCode,
+		arg.PickupCountry,
+		arg.PickupLatitude,
+		arg.PickupLongitude,
+		arg.DeliveryStreet,
+		arg.DeliveryCity,
+		arg.DeliveryPostalCode,
+		arg.DeliveryCountry,
+		arg.DeliveryLatitude,
+		arg.DeliveryLongitude,
+		arg.PeriodStart,
+		arg.PeriodEnd,
+		arg.WeightKg,
+		arg.Dimensions,
+		arg.Priority,
+		arg.PackageID,
+	)
+	return err
 }

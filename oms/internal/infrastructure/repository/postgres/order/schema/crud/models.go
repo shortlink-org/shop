@@ -22,6 +22,35 @@ type OmsOrder struct {
 	UpdatedAt pgtype.Timestamptz
 }
 
+// Delivery information for orders
+type OmsOrderDeliveryInfo struct {
+	OrderID uuid.UUID
+	// Street address for package pickup
+	PickupStreet     pgtype.Text
+	PickupCity       pgtype.Text
+	PickupPostalCode pgtype.Text
+	PickupCountry    pgtype.Text
+	PickupLatitude   pgtype.Numeric
+	PickupLongitude  pgtype.Numeric
+	// Street address for package delivery
+	DeliveryStreet     string
+	DeliveryCity       string
+	DeliveryPostalCode pgtype.Text
+	DeliveryCountry    string
+	DeliveryLatitude   pgtype.Numeric
+	DeliveryLongitude  pgtype.Numeric
+	// Start of desired delivery time window
+	PeriodStart pgtype.Timestamptz
+	// End of desired delivery time window
+	PeriodEnd  pgtype.Timestamptz
+	WeightKg   pgtype.Numeric
+	Dimensions pgtype.Text
+	// Delivery priority: NORMAL, URGENT
+	Priority string
+	// Package ID assigned by delivery service
+	PackageID pgtype.UUID
+}
+
 // Items in orders
 type OmsOrderItem struct {
 	OrderID  uuid.UUID

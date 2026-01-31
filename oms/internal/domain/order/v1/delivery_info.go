@@ -31,6 +31,30 @@ const (
 	DeliveryPriorityUrgent      DeliveryPriority = 2
 )
 
+// String returns the string representation of the delivery priority.
+func (p DeliveryPriority) String() string {
+	switch p {
+	case DeliveryPriorityNormal:
+		return "NORMAL"
+	case DeliveryPriorityUrgent:
+		return "URGENT"
+	default:
+		return "UNSPECIFIED"
+	}
+}
+
+// DeliveryPriorityFromString converts a string to DeliveryPriority.
+func DeliveryPriorityFromString(s string) DeliveryPriority {
+	switch s {
+	case "NORMAL":
+		return DeliveryPriorityNormal
+	case "URGENT":
+		return DeliveryPriorityUrgent
+	default:
+		return DeliveryPriorityUnspecified
+	}
+}
+
 // NewDeliveryInfo creates a new DeliveryInfo value object.
 func NewDeliveryInfo(
 	pickupAddr address.Address,

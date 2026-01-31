@@ -10,6 +10,7 @@ import (
 	"github.com/shortlink-org/shop/oms/internal/boundary/ports"
 	order "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order/dto"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order/schema/crud"
 	"github.com/shortlink-org/shop/oms/pkg/uow"
 )
 
@@ -38,7 +39,19 @@ func (s *Store) Load(ctx context.Context, orderID uuid.UUID) (*order.OrderState,
 		return nil, err
 	}
 
-	return dto.ToDomain(row, items), nil
+	// Get delivery info (optional)
+	var deliveryInfoRow *crud.OmsOrderDeliveryInfo
+	deliveryRow, err := qtx.GetOrderDeliveryInfo(ctx, orderID)
+	if err != nil {
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return nil, err
+		}
+		// No delivery info - that's OK (self-pickup)
+	} else {
+		deliveryInfoRow = &deliveryRow
+	}
+
+	return dto.ToDomain(row, items, deliveryInfoRow), nil
 }
 
 // ListByCustomer retrieves all orders for a customer.
@@ -64,9 +77,19 @@ func (s *Store) ListByCustomer(ctx context.Context, customerID uuid.UUID) ([]*or
 			return nil, err
 		}
 
-		orders = append(orders, dto.ToDomainFromList(row, items))
+		// Get delivery info (optional)
+		var deliveryInfoRow *crud.OmsOrderDeliveryInfo
+		deliveryRow, err := qtx.GetOrderDeliveryInfo(ctx, row.ID)
+		if err != nil {
+			if !errors.Is(err, pgx.ErrNoRows) {
+				return nil, err
+			}
+		} else {
+			deliveryInfoRow = &deliveryRow
+		}
+
+		orders = append(orders, dto.ToDomainFromList(row, items, deliveryInfoRow))
 	}
 
 	return orders, nil
 }
-

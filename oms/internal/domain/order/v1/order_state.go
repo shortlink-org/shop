@@ -28,6 +28,8 @@ type OrderState struct {
 	// domainEvents stores domain events that occurred during aggregate operations
 	// Events are collected here and can be retrieved by application layer for publishing
 	domainEvents []DomainEvent
+	// deliveryInfo contains delivery information for the order (nil = self-pickup)
+	deliveryInfo *DeliveryInfo
 }
 
 // NewOrderState creates a new OrderState instance with the given customer ID.
@@ -82,7 +84,7 @@ func NewOrderState(customerId uuid.UUID) *OrderState {
 func (o *OrderState) onEnterState(ctx context.Context, from, to fsm.State, event fsm.Event) {
 	// Convert FSM state to OrderStatus
 	toStatus := o.fsmStateToOrderStatus(to)
-	
+
 	// Generate domain events based on state transitions
 	now := time.Now()
 	switch toStatus {
@@ -148,6 +150,31 @@ func (o *OrderState) GetCustomerId() uuid.UUID {
 	return o.customerId
 }
 
+// GetDeliveryInfo returns the delivery information for the order.
+// Returns nil if the order is for self-pickup (no delivery).
+func (o *OrderState) GetDeliveryInfo() *DeliveryInfo {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+
+	return o.deliveryInfo
+}
+
+// SetDeliveryInfo sets the delivery information for the order.
+func (o *OrderState) SetDeliveryInfo(info DeliveryInfo) {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+
+	o.deliveryInfo = &info
+}
+
+// HasDeliveryInfo returns true if the order has delivery information.
+func (o *OrderState) HasDeliveryInfo() bool {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+
+	return o.deliveryInfo != nil
+}
+
 // GetStatus returns the current status of the order.
 func (o *OrderState) GetStatus() OrderStatus {
 	o.mu.Lock()
@@ -182,7 +209,7 @@ func (o *OrderState) addDomainEvent(event DomainEvent) {
 func (o *OrderState) GetDomainEvents() []DomainEvent {
 	o.mu.Lock()
 	defer o.mu.Unlock()
-	
+
 	// Return a copy to prevent external modification
 	eventsCopy := make([]DomainEvent, len(o.domainEvents))
 	copy(eventsCopy, o.domainEvents)

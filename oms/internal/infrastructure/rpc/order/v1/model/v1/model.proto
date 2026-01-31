@@ -23,6 +23,8 @@ message OrderState {
   google.protobuf.Timestamp created_at = 5;
   // Timestamp for when the order was last updated
   google.protobuf.Timestamp updated_at = 6;
+  // Delivery information (optional, nil = self-pickup)
+  domain.order.common.v1.DeliveryInfo delivery_info = 7;
 }
 
 // Define the OrderItem message
@@ -39,6 +41,8 @@ message OrderItem {
 message CreateRequest {
   // Order details
   OrderState order = 1;
+  // Delivery information (optional, nil = self-pickup)
+  domain.order.common.v1.DeliveryInfo delivery_info = 2;
 }
 
 // Request message for getting an order by ID
