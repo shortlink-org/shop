@@ -25,6 +25,9 @@ WORKDIR /app/delivery
 COPY Cargo.toml Cargo.lock* ./
 COPY .cargo ./.cargo
 
+# Copy migration crate (dev-dependency, but Cargo needs to resolve it)
+COPY migration ./migration
+
 # Build dependencies only (for caching)
 RUN cargo build --release || true
 RUN rm -rf src
