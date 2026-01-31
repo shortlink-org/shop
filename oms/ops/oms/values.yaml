@@ -58,6 +58,13 @@ deploy:
   # type: Deployment, Rollout, StatefulSet
   type: Rollout
 
+  # Argo Rollouts strategy configuration
+  strategy:
+    type: Canary
+    canary:
+      steps:
+        - setWeight: 100
+
   image:
     repository: registry.gitlab.com/shortlink-org/shortlink/oms
     tag: latest
