@@ -52,4 +52,3 @@ func (h *Handler) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// Register connection
 	h.notifier.RegisterConnection(customerId, conn)
 }
-

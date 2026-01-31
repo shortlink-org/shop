@@ -5,12 +5,14 @@
 package crud
 
 import (
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/shopspring/decimal"
 )
 
 // Shopping carts by customer
 type OmsCart struct {
-	CustomerID pgtype.UUID
+	CustomerID uuid.UUID
 	// Optimistic concurrency control version
 	Version   int32
 	CreatedAt pgtype.Timestamptz
@@ -19,9 +21,9 @@ type OmsCart struct {
 
 // Items in shopping carts
 type OmsCartItem struct {
-	CartID   pgtype.UUID
-	GoodID   pgtype.UUID
+	CartID   uuid.UUID
+	GoodID   uuid.UUID
 	Quantity int32
-	Price    pgtype.Numeric
-	Discount pgtype.Numeric
+	Price    decimal.Decimal
+	Discount decimal.Decimal
 }

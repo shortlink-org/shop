@@ -13,7 +13,9 @@ import (
 
 	"github.com/authzed/authzed-go/v1"
 	"github.com/google/wire"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	shopspringDecimal "github.com/jackc/pgx-shopspring-decimal"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/trace"
 	"go.temporal.io/sdk/client"
@@ -39,7 +41,7 @@ import (
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/run"
 	cartRepo "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart"
 	orderRepo "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order"
-	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/uow"
+	pguow "github.com/shortlink-org/shop/oms/pkg/uow/postgres"
 	"github.com/shortlink-org/shop/oms/internal/usecases/cart"
 	"github.com/shortlink-org/shop/oms/internal/usecases/checkout"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order"
@@ -113,7 +115,7 @@ var OMSSet = wire.NewSet(
 
 	// UnitOfWork
 	newUnitOfWork,
-	wire.Bind(new(ports.UnitOfWork), new(*uow.PostgresUoW)),
+	wire.Bind(new(ports.UnitOfWork), new(*pguow.UoW)),
 
 	// Repositories
 	newCartRepository,
@@ -178,16 +180,22 @@ func newGoSDKProfiling(ctx context.Context, log logger.Logger, tracer trace.Trac
 
 // newDatabase creates a database connection using go-sdk/db
 func newDatabase(ctx context.Context, log logger.Logger, tracer trace.TracerProvider, meterProvider *sdkmetric.MeterProvider, cfg *config.Config) (db.DB, error) {
-	return db.New(ctx, log, tracer, meterProvider, cfg)
+	// Register shopspring/decimal type for PostgreSQL numeric columns
+	afterConnect := func(ctx context.Context, conn *pgx.Conn) error {
+		shopspringDecimal.Register(conn.TypeMap())
+		return nil
+	}
+
+	return db.New(ctx, log, tracer, meterProvider, cfg, db.WithPostgresAfterConnect(afterConnect))
 }
 
 // newUnitOfWork creates a PostgreSQL UnitOfWork
-func newUnitOfWork(store db.DB) (*uow.PostgresUoW, error) {
+func newUnitOfWork(store db.DB) (*pguow.UoW, error) {
 	pool, ok := store.GetConn().(*pgxpool.Pool)
 	if !ok {
 		return nil, db.ErrGetConnection
 	}
-	return uow.New(pool), nil
+	return pguow.New(pool), nil
 }
 
 // newCartRepository creates a PostgreSQL cart repository

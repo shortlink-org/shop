@@ -12,7 +12,7 @@ import (
 
 // StockChangeHandler handles HTTP requests for stock change events
 type StockChangeHandler struct {
-	log        logger.Logger
+	log         logger.Logger
 	cartService *cart.UC
 }
 
@@ -63,4 +63,3 @@ func (h *StockChangeHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte(`{"status":"ok"}`))
 }
-

@@ -97,7 +97,6 @@ func NewItemWithPricing(
 	return item, nil
 }
 
-
 // WithPricing returns a new Item with updated pricing information.
 // This preserves immutability by creating a new instance.
 func (i Item) WithPricing(price, discount, tax decimal.Decimal) (Item, error) {

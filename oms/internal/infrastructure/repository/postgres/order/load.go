@@ -6,18 +6,17 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/shortlink-org/shop/oms/internal/boundary/ports"
 	order "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order/dto"
-	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/tx"
+	"github.com/shortlink-org/shop/oms/pkg/uow"
 )
 
 // Load retrieves an order by ID.
 // Requires transaction in context (use UnitOfWork.Begin()).
 func (s *Store) Load(ctx context.Context, orderID uuid.UUID) (*order.OrderState, error) {
-	pgxTx := tx.FromContext(ctx)
+	pgxTx := uow.FromContext(ctx)
 	if pgxTx == nil {
 		return nil, ErrTransactionRequired
 	}
@@ -25,7 +24,7 @@ func (s *Store) Load(ctx context.Context, orderID uuid.UUID) (*order.OrderState,
 	qtx := s.query.WithTx(pgxTx)
 
 	// Get order header
-	row, err := qtx.GetOrder(ctx, uuidToPgtype(orderID))
+	row, err := qtx.GetOrder(ctx, orderID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ports.ErrNotFound
@@ -34,7 +33,7 @@ func (s *Store) Load(ctx context.Context, orderID uuid.UUID) (*order.OrderState,
 	}
 
 	// Get order items
-	items, err := qtx.GetOrderItems(ctx, uuidToPgtype(orderID))
+	items, err := qtx.GetOrderItems(ctx, orderID)
 	if err != nil {
 		return nil, err
 	}
@@ -45,14 +44,14 @@ func (s *Store) Load(ctx context.Context, orderID uuid.UUID) (*order.OrderState,
 // ListByCustomer retrieves all orders for a customer.
 // Requires transaction in context (use UnitOfWork.Begin()).
 func (s *Store) ListByCustomer(ctx context.Context, customerID uuid.UUID) ([]*order.OrderState, error) {
-	pgxTx := tx.FromContext(ctx)
+	pgxTx := uow.FromContext(ctx)
 	if pgxTx == nil {
 		return nil, ErrTransactionRequired
 	}
 
 	qtx := s.query.WithTx(pgxTx)
 
-	rows, err := qtx.ListOrdersByCustomer(ctx, uuidToPgtype(customerID))
+	rows, err := qtx.ListOrdersByCustomer(ctx, customerID)
 	if err != nil {
 		return nil, err
 	}
@@ -71,10 +70,3 @@ func (s *Store) ListByCustomer(ctx context.Context, customerID uuid.UUID) ([]*or
 	return orders, nil
 }
 
-// pgtypeUUIDToUUID converts pgtype.UUID to uuid.UUID
-func pgtypeUUIDToUUID(p pgtype.UUID) uuid.UUID {
-	if !p.Valid {
-		return uuid.Nil
-	}
-	return uuid.UUID(p.Bytes)
-}

@@ -1,35 +1,35 @@
-package uow
+package postgres
 
 import (
 	"context"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/tx"
+	"github.com/shortlink-org/shop/oms/pkg/uow"
 )
 
-// PostgresUoW implements UnitOfWork using PostgreSQL transactions.
-type PostgresUoW struct {
+// UoW implements UnitOfWork using PostgreSQL transactions.
+type UoW struct {
 	pool *pgxpool.Pool
 }
 
 // New creates a new PostgreSQL UnitOfWork.
-func New(pool *pgxpool.Pool) *PostgresUoW {
-	return &PostgresUoW{pool: pool}
+func New(pool *pgxpool.Pool) *UoW {
+	return &UoW{pool: pool}
 }
 
 // Begin starts a new transaction and returns context with tx.
-func (u *PostgresUoW) Begin(ctx context.Context) (context.Context, error) {
+func (u *UoW) Begin(ctx context.Context) (context.Context, error) {
 	pgxTx, err := u.pool.Begin(ctx)
 	if err != nil {
 		return ctx, err
 	}
-	return tx.WithTx(ctx, pgxTx), nil
+	return uow.WithTx(ctx, pgxTx), nil
 }
 
 // Commit commits the transaction from context.
-func (u *PostgresUoW) Commit(ctx context.Context) error {
-	pgxTx := tx.FromContext(ctx)
+func (u *UoW) Commit(ctx context.Context) error {
+	pgxTx := uow.FromContext(ctx)
 	if pgxTx == nil {
 		return nil // no-op if no transaction
 	}
@@ -38,8 +38,8 @@ func (u *PostgresUoW) Commit(ctx context.Context) error {
 
 // Rollback rolls back the transaction from context.
 // Safe to call multiple times or after commit (no-op).
-func (u *PostgresUoW) Rollback(ctx context.Context) error {
-	pgxTx := tx.FromContext(ctx)
+func (u *UoW) Rollback(ctx context.Context) error {
+	pgxTx := uow.FromContext(ctx)
 	if pgxTx == nil {
 		return nil // no-op if no transaction
 	}

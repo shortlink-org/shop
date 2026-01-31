@@ -7,17 +7,17 @@ package crud
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
-	DeleteOrderItems(ctx context.Context, orderID pgtype.UUID) error
-	GetOrder(ctx context.Context, id pgtype.UUID) (OmsOrder, error)
-	GetOrderItems(ctx context.Context, orderID pgtype.UUID) ([]GetOrderItemsRow, error)
+	DeleteOrderItems(ctx context.Context, orderID uuid.UUID) error
+	GetOrder(ctx context.Context, id uuid.UUID) (OmsOrder, error)
+	GetOrderItems(ctx context.Context, orderID uuid.UUID) ([]GetOrderItemsRow, error)
 	InsertOrder(ctx context.Context, arg InsertOrderParams) error
 	InsertOrderItem(ctx context.Context, arg InsertOrderItemParams) error
-	ListOrdersByCustomer(ctx context.Context, customerID pgtype.UUID) ([]OmsOrder, error)
+	ListOrdersByCustomer(ctx context.Context, customerID uuid.UUID) ([]OmsOrder, error)
 	UpdateOrder(ctx context.Context, arg UpdateOrderParams) (pgconn.CommandTag, error)
 }
 

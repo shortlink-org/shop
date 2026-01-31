@@ -8,8 +8,9 @@ package crud
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/shopspring/decimal"
 )
 
 const deleteOrderItems = `-- name: DeleteOrderItems :exec
@@ -17,7 +18,7 @@ DELETE FROM oms.order_items
 WHERE order_id = $1
 `
 
-func (q *Queries) DeleteOrderItems(ctx context.Context, orderID pgtype.UUID) error {
+func (q *Queries) DeleteOrderItems(ctx context.Context, orderID uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteOrderItems, orderID)
 	return err
 }
@@ -28,7 +29,7 @@ FROM oms.orders
 WHERE id = $1
 `
 
-func (q *Queries) GetOrder(ctx context.Context, id pgtype.UUID) (OmsOrder, error) {
+func (q *Queries) GetOrder(ctx context.Context, id uuid.UUID) (OmsOrder, error) {
 	row := q.db.QueryRow(ctx, getOrder, id)
 	var i OmsOrder
 	err := row.Scan(
@@ -49,12 +50,12 @@ WHERE order_id = $1
 `
 
 type GetOrderItemsRow struct {
-	GoodID   pgtype.UUID
+	GoodID   uuid.UUID
 	Quantity int32
-	Price    pgtype.Numeric
+	Price    decimal.Decimal
 }
 
-func (q *Queries) GetOrderItems(ctx context.Context, orderID pgtype.UUID) ([]GetOrderItemsRow, error) {
+func (q *Queries) GetOrderItems(ctx context.Context, orderID uuid.UUID) ([]GetOrderItemsRow, error) {
 	rows, err := q.db.Query(ctx, getOrderItems, orderID)
 	if err != nil {
 		return nil, err
@@ -80,8 +81,8 @@ VALUES ($1, $2, $3, 1, NOW(), NOW())
 `
 
 type InsertOrderParams struct {
-	ID         pgtype.UUID
-	CustomerID pgtype.UUID
+	ID         uuid.UUID
+	CustomerID uuid.UUID
 	Status     string
 }
 
@@ -96,10 +97,10 @@ VALUES ($1, $2, $3, $4)
 `
 
 type InsertOrderItemParams struct {
-	OrderID  pgtype.UUID
-	GoodID   pgtype.UUID
+	OrderID  uuid.UUID
+	GoodID   uuid.UUID
 	Quantity int32
-	Price    pgtype.Numeric
+	Price    decimal.Decimal
 }
 
 func (q *Queries) InsertOrderItem(ctx context.Context, arg InsertOrderItemParams) error {
@@ -119,7 +120,7 @@ WHERE customer_id = $1
 ORDER BY created_at DESC
 `
 
-func (q *Queries) ListOrdersByCustomer(ctx context.Context, customerID pgtype.UUID) ([]OmsOrder, error) {
+func (q *Queries) ListOrdersByCustomer(ctx context.Context, customerID uuid.UUID) ([]OmsOrder, error) {
 	rows, err := q.db.Query(ctx, listOrdersByCustomer, customerID)
 	if err != nil {
 		return nil, err
@@ -153,7 +154,7 @@ WHERE id = $1 AND version = $4
 `
 
 type UpdateOrderParams struct {
-	ID        pgtype.UUID
+	ID        uuid.UUID
 	Status    string
 	Version   int32
 	Version_2 int32

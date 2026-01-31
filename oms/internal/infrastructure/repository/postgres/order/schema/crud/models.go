@@ -5,13 +5,15 @@
 package crud
 
 import (
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/shopspring/decimal"
 )
 
 // Customer orders
 type OmsOrder struct {
-	ID         pgtype.UUID
-	CustomerID pgtype.UUID
+	ID         uuid.UUID
+	CustomerID uuid.UUID
 	// Order status: PENDING, PROCESSING, COMPLETED, CANCELLED
 	Status string
 	// Optimistic concurrency control version
@@ -22,8 +24,8 @@ type OmsOrder struct {
 
 // Items in orders
 type OmsOrderItem struct {
-	OrderID  pgtype.UUID
-	GoodID   pgtype.UUID
+	OrderID  uuid.UUID
+	GoodID   uuid.UUID
 	Quantity int32
-	Price    pgtype.Numeric
+	Price    decimal.Decimal
 }

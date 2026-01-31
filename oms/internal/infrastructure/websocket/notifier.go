@@ -20,7 +20,7 @@ type Notification struct {
 
 // StockDepletedNotification represents a notification when stock is depleted
 type StockDepletedNotification struct {
-	GoodID string `json:"good_id"`
+	GoodID  string `json:"good_id"`
 	Message string `json:"message"`
 }
 
@@ -145,4 +145,3 @@ func (n *Notifier) handleConnection(customerId uuid.UUID, conn *websocket.Conn) 
 		}
 	}
 }
-

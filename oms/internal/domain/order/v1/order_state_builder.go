@@ -47,13 +47,13 @@ func (b *OrderStateBuilder) AddItem(goodId uuid.UUID, quantity int32, price deci
 		return b
 	}
 	item := NewItem(goodId, quantity, price)
-	
+
 	// Validate item before adding to maintain invariants
 	if err := ValidateOrderItem(item); err != nil {
 		b.errors = errors.Join(b.errors, fmt.Errorf("invalid item %s: %w", goodId, err))
 		return b
 	}
-	
+
 	b.orderState.items = append(b.orderState.items, item)
 	return b
 }
@@ -68,7 +68,7 @@ func (b *OrderStateBuilder) SetStatus(targetStatus OrderStatus) *OrderStateBuild
 	}
 
 	currentStatus := b.orderState.GetStatus()
-	
+
 	// If already at the target status, no transition needed
 	if currentStatus == targetStatus {
 		return b
@@ -97,14 +97,14 @@ func (b *OrderStateBuilder) replayEventsToStatus(currentStatus, targetStatus Ord
 				return fmt.Errorf("failed to transition to PROCESSING: %w", err)
 			}
 		}
-		
+
 	case targetStatus == OrderStatus_ORDER_STATUS_CANCELLED:
 		// To reach Cancelled, trigger CANCELLED event from any state
 		err := b.orderState.fsm.TriggerEvent(context.Background(), fsm.Event(OrderStatus_ORDER_STATUS_CANCELLED.String()))
 		if err != nil {
 			return fmt.Errorf("failed to transition to CANCELLED: %w", err)
 		}
-		
+
 	case targetStatus == OrderStatus_ORDER_STATUS_COMPLETED:
 		// To reach Completed, we need to be in PROCESSING first
 		// If we're in PENDING, first transition to PROCESSING
@@ -116,7 +116,7 @@ func (b *OrderStateBuilder) replayEventsToStatus(currentStatus, targetStatus Ord
 			// Update current status after transition
 			currentStatus = OrderStatus_ORDER_STATUS_PROCESSING
 		}
-		
+
 		// Now transition from PROCESSING to COMPLETED
 		if currentStatus == OrderStatus_ORDER_STATUS_PROCESSING {
 			err := b.orderState.fsm.TriggerEvent(context.Background(), fsm.Event(OrderStatus_ORDER_STATUS_COMPLETED.String()))
@@ -126,7 +126,7 @@ func (b *OrderStateBuilder) replayEventsToStatus(currentStatus, targetStatus Ord
 		} else {
 			return fmt.Errorf("cannot transition to COMPLETED from status '%s'", currentStatus)
 		}
-		
+
 	default:
 		return fmt.Errorf("unsupported target status '%s'", targetStatus)
 	}

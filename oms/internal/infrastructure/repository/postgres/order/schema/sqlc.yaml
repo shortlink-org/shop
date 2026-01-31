@@ -15,3 +15,12 @@ sql:
           package: crud
           emit_interface: true
           sql_package: pgx/v5
+          overrides:
+            - db_type: uuid
+              go_type:
+                import: github.com/google/uuid
+                type: UUID
+            - db_type: pg_catalog.numeric
+              go_type:
+                import: github.com/shopspring/decimal
+                type: Decimal

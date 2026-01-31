@@ -8,8 +8,9 @@ package crud
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/shopspring/decimal"
 )
 
 const deleteCartItems = `-- name: DeleteCartItems :exec
@@ -17,7 +18,7 @@ DELETE FROM oms.cart_items
 WHERE cart_id = $1
 `
 
-func (q *Queries) DeleteCartItems(ctx context.Context, cartID pgtype.UUID) error {
+func (q *Queries) DeleteCartItems(ctx context.Context, cartID uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteCartItems, cartID)
 	return err
 }
@@ -28,7 +29,7 @@ FROM oms.carts
 WHERE customer_id = $1
 `
 
-func (q *Queries) GetCart(ctx context.Context, customerID pgtype.UUID) (OmsCart, error) {
+func (q *Queries) GetCart(ctx context.Context, customerID uuid.UUID) (OmsCart, error) {
 	row := q.db.QueryRow(ctx, getCart, customerID)
 	var i OmsCart
 	err := row.Scan(
@@ -47,13 +48,13 @@ WHERE cart_id = $1
 `
 
 type GetCartItemsRow struct {
-	GoodID   pgtype.UUID
+	GoodID   uuid.UUID
 	Quantity int32
-	Price    pgtype.Numeric
-	Discount pgtype.Numeric
+	Price    decimal.Decimal
+	Discount decimal.Decimal
 }
 
-func (q *Queries) GetCartItems(ctx context.Context, cartID pgtype.UUID) ([]GetCartItemsRow, error) {
+func (q *Queries) GetCartItems(ctx context.Context, cartID uuid.UUID) ([]GetCartItemsRow, error) {
 	rows, err := q.db.Query(ctx, getCartItems, cartID)
 	if err != nil {
 		return nil, err
@@ -83,7 +84,7 @@ INSERT INTO oms.carts (customer_id, version, created_at, updated_at)
 VALUES ($1, 1, NOW(), NOW())
 `
 
-func (q *Queries) InsertCart(ctx context.Context, customerID pgtype.UUID) error {
+func (q *Queries) InsertCart(ctx context.Context, customerID uuid.UUID) error {
 	_, err := q.db.Exec(ctx, insertCart, customerID)
 	return err
 }
@@ -94,11 +95,11 @@ VALUES ($1, $2, $3, $4, $5)
 `
 
 type InsertCartItemParams struct {
-	CartID   pgtype.UUID
-	GoodID   pgtype.UUID
+	CartID   uuid.UUID
+	GoodID   uuid.UUID
 	Quantity int32
-	Price    pgtype.Numeric
-	Discount pgtype.Numeric
+	Price    decimal.Decimal
+	Discount decimal.Decimal
 }
 
 func (q *Queries) InsertCartItem(ctx context.Context, arg InsertCartItemParams) error {
@@ -121,7 +122,7 @@ WHERE oms.carts.version = $3
 `
 
 type UpsertCartParams struct {
-	CustomerID pgtype.UUID
+	CustomerID uuid.UUID
 	Version    int32
 	Version_2  int32
 }

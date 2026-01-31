@@ -7,15 +7,15 @@ package crud
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
-	DeleteCartItems(ctx context.Context, cartID pgtype.UUID) error
-	GetCart(ctx context.Context, customerID pgtype.UUID) (OmsCart, error)
-	GetCartItems(ctx context.Context, cartID pgtype.UUID) ([]GetCartItemsRow, error)
-	InsertCart(ctx context.Context, customerID pgtype.UUID) error
+	DeleteCartItems(ctx context.Context, cartID uuid.UUID) error
+	GetCart(ctx context.Context, customerID uuid.UUID) (OmsCart, error)
+	GetCartItems(ctx context.Context, cartID uuid.UUID) ([]GetCartItemsRow, error)
+	InsertCart(ctx context.Context, customerID uuid.UUID) error
 	InsertCartItem(ctx context.Context, arg InsertCartItemParams) error
 	UpsertCart(ctx context.Context, arg UpsertCartParams) (pgconn.CommandTag, error)
 }

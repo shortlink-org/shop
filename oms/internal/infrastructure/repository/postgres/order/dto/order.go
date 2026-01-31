@@ -1,10 +1,6 @@
 package dto
 
 import (
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/shopspring/decimal"
-
 	order "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order/schema/crud"
 )
@@ -14,18 +10,13 @@ func ToDomain(row crud.OmsOrder, items []crud.GetOrderItemsRow) *order.OrderStat
 	domainItems := make(order.Items, 0, len(items))
 
 	for _, i := range items {
-		goodID := pgtypeUUIDToUUID(i.GoodID)
-		price := pgtypeNumericToDecimal(i.Price)
-
-		item := order.NewItem(goodID, i.Quantity, price)
+		item := order.NewItem(i.GoodID, i.Quantity, i.Price)
 		domainItems = append(domainItems, item)
 	}
 
-	id := pgtypeUUIDToUUID(row.ID)
-	customerID := pgtypeUUIDToUUID(row.CustomerID)
 	status := stringToOrderStatus(row.Status)
 
-	return order.Reconstitute(id, customerID, domainItems, status, int(row.Version))
+	return order.Reconstitute(row.ID, row.CustomerID, domainItems, status, int(row.Version))
 }
 
 // ToDomainFromList converts database models from list query to domain aggregate.
@@ -47,33 +38,4 @@ func stringToOrderStatus(s string) order.OrderStatus {
 	default:
 		return order.OrderStatus_ORDER_STATUS_UNSPECIFIED
 	}
-}
-
-// pgtypeUUIDToUUID converts pgtype.UUID to uuid.UUID
-func pgtypeUUIDToUUID(p pgtype.UUID) uuid.UUID {
-	if !p.Valid {
-		return uuid.Nil
-	}
-	return uuid.UUID(p.Bytes)
-}
-
-// pgtypeNumericToDecimal converts pgtype.Numeric to decimal.Decimal
-func pgtypeNumericToDecimal(p pgtype.Numeric) decimal.Decimal {
-	if !p.Valid {
-		return decimal.Zero
-	}
-
-	// Convert pgtype.Numeric to float64
-	f, err := p.Float64Value()
-	if err == nil && f.Valid {
-		return decimal.NewFromFloat(f.Float64)
-	}
-
-	// Fallback: try Int64
-	i, err := p.Int64Value()
-	if err == nil && i.Valid {
-		return decimal.NewFromInt(i.Int64)
-	}
-
-	return decimal.Zero
 }

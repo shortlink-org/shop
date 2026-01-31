@@ -25,15 +25,15 @@ import (
 	"github.com/shortlink-org/go-sdk/temporal"
 	"github.com/shortlink-org/shop/oms/internal/boundary/ports"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/index/redis"
-	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart"
-	postgres2 "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order"
-	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/uow"
+	postgres2 "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart"
+	postgres3 "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1"
 	v1_2 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/run"
 	"github.com/shortlink-org/shop/oms/internal/usecases/cart"
 	"github.com/shortlink-org/shop/oms/internal/usecases/checkout"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order"
+	"github.com/shortlink-org/shop/oms/pkg/uow/postgres"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/trace"
 	"go.temporal.io/sdk/client"
@@ -94,7 +94,7 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	postgresUoW, err := newUnitOfWork(db)
+	uoW, err := newUnitOfWork(db)
 	if err != nil {
 		cleanup4()
 		cleanup3()
@@ -135,7 +135,7 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		return nil, nil, err
 	}
 	cartGoodsIndex := newCartGoodsIndex(rueidisClient)
-	uc, err := cart.New(logger, client, postgresUoW, store, cartGoodsIndex)
+	uc, err := cart.New(logger, client, uoW, store, cartGoodsIndex)
 	if err != nil {
 		cleanup5()
 		cleanup4()
@@ -171,7 +171,7 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	orderUC, err := order.New(logger, client, postgresUoW, postgresStore, clientClient)
+	orderUC, err := order.New(logger, client, uoW, postgresStore, clientClient)
 	if err != nil {
 		cleanup5()
 		cleanup4()
@@ -189,8 +189,8 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	checkoutUC := checkout.New(logger, postgresUoW, store, postgresStore)
-	omsService, err := NewOMSService(logger, config, monitoring, tracerProvider, pprofEndpoint, client, db, postgresUoW, store, postgresStore, response, cartRPC, orderRPC, uc, orderUC, checkoutUC, clientClient)
+	checkoutUC := checkout.New(logger, uoW, store, postgresStore)
+	omsService, err := NewOMSService(logger, config, monitoring, tracerProvider, pprofEndpoint, client, db, uoW, store, postgresStore, response, cartRPC, orderRPC, uc, orderUC, checkoutUC, clientClient)
 	if err != nil {
 		cleanup5()
 		cleanup4()
@@ -264,8 +264,8 @@ var OMSSet = wire.NewSet(
 
 	newDatabase, wire.FieldsOf(new(*metrics.Monitoring), "Metrics"), newRedisClient,
 
-	newUnitOfWork, wire.Bind(new(ports.UnitOfWork), new(*uow.PostgresUoW)), newCartRepository,
-	newOrderRepository, wire.Bind(new(ports.CartRepository), new(*postgres.Store)), wire.Bind(new(ports.OrderRepository), new(*postgres2.Store)), newCartGoodsIndex, wire.Bind(new(ports.CartGoodsIndex), new(*redis.CartGoodsIndex)), v1.New, v1_2.New, NewRunRPCServer, cart.New, order.New, checkout.New, temporal.New, NewOMSService,
+	newUnitOfWork, wire.Bind(new(ports.UnitOfWork), new(*postgres.UoW)), newCartRepository,
+	newOrderRepository, wire.Bind(new(ports.CartRepository), new(*postgres2.Store)), wire.Bind(new(ports.OrderRepository), new(*postgres3.Store)), newCartGoodsIndex, wire.Bind(new(ports.CartGoodsIndex), new(*redis.CartGoodsIndex)), v1.New, v1_2.New, NewRunRPCServer, cart.New, order.New, checkout.New, temporal.New, NewOMSService,
 )
 
 // newGRPCServer creates a gRPC server using go-sdk/grpc
@@ -309,22 +309,22 @@ func newDatabase(ctx2 context.Context, log logger.Logger, tracer trace.TracerPro
 }
 
 // newUnitOfWork creates a PostgreSQL UnitOfWork
-func newUnitOfWork(store db.DB) (*uow.PostgresUoW, error) {
+func newUnitOfWork(store db.DB) (*postgres.UoW, error) {
 	pool, ok := store.GetConn().(*pgxpool.Pool)
 	if !ok {
 		return nil, db.ErrGetConnection
 	}
-	return uow.New(pool), nil
+	return postgres.New(pool), nil
 }
 
 // newCartRepository creates a PostgreSQL cart repository
-func newCartRepository(ctx2 context.Context, store db.DB) (*postgres.Store, error) {
-	return postgres.New(ctx2, store)
+func newCartRepository(ctx2 context.Context, store db.DB) (*postgres2.Store, error) {
+	return postgres2.New(ctx2, store)
 }
 
 // newOrderRepository creates a PostgreSQL order repository
-func newOrderRepository(ctx2 context.Context, store db.DB) (*postgres2.Store, error) {
-	return postgres2.New(ctx2, store)
+func newOrderRepository(ctx2 context.Context, store db.DB) (*postgres3.Store, error) {
+	return postgres3.New(ctx2, store)
 }
 
 // newRedisClient creates a Redis client using rueidis
