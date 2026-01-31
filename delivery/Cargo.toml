@@ -40,3 +40,8 @@ rust_decimal = { version = "1", features = ["db-postgres"] }
 [build-dependencies]
 prost-build = "0.14.3"
 
+[dev-dependencies]
+testcontainers = "0.23"
+testcontainers-modules = { version = "0.11", features = ["postgres"] }
+migration = { path = "migration" }
+

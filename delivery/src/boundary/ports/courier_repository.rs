@@ -69,4 +69,10 @@ pub trait CourierRepository: Send + Sync {
 
     /// Delete a courier by ID
     async fn delete(&self, id: Uuid) -> Result<(), RepositoryError>;
+
+    /// List all couriers with pagination
+    ///
+    /// Returns couriers ordered by created_at descending.
+    /// Use limit and offset for pagination.
+    async fn list(&self, limit: u64, offset: u64) -> Result<Vec<Courier>, RepositoryError>;
 }
