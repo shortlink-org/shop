@@ -1,0 +1,39 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dependencies (will be installed fresh)
+node_modules/
+
+# Build artifacts
+.next/
+out/
+dist/
+
+# Environment files (use build args instead)
+.env*
+!.env.example
+
+# Documentation
+*.md
+
+# Test files
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+__tests__/
+coverage/
+
+# Ops (except this Dockerfile)
+ops/Helm/

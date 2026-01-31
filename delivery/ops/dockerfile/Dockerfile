@@ -7,37 +7,41 @@ ARG BUILDKIT_SBOM_SCAN_STAGE=true
 ARG BUILDKIT_SBOM_SCAN_CONTEXT=true
 
 # Build stage
-FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS builder
+FROM --platform=$BUILDPLATFORM rust:1.84-alpine AS builder
 
-ARG TARGETOS
-ARG TARGETARCH
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
 
 WORKDIR /app
 
-# Install dependencies
-RUN apk add --no-cache git ca-certificates
+# Install build dependencies
+RUN apk add --no-cache musl-dev protobuf-dev
 
-# Copy go mod files
-COPY go.mod go.sum ./
+# Create a new empty shell project for caching dependencies
+RUN cargo new --bin delivery
+WORKDIR /app/delivery
 
-# Download dependencies
-RUN go mod download
+# Copy manifests
+COPY Cargo.toml Cargo.lock* ./
+COPY .cargo ./.cargo
+
+# Build dependencies only (for caching)
+RUN cargo build --release || true
+RUN rm -rf src
 
 # Copy source code
-COPY . .
+COPY src ./src
+COPY build.rs ./
 
-# Build the binary
-RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build \
-    -ldflags="-w -s" \
-    -o /courier-emulation \
-    ./cmd/courier-emulation
+# Build the application
+RUN cargo build --release
 
 # Final stage
 FROM alpine:3.21
 
 LABEL maintainer=batazor111@gmail.com
-LABEL org.opencontainers.image.title="shortlink-shop-courier-emulation"
-LABEL org.opencontainers.image.description="Courier Emulation Service for Delivery Boundary"
+LABEL org.opencontainers.image.title="shortlink-shop-delivery"
+LABEL org.opencontainers.image.description="Delivery Service for ShortLink Shop"
 LABEL org.opencontainers.image.authors="Login Viktor @batazor"
 LABEL org.opencontainers.image.vendor="Login Viktor @batazor"
 LABEL org.opencontainers.image.licenses="MIT"
@@ -47,7 +51,9 @@ LABEL org.opencontainers.image.source="https://github.com/shortlink-org/shortlin
 # Install ca-certificates for HTTPS and tini for proper signal handling
 RUN apk add --no-cache ca-certificates tini
 
-# Prometheus metrics
+# gRPC port
+EXPOSE 50051
+# Metrics/health port
 EXPOSE 9090
 
 WORKDIR /app
@@ -56,7 +62,7 @@ WORKDIR /app
 RUN addgroup -S app && adduser -S app -G app
 
 # Copy the binary from builder
-COPY --from=builder /courier-emulation /app/courier-emulation
+COPY --from=builder /app/delivery/target/release/delivery /app/delivery
 
 # Change ownership
 RUN chown -R app:app /app
@@ -64,4 +70,4 @@ RUN chown -R app:app /app
 USER app
 
 ENTRYPOINT ["/sbin/tini", "--"]
-CMD ["/app/courier-emulation"]
+CMD ["/app/delivery"]

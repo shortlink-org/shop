@@ -7,6 +7,7 @@ console.info('API_URI', API_URI)
 
 /** @type {import('next').NextConfig} */
 module.exports = {
+  output: 'standalone',
   reactStrictMode: true,
   env: {
     // ShortLink API

@@ -1,0 +1,27 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test files
+tests/
+
+# Documentation
+*.md
+docs/
+
+# Build artifacts
+target/
+debug/
+
+# Cargo lock might be regenerated
+# Cargo.lock
