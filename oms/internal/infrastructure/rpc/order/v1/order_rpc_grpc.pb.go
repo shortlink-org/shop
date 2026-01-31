@@ -25,6 +25,7 @@ const (
 	OrderService_Get_FullMethodName                = "/infrastructure.rpc.order.v1.OrderService/Get"
 	OrderService_Cancel_FullMethodName             = "/infrastructure.rpc.order.v1.OrderService/Cancel"
 	OrderService_UpdateDeliveryInfo_FullMethodName = "/infrastructure.rpc.order.v1.OrderService/UpdateDeliveryInfo"
+	OrderService_Checkout_FullMethodName           = "/infrastructure.rpc.order.v1.OrderService/Checkout"
 )
 
 // OrderServiceClient is the client API for OrderService service.
@@ -41,6 +42,8 @@ type OrderServiceClient interface {
 	Cancel(ctx context.Context, in *v1.CancelRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// UpdateDeliveryInfo updates delivery information for an order.
 	UpdateDeliveryInfo(ctx context.Context, in *v1.UpdateDeliveryInfoRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// Checkout creates an order from customer's cart.
+	Checkout(ctx context.Context, in *v1.CheckoutRequest, opts ...grpc.CallOption) (*v1.CheckoutResponse, error)
 }
 
 type orderServiceClient struct {
@@ -91,6 +94,16 @@ func (c *orderServiceClient) UpdateDeliveryInfo(ctx context.Context, in *v1.Upda
 	return out, nil
 }
 
+func (c *orderServiceClient) Checkout(ctx context.Context, in *v1.CheckoutRequest, opts ...grpc.CallOption) (*v1.CheckoutResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(v1.CheckoutResponse)
+	err := c.cc.Invoke(ctx, OrderService_Checkout_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OrderServiceServer is the server API for OrderService service.
 // All implementations must embed UnimplementedOrderServiceServer
 // for forward compatibility.
@@ -105,6 +118,8 @@ type OrderServiceServer interface {
 	Cancel(context.Context, *v1.CancelRequest) (*emptypb.Empty, error)
 	// UpdateDeliveryInfo updates delivery information for an order.
 	UpdateDeliveryInfo(context.Context, *v1.UpdateDeliveryInfoRequest) (*emptypb.Empty, error)
+	// Checkout creates an order from customer's cart.
+	Checkout(context.Context, *v1.CheckoutRequest) (*v1.CheckoutResponse, error)
 	mustEmbedUnimplementedOrderServiceServer()
 }
 
@@ -126,6 +141,9 @@ func (UnimplementedOrderServiceServer) Cancel(context.Context, *v1.CancelRequest
 }
 func (UnimplementedOrderServiceServer) UpdateDeliveryInfo(context.Context, *v1.UpdateDeliveryInfoRequest) (*emptypb.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method UpdateDeliveryInfo not implemented")
+}
+func (UnimplementedOrderServiceServer) Checkout(context.Context, *v1.CheckoutRequest) (*v1.CheckoutResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method Checkout not implemented")
 }
 func (UnimplementedOrderServiceServer) mustEmbedUnimplementedOrderServiceServer() {}
 func (UnimplementedOrderServiceServer) testEmbeddedByValue()                      {}
@@ -220,6 +238,24 @@ func _OrderService_UpdateDeliveryInfo_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OrderService_Checkout_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(v1.CheckoutRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderServiceServer).Checkout(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OrderService_Checkout_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderServiceServer).Checkout(ctx, req.(*v1.CheckoutRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OrderService_ServiceDesc is the grpc.ServiceDesc for OrderService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -242,6 +278,10 @@ var OrderService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateDeliveryInfo",
 			Handler:    _OrderService_UpdateDeliveryInfo_Handler,
+		},
+		{
+			MethodName: "Checkout",
+			Handler:    _OrderService_Checkout_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

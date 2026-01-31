@@ -54,6 +54,9 @@ import (
 	orderCreate "github.com/shortlink-org/shop/oms/internal/usecases/order/command/create"
 	orderUpdateDeliveryInfo "github.com/shortlink-org/shop/oms/internal/usecases/order/command/update_delivery_info"
 	orderGet "github.com/shortlink-org/shop/oms/internal/usecases/order/query/get"
+
+	// Checkout handlers
+	checkout "github.com/shortlink-org/shop/oms/internal/usecases/checkout/command/create_order_from_cart"
 )
 
 type OMSService struct {
@@ -149,6 +152,9 @@ var OMSSet = wire.NewSet(
 	newOrderCancelHandler,
 	newOrderUpdateDeliveryInfoHandler,
 	newOrderGetHandler,
+
+	// Checkout Handlers
+	newCheckoutHandler,
 
 	// Delivery
 	newCartRPC,
@@ -287,6 +293,11 @@ func newOrderGetHandler(uow ports.UnitOfWork, orderRepo ports.OrderRepository) *
 	return orderGet.NewHandler(uow, orderRepo)
 }
 
+// Checkout Handler Factory
+func newCheckoutHandler(log logger.Logger, uow ports.UnitOfWork, cartRepo ports.CartRepository, orderRepo ports.OrderRepository, publisher ports.EventPublisher) *checkout.Handler {
+	return checkout.NewHandler(log, uow, cartRepo, orderRepo, publisher)
+}
+
 // newOrderEventSubscriber creates and registers the order event subscriber
 func newOrderEventSubscriber(log logger.Logger, temporalClient client.Client, publisher *events.InMemoryPublisher) *temporalInfra.OrderEventSubscriber {
 	subscriber := temporalInfra.NewOrderEventSubscriber(log, temporalClient)
@@ -313,9 +324,10 @@ func newOrderRPC(
 	createHandler *orderCreate.Handler,
 	cancelHandler *orderCancel.Handler,
 	updateDeliveryInfoHandler *orderUpdateDeliveryInfo.Handler,
+	checkoutHandler *checkout.Handler,
 	getHandler *orderGet.Handler,
 ) (*orderRPC.OrderRPC, error) {
-	return orderRPC.New(runRPCServer, log, createHandler, cancelHandler, updateDeliveryInfoHandler, getHandler)
+	return orderRPC.New(runRPCServer, log, createHandler, cancelHandler, updateDeliveryInfoHandler, checkoutHandler, getHandler)
 }
 
 func NewOMSService(

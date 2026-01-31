@@ -22,4 +22,7 @@ service OrderService {
 
   // UpdateDeliveryInfo updates delivery information for an order.
   rpc UpdateDeliveryInfo(infrastructure.rpc.order.v1.model.v1.UpdateDeliveryInfoRequest) returns (google.protobuf.Empty);
+
+  // Checkout creates an order from customer's cart.
+  rpc Checkout(infrastructure.rpc.order.v1.model.v1.CheckoutRequest) returns (infrastructure.rpc.order.v1.model.v1.CheckoutResponse);
 }

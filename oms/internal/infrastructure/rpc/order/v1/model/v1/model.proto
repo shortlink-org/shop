@@ -78,3 +78,17 @@ message UpdateDeliveryInfoRequest {
   // New delivery information
   domain.order.common.v1.DeliveryInfo delivery_info = 2;
 }
+
+// Request message for checkout (creating order from cart)
+message CheckoutRequest {
+  // ID of the customer whose cart should be converted to order
+  string customer_id = 1;
+  // Delivery information (optional, nil = self-pickup)
+  domain.order.common.v1.DeliveryInfo delivery_info = 2;
+}
+
+// Response message for checkout
+message CheckoutResponse {
+  // ID of the created order
+  string order_id = 1;
+}

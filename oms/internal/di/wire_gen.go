@@ -36,6 +36,7 @@ import (
 	"github.com/shortlink-org/shop/oms/internal/usecases/cart/command/remove_items"
 	"github.com/shortlink-org/shop/oms/internal/usecases/cart/command/reset"
 	"github.com/shortlink-org/shop/oms/internal/usecases/cart/query/get"
+	"github.com/shortlink-org/shop/oms/internal/usecases/checkout/command/create_order_from_cart"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/cancel"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/create"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/update_delivery_info"
@@ -168,8 +169,9 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	createHandler := newOrderCreateHandler(logger, uoW, postgresStore, inMemoryPublisher)
 	cancelHandler := newOrderCancelHandler(logger, uoW, postgresStore, inMemoryPublisher)
 	update_delivery_infoHandler := newOrderUpdateDeliveryInfoHandler(logger, uoW, postgresStore, inMemoryPublisher)
+	create_order_from_cartHandler := newCheckoutHandler(logger, uoW, store, postgresStore, inMemoryPublisher)
 	handler2 := newOrderGetHandler(uoW, postgresStore)
-	orderRPC, err := newOrderRPC(server, logger, createHandler, cancelHandler, update_delivery_infoHandler, handler2)
+	orderRPC, err := newOrderRPC(server, logger, createHandler, cancelHandler, update_delivery_infoHandler, create_order_from_cartHandler, handler2)
 	if err != nil {
 		cleanup5()
 		cleanup4()
@@ -270,6 +272,8 @@ var OMSSet = wire.NewSet(
 	newOrderCancelHandler,
 	newOrderUpdateDeliveryInfoHandler,
 	newOrderGetHandler,
+
+	newCheckoutHandler,
 
 	newCartRPC,
 	newOrderRPC,
@@ -403,6 +407,11 @@ func newOrderGetHandler(uow ports.UnitOfWork, orderRepo ports.OrderRepository) *
 	return get2.NewHandler(uow, orderRepo)
 }
 
+// Checkout Handler Factory
+func newCheckoutHandler(log logger.Logger, uow ports.UnitOfWork, cartRepo ports.CartRepository, orderRepo ports.OrderRepository, publisher ports.EventPublisher) *create_order_from_cart.Handler {
+	return create_order_from_cart.NewHandler(log, uow, cartRepo, orderRepo, publisher)
+}
+
 // newOrderEventSubscriber creates and registers the order event subscriber
 func newOrderEventSubscriber(log logger.Logger, temporalClient client.Client, publisher *events.InMemoryPublisher) *temporal2.OrderEventSubscriber {
 	subscriber := temporal2.NewOrderEventSubscriber(log, temporalClient)
@@ -429,9 +438,10 @@ func newOrderRPC(
 	createHandler *create.Handler,
 	cancelHandler *cancel.Handler,
 	updateDeliveryInfoHandler *update_delivery_info.Handler,
+	checkoutHandler *create_order_from_cart.Handler,
 	getHandler *get2.Handler,
 ) (*v1_2.OrderRPC, error) {
-	return v1_2.New(runRPCServer, log, createHandler, cancelHandler, updateDeliveryInfoHandler, getHandler)
+	return v1_2.New(runRPCServer, log, createHandler, cancelHandler, updateDeliveryInfoHandler, checkoutHandler, getHandler)
 }
 
 func NewOMSService(

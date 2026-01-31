@@ -492,6 +492,107 @@ func (x *UpdateDeliveryInfoRequest) GetDeliveryInfo() *v1.DeliveryInfo {
 	return nil
 }
 
+// Request message for checkout (creating order from cart)
+type CheckoutRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// ID of the customer whose cart should be converted to order
+	CustomerId string `protobuf:"bytes,1,opt,name=customer_id,json=customerId,proto3" json:"customer_id,omitempty"`
+	// Delivery information (optional, nil = self-pickup)
+	DeliveryInfo  *v1.DeliveryInfo `protobuf:"bytes,2,opt,name=delivery_info,json=deliveryInfo,proto3" json:"delivery_info,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CheckoutRequest) Reset() {
+	*x = CheckoutRequest{}
+	mi := &file_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CheckoutRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CheckoutRequest) ProtoMessage() {}
+
+func (x *CheckoutRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CheckoutRequest.ProtoReflect.Descriptor instead.
+func (*CheckoutRequest) Descriptor() ([]byte, []int) {
+	return file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *CheckoutRequest) GetCustomerId() string {
+	if x != nil {
+		return x.CustomerId
+	}
+	return ""
+}
+
+func (x *CheckoutRequest) GetDeliveryInfo() *v1.DeliveryInfo {
+	if x != nil {
+		return x.DeliveryInfo
+	}
+	return nil
+}
+
+// Response message for checkout
+type CheckoutResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// ID of the created order
+	OrderId       string `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CheckoutResponse) Reset() {
+	*x = CheckoutResponse{}
+	mi := &file_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CheckoutResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CheckoutResponse) ProtoMessage() {}
+
+func (x *CheckoutResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CheckoutResponse.ProtoReflect.Descriptor instead.
+func (*CheckoutResponse) Descriptor() ([]byte, []int) {
+	return file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *CheckoutResponse) GetOrderId() string {
+	if x != nil {
+		return x.OrderId
+	}
+	return ""
+}
+
 var File_infrastructure_rpc_order_v1_model_v1_model_proto protoreflect.FileDescriptor
 
 const file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDesc = "" +
@@ -529,7 +630,13 @@ const file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\x81\x01\n" +
 	"\x19UpdateDeliveryInfoRequest\x12\x19\n" +
 	"\border_id\x18\x01 \x01(\tR\aorderId\x12I\n" +
-	"\rdelivery_info\x18\x02 \x01(\v2$.domain.order.common.v1.DeliveryInfoR\fdeliveryInfoB\xbe\x02\n" +
+	"\rdelivery_info\x18\x02 \x01(\v2$.domain.order.common.v1.DeliveryInfoR\fdeliveryInfo\"}\n" +
+	"\x0fCheckoutRequest\x12\x1f\n" +
+	"\vcustomer_id\x18\x01 \x01(\tR\n" +
+	"customerId\x12I\n" +
+	"\rdelivery_info\x18\x02 \x01(\v2$.domain.order.common.v1.DeliveryInfoR\fdeliveryInfo\"-\n" +
+	"\x10CheckoutResponse\x12\x19\n" +
+	"\border_id\x18\x01 \x01(\tR\aorderIdB\xbe\x02\n" +
 	"(com.infrastructure.rpc.order.v1.model.v1B\n" +
 	"ModelProtoP\x01ZOgithub.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/model/v1\xa2\x02\x05IROVM\xaa\x02$Infrastructure.Rpc.Order.V1.Model.V1\xca\x02$Infrastructure\\Rpc\\Order\\V1\\Model\\V1\xe2\x020Infrastructure\\Rpc\\Order\\V1\\Model\\V1\\GPBMetadata\xea\x02)Infrastructure::Rpc::Order::V1::Model::V1b\x06proto3"
 
@@ -545,7 +652,7 @@ func file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP() []byte 
 	return file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescData
 }
 
-var file_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_infrastructure_rpc_order_v1_model_v1_model_proto_goTypes = []any{
 	(*OrderState)(nil),                // 0: infrastructure.rpc.order.v1.model.v1.OrderState
 	(*OrderItem)(nil),                 // 1: infrastructure.rpc.order.v1.model.v1.OrderItem
@@ -555,28 +662,31 @@ var file_infrastructure_rpc_order_v1_model_v1_model_proto_goTypes = []any{
 	(*UpdateRequest)(nil),             // 5: infrastructure.rpc.order.v1.model.v1.UpdateRequest
 	(*CancelRequest)(nil),             // 6: infrastructure.rpc.order.v1.model.v1.CancelRequest
 	(*UpdateDeliveryInfoRequest)(nil), // 7: infrastructure.rpc.order.v1.model.v1.UpdateDeliveryInfoRequest
-	(v1.OrderStatus)(0),               // 8: domain.order.common.v1.OrderStatus
-	(*timestamppb.Timestamp)(nil),     // 9: google.protobuf.Timestamp
-	(*v1.DeliveryInfo)(nil),           // 10: domain.order.common.v1.DeliveryInfo
-	(*fieldmaskpb.FieldMask)(nil),     // 11: google.protobuf.FieldMask
+	(*CheckoutRequest)(nil),           // 8: infrastructure.rpc.order.v1.model.v1.CheckoutRequest
+	(*CheckoutResponse)(nil),          // 9: infrastructure.rpc.order.v1.model.v1.CheckoutResponse
+	(v1.OrderStatus)(0),               // 10: domain.order.common.v1.OrderStatus
+	(*timestamppb.Timestamp)(nil),     // 11: google.protobuf.Timestamp
+	(*v1.DeliveryInfo)(nil),           // 12: domain.order.common.v1.DeliveryInfo
+	(*fieldmaskpb.FieldMask)(nil),     // 13: google.protobuf.FieldMask
 }
 var file_infrastructure_rpc_order_v1_model_v1_model_proto_depIdxs = []int32{
 	1,  // 0: infrastructure.rpc.order.v1.model.v1.OrderState.items:type_name -> infrastructure.rpc.order.v1.model.v1.OrderItem
-	8,  // 1: infrastructure.rpc.order.v1.model.v1.OrderState.status:type_name -> domain.order.common.v1.OrderStatus
-	9,  // 2: infrastructure.rpc.order.v1.model.v1.OrderState.created_at:type_name -> google.protobuf.Timestamp
-	9,  // 3: infrastructure.rpc.order.v1.model.v1.OrderState.updated_at:type_name -> google.protobuf.Timestamp
-	10, // 4: infrastructure.rpc.order.v1.model.v1.OrderState.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
+	10, // 1: infrastructure.rpc.order.v1.model.v1.OrderState.status:type_name -> domain.order.common.v1.OrderStatus
+	11, // 2: infrastructure.rpc.order.v1.model.v1.OrderState.created_at:type_name -> google.protobuf.Timestamp
+	11, // 3: infrastructure.rpc.order.v1.model.v1.OrderState.updated_at:type_name -> google.protobuf.Timestamp
+	12, // 4: infrastructure.rpc.order.v1.model.v1.OrderState.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
 	0,  // 5: infrastructure.rpc.order.v1.model.v1.CreateRequest.order:type_name -> infrastructure.rpc.order.v1.model.v1.OrderState
-	10, // 6: infrastructure.rpc.order.v1.model.v1.CreateRequest.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
+	12, // 6: infrastructure.rpc.order.v1.model.v1.CreateRequest.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
 	0,  // 7: infrastructure.rpc.order.v1.model.v1.GetResponse.order:type_name -> infrastructure.rpc.order.v1.model.v1.OrderState
 	0,  // 8: infrastructure.rpc.order.v1.model.v1.UpdateRequest.order:type_name -> infrastructure.rpc.order.v1.model.v1.OrderState
-	11, // 9: infrastructure.rpc.order.v1.model.v1.UpdateRequest.update_mask:type_name -> google.protobuf.FieldMask
-	10, // 10: infrastructure.rpc.order.v1.model.v1.UpdateDeliveryInfoRequest.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
-	11, // [11:11] is the sub-list for method output_type
-	11, // [11:11] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	13, // 9: infrastructure.rpc.order.v1.model.v1.UpdateRequest.update_mask:type_name -> google.protobuf.FieldMask
+	12, // 10: infrastructure.rpc.order.v1.model.v1.UpdateDeliveryInfoRequest.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
+	12, // 11: infrastructure.rpc.order.v1.model.v1.CheckoutRequest.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
+	12, // [12:12] is the sub-list for method output_type
+	12, // [12:12] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_infrastructure_rpc_order_v1_model_v1_model_proto_init() }
@@ -590,7 +700,7 @@ func file_infrastructure_rpc_order_v1_model_v1_model_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDesc), len(file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -8,6 +8,7 @@ import (
 	"github.com/shortlink-org/go-sdk/grpc"
 	logger "github.com/shortlink-org/go-sdk/logger"
 
+	"github.com/shortlink-org/shop/oms/internal/usecases/checkout/command/create_order_from_cart"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/cancel"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/create"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/update_delivery_info"
@@ -24,6 +25,7 @@ type OrderRPC struct {
 	createHandler             *create.Handler
 	cancelHandler             *cancel.Handler
 	updateDeliveryInfoHandler *update_delivery_info.Handler
+	checkoutHandler           *create_order_from_cart.Handler
 
 	// Query Handlers
 	getHandler *get.Handler
@@ -35,6 +37,7 @@ func New(
 	createHandler *create.Handler,
 	cancelHandler *cancel.Handler,
 	updateDeliveryInfoHandler *update_delivery_info.Handler,
+	checkoutHandler *create_order_from_cart.Handler,
 	getHandler *get.Handler,
 ) (*OrderRPC, error) {
 	server := &OrderRPC{
@@ -45,6 +48,7 @@ func New(
 		createHandler:             createHandler,
 		cancelHandler:             cancelHandler,
 		updateDeliveryInfoHandler: updateDeliveryInfoHandler,
+		checkoutHandler:           checkoutHandler,
 
 		// Query Handlers
 		getHandler: getHandler,
