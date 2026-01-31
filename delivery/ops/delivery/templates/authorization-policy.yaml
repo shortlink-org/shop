@@ -1,1 +1,17 @@
-{{- include "shortlink-template.authorizationPolicy" . }}
+{{- if .Values.authorizationPolicy.enabled }}
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: {{ include "helpers.fullname" . }}
+  labels:
+    {{- include "helpers.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "shortlink-common.matchLabels" . | nindent 6 }}
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            requestPrincipals: ["*"]
+{{- end }}
