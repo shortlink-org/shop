@@ -12,8 +12,6 @@
 *.dll
 *.so
 *.dylib
-main
-cmd
 bin/
 
 # Test binary, built with `go test -c`

@@ -1,0 +1,31 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test files
+*_test.go
+tests/
+
+# Documentation
+*.md
+docs/
+
+# Makefile (not needed in container)
+Makefile
+ops/Makefile/
+
+# Helm charts (not needed in container)
+ops/Helm/
