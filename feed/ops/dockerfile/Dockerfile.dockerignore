@@ -1,0 +1,23 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test output
+out/
+
+# Documentation
+*.md
+docs/
+
+# Ops (except Dockerfile)
+ops/Helm/
