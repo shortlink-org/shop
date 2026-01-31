@@ -12,7 +12,9 @@
     "build": "NODE_ENV=production pnpm next build",
     "prettier": "pnpm dlx prettier --write --ignore-unknown .",
     "prettier:check": "pnpm dlx prettier --check --ignore-unknown .",
-    "test": "pnpm dlx pnpm prettier:check"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",
@@ -30,14 +32,19 @@
     "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/postcss": "^4.1.18",
     "@tailwindcss/typography": "^0.5.19",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
     "@types/node": "24.10.1",
     "@types/react": "19.2.10",
+    "@vitejs/plugin-react": "^4.5.2",
     "autoprefixer": "^10.4.23",
+    "jsdom": "^26.1.0",
     "next-themes": "^0.4.6",
     "postcss": "^8.5.6",
     "prettier": "3.6.2",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "^4.1.18",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "^3.2.0"
   }
 }
