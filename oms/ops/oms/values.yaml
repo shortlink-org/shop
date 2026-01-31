@@ -99,6 +99,7 @@ deploy:
     # Temporal configuration
     TEMPORAL_HOST: temporal-frontend.temporal.svc.cluster.local:7233
     TEMPORAL_NAMESPACE: default
+    TEMPORAL_TLS_ENABLED: "false"
 
     # -- Default store config
     STORE_TYPE: postgres
