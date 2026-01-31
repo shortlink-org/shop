@@ -1,0 +1,33 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+docs/
+*.txt
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build artifacts
+bin/
+dist/
+
+# Test files
+*_test.go
+testdata/
+
+# Helm charts (not needed in Docker image)
+ops/oms/
+ops/Makefile/
+
+# Proto source files (compiled .pb.go files are included)
+*.proto
+
+# Local development
+.env
+.env.*
