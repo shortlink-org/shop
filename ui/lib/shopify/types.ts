@@ -245,8 +245,7 @@ export type ShopifyPagesOperation = {
 
 export type ShopifyProductOperation = {
   data: { 
-    product: ShopifyProduct;
-    goods_goods_retrieve: ShopifyProduct;
+    good: ShopifyProduct;
   };
   variables: {
     id: number;
