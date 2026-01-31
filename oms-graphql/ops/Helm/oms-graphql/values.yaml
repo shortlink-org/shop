@@ -1,4 +1,4 @@
-# Common default values for shortlink.
+# Common default values for oms-graphql.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -8,70 +8,50 @@ serviceAccount:
   create: true
 
 # ==============================================================================
-ingress:
-  enabled: false
-
-# ==============================================================================
-# HTTPRoute configuration for Gateway API
-httpRoute:
-  enabled: true
-  gatewayName: external-gateway
-  gatewayNamespace: istio-ingress
-  hostnames:
-    - shop.shortlink.best
-  path: /
-  port: 3000
-
-# ==============================================================================
 deploy:
   replicaCount: 1
 
   imagePullSecrets: []
 
   env:
-    # GraphQL BFF URL
-    API_URI: http://shortlink-shop-bff.shortlink-shop:9991
+    # OMS gRPC URL
+    OMS_GRPC_URL: http://shortlink-shop-oms.shortlink-shop:50051
 
   resources:
     limits:
-      cpu: 100m
-      memory: 128Mi
+      cpu: 500m
+      memory: 256Mi
     requests:
-      cpu: 15m
-      memory: 64Mi
+      cpu: 50m
+      memory: 32Mi
 
   # -- Annotations to be added to controller pods
   annotations: {}
 
   image:
-    repository: registry.gitlab.com/shortlink-org/shortlink/shop_ui
-    tag: 0.18.15.8
+    repository: registry.gitlab.com/shortlink-org/shortlink/shop_oms_graphql
+    tag: 1.0.0
     # -- Global imagePullPolicy
     # Default: 'Always' if image tag is 'latest', else 'IfNotPresent'
     # Ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
     pullPolicy: Always
 
-  # -- define a liveness probe that checks
+  # -- define a liveness probe that checks every 5 seconds, starting after 5 seconds
   livenessProbe:
-    enabled: false
-    initialDelaySeconds: 300
-    timeoutSeconds: 60
+    enabled: true
     httpGet:
-      path: /
-      port: 3000
+      path: /graphql
+      port: 8100
 
-  # -- define a readiness probe that checks
+  # -- define a readiness probe that checks every 5 seconds, starting after 5 seconds
   readinessProbe:
-    enabled: false
-    initialDelaySeconds: 180
-    timeoutSeconds: 30
-    failureThreshold: 10
+    enabled: true
     httpGet:
-      path: /
-      port: 3000
+      path: /graphql
+      port: 8100
 
   securityContext:
-    readOnlyRootFilesystem: false
+    readOnlyRootFilesystem: true
 
   volumes:
     - name: tmp
@@ -84,9 +64,14 @@ service:
   type: ClusterIP
   ports:
     - name: http
-      port: 3000
+      port: 8100
       protocol: TCP
-      public: true
+      public: false
+    - name: metrics
+      port: 8100
+      targetPort: 8100
+      protocol: TCP
+      public: false
 
 # ==============================================================================
 # Prometheus Operator ServiceMonitor configuration

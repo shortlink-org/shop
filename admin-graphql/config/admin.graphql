@@ -1,7 +1,7 @@
 schema
 @server(port: 8101, enableFederation: true)
 @upstream(
-  baseURL: "http://127.0.0.1:8000"
+  baseURL: "{{.env.ADMIN_API_URL}}"
   allowedHeaders: ["Authorization", "Cookie"]
 )
 @telemetry(

@@ -93,6 +93,49 @@ pnpm run docker:build
 pnpm run docker:run
 ```
 
+## Generating router-config.json for Deployment
+
+The `router-config.json` file contains the composed federated schema and is required for the router to start.
+
+### Option 1: Introspection (requires running subgraphs)
+
+```bash
+# Start all subgraphs first, then:
+pnpm run compose
+```
+
+### Option 2: Schema Files (offline composition)
+
+Update `graph.yaml` to use schema files instead of introspection:
+
+```yaml
+version: 1
+subgraphs:
+  - name: carts
+    routing_url: http://localhost:8100/graphql
+    schema:
+      file: ../oms-graphql/config/grpc.graphql
+  - name: admin
+    routing_url: http://localhost:8101/graphql
+    schema:
+      file: ../admin-graphql/config/admin.graphql
+```
+
+### CI/CD Integration
+
+In your CI pipeline, compose the schema before building the Docker image:
+
+```yaml
+build:bff:
+  script:
+    - cd bff
+    - npm install -g wgc
+    - wgc router compose -i graph.yaml -o router-config.json
+    - docker build -f ops/dockerfile/Dockerfile -t bff:latest .
+```
+
+**Note:** The `router-config.json` must be generated and included in the Docker image. It is copied during the Docker build process.
+
 ## Configuration
 
 ### graph.yaml

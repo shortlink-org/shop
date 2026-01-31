@@ -32,3 +32,11 @@
       # Admin GraphQL Subgraph
       - HELM_CHART_NAME: admin-graphql
         HELM_CHART_PATH: admin-graphql/ops/Helm/$HELM_CHART_NAME
+
+      # OMS GraphQL Subgraph
+      - HELM_CHART_NAME: oms-graphql
+        HELM_CHART_PATH: oms-graphql/ops/Helm/$HELM_CHART_NAME
+
+      # UI - Shop Frontend
+      - HELM_CHART_NAME: ui
+        HELM_CHART_PATH: ui/ops/Helm
