@@ -20,7 +20,7 @@ deploy:
         - setWeight: 100
 
   image:
-    repository: registry.gitlab.com/shortlink-org/shortlink/courier-emulation
+    repository: registry.gitlab.com/shortlink-org/shop/courier-emulation
     tag: latest
     # -- Global imagePullPolicy
     # Default: 'Always' if image tag is 'latest', else 'IfNotPresent'

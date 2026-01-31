@@ -66,7 +66,7 @@ deploy:
         - setWeight: 100
 
   image:
-    repository: registry.gitlab.com/shortlink-org/shortlink/oms
+    repository: registry.gitlab.com/shortlink-org/shop/oms
     tag: latest
     # -- Global imagePullPolicy
     # Default: 'Always' if image tag is 'latest', else 'IfNotPresent'
