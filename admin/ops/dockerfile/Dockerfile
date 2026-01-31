@@ -29,7 +29,10 @@ ENV ORY_UI_URL="http://host.docker.internal:3000/next/auth"
 EXPOSE 8000
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl tini sqlite3 git && \
+    apt-get install -y --no-install-recommends \
+      curl tini sqlite3 git \
+      # GeoDjango dependencies (GDAL, GEOS, PROJ)
+      gdal-bin libgdal-dev libgeos-dev libproj-dev && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
