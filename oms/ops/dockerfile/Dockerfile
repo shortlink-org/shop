@@ -65,5 +65,8 @@ RUN chown -R app:app /app
 
 USER app
 
+# Required for Go os/user package in Alpine without cgo (CGO_ENABLED=0)
+ENV USER=app
+
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["/app/oms"]
