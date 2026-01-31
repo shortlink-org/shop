@@ -34,13 +34,13 @@ import (
 
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/events"
-	temporalInfra "github.com/shortlink-org/shop/oms/internal/infrastructure/temporal"
-	cartGoodsIndex "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/redis/cart_goods_index"
 	cartRepo "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart"
 	orderRepo "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order"
+	cartGoodsIndex "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/redis/cart_goods_index"
 	cartRPC "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1"
 	orderRPC "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/run"
+	temporalInfra "github.com/shortlink-org/shop/oms/internal/infrastructure/temporal"
 	pguow "github.com/shortlink-org/shop/oms/pkg/uow/postgres"
 
 	// Cart handlers

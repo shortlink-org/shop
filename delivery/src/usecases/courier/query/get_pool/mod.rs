@@ -6,4 +6,4 @@ mod handler;
 mod query;
 
 pub use handler::{CourierWithState, GetCourierPoolError, Handler, Response};
-pub use query::{CourierFilter, Query};
+pub use query::{CourierFilter, Filter, Query};

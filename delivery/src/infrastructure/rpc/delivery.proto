@@ -1,0 +1,145 @@
+syntax = "proto3";
+
+package infrastructure.rpc.delivery.v1;
+
+option go_package = "github.com/shortlink-org/shortlink/boundaries/shop/delivery/infrastructure/rpc/delivery/v1";
+
+import "google/protobuf/timestamp.proto";
+
+// DeliveryService provides gRPC API for delivery operations
+service DeliveryService {
+  // RegisterCourier registers a new courier in the system
+  rpc RegisterCourier(RegisterCourierRequest) returns (RegisterCourierResponse);
+  
+  // GetCourierPool retrieves couriers with filtering and pagination
+  rpc GetCourierPool(GetCourierPoolRequest) returns (GetCourierPoolResponse);
+  
+  // AssignOrder assigns a package to a courier
+  rpc AssignOrder(AssignOrderRequest) returns (AssignOrderResponse);
+}
+
+// ==================== Common Types ====================
+
+// Location represents a GPS location
+message Location {
+  double latitude = 1;
+  double longitude = 2;
+}
+
+// TransportType defines courier transport modes
+enum TransportType {
+  TRANSPORT_TYPE_UNSPECIFIED = 0;
+  TRANSPORT_TYPE_WALKING = 1;
+  TRANSPORT_TYPE_BICYCLE = 2;
+  TRANSPORT_TYPE_MOTORCYCLE = 3;
+  TRANSPORT_TYPE_CAR = 4;
+}
+
+// CourierStatus defines courier availability states
+enum CourierStatus {
+  COURIER_STATUS_UNSPECIFIED = 0;
+  COURIER_STATUS_UNAVAILABLE = 1;
+  COURIER_STATUS_FREE = 2;
+  COURIER_STATUS_BUSY = 3;
+}
+
+// WorkHours defines courier working schedule
+message WorkHours {
+  string start_time = 1; // "09:00" format
+  string end_time = 2;   // "18:00" format
+  repeated int32 work_days = 3; // [1,2,3,4,5] - Monday to Friday
+}
+
+// Pagination request parameters
+message Pagination {
+  int32 page = 1;
+  int32 page_size = 2; // Max 100
+}
+
+// PaginationInfo response metadata
+message PaginationInfo {
+  int32 current_page = 1;
+  int32 page_size = 2;
+  int32 total_pages = 3;
+  int32 total_items = 4;
+}
+
+// ==================== RegisterCourier ====================
+
+// RegisterCourierRequest contains data for new courier registration
+message RegisterCourierRequest {
+  string name = 1;
+  string phone = 2;
+  string email = 3;
+  TransportType transport_type = 4;
+  double max_distance_km = 5;
+  string work_zone = 6;
+  WorkHours work_hours = 7;
+  optional string push_token = 8;
+}
+
+// RegisterCourierResponse returns registered courier data
+message RegisterCourierResponse {
+  string courier_id = 1;
+  CourierStatus status = 2;
+  google.protobuf.Timestamp created_at = 3;
+}
+
+// ==================== GetCourierPool ====================
+
+// GetCourierPoolRequest contains filters for courier pool query
+message GetCourierPoolRequest {
+  repeated CourierStatus status_filter = 1;
+  repeated TransportType transport_type_filter = 2;
+  string zone_filter = 3;
+  bool available_only = 4;
+  bool include_location = 5;
+  Pagination pagination = 6;
+}
+
+// Courier represents a courier in the pool response
+message Courier {
+  string courier_id = 1;
+  string name = 2;
+  string phone = 3;
+  string email = 4;
+  TransportType transport_type = 5;
+  double max_distance_km = 6;
+  CourierStatus status = 7;
+  int32 current_load = 8;
+  int32 max_load = 9;
+  double rating = 10;
+  WorkHours work_hours = 11;
+  string work_zone = 12;
+  optional Location current_location = 13;
+  int32 successful_deliveries = 14;
+  int32 failed_deliveries = 15;
+  google.protobuf.Timestamp created_at = 16;
+  optional google.protobuf.Timestamp last_active_at = 17;
+}
+
+// GetCourierPoolResponse returns list of couriers
+message GetCourierPoolResponse {
+  repeated Courier couriers = 1;
+  int32 total_count = 2;
+  PaginationInfo pagination = 3;
+}
+
+// ==================== AssignOrder ====================
+
+// AssignOrderRequest contains order assignment data
+message AssignOrderRequest {
+  string package_id = 1;
+  oneof assignment_type {
+    string courier_id = 2;  // Manual assignment
+    bool auto_assign = 3;   // Auto dispatch
+  }
+}
+
+// AssignOrderResponse returns assignment result
+message AssignOrderResponse {
+  string package_id = 1;
+  string courier_id = 2;
+  google.protobuf.Timestamp assigned_at = 3;
+  int32 estimated_delivery_minutes = 4;
+}

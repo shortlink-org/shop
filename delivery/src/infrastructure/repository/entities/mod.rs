@@ -3,5 +3,7 @@
 //! Database models for Sea-ORM that map to PostgreSQL tables.
 
 pub mod courier;
+pub mod package;
 
 pub use courier::Entity as CourierEntity;
+pub use package::Entity as PackageEntity;

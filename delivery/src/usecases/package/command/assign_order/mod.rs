@@ -5,5 +5,5 @@
 mod command;
 mod handler;
 
-pub use command::Command;
+pub use command::{AssignmentMode, Command};
 pub use handler::{AssignOrderError, Handler, Response};

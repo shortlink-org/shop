@@ -9,6 +9,7 @@ prost = "0.14.3"
 prost-types = "0.14.3"
 pbjson-types = "0.6"
 tonic = "0.14.3"
+tonic-prost = "0.14"
 
 # Async runtime
 tokio = { version = "1", features = ["full"] }
@@ -37,8 +38,16 @@ async-trait = "0.1"
 thiserror = "2"
 rust_decimal = { version = "1", features = ["db-postgres"] }
 
+# Configuration
+dotenvy = "0.15"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
 [build-dependencies]
 prost-build = "0.14.3"
+tonic-prost-build = "0.14"
 
 [dev-dependencies]
 testcontainers = "0.23"

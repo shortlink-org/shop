@@ -43,12 +43,16 @@ impl CourierFilter {
 pub struct Query {
     /// Filter criteria
     pub filter: CourierFilter,
+    /// Limit results
+    pub limit: Option<u64>,
+    /// Offset for pagination
+    pub offset: Option<u64>,
 }
 
 impl Query {
     /// Create a new GetCourierPool query
     pub fn new(filter: CourierFilter) -> Self {
-        Self { filter }
+        Self { filter, limit: None, offset: None }
     }
 
     /// Create a query with no filters
@@ -65,4 +69,19 @@ impl Query {
     pub fn in_zone(zone: &str) -> Self {
         Self::new(CourierFilter::in_zone(zone))
     }
+
+    /// Set pagination limit
+    pub fn with_limit(mut self, limit: u64) -> Self {
+        self.limit = Some(limit);
+        self
+    }
+
+    /// Set pagination offset
+    pub fn with_offset(mut self, offset: u64) -> Self {
+        self.offset = Some(offset);
+        self
+    }
 }
+
+/// Type alias for backward compatibility
+pub type Filter = CourierFilter;
