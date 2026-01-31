@@ -1,12 +1,16 @@
 apiVersion: v2
-appVersion: "2.0.0"
-name: bff
-description: ShortLink Shop BFF - Cosmo Router based GraphQL Federation Gateway
-version: 0.2.0
+appVersion: "1.0.0"
+name: admin-graphql
+description: ShortLink Shop Admin GraphQL Subgraph (Tailcall)
+version: 0.1.0
 kubeVersion: ">= 1.30.0 || >= v1.30.0-0"
 keywords:
-  - bff
-  - shop
+  - graphql
+  - admin
+  - tailcall
+  - subgraph
+  - goods
+  - offices
 home: https://github.com/shortlink-org/shortlink
 sources:
   - https://github.com/shortlink-org/shortlink

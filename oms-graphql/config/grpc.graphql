@@ -1,5 +1,5 @@
 schema
-@server(port: 8100)
+@server(port: 8100, enableFederation: true)
 @upstream(
   allowedHeaders: ["Authorization", "user-id"]
 )

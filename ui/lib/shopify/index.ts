@@ -235,12 +235,12 @@ export async function getCollectionProducts({ page }: {
     query: getCollectionProductsQuery,
   });
 
-  if (!res.body.data.goods_goods_list) {
+  if (!res.body.data.goods) {
     console.log(`No collection found for \`${res.body.data}\``);
     return [];
   }
 
-  return res.body.data.goods_goods_list.results;
+  return res.body.data.goods.results;
 }
 
 export async function getCollections(): Promise<Collection[]> {
@@ -323,7 +323,7 @@ export async function getGood(id: number): Promise<Good | undefined> {
     },
   });
 
-  return res.body.data.goods_goods_retrieve;
+  return res.body.data.good;
 }
 
 export async function getGoodRecommendations(id: number): Promise<Good[]> {

@@ -1,4 +1,4 @@
-# Common default values for shortlink.
+# Common default values for admin-graphql.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -8,54 +8,29 @@ serviceAccount:
   create: true
 
 # ==============================================================================
-# NOTE: shop/bff uses nginx ingress with URL rewriting which is not yet
-# supported by our HTTPRoute template. Keep using nginx ingress for now.
-ingress:
-  enabled: true
-  ingressClassName: nginx
-  annotations:
-    cert-manager.io/cluster-issuer: cert-manager-production
-    nginx.ingress.kubernetes.io/enable-owasp-core-rules: "true"
-    nginx.ingress.kubernetes.io/enable-opentelemetry: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-    nginx.ingress.kubernetes.io/use-regex: "true"
-
-  hostname: shop.shortlink.best
-  paths:
-    - path: /api(/|$)(.*)
-      service:
-        name: shortlink-shop-bff
-        port: 9991
-
-# ==============================================================================
 deploy:
   replicaCount: 1
 
   imagePullSecrets: []
 
   env:
-    # Subgraph URLs for Cosmo Router
-    CARTS_SUBGRAPH_URL: http://shortlink-shop-oms-graphql.shortlink-shop:8100/graphql
-    ADMIN_SUBGRAPH_URL: http://shortlink-shop-admin-graphql.shortlink-shop:8101/graphql
-    COUNTRIES_SUBGRAPH_URL: https://countries.trevorblades.com/
-    # Router configuration
-    LOG_LEVEL: info
-    LISTEN_ADDR: "0.0.0.0:9991"
+    # Django Admin API URL
+    ADMIN_API_URL: http://shortlink-shop-admin.shortlink-shop:8000
 
   resources:
     limits:
-      cpu: 1000m
-      memory: 512Mi
+      cpu: 500m
+      memory: 256Mi
     requests:
-      cpu: 100m
-      memory: 64Mi
+      cpu: 50m
+      memory: 32Mi
 
   # -- Annotations to be added to controller pods
   annotations: {}
 
   image:
-    repository: registry.gitlab.com/shortlink-org/shortlink/shop_bff
-    tag: 2.0.0
+    repository: registry.gitlab.com/shortlink-org/shortlink/shop_admin_graphql
+    tag: 1.0.0
     # -- Global imagePullPolicy
     # Default: 'Always' if image tag is 'latest', else 'IfNotPresent'
     # Ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -65,15 +40,15 @@ deploy:
   livenessProbe:
     enabled: true
     httpGet:
-      path: /health
-      port: 9991
+      path: /graphql
+      port: 8101
 
   # -- define a readiness probe that checks every 5 seconds, starting after 5 seconds
   readinessProbe:
     enabled: true
     httpGet:
-      path: /ready
-      port: 9991
+      path: /graphql
+      port: 8101
 
   securityContext:
     readOnlyRootFilesystem: true
@@ -89,11 +64,12 @@ service:
   type: ClusterIP
   ports:
     - name: http
-      port: 9991
+      port: 8101
       protocol: TCP
-      public: true
+      public: false
     - name: metrics
-      port: 8088
+      port: 8101
+      targetPort: 8101
       protocol: TCP
       public: false
 

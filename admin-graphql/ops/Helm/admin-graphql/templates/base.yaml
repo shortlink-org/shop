@@ -1,0 +1,5 @@
+{{ include "shortlink-template.deployment" . }}
+---
+{{ include "shortlink-template.service" . }}
+---
+{{ include "shortlink-template.serviceAccount" . }}

@@ -39,8 +39,8 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
 WORKDIR /app
 
-COPY boundaries/shop/admin/pyproject.toml .
-COPY boundaries/shop/admin/requirements.txt .
+COPY pyproject.toml .
+COPY requirements.txt .
 
 # Create a virtual environment at .venv
 RUN uv venv
@@ -58,7 +58,7 @@ HEALTHCHECK \
 
 RUN addgroup --system shop && adduser --system --group shop
 
-COPY boundaries/shop/admin/ .
+COPY . .
 
 RUN chown -R shop:shop /app/src
 

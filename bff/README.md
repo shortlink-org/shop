@@ -1,29 +1,198 @@
-# WunderGraph simple example
+# ShortLink Shop BFF
 
-#### Getting started
+GraphQL Federation Gateway powered by [WunderGraph Cosmo Router](https://cosmo-docs.wundergraph.com/).
 
-```shell
-npmp i && npmp start
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        Cosmo Router                             │
+│                         (BFF :9991)                             │
+└───────────────┬─────────────────┬─────────────────┬─────────────┘
+                │                 │                 │
+                ▼                 ▼                 ▼
+        ┌───────────────┐ ┌───────────────┐ ┌───────────────┐
+        │ carts-subgraph│ │ admin-subgraph│ │   countries   │
+        │  (Tailcall)   │ │  (Tailcall)   │ │  (external)   │
+        │    :8100      │ │    :8101      │ │               │
+        └───────┬───────┘ └───────┬───────┘ └───────────────┘
+                │                 │
+                ▼                 ▼
+        ┌───────────────┐ ┌───────────────┐
+        │   OMS gRPC    │ │ Django Admin  │
+        │    :50051     │ │    :8000      │
+        └───────────────┘ └───────────────┘
 ```
 
-#### Get all Continents
+## Subgraphs
 
-```shell
-curl http://localhost:9991/operations/Continents
+| Subgraph   | Port | Technology | Description                        |
+|------------|------|------------|------------------------------------|
+| carts      | 8100 | Tailcall   | gRPC → GraphQL for cart            |
+| admin      | 8101 | Tailcall   | REST → GraphQL for goods, offices  |
+| countries  | -    | External   | External GraphQL API               |
+
+## Prerequisites
+
+- Node.js 18+
+- pnpm
+- Cosmo CLI (`wgc`)
+- All subgraphs running
+
+## Installation
+
+```bash
+pnpm install
 ```
 
-#### Get all Countries
+## Usage
 
-```shell
-curl http://localhost:9991/operations/Countries
+### 1. Start subgraphs
+
+```bash
+# Terminal 1: OMS gRPC service
+cd ../oms && make run
+
+# Terminal 2: Carts subgraph
+cd ../oms-graphql && pnpm start
+
+# Terminal 3: Admin subgraph (goods, offices)
+cd ../admin-graphql && pnpm start
+
+# Terminal 4: Django Admin
+cd ../admin && uv run python src/manage.py runserver 8000
 ```
 
-#### Get user
+### 2. Compose the federated schema
 
-```shell
-curl http://localhost:9991/operations/users/get?id=1
+```bash
+pnpm run compose
+```
+
+This generates `router-config.json` from all subgraph schemas.
+
+### 3. Download and run the router
+
+```bash
+# Download Cosmo Router binary
+pnpm run download:router
+
+# Start the router
+./router --config router.yaml
+```
+
+The GraphQL endpoint will be available at `http://localhost:9991/graphql`.
+
+## Docker
+
+```bash
+# Build image
+pnpm run docker:build
+
+# Run container
+pnpm run docker:run
+```
+
+## Configuration
+
+### graph.yaml
+
+Defines subgraphs for schema composition:
+
+```yaml
+version: 1
+subgraphs:
+  - name: carts
+    routing_url: http://localhost:8100/graphql
+    introspection:
+      url: http://localhost:8100/graphql
+  - name: admin
+    routing_url: http://localhost:8101/graphql
+    introspection:
+      url: http://localhost:8101/graphql
+  - name: countries
+    routing_url: https://countries.trevorblades.com/
+    introspection:
+      url: https://countries.trevorblades.com/
+```
+
+### router.yaml
+
+Router runtime configuration (CORS, logging, metrics, etc.).
+
+### Environment Variables
+
+| Variable              | Default                              | Description                |
+|-----------------------|--------------------------------------|----------------------------|
+| `CARTS_SUBGRAPH_URL`  | `http://localhost:8100/graphql`      | Carts subgraph URL         |
+| `ADMIN_SUBGRAPH_URL`  | `http://localhost:8101/graphql`      | Admin subgraph URL         |
+| `COUNTRIES_SUBGRAPH_URL` | `https://countries.trevorblades.com/` | Countries subgraph URL |
+| `LOG_LEVEL`           | `info`                               | Log level                  |
+
+## Example Queries
+
+### Get goods
+
+```graphql
+query {
+  goods(page: 1) {
+    count
+    results {
+      id
+      name
+      price
+    }
+  }
+}
+```
+
+### Get cart
+
+```graphql
+query {
+  getCart(customerId: { customerId: "user-123" }) {
+    state {
+      cartId
+      items {
+        goodId
+        quantity
+      }
+    }
+  }
+}
+```
+
+### Get offices
+
+```graphql
+query {
+  offices {
+    results {
+      id
+      name
+      address
+      latitude
+      longitude
+      is_active
+    }
+  }
+}
+```
+
+### Get countries
+
+```graphql
+query {
+  countries {
+    code
+    name
+    emoji
+  }
+}
 ```
 
 ## Learn More
 
-Read the [Docs](https://wundergraph.com/docs).
+- [Cosmo Router Documentation](https://cosmo-docs.wundergraph.com/router/intro)
+- [Cosmo CLI Reference](https://cosmo-docs.wundergraph.com/cli/intro)
+- [GraphQL Federation](https://www.apollographql.com/docs/federation/)

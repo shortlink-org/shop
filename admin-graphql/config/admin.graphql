@@ -1,0 +1,118 @@
+schema
+@server(port: 8101, enableFederation: true)
+@upstream(
+  baseURL: "http://127.0.0.1:8000"
+  allowedHeaders: ["Authorization", "Cookie"]
+)
+@telemetry(
+  export: {
+    prometheus: {
+      path: "/metrics"
+    }
+  }
+) {
+  query: Query
+}
+
+# =============================================================================
+# GOODS
+# =============================================================================
+
+"""
+Good entity representing a product in the shop.
+"""
+type Good {
+  id: Int!
+  name: String!
+  price: String!
+  description: String!
+  created_at: String!
+  updated_at: String!
+}
+
+"""
+Paginated list of goods.
+"""
+type GoodsList {
+  count: Int!
+  next: String
+  previous: String
+  results: [Good!]!
+}
+
+# =============================================================================
+# OFFICES
+# =============================================================================
+
+"""
+Office entity representing an order pickup location.
+"""
+type Office {
+  id: Int!
+  name: String!
+  address: String!
+  latitude: Float
+  longitude: Float
+  opening_time: String!
+  closing_time: String!
+  working_days: String!
+  phone: String
+  email: String
+  is_active: Boolean!
+  created_at: String!
+  updated_at: String!
+}
+
+"""
+Paginated list of offices.
+"""
+type OfficesList {
+  count: Int!
+  next: String
+  previous: String
+  results: [Office!]!
+}
+
+# =============================================================================
+# QUERIES
+# =============================================================================
+
+type Query {
+  # -------------------------------------------------------------------------
+  # Goods queries
+  # -------------------------------------------------------------------------
+  
+  """
+  Get a paginated list of goods.
+  """
+  goods(page: Int): GoodsList
+    @http(
+      url: "/goods/"
+      query: [{key: "page", value: "{{.args.page}}"}]
+    )
+
+  """
+  Get a single good by ID.
+  """
+  good(id: Int!): Good
+    @http(url: "/goods/{{.args.id}}/")
+
+  # -------------------------------------------------------------------------
+  # Offices queries
+  # -------------------------------------------------------------------------
+  
+  """
+  Get a paginated list of offices.
+  """
+  offices(page: Int): OfficesList
+    @http(
+      url: "/offices/"
+      query: [{key: "page", value: "{{.args.page}}"}]
+    )
+
+  """
+  Get a single office by ID.
+  """
+  office(id: Int!): Office
+    @http(url: "/offices/{{.args.id}}/")
+}

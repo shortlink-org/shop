@@ -1,0 +1,12 @@
+node_modules
+.wundergraph
+.git
+.gitignore
+*.md
+test
+*.test.ts
+jest.config.js
+tsconfig.json
+pnpm-lock.yaml
+pnpm-workspace.yaml
+.graphqlrc.yaml

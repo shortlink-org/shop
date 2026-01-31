@@ -28,3 +28,7 @@
       # Courier Emulation Service
       - HELM_CHART_NAME: courier-emulation
         HELM_CHART_PATH: courier-emulation/ops/Helm/$HELM_CHART_NAME
+
+      # Admin GraphQL Subgraph
+      - HELM_CHART_NAME: admin-graphql
+        HELM_CHART_PATH: admin-graphql/ops/Helm/$HELM_CHART_NAME

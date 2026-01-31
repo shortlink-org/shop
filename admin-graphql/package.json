@@ -1,0 +1,16 @@
+{
+  "name": "admin-graphql",
+  "version": "1.0.0",
+  "description": "GraphQL subgraph for Django Admin API (REST to GraphQL via Tailcall)",
+  "main": "index.js",
+  "scripts": {
+    "start": "tailcall start config/admin.graphql",
+    "dev": "tailcall start config/admin.graphql --watch"
+  },
+  "keywords": ["graphql", "tailcall", "admin", "goods", "offices"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@tailcallhq/tailcall": "^1.6.14"
+  }
+}

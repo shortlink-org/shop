@@ -1,0 +1,23 @@
+# Cosmo Router Subgraph Configuration
+# Used by `wgc router compose` to generate router execution config
+
+version: 1
+
+subgraphs:
+  # Cart operations (gRPC -> GraphQL via Tailcall)
+  - name: carts
+    routing_url: http://localhost:8100/graphql
+    introspection:
+      url: http://localhost:8100/graphql
+
+  # Admin API (REST -> GraphQL via Tailcall) - goods, offices, etc.
+  - name: admin
+    routing_url: http://localhost:8101/graphql
+    introspection:
+      url: http://localhost:8101/graphql
+
+  # Countries (external GraphQL API)
+  - name: countries
+    routing_url: https://countries.trevorblades.com/
+    introspection:
+      url: https://countries.trevorblades.com/

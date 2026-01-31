@@ -1,34 +1,46 @@
 export const getGoodQuery = /* GraphQL */ `
-  query Goods_goods_retrieve(
-    $id: Int!
-  ) {
-    goods_goods_retrieve(id: $id) {
-        created_at
-        description
-        id
-        name
-        price
-        updated_at
+  query GetGood($id: Int!) {
+    good(id: $id) {
+      id
+      name
+      price
+      description
+      created_at
+      updated_at
     }
   }
 `;
 
 export const getGoodsQuery = /* GraphQL */ `
-  query Goods_goods_retrieve {
-    goods_goods_list {
+  query GetGoods($page: Int) {
+    goods(page: $page) {
       count
       next
       previous
+      results {
+        id
+        name
+        price
+        description
+        created_at
+        updated_at
+      }
     }
   }
 `;
 
 export const getGoodRecommendationsQuery = /* GraphQL */ `
-  query Goods_goods_retrieve {
-    goods_goods_list {
+  query GetGoodRecommendations($page: Int) {
+    goods(page: $page) {
       count
       next
       previous
+      results {
+        id
+        name
+        price
+        description
+      }
     }
   }
 `;

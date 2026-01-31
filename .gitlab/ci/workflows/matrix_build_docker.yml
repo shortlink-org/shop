@@ -20,11 +20,23 @@
         WORKDIR: $APPLICATION
         DOCKERFILE_PATH: ops/dockerfile/Dockerfile
 
-      # BFF - Backend for Frontend (TypeScript/WunderGraph)
+      # BFF - Backend for Frontend (Cosmo Router)
       - APPLICATION: bff
         REGISTRY_IMAGE: $CI_REGISTRY_IMAGE/$APPLICATION
         WORKDIR: $APPLICATION
-        DOCKERFILE_PATH: ops/Dockerfile
+        DOCKERFILE_PATH: ops/dockerfile/Dockerfile
+
+      # Admin GraphQL Subgraph (Tailcall)
+      - APPLICATION: admin-graphql
+        REGISTRY_IMAGE: $CI_REGISTRY_IMAGE/$APPLICATION
+        WORKDIR: $APPLICATION
+        DOCKERFILE_PATH: ops/dockerfile/Dockerfile
+
+      # OMS GraphQL Subgraph (Tailcall)
+      - APPLICATION: oms-graphql
+        REGISTRY_IMAGE: $CI_REGISTRY_IMAGE/$APPLICATION
+        WORKDIR: $APPLICATION
+        DOCKERFILE_PATH: ops/dockerfile/Dockerfile
 
       # Feed Service (Go)
       - APPLICATION: feed
