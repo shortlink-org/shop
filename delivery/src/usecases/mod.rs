@@ -15,3 +15,7 @@ pub mod get_courier_pool;
 pub mod get_package_pool;
 pub mod register_courier;
 pub mod update_courier_location;
+
+// Re-export main use case types
+pub use get_courier_pool::{CourierFilter, CourierWithState, GetCourierPoolError, GetCourierPoolResponse, GetCourierPoolUseCase};
+pub use register_courier::{RegisterCourierError, RegisterCourierRequest, RegisterCourierResponse, RegisterCourierUseCase};

@@ -1,0 +1,21 @@
+===============================================================================
+  ShortLink Delivery Service
+===============================================================================
+
+Delivery Service has been deployed successfully!
+
+Service provides:
+- Courier registration and management
+- Order assignment to couriers
+- Delivery tracking
+- Integration with Temporal for workflow orchestration
+
+Endpoints:
+- gRPC: {{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local:50051
+- Metrics: {{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local:9090
+
+To check the status:
+  kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/name={{ .Chart.Name }}
+
+To view logs:
+  kubectl logs -n {{ .Release.Namespace }} -l app.kubernetes.io/name={{ .Chart.Name }} -f

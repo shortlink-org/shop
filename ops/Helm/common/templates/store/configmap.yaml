@@ -41,3 +41,19 @@ data:
     -- Grant grafana read access to oms schema for monitoring
     GRANT USAGE ON SCHEMA oms TO grafana;
     ALTER DEFAULT PRIVILEGES FOR ROLE shop IN SCHEMA oms GRANT SELECT ON TABLES TO grafana;
+
+    -- Delivery schema for Delivery Service
+    CREATE SCHEMA IF NOT EXISTS delivery AUTHORIZATION shop;
+    COMMENT ON SCHEMA delivery IS 'Delivery Service - courier management and order delivery';
+
+    -- Grant delivery user access to delivery schema
+    GRANT CONNECT ON DATABASE shop TO delivery;
+    GRANT USAGE ON SCHEMA delivery TO delivery;
+    GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA delivery TO delivery;
+    GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA delivery TO delivery;
+    ALTER DEFAULT PRIVILEGES FOR ROLE shop IN SCHEMA delivery GRANT ALL ON TABLES TO delivery;
+    ALTER DEFAULT PRIVILEGES FOR ROLE shop IN SCHEMA delivery GRANT ALL ON SEQUENCES TO delivery;
+
+    -- Grant grafana read access to delivery schema for monitoring
+    GRANT USAGE ON SCHEMA delivery TO grafana;
+    ALTER DEFAULT PRIVILEGES FOR ROLE shop IN SCHEMA delivery GRANT SELECT ON TABLES TO grafana;

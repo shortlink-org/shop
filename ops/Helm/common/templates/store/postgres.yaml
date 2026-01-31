@@ -143,3 +143,6 @@ spec:
     - name: oms
       databases:
         - shop
+    - name: delivery
+      databases:
+        - shop
