@@ -4,12 +4,15 @@ import (
 	"context"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
 
 	"github.com/shortlink-org/go-sdk/fsm"
+	common "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common/v1"
+	"github.com/shortlink-org/shop/oms/internal/domain/order/v1/vo/address"
 )
 
 func TestOrderState(t *testing.T) {
@@ -207,4 +210,243 @@ func TestOrderState(t *testing.T) {
 
 	// ContextCancellation test removed: domain layer no longer depends on context.Context
 	// Domain methods use context.Background() internally for FSM, keeping domain pure
+}
+
+// createTestDeliveryInfo creates a test DeliveryInfo for testing purposes.
+func createTestDeliveryInfo(t *testing.T) DeliveryInfo {
+	t.Helper()
+
+	pickupAddr, err := address.NewAddress("123 Warehouse St", "Moscow", "101000", "Russia")
+	require.NoError(t, err)
+
+	deliveryAddr, err := address.NewAddress("456 Customer St", "Moscow", "102000", "Russia")
+	require.NoError(t, err)
+
+	// Create a valid future delivery period
+	startTime := time.Now().Add(24 * time.Hour)
+	endTime := startTime.Add(2 * time.Hour)
+	period := NewDeliveryPeriod(startTime, endTime)
+
+	packageInfo := NewPackageInfo(2.5, "30x20x15")
+
+	return NewDeliveryInfo(pickupAddr, deliveryAddr, period, packageInfo, DeliveryPriorityNormal)
+}
+
+func TestSetDeliveryInfo_OrderStatusValidation(t *testing.T) {
+	fixedCustomerID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+	fixedGoodID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174001")
+
+	t.Run("AllowsSettingDeliveryInfoInPendingState", func(t *testing.T) {
+		order := NewOrderState(fixedCustomerID)
+		deliveryInfo := createTestDeliveryInfo(t)
+
+		err := order.SetDeliveryInfo(deliveryInfo)
+		require.NoError(t, err, "SetDeliveryInfo should succeed in PENDING state")
+		require.True(t, order.HasDeliveryInfo(), "Order should have delivery info")
+	})
+
+	t.Run("AllowsSettingDeliveryInfoInProcessingState", func(t *testing.T) {
+		order := NewOrderState(fixedCustomerID)
+		items := Items{NewItem(fixedGoodID, 1, decimal.NewFromFloat(10.00))}
+		err := order.CreateOrder(items)
+		require.NoError(t, err)
+
+		deliveryInfo := createTestDeliveryInfo(t)
+		err = order.SetDeliveryInfo(deliveryInfo)
+		require.NoError(t, err, "SetDeliveryInfo should succeed in PROCESSING state")
+	})
+
+	t.Run("BlocksSettingDeliveryInfoInCompletedState", func(t *testing.T) {
+		order := NewOrderState(fixedCustomerID)
+		items := Items{NewItem(fixedGoodID, 1, decimal.NewFromFloat(10.00))}
+		err := order.CreateOrder(items)
+		require.NoError(t, err)
+		err = order.CompleteOrder()
+		require.NoError(t, err)
+
+		deliveryInfo := createTestDeliveryInfo(t)
+		err = order.SetDeliveryInfo(deliveryInfo)
+		require.Error(t, err, "SetDeliveryInfo should fail in COMPLETED state")
+		require.Contains(t, err.Error(), "ORDER_STATUS_COMPLETED")
+	})
+
+	t.Run("BlocksSettingDeliveryInfoInCancelledState", func(t *testing.T) {
+		order := NewOrderState(fixedCustomerID)
+		err := order.CancelOrder()
+		require.NoError(t, err)
+
+		deliveryInfo := createTestDeliveryInfo(t)
+		err = order.SetDeliveryInfo(deliveryInfo)
+		require.Error(t, err, "SetDeliveryInfo should fail in CANCELLED state")
+		require.Contains(t, err.Error(), "ORDER_STATUS_CANCELLED")
+	})
+}
+
+func TestSetDeliveryInfo_DeliveryStatusValidation(t *testing.T) {
+	fixedCustomerID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+	fixedGoodID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174001")
+
+	t.Run("AllowsSettingDeliveryInfoWhenDeliveryStatusAccepted", func(t *testing.T) {
+		order := NewOrderState(fixedCustomerID)
+		items := Items{NewItem(fixedGoodID, 1, decimal.NewFromFloat(10.00))}
+		err := order.CreateOrder(items)
+		require.NoError(t, err)
+
+		// Set delivery status to ACCEPTED
+		err = order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_ACCEPTED)
+		require.NoError(t, err)
+
+		deliveryInfo := createTestDeliveryInfo(t)
+		err = order.SetDeliveryInfo(deliveryInfo)
+		require.NoError(t, err, "SetDeliveryInfo should succeed when delivery is ACCEPTED")
+	})
+
+	t.Run("BlocksSettingDeliveryInfoWhenDeliveryStatusAssigned", func(t *testing.T) {
+		order := NewOrderState(fixedCustomerID)
+		items := Items{NewItem(fixedGoodID, 1, decimal.NewFromFloat(10.00))}
+		err := order.CreateOrder(items)
+		require.NoError(t, err)
+
+		// Set delivery status to ASSIGNED (courier assigned)
+		err = order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_ACCEPTED)
+		require.NoError(t, err)
+		err = order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_ASSIGNED)
+		require.NoError(t, err)
+
+		deliveryInfo := createTestDeliveryInfo(t)
+		err = order.SetDeliveryInfo(deliveryInfo)
+		require.Error(t, err, "SetDeliveryInfo should fail when courier is ASSIGNED")
+		require.Contains(t, err.Error(), "DELIVERY_STATUS_ASSIGNED")
+	})
+
+	t.Run("BlocksSettingDeliveryInfoWhenDeliveryStatusInTransit", func(t *testing.T) {
+		order := NewOrderState(fixedCustomerID)
+		items := Items{NewItem(fixedGoodID, 1, decimal.NewFromFloat(10.00))}
+		err := order.CreateOrder(items)
+		require.NoError(t, err)
+
+		// Set delivery status to IN_TRANSIT
+		err = order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_ACCEPTED)
+		require.NoError(t, err)
+		err = order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_ASSIGNED)
+		require.NoError(t, err)
+		err = order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_IN_TRANSIT)
+		require.NoError(t, err)
+
+		deliveryInfo := createTestDeliveryInfo(t)
+		err = order.SetDeliveryInfo(deliveryInfo)
+		require.Error(t, err, "SetDeliveryInfo should fail when package is IN_TRANSIT")
+		require.Contains(t, err.Error(), "DELIVERY_STATUS_IN_TRANSIT")
+	})
+
+	t.Run("BlocksSettingDeliveryInfoWhenDeliveryStatusDelivered", func(t *testing.T) {
+		order := NewOrderState(fixedCustomerID)
+		items := Items{NewItem(fixedGoodID, 1, decimal.NewFromFloat(10.00))}
+		err := order.CreateOrder(items)
+		require.NoError(t, err)
+
+		// Set delivery status to DELIVERED
+		err = order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_ACCEPTED)
+		require.NoError(t, err)
+		err = order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_ASSIGNED)
+		require.NoError(t, err)
+		err = order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_IN_TRANSIT)
+		require.NoError(t, err)
+		err = order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_DELIVERED)
+		require.NoError(t, err)
+
+		deliveryInfo := createTestDeliveryInfo(t)
+		err = order.SetDeliveryInfo(deliveryInfo)
+		require.Error(t, err, "SetDeliveryInfo should fail when package is DELIVERED")
+		require.Contains(t, err.Error(), "DELIVERY_STATUS_DELIVERED")
+	})
+}
+
+func TestSetDeliveryStatus(t *testing.T) {
+	fixedCustomerID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+	fixedGoodID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174001")
+
+	t.Run("AllowsValidDeliveryStatusTransitions", func(t *testing.T) {
+		order := NewOrderState(fixedCustomerID)
+		items := Items{NewItem(fixedGoodID, 1, decimal.NewFromFloat(10.00))}
+		err := order.CreateOrder(items)
+		require.NoError(t, err)
+
+		// UNSPECIFIED -> ACCEPTED
+		err = order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_ACCEPTED)
+		require.NoError(t, err)
+		require.Equal(t, common.DeliveryStatus_DELIVERY_STATUS_ACCEPTED, order.GetDeliveryStatus())
+
+		// ACCEPTED -> ASSIGNED
+		err = order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_ASSIGNED)
+		require.NoError(t, err)
+		require.Equal(t, common.DeliveryStatus_DELIVERY_STATUS_ASSIGNED, order.GetDeliveryStatus())
+
+		// ASSIGNED -> IN_TRANSIT
+		err = order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_IN_TRANSIT)
+		require.NoError(t, err)
+		require.Equal(t, common.DeliveryStatus_DELIVERY_STATUS_IN_TRANSIT, order.GetDeliveryStatus())
+
+		// IN_TRANSIT -> DELIVERED
+		err = order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_DELIVERED)
+		require.NoError(t, err)
+		require.Equal(t, common.DeliveryStatus_DELIVERY_STATUS_DELIVERED, order.GetDeliveryStatus())
+	})
+
+	t.Run("AllowsNotDeliveredFromInTransit", func(t *testing.T) {
+		order := NewOrderState(fixedCustomerID)
+		items := Items{NewItem(fixedGoodID, 1, decimal.NewFromFloat(10.00))}
+		err := order.CreateOrder(items)
+		require.NoError(t, err)
+
+		err = order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_ACCEPTED)
+		require.NoError(t, err)
+		err = order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_ASSIGNED)
+		require.NoError(t, err)
+		err = order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_IN_TRANSIT)
+		require.NoError(t, err)
+
+		// IN_TRANSIT -> NOT_DELIVERED
+		err = order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_NOT_DELIVERED)
+		require.NoError(t, err)
+		require.Equal(t, common.DeliveryStatus_DELIVERY_STATUS_NOT_DELIVERED, order.GetDeliveryStatus())
+	})
+
+	t.Run("BlocksInvalidDeliveryStatusTransition", func(t *testing.T) {
+		order := NewOrderState(fixedCustomerID)
+		items := Items{NewItem(fixedGoodID, 1, decimal.NewFromFloat(10.00))}
+		err := order.CreateOrder(items)
+		require.NoError(t, err)
+
+		err = order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_ACCEPTED)
+		require.NoError(t, err)
+
+		// ACCEPTED -> DELIVERED (invalid - should go through ASSIGNED and IN_TRANSIT)
+		err = order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_DELIVERED)
+		require.Error(t, err, "Should not allow skipping delivery status transitions")
+		require.Contains(t, err.Error(), "invalid delivery status transition")
+	})
+
+	t.Run("BlocksDeliveryStatusUpdateInCompletedOrder", func(t *testing.T) {
+		order := NewOrderState(fixedCustomerID)
+		items := Items{NewItem(fixedGoodID, 1, decimal.NewFromFloat(10.00))}
+		err := order.CreateOrder(items)
+		require.NoError(t, err)
+		err = order.CompleteOrder()
+		require.NoError(t, err)
+
+		err = order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_ACCEPTED)
+		require.Error(t, err, "Should not allow delivery status update in COMPLETED order")
+		require.Contains(t, err.Error(), "ORDER_STATUS_COMPLETED")
+	})
+
+	t.Run("BlocksDeliveryStatusUpdateInCancelledOrder", func(t *testing.T) {
+		order := NewOrderState(fixedCustomerID)
+		err := order.CancelOrder()
+		require.NoError(t, err)
+
+		err = order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_ACCEPTED)
+		require.Error(t, err, "Should not allow delivery status update in CANCELLED order")
+		require.Contains(t, err.Error(), "ORDER_STATUS_CANCELLED")
+	})
 }

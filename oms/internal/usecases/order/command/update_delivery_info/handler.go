@@ -1,4 +1,4 @@
-package create
+package update_delivery_info
 
 import (
 	"context"
@@ -8,10 +8,9 @@ import (
 	"github.com/shortlink-org/go-sdk/logger"
 
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
-	orderv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 )
 
-// Handler handles CreateOrder commands.
+// Handler handles UpdateDeliveryInfo commands.
 type Handler struct {
 	log       logger.Logger
 	uow       ports.UnitOfWork
@@ -19,7 +18,7 @@ type Handler struct {
 	publisher ports.EventPublisher
 }
 
-// NewHandler creates a new CreateOrder handler.
+// NewHandler creates a new UpdateDeliveryInfo handler.
 func NewHandler(
 	log logger.Logger,
 	uow ports.UnitOfWork,
@@ -34,8 +33,9 @@ func NewHandler(
 	}
 }
 
-// Handle executes the CreateOrder command.
-// Pattern: Create aggregate -> Persist -> Publish event
+// Handle executes the UpdateDeliveryInfo command.
+// Pattern: Load -> Domain method -> Save -> Publish event
+// Returns error if order is in terminal state or delivery is already in progress.
 func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 	// Begin transaction
 	ctx, err := h.uow.Begin(ctx)
@@ -44,25 +44,21 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 	}
 	defer func() { _ = h.uow.Rollback(ctx) }()
 
-	// 1. Create domain aggregate
-	order := orderv1.NewOrderState(cmd.CustomerID)
-	order.SetID(cmd.OrderID)
-
-	// 2. Apply business logic (create order with items)
-	if err := order.CreateOrder(cmd.Items); err != nil {
-		return err
+	// 1. Load order aggregate
+	order, err := h.orderRepo.Load(ctx, cmd.OrderID)
+	if err != nil {
+		return fmt.Errorf("failed to load order: %w", err)
 	}
 
-	// 3. Set delivery info if provided
-	if cmd.DeliveryInfo != nil {
-		if err := order.SetDeliveryInfo(*cmd.DeliveryInfo); err != nil {
-			return fmt.Errorf("failed to set delivery info: %w", err)
-		}
+	// 2. Apply business logic (update delivery info)
+	// This will fail if order is COMPLETED/CANCELLED or if delivery is ASSIGNED/IN_TRANSIT/DELIVERED
+	if err := order.SetDeliveryInfo(cmd.DeliveryInfo); err != nil {
+		return fmt.Errorf("cannot update delivery info: %w", err)
 	}
 
-	// 4. Persist to database
+	// 3. Persist to database
 	if err := h.orderRepo.Save(ctx, order); err != nil {
-		return err
+		return fmt.Errorf("failed to save order: %w", err)
 	}
 
 	// Commit transaction before publishing events
@@ -70,8 +66,7 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
-	// 5. Publish domain events (collected by aggregate during state transitions)
-	// Temporal subscriber will listen and start workflow
+	// 4. Publish domain events (if any)
 	for _, event := range order.GetDomainEvents() {
 		if publishableEvent, ok := event.(ports.Event); ok {
 			if err := h.publisher.Publish(ctx, publishableEvent); err != nil {

@@ -84,7 +84,9 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (Result, error) {
 
 	// 7. Set delivery info if provided
 	if cmd.DeliveryInfo != nil {
-		order.SetDeliveryInfo(*cmd.DeliveryInfo)
+		if err := order.SetDeliveryInfo(*cmd.DeliveryInfo); err != nil {
+			return Result{}, fmt.Errorf("failed to set delivery info: %w", err)
+		}
 	}
 
 	// 8. Clear cart

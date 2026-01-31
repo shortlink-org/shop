@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/shortlink-org/go-sdk/fsm"
+	common "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common/v1"
 )
 
 // OrderState represents the order state.
@@ -30,6 +31,8 @@ type OrderState struct {
 	domainEvents []DomainEvent
 	// deliveryInfo contains delivery information for the order (nil = self-pickup)
 	deliveryInfo *DeliveryInfo
+	// deliveryStatus tracks the delivery status (ACCEPTED, ASSIGNED, IN_TRANSIT, etc.)
+	deliveryStatus common.DeliveryStatus
 }
 
 // NewOrderState creates a new OrderState instance with the given customer ID.
@@ -160,11 +163,28 @@ func (o *OrderState) GetDeliveryInfo() *DeliveryInfo {
 }
 
 // SetDeliveryInfo sets the delivery information for the order.
-func (o *OrderState) SetDeliveryInfo(info DeliveryInfo) {
+// Returns an error if the order is in a terminal state or if delivery is already in progress.
+func (o *OrderState) SetDeliveryInfo(info DeliveryInfo) error {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
+	// Check OrderStatus - cannot update delivery info in terminal states
+	currentStatus := o.getStatusUnlocked()
+	if currentStatus == OrderStatus_ORDER_STATUS_COMPLETED ||
+		currentStatus == OrderStatus_ORDER_STATUS_CANCELLED {
+		return fmt.Errorf("cannot update delivery info in %s state", currentStatus)
+	}
+
+	// Check DeliveryStatus - cannot change after package is assigned to courier or in transit
+	if o.deliveryStatus == common.DeliveryStatus_DELIVERY_STATUS_ASSIGNED ||
+		o.deliveryStatus == common.DeliveryStatus_DELIVERY_STATUS_IN_TRANSIT ||
+		o.deliveryStatus == common.DeliveryStatus_DELIVERY_STATUS_DELIVERED ||
+		o.deliveryStatus == common.DeliveryStatus_DELIVERY_STATUS_NOT_DELIVERED {
+		return fmt.Errorf("cannot update delivery info: package already %s", o.deliveryStatus)
+	}
+
 	o.deliveryInfo = &info
+	return nil
 }
 
 // HasDeliveryInfo returns true if the order has delivery information.
@@ -173,6 +193,72 @@ func (o *OrderState) HasDeliveryInfo() bool {
 	defer o.mu.Unlock()
 
 	return o.deliveryInfo != nil
+}
+
+// GetDeliveryStatus returns the current delivery status.
+func (o *OrderState) GetDeliveryStatus() common.DeliveryStatus {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+
+	return o.deliveryStatus
+}
+
+// SetDeliveryStatus updates the delivery status.
+// Returns an error if the order is in a terminal state or if the transition is invalid.
+func (o *OrderState) SetDeliveryStatus(status common.DeliveryStatus) error {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+
+	// Cannot update delivery status in terminal order states
+	currentOrderStatus := o.getStatusUnlocked()
+	if currentOrderStatus == OrderStatus_ORDER_STATUS_COMPLETED ||
+		currentOrderStatus == OrderStatus_ORDER_STATUS_CANCELLED {
+		return fmt.Errorf("cannot update delivery status in %s order state", currentOrderStatus)
+	}
+
+	// Validate delivery status transition (only forward transitions allowed)
+	if !o.isValidDeliveryStatusTransition(o.deliveryStatus, status) {
+		return fmt.Errorf("invalid delivery status transition from %s to %s", o.deliveryStatus, status)
+	}
+
+	o.deliveryStatus = status
+	return nil
+}
+
+// isValidDeliveryStatusTransition checks if the delivery status transition is valid.
+// Delivery status can only move forward: UNSPECIFIED -> ACCEPTED -> ASSIGNED -> IN_TRANSIT -> DELIVERED/NOT_DELIVERED
+func (o *OrderState) isValidDeliveryStatusTransition(from, to common.DeliveryStatus) bool {
+	// Allow setting initial status
+	if from == common.DeliveryStatus_DELIVERY_STATUS_UNSPECIFIED {
+		return true
+	}
+
+	// Define valid transitions
+	validTransitions := map[common.DeliveryStatus][]common.DeliveryStatus{
+		common.DeliveryStatus_DELIVERY_STATUS_ACCEPTED: {
+			common.DeliveryStatus_DELIVERY_STATUS_ASSIGNED,
+		},
+		common.DeliveryStatus_DELIVERY_STATUS_ASSIGNED: {
+			common.DeliveryStatus_DELIVERY_STATUS_IN_TRANSIT,
+		},
+		common.DeliveryStatus_DELIVERY_STATUS_IN_TRANSIT: {
+			common.DeliveryStatus_DELIVERY_STATUS_DELIVERED,
+			common.DeliveryStatus_DELIVERY_STATUS_NOT_DELIVERED,
+		},
+	}
+
+	allowedTargets, exists := validTransitions[from]
+	if !exists {
+		return false
+	}
+
+	for _, allowed := range allowedTargets {
+		if to == allowed {
+			return true
+		}
+	}
+
+	return false
 }
 
 // GetStatus returns the current status of the order.
