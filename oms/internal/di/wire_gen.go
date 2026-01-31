@@ -38,6 +38,7 @@ import (
 	"github.com/shortlink-org/shop/oms/internal/usecases/cart/query/get"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/cancel"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/create"
+	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/update_delivery_info"
 	get2 "github.com/shortlink-org/shop/oms/internal/usecases/order/query/get"
 	"github.com/shortlink-org/shop/oms/pkg/uow/postgres"
 	"go.opentelemetry.io/otel/sdk/metric"
@@ -166,8 +167,9 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	}
 	createHandler := newOrderCreateHandler(logger, uoW, postgresStore, inMemoryPublisher)
 	cancelHandler := newOrderCancelHandler(logger, uoW, postgresStore, inMemoryPublisher)
+	update_delivery_infoHandler := newOrderUpdateDeliveryInfoHandler(logger, uoW, postgresStore, inMemoryPublisher)
 	handler2 := newOrderGetHandler(uoW, postgresStore)
-	orderRPC, err := newOrderRPC(server, logger, createHandler, cancelHandler, handler2)
+	orderRPC, err := newOrderRPC(server, logger, createHandler, cancelHandler, update_delivery_infoHandler, handler2)
 	if err != nil {
 		cleanup5()
 		cleanup4()
@@ -266,6 +268,7 @@ var OMSSet = wire.NewSet(
 
 	newOrderCreateHandler,
 	newOrderCancelHandler,
+	newOrderUpdateDeliveryInfoHandler,
 	newOrderGetHandler,
 
 	newCartRPC,
@@ -392,6 +395,10 @@ func newOrderCancelHandler(log logger.Logger, uow ports.UnitOfWork, orderRepo po
 	return cancel.NewHandler(log, uow, orderRepo, publisher)
 }
 
+func newOrderUpdateDeliveryInfoHandler(log logger.Logger, uow ports.UnitOfWork, orderRepo ports.OrderRepository, publisher ports.EventPublisher) *update_delivery_info.Handler {
+	return update_delivery_info.NewHandler(log, uow, orderRepo, publisher)
+}
+
 func newOrderGetHandler(uow ports.UnitOfWork, orderRepo ports.OrderRepository) *get2.Handler {
 	return get2.NewHandler(uow, orderRepo)
 }
@@ -421,9 +428,10 @@ func newOrderRPC(
 	log logger.Logger,
 	createHandler *create.Handler,
 	cancelHandler *cancel.Handler,
+	updateDeliveryInfoHandler *update_delivery_info.Handler,
 	getHandler *get2.Handler,
 ) (*v1_2.OrderRPC, error) {
-	return v1_2.New(runRPCServer, log, createHandler, cancelHandler, getHandler)
+	return v1_2.New(runRPCServer, log, createHandler, cancelHandler, updateDeliveryInfoHandler, getHandler)
 }
 
 func NewOMSService(

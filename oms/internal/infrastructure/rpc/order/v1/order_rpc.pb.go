@@ -28,29 +28,33 @@ var File_infrastructure_rpc_order_v1_order_rpc_proto protoreflect.FileDescriptor
 
 const file_infrastructure_rpc_order_v1_order_rpc_proto_rawDesc = "" +
 	"\n" +
-	"+infrastructure/rpc/order/v1/order_rpc.proto\x12\x1binfrastructure.rpc.order.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a google/protobuf/field_mask.proto\x1a0infrastructure/rpc/order/v1/model/v1/model.proto2\xa8\x02\n" +
+	"+infrastructure/rpc/order/v1/order_rpc.proto\x12\x1binfrastructure.rpc.order.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a google/protobuf/field_mask.proto\x1a0infrastructure/rpc/order/v1/model/v1/model.proto2\x97\x03\n" +
 	"\fOrderService\x12U\n" +
 	"\x06Create\x123.infrastructure.rpc.order.v1.model.v1.CreateRequest\x1a\x16.google.protobuf.Empty\x12j\n" +
 	"\x03Get\x120.infrastructure.rpc.order.v1.model.v1.GetRequest\x1a1.infrastructure.rpc.order.v1.model.v1.GetResponse\x12U\n" +
-	"\x06Cancel\x123.infrastructure.rpc.order.v1.model.v1.CancelRequest\x1a\x16.google.protobuf.EmptyB\x87\x02\n" +
+	"\x06Cancel\x123.infrastructure.rpc.order.v1.model.v1.CancelRequest\x1a\x16.google.protobuf.Empty\x12m\n" +
+	"\x12UpdateDeliveryInfo\x12?.infrastructure.rpc.order.v1.model.v1.UpdateDeliveryInfoRequest\x1a\x16.google.protobuf.EmptyB\x87\x02\n" +
 	"\x1fcom.infrastructure.rpc.order.v1B\rOrderRpcProtoP\x01ZFgithub.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1\xa2\x02\x03IRO\xaa\x02\x1bInfrastructure.Rpc.Order.V1\xca\x02\x1bInfrastructure\\Rpc\\Order\\V1\xe2\x02'Infrastructure\\Rpc\\Order\\V1\\GPBMetadata\xea\x02\x1eInfrastructure::Rpc::Order::V1b\x06proto3"
 
 var file_infrastructure_rpc_order_v1_order_rpc_proto_goTypes = []any{
-	(*v1.CreateRequest)(nil), // 0: infrastructure.rpc.order.v1.model.v1.CreateRequest
-	(*v1.GetRequest)(nil),    // 1: infrastructure.rpc.order.v1.model.v1.GetRequest
-	(*v1.CancelRequest)(nil), // 2: infrastructure.rpc.order.v1.model.v1.CancelRequest
-	(*emptypb.Empty)(nil),    // 3: google.protobuf.Empty
-	(*v1.GetResponse)(nil),   // 4: infrastructure.rpc.order.v1.model.v1.GetResponse
+	(*v1.CreateRequest)(nil),             // 0: infrastructure.rpc.order.v1.model.v1.CreateRequest
+	(*v1.GetRequest)(nil),                // 1: infrastructure.rpc.order.v1.model.v1.GetRequest
+	(*v1.CancelRequest)(nil),             // 2: infrastructure.rpc.order.v1.model.v1.CancelRequest
+	(*v1.UpdateDeliveryInfoRequest)(nil), // 3: infrastructure.rpc.order.v1.model.v1.UpdateDeliveryInfoRequest
+	(*emptypb.Empty)(nil),                // 4: google.protobuf.Empty
+	(*v1.GetResponse)(nil),               // 5: infrastructure.rpc.order.v1.model.v1.GetResponse
 }
 var file_infrastructure_rpc_order_v1_order_rpc_proto_depIdxs = []int32{
 	0, // 0: infrastructure.rpc.order.v1.OrderService.Create:input_type -> infrastructure.rpc.order.v1.model.v1.CreateRequest
 	1, // 1: infrastructure.rpc.order.v1.OrderService.Get:input_type -> infrastructure.rpc.order.v1.model.v1.GetRequest
 	2, // 2: infrastructure.rpc.order.v1.OrderService.Cancel:input_type -> infrastructure.rpc.order.v1.model.v1.CancelRequest
-	3, // 3: infrastructure.rpc.order.v1.OrderService.Create:output_type -> google.protobuf.Empty
-	4, // 4: infrastructure.rpc.order.v1.OrderService.Get:output_type -> infrastructure.rpc.order.v1.model.v1.GetResponse
-	3, // 5: infrastructure.rpc.order.v1.OrderService.Cancel:output_type -> google.protobuf.Empty
-	3, // [3:6] is the sub-list for method output_type
-	0, // [0:3] is the sub-list for method input_type
+	3, // 3: infrastructure.rpc.order.v1.OrderService.UpdateDeliveryInfo:input_type -> infrastructure.rpc.order.v1.model.v1.UpdateDeliveryInfoRequest
+	4, // 4: infrastructure.rpc.order.v1.OrderService.Create:output_type -> google.protobuf.Empty
+	5, // 5: infrastructure.rpc.order.v1.OrderService.Get:output_type -> infrastructure.rpc.order.v1.model.v1.GetResponse
+	4, // 6: infrastructure.rpc.order.v1.OrderService.Cancel:output_type -> google.protobuf.Empty
+	4, // 7: infrastructure.rpc.order.v1.OrderService.UpdateDeliveryInfo:output_type -> google.protobuf.Empty
+	4, // [4:8] is the sub-list for method output_type
+	0, // [0:4] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name

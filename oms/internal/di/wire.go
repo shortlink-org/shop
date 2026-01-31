@@ -52,6 +52,7 @@ import (
 	// Order handlers
 	orderCancel "github.com/shortlink-org/shop/oms/internal/usecases/order/command/cancel"
 	orderCreate "github.com/shortlink-org/shop/oms/internal/usecases/order/command/create"
+	orderUpdateDeliveryInfo "github.com/shortlink-org/shop/oms/internal/usecases/order/command/update_delivery_info"
 	orderGet "github.com/shortlink-org/shop/oms/internal/usecases/order/query/get"
 )
 
@@ -146,6 +147,7 @@ var OMSSet = wire.NewSet(
 	// Order Handlers (concrete types)
 	newOrderCreateHandler,
 	newOrderCancelHandler,
+	newOrderUpdateDeliveryInfoHandler,
 	newOrderGetHandler,
 
 	// Delivery
@@ -277,6 +279,10 @@ func newOrderCancelHandler(log logger.Logger, uow ports.UnitOfWork, orderRepo po
 	return orderCancel.NewHandler(log, uow, orderRepo, publisher)
 }
 
+func newOrderUpdateDeliveryInfoHandler(log logger.Logger, uow ports.UnitOfWork, orderRepo ports.OrderRepository, publisher ports.EventPublisher) *orderUpdateDeliveryInfo.Handler {
+	return orderUpdateDeliveryInfo.NewHandler(log, uow, orderRepo, publisher)
+}
+
 func newOrderGetHandler(uow ports.UnitOfWork, orderRepo ports.OrderRepository) *orderGet.Handler {
 	return orderGet.NewHandler(uow, orderRepo)
 }
@@ -306,9 +312,10 @@ func newOrderRPC(
 	log logger.Logger,
 	createHandler *orderCreate.Handler,
 	cancelHandler *orderCancel.Handler,
+	updateDeliveryInfoHandler *orderUpdateDeliveryInfo.Handler,
 	getHandler *orderGet.Handler,
 ) (*orderRPC.OrderRPC, error) {
-	return orderRPC.New(runRPCServer, log, createHandler, cancelHandler, getHandler)
+	return orderRPC.New(runRPCServer, log, createHandler, cancelHandler, updateDeliveryInfoHandler, getHandler)
 }
 
 func NewOMSService(

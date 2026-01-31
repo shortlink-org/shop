@@ -19,4 +19,7 @@ service OrderService {
 
   // Delete deletes an order by its ID.
   rpc Cancel(infrastructure.rpc.order.v1.model.v1.CancelRequest) returns (google.protobuf.Empty);
+
+  // UpdateDeliveryInfo updates delivery information for an order.
+  rpc UpdateDeliveryInfo(infrastructure.rpc.order.v1.model.v1.UpdateDeliveryInfoRequest) returns (google.protobuf.Empty);
 }

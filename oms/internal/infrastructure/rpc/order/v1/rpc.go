@@ -10,6 +10,7 @@ import (
 
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/cancel"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/create"
+	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/update_delivery_info"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/query/get"
 )
 
@@ -20,8 +21,9 @@ type OrderRPC struct {
 	log logger.Logger
 
 	// Command Handlers (concrete types for wire compatibility)
-	createHandler *create.Handler
-	cancelHandler *cancel.Handler
+	createHandler             *create.Handler
+	cancelHandler             *cancel.Handler
+	updateDeliveryInfoHandler *update_delivery_info.Handler
 
 	// Query Handlers
 	getHandler *get.Handler
@@ -32,6 +34,7 @@ func New(
 	log logger.Logger,
 	createHandler *create.Handler,
 	cancelHandler *cancel.Handler,
+	updateDeliveryInfoHandler *update_delivery_info.Handler,
 	getHandler *get.Handler,
 ) (*OrderRPC, error) {
 	server := &OrderRPC{
@@ -39,8 +42,9 @@ func New(
 		log: log,
 
 		// Command Handlers
-		createHandler: createHandler,
-		cancelHandler: cancelHandler,
+		createHandler:             createHandler,
+		cancelHandler:             cancelHandler,
+		updateDeliveryInfoHandler: updateDeliveryInfoHandler,
 
 		// Query Handlers
 		getHandler: getHandler,

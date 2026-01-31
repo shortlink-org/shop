@@ -19,6 +19,10 @@ schema
   mutation: Mutation
 }
 
+# ============================================
+# Cart Types
+# ============================================
+
 type CartItem {
   goodId: String
   quantity: Int
@@ -40,7 +44,57 @@ type CartRequest {
   customerId: String
 }
 
+# ============================================
+# Order Types
+# ============================================
+
+type OrderItem {
+  id: String
+  quantity: Int
+  price: Float
+}
+
+type DeliveryAddress {
+  street: String
+  city: String
+  postalCode: String
+  country: String
+  latitude: Float
+  longitude: Float
+}
+
+type DeliveryPeriod {
+  startTime: String
+  endTime: String
+}
+
+type PackageInfo {
+  weightKg: Float
+  dimensions: String
+}
+
+type DeliveryInfo {
+  pickupAddress: DeliveryAddress
+  deliveryAddress: DeliveryAddress
+  deliveryPeriod: DeliveryPeriod
+  packageInfo: PackageInfo
+  priority: String
+}
+
+type OrderState {
+  id: String
+  customerId: String
+  items: [OrderItem]
+  status: String
+  deliveryInfo: DeliveryInfo
+}
+
+type GetOrderResponse {
+  order: OrderState
+}
+
 type Query {
+  # Cart queries
   getCart(customerId: CartRequest): GetCartResponse
   @grpc(
     url: "{{.env.OMS_GRPC_URL}}"
@@ -50,11 +104,79 @@ type Query {
       {key: "user-id", value: "3e173751-8840-4b0d-8065-fbea88357cc5"}
     ]
   )
+
+  # Order queries
+  getOrder(id: String!): GetOrderResponse
+  @grpc(
+    url: "{{.env.OMS_GRPC_URL}}"
+    method: "infrastructure.rpc.order.v1.OrderService.Get"
+    body: "{\"id\": \"{{.args.id}}\"}"
+    headers: [
+      {key: "user-id", value: "3e173751-8840-4b0d-8065-fbea88357cc5"}
+    ]
+  )
 }
+
+# ============================================
+# Cart Inputs
+# ============================================
 
 input ItemRequest {
   customerId: String!
   items: [CartItemInput!]!
+}
+
+input CartItemInput {
+  goodId: String!
+  quantity: Int!
+}
+
+# ============================================
+# Order Inputs
+# ============================================
+
+input DeliveryAddressInput {
+  street: String!
+  city: String!
+  postalCode: String
+  country: String!
+  latitude: Float
+  longitude: Float
+}
+
+input DeliveryPeriodInput {
+  startTime: String!
+  endTime: String!
+}
+
+input PackageInfoInput {
+  weightKg: Float!
+  dimensions: String!
+}
+
+input DeliveryInfoInput {
+  pickupAddress: DeliveryAddressInput!
+  deliveryAddress: DeliveryAddressInput!
+  deliveryPeriod: DeliveryPeriodInput!
+  packageInfo: PackageInfoInput!
+  priority: String
+}
+
+input OrderItemInput {
+  id: String!
+  quantity: Int!
+  price: Float!
+}
+
+input CreateOrderInput {
+  customerId: String!
+  items: [OrderItemInput!]!
+  deliveryInfo: DeliveryInfoInput
+}
+
+input UpdateDeliveryInfoInput {
+  orderId: String!
+  deliveryInfo: DeliveryInfoInput!
 }
 
 type Mutation {
@@ -87,9 +209,35 @@ type Mutation {
       {key: "user-id", value: "3e173751-8840-4b0d-8065-fbea88357cc5"}
     ]
   )
-}
 
-input CartItemInput {
-  goodId: String!
-  quantity: Int!
+  # Order mutations
+  createOrder(input: CreateOrderInput!): Empty!
+  @grpc(
+    url: "{{.env.OMS_GRPC_URL}}"
+    method: "infrastructure.rpc.order.v1.OrderService.Create"
+    body: "{{.args.input}}"
+    headers: [
+      {key: "user-id", value: "3e173751-8840-4b0d-8065-fbea88357cc5"}
+    ]
+  )
+
+  cancelOrder(orderId: String!): Empty!
+  @grpc(
+    url: "{{.env.OMS_GRPC_URL}}"
+    method: "infrastructure.rpc.order.v1.OrderService.Cancel"
+    body: "{\"id\": \"{{.args.orderId}}\"}"
+    headers: [
+      {key: "user-id", value: "3e173751-8840-4b0d-8065-fbea88357cc5"}
+    ]
+  )
+
+  updateDeliveryInfo(input: UpdateDeliveryInfoInput!): Empty!
+  @grpc(
+    url: "{{.env.OMS_GRPC_URL}}"
+    method: "infrastructure.rpc.order.v1.OrderService.UpdateDeliveryInfo"
+    body: "{\"order_id\": \"{{.args.input.orderId}}\", \"delivery_info\": {{.args.input.deliveryInfo}}}"
+    headers: [
+      {key: "user-id", value: "3e173751-8840-4b0d-8065-fbea88357cc5"}
+    ]
+  )
 }

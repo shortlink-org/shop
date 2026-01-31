@@ -70,3 +70,11 @@ message CancelRequest {
   // ID of the order to delete
   string id = 1;
 }
+
+// Request message for updating delivery info
+message UpdateDeliveryInfoRequest {
+  // ID of the order to update
+  string order_id = 1;
+  // New delivery information
+  domain.order.common.v1.DeliveryInfo delivery_info = 2;
+}
