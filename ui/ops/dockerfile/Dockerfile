@@ -44,6 +44,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Build the application
 RUN pnpm build
 
+# Ensure public directory exists (Next.js optional directory)
+RUN mkdir -p public
+
 # =============================================================================
 # Stage 3: Runner
 # =============================================================================
