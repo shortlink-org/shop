@@ -8,8 +8,8 @@ import (
 	"github.com/shortlink-org/go-sdk/logger"
 	"go.temporal.io/sdk/client"
 
-	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	orderv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
+	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	queuev1 "github.com/shortlink-org/shop/oms/internal/domain/queue/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/events"
 )

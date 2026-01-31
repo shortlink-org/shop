@@ -9,8 +9,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/shortlink-org/go-sdk/logger"
 
-	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	itemv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/item/v1"
+	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/websocket"
 )
 

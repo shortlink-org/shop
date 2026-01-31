@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	v1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
+	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 )
 
 // Result is the result of the GetCart query.

@@ -8,8 +8,8 @@ import (
 
 	"github.com/shortlink-org/go-sdk/logger"
 
-	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	v1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
+	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 )
 
 // Handler handles AddItem commands.

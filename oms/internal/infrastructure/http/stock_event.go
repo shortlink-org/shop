@@ -13,15 +13,15 @@ import (
 
 // StockChangeHandler handles HTTP requests for stock change events
 type StockChangeHandler struct {
-	log                   logger.Logger
-	stockChangedHandler   *on_stock_changed.Handler
+	log                 logger.Logger
+	stockChangedHandler *on_stock_changed.Handler
 }
 
 // NewStockChangeHandler creates a new stock change event handler
 func NewStockChangeHandler(log logger.Logger, stockChangedHandler *on_stock_changed.Handler) *StockChangeHandler {
 	return &StockChangeHandler{
-		log:                   log,
-		stockChangedHandler:   stockChangedHandler,
+		log:                 log,
+		stockChangedHandler: stockChangedHandler,
 	}
 }
 

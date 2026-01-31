@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	orderv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
+	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 )
 
 // Result is the result of the ListOrdersByCustomer query.
