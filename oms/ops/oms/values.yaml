@@ -86,6 +86,9 @@ deploy:
       memory: 128Mi
 
   env:
+    # Required for Go os/user package in Alpine without cgo
+    USER: app
+
     TRACER_URI: grafana-tempo.grafana:4317
 
     GRPC_CLIENT_HOST: internal-gateway-istio.istio-ingress.svc.cluster.local
