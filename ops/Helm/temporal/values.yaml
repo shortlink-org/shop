@@ -3,6 +3,11 @@
 # Declare variables to be passed into your templates.
 
 # ==============================================================================
+# Deploy configuration (required for shortlink-template http_route)
+deploy:
+  type: Deployment
+
+# ==============================================================================
 # Service configuration (required for shortlink-template)
 service:
   type: ClusterIP
