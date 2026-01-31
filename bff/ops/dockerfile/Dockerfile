@@ -4,7 +4,7 @@
 # =============================================================================
 # Stage 1: Generate router-config.json (offline composition)
 # =============================================================================
-FROM node:22-alpine AS builder
+FROM node:24.13.0-alpine AS builder
 
 WORKDIR /build
 
