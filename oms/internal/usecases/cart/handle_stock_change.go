@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/uuid"
 
-	domain "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
 	itemv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/item/v1"
 )
 
@@ -61,7 +60,6 @@ func (uc *UC) HandleStockChange(ctx context.Context, goodId uuid.UUID, newQuanti
 			slog.String("good_id", goodId.String()),
 			slog.Int("quantity", int(itemQuantity)))
 
-		removeRequest := domain.New(customerId)
 		cartItem, err := itemv1.NewItem(goodId, itemQuantity)
 		if err != nil {
 			uc.log.Warn("Failed to construct cart item for removal",
@@ -71,15 +69,8 @@ func (uc *UC) HandleStockChange(ctx context.Context, goodId uuid.UUID, newQuanti
 			continue
 		}
 
-		if err := removeRequest.AddItem(cartItem); err != nil {
-			uc.log.Warn("Failed to stage cart item removal",
-				slog.String("customer_id", customerId.String()),
-				slog.String("good_id", goodId.String()),
-				slog.String("error", err.Error()))
-			continue
-		}
-
-		err = uc.Remove(ctx, removeRequest)
+		// Use the new Remove signature: (ctx, customerID, item)
+		err = uc.Remove(ctx, customerId, cartItem)
 		if err != nil {
 			uc.log.Warn("Failed to remove item from cart",
 				slog.String("customer_id", customerId.String()),

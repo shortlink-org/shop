@@ -1,52 +1,22 @@
 package services
 
 import (
-	"context"
-	"fmt"
-
 	"github.com/google/uuid"
 
 	cart "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
+	itemv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/item/v1"
 )
 
 // StockCartService is a domain service that handles stock-related operations for carts.
 // This service contains business logic that involves multiple aggregates (Cart and Stock).
-type StockCartService struct {
-	// CartRepository is an interface for cart operations
-	// In a real implementation, this would be injected via dependency injection
-	CartRepository CartRepository
-}
-
-// CartRepository defines the interface for cart repository operations needed by the domain service
-type CartRepository interface {
-	// GetCart retrieves a cart by customer ID
-	GetCart(ctx context.Context, customerId uuid.UUID) (*cart.State, error)
-	// RemoveItemFromCart removes an item from a cart
-	RemoveItemFromCart(ctx context.Context, customerId uuid.UUID, goodId uuid.UUID, quantity int32) error
-}
+//
+// Note: This is a pure domain service - it operates on domain aggregates directly.
+// The application layer (UseCase) is responsible for loading/saving aggregates.
+type StockCartService struct{}
 
 // NewStockCartService creates a new StockCartService
-func NewStockCartService(repo CartRepository) *StockCartService {
-	return &StockCartService{
-		CartRepository: repo,
-	}
-}
-
-// HandleStockDepletion handles the business logic when stock for a good is depleted.
-// This method encapsulates the domain rule: "When stock reaches zero, remove the item from all affected carts"
-func (s *StockCartService) HandleStockDepletion(
-	ctx context.Context,
-	goodId uuid.UUID,
-	affectedCustomerIds []uuid.UUID,
-) ([]StockDepletionResult, error) {
-	var results []StockDepletionResult
-
-	for _, customerId := range affectedCustomerIds {
-		result := s.processCustomerCart(ctx, customerId, goodId)
-		results = append(results, result)
-	}
-
-	return results, nil
+func NewStockCartService() *StockCartService {
+	return &StockCartService{}
 }
 
 // StockDepletionResult represents the result of processing a stock depletion for a customer's cart
@@ -58,28 +28,23 @@ type StockDepletionResult struct {
 	Error      error
 }
 
-// processCustomerCart processes stock depletion for a single customer's cart
-func (s *StockCartService) processCustomerCart(
-	ctx context.Context,
-	customerId uuid.UUID,
-	goodId uuid.UUID,
+// ProcessStockDepletion processes stock depletion for a cart.
+// This is a pure domain operation - it modifies the cart aggregate in memory.
+// The caller (UseCase) is responsible for loading the cart before and saving after.
+//
+// Pattern: The UseCase does Load -> this domain service method -> Save
+func (s *StockCartService) ProcessStockDepletion(
+	cartState *cart.State,
+	goodID uuid.UUID,
 ) StockDepletionResult {
-	// Get the cart
-	cart, err := s.CartRepository.GetCart(ctx, customerId)
-	if err != nil {
-		return StockDepletionResult{
-			CustomerID: customerId,
-			GoodID:     goodId,
-			Removed:    false,
-			Error:      fmt.Errorf("failed to get cart: %w", err),
-		}
-	}
+	customerID := cartState.GetCustomerId()
 
 	// Find the item in the cart
 	var itemQuantity int32
-	found := false
-	for _, item := range cart.GetItems() {
-		if item.GetGoodId() == goodId {
+	var found bool
+
+	for _, item := range cartState.GetItems() {
+		if item.GetGoodId() == goodID {
 			itemQuantity = item.GetQuantity()
 			found = true
 			break
@@ -89,28 +54,39 @@ func (s *StockCartService) processCustomerCart(
 	if !found {
 		// Item was already removed from cart
 		return StockDepletionResult{
-			CustomerID: customerId,
-			GoodID:     goodId,
+			CustomerID: customerID,
+			GoodID:     goodID,
 			Removed:    false,
 			Quantity:   0,
 		}
 	}
 
-	// Remove the item from cart
-	err = s.CartRepository.RemoveItemFromCart(ctx, customerId, goodId, itemQuantity)
+	// Create an item to remove (with the quantity to remove)
+	itemToRemove, err := itemv1.NewItem(goodID, itemQuantity)
 	if err != nil {
 		return StockDepletionResult{
-			CustomerID: customerId,
-			GoodID:     goodId,
+			CustomerID: customerID,
+			GoodID:     goodID,
 			Removed:    false,
 			Quantity:   itemQuantity,
-			Error:      fmt.Errorf("failed to remove item from cart: %w", err),
+			Error:      err,
+		}
+	}
+
+	// Remove the item from cart (domain method)
+	if err := cartState.RemoveItem(itemToRemove); err != nil {
+		return StockDepletionResult{
+			CustomerID: customerID,
+			GoodID:     goodID,
+			Removed:    false,
+			Quantity:   itemQuantity,
+			Error:      err,
 		}
 	}
 
 	return StockDepletionResult{
-		CustomerID: customerId,
-		GoodID:     goodId,
+		CustomerID: customerID,
+		GoodID:     goodID,
 		Removed:    true,
 		Quantity:   itemQuantity,
 	}

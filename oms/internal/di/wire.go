@@ -13,12 +13,14 @@ import (
 
 	"github.com/authzed/authzed-go/v1"
 	"github.com/google/wire"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/trace"
 	"go.temporal.io/sdk/client"
 
 	"github.com/shortlink-org/go-sdk/auth/permission"
 	config "github.com/shortlink-org/go-sdk/config"
 	sdkctx "github.com/shortlink-org/go-sdk/context"
+	"github.com/shortlink-org/go-sdk/db"
 	"github.com/shortlink-org/go-sdk/flags"
 	grpc "github.com/shortlink-org/go-sdk/grpc"
 	logger "github.com/shortlink-org/go-sdk/logger"
@@ -26,9 +28,13 @@ import (
 	profiling "github.com/shortlink-org/go-sdk/observability/profiling"
 	"github.com/shortlink-org/go-sdk/observability/tracing"
 	"github.com/shortlink-org/go-sdk/temporal"
+
+	"github.com/shortlink-org/shop/oms/internal/boundary/ports"
 	cartRPC "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1"
 	orderRPC "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/run"
+	cartRepo "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart"
+	orderRepo "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order"
 	"github.com/shortlink-org/shop/oms/internal/usecases/cart"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order"
 )
@@ -46,13 +52,21 @@ type OMSService struct {
 	// Security
 	authPermission *authzed.Client
 
+	// Database
+	DB db.DB
+
+	// Repositories
+	CartRepo  ports.CartRepository
+	OrderRepo ports.OrderRepository
+
 	// Delivery
 	run            *run.Response
 	cartRPCServer  *cartRPC.CartRPC
 	orderRPCServer *orderRPC.OrderRPC
 
 	// Applications
-	cartService *cart.UC
+	CartService  *cart.UC
+	OrderService *order.UC
 
 	// Temporal
 	temporalClient client.Client
@@ -79,6 +93,16 @@ var OMSSet = wire.NewSet(
 	// Observability (go-sdk)
 	newGoSDKTracer,
 	newGoSDKMonitoring,
+
+	// Database
+	newDatabase,
+	wire.FieldsOf(new(*metrics.Monitoring), "Metrics"),
+
+	// Repositories
+	newCartRepository,
+	newOrderRepository,
+	wire.Bind(new(ports.CartRepository), new(*cartRepo.Store)),
+	wire.Bind(new(ports.OrderRepository), new(*orderRepo.Store)),
 
 	// Delivery
 	cartRPC.New,
@@ -130,6 +154,21 @@ func newGoSDKProfiling(ctx context.Context, log logger.Logger, tracer trace.Trac
 	return profiling.New(ctx, log, tracer, cfg)
 }
 
+// newDatabase creates a database connection using go-sdk/db
+func newDatabase(ctx context.Context, log logger.Logger, tracer trace.TracerProvider, meterProvider *sdkmetric.MeterProvider, cfg *config.Config) (db.DB, error) {
+	return db.New(ctx, log, tracer, meterProvider, cfg)
+}
+
+// newCartRepository creates a PostgreSQL cart repository
+func newCartRepository(ctx context.Context, store db.DB) (*cartRepo.Store, error) {
+	return cartRepo.New(ctx, store)
+}
+
+// newOrderRepository creates a PostgreSQL order repository
+func newOrderRepository(ctx context.Context, store db.DB) (*orderRepo.Store, error) {
+	return orderRepo.New(ctx, store)
+}
+
 func NewOMSService(
 	// Common
 	log logger.Logger,
@@ -143,10 +182,21 @@ func NewOMSService(
 	// Security
 	authPermission *authzed.Client,
 
+	// Database
+	database db.DB,
+
+	// Repositories
+	cartRepository ports.CartRepository,
+	orderRepository ports.OrderRepository,
+
 	// Delivery
 	run *run.Response,
 	cartRPCServer *cartRPC.CartRPC,
 	orderRPCServer *orderRPC.OrderRPC,
+
+	// Applications
+	cartService *cart.UC,
+	orderService *order.UC,
 
 	// Temporal
 	temporalClient client.Client,
@@ -165,10 +215,21 @@ func NewOMSService(
 		// TODO: enable later
 		// authPermission: authPermission,
 
+		// Database
+		DB: database,
+
+		// Repositories
+		CartRepo:  cartRepository,
+		OrderRepo: orderRepository,
+
 		// Delivery
 		run:            run,
 		cartRPCServer:  cartRPCServer,
 		orderRPCServer: orderRPCServer,
+
+		// Applications
+		CartService:  cartService,
+		OrderService: orderService,
 
 		// Temporal
 		temporalClient: temporalClient,

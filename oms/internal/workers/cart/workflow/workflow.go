@@ -1,93 +1,98 @@
 package cart_workflow
 
 import (
+	"time"
+
 	"github.com/google/uuid"
+	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 
 	v2 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
-	itemv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/item/v1"
-	v3 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1/model/v1"
-	"github.com/shortlink-org/shop/oms/internal/workers/cart/workflow/dto"
-	v1 "github.com/shortlink-org/shop/oms/internal/workers/cart/workflow/model/cart/v1"
+	"github.com/shortlink-org/shop/oms/internal/workers/cart/activities"
 )
 
-// Workflow is a Temporal workflow that manages the cart state.
-func Workflow(ctx workflow.Context, customerId uuid.UUID) error {
-	state := v2.New(customerId)
-
-	// Set up query handler for getting cart state
-	err := workflow.SetQueryHandler(ctx, v2.Event_EVENT_GET.String(), func() (*v3.CartState, error) {
-		return dto.CartStateToDomain(state), nil
-	})
-	if err != nil {
-		return err
-	}
-
-	// https://docs.temporal.io/docs/concepts/workflows/#workflows-have-options
+// Workflow is a Temporal workflow for cart operations.
+//
+// NOTE: For simple cart CRUD operations, direct database access via CartRepository
+// is preferred over using this workflow. This workflow is kept for scenarios where
+// you need:
+// - Long-running cart sessions with TTL
+// - Complex cart validation workflows
+// - Integration with external services (stock reservation, etc.)
+//
+// For most use cases, use the cart UseCase directly instead of this workflow.
+func Workflow(ctx workflow.Context, customerID uuid.UUID) error {
 	logger := workflow.GetLogger(ctx)
 
-	addToCartChannel := workflow.GetSignalChannel(ctx, v2.Event_EVENT_ADD.String())
-	removeFromCartChannel := workflow.GetSignalChannel(ctx, v2.Event_EVENT_REMOVE.String())
-	resetCartChannel := workflow.GetSignalChannel(ctx, v2.Event_EVENT_RESET.String())
+	// Activity options
+	ao := workflow.ActivityOptions{
+		StartToCloseTimeout: 10 * time.Second,
+		RetryPolicy: &temporal.RetryPolicy{
+			InitialInterval:    time.Second,
+			BackoffCoefficient: 2.0,
+			MaximumInterval:    time.Minute,
+			MaximumAttempts:    3,
+		},
+	}
+	ctx = workflow.WithActivityOptions(ctx, ao)
+
+	// Signal channels
+	addChannel := workflow.GetSignalChannel(ctx, v2.Event_EVENT_ADD.String())
+	removeChannel := workflow.GetSignalChannel(ctx, v2.Event_EVENT_REMOVE.String())
+	resetChannel := workflow.GetSignalChannel(ctx, v2.Event_EVENT_RESET.String())
+
+	// Cart session timeout (e.g., 24 hours)
+	sessionTimeout := workflow.NewTimer(ctx, 24*time.Hour)
 
 	selector := workflow.NewSelector(ctx)
 
-	selector.AddReceive(addToCartChannel, func(c workflow.ReceiveChannel, _ bool) {
-		var request v1.CartEvent
-		c.Receive(ctx, &request)
+	// Handle add item signal
+	selector.AddReceive(addChannel, func(c workflow.ReceiveChannel, _ bool) {
+		var req activities.AddItemRequest
+		c.Receive(ctx, &req)
 
-		for _, item := range request.Items {
-			goodId, err := uuid.Parse(item.GoodId)
-			if err != nil {
-				logger.Error("Invalid good ID", "good_id", item.GoodId, "error", err)
-				continue
-			}
-
-			cartItem, err := itemv1.NewItem(goodId, item.Quantity)
-			if err != nil {
-				logger.Error("Invalid cart item", "good_id", item.GoodId, "error", err)
-				continue
-			}
-
-			if err := state.AddItem(cartItem); err != nil {
-				logger.Error("Failed to add item to cart", "good_id", item.GoodId, "error", err)
-			}
+		logger.Info("Adding item to cart via activity", "customerID", customerID, "goodID", req.GoodID)
+		err := workflow.ExecuteActivity(ctx, "AddItem", req).Get(ctx, nil)
+		if err != nil {
+			logger.Error("Failed to add item", "error", err)
 		}
 	})
 
-	selector.AddReceive(removeFromCartChannel, func(c workflow.ReceiveChannel, _ bool) {
-		var request v1.CartEvent
-		c.Receive(ctx, &request)
+	// Handle remove item signal
+	selector.AddReceive(removeChannel, func(c workflow.ReceiveChannel, _ bool) {
+		var req activities.RemoveItemRequest
+		c.Receive(ctx, &req)
 
-		for _, item := range request.Items {
-			goodId, err := uuid.Parse(item.GoodId)
-			if err != nil {
-				logger.Error("Invalid good ID", "good_id", item.GoodId, "error", err)
-				continue
-			}
-
-			cartItem, err := itemv1.NewItem(goodId, item.Quantity)
-			if err != nil {
-				logger.Error("Invalid cart item", "good_id", item.GoodId, "error", err)
-				continue
-			}
-
-			if err := state.RemoveItem(cartItem); err != nil {
-				logger.Error("Failed to remove item from cart", "good_id", item.GoodId, "error", err)
-			}
+		logger.Info("Removing item from cart via activity", "customerID", customerID, "goodID", req.GoodID)
+		err := workflow.ExecuteActivity(ctx, "RemoveItem", req).Get(ctx, nil)
+		if err != nil {
+			logger.Error("Failed to remove item", "error", err)
 		}
 	})
 
-	selector.AddReceive(resetCartChannel, func(c workflow.ReceiveChannel, _ bool) {
-		var customerId string
-		c.Receive(ctx, &customerId)
+	// Handle reset signal
+	selector.AddReceive(resetChannel, func(c workflow.ReceiveChannel, _ bool) {
+		c.Receive(ctx, nil)
 
-		state.Reset()
+		logger.Info("Resetting cart via activity", "customerID", customerID)
+		err := workflow.ExecuteActivity(ctx, "ResetCart", activities.ResetCartRequest{
+			CustomerID: customerID,
+		}).Get(ctx, nil)
+		if err != nil {
+			logger.Error("Failed to reset cart", "error", err)
+		}
 	})
 
+	// Handle session timeout
+	selector.AddFuture(sessionTimeout, func(f workflow.Future) {
+		logger.Info("Cart session timed out, resetting cart", "customerID", customerID)
+		_ = workflow.ExecuteActivity(ctx, "ResetCart", activities.ResetCartRequest{
+			CustomerID: customerID,
+		}).Get(ctx, nil)
+	})
+
+	// Process signals until timeout
 	for {
 		selector.Select(ctx)
 	}
-
-	return nil
 }

@@ -25,3 +25,19 @@ data:
     -- Grant grafana access to pg_statio_user_tables via pg_read_all_stats role
     GRANT pg_read_all_stats TO grafana;
     GRANT pg_read_all_settings TO grafana;
+
+    -- OMS schema for Order Management System
+    CREATE SCHEMA IF NOT EXISTS oms AUTHORIZATION shop;
+    COMMENT ON SCHEMA oms IS 'Order Management System';
+
+    -- Grant OMS user access to oms schema
+    GRANT CONNECT ON DATABASE shop TO oms;
+    GRANT USAGE ON SCHEMA oms TO oms;
+    GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA oms TO oms;
+    GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA oms TO oms;
+    ALTER DEFAULT PRIVILEGES FOR ROLE shop IN SCHEMA oms GRANT ALL ON TABLES TO oms;
+    ALTER DEFAULT PRIVILEGES FOR ROLE shop IN SCHEMA oms GRANT ALL ON SEQUENCES TO oms;
+
+    -- Grant grafana read access to oms schema for monitoring
+    GRANT USAGE ON SCHEMA oms TO grafana;
+    ALTER DEFAULT PRIVILEGES FOR ROLE shop IN SCHEMA oms GRANT SELECT ON TABLES TO grafana;

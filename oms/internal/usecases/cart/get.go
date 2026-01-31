@@ -2,34 +2,24 @@ package cart
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	"github.com/google/uuid"
 
+	"github.com/shortlink-org/shop/oms/internal/boundary/ports"
 	v1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
-	v3 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1/model/v1"
-	"github.com/shortlink-org/shop/oms/internal/usecases/cart/dto"
 )
 
-// Get gets the cart.
-func (uc *UC) Get(ctx context.Context, customerId uuid.UUID) (*v1.State, error) {
-	workflowId := fmt.Sprintf("cart-%s", customerId)
-
-	resp, err := uc.temporalClient.QueryWorkflow(ctx, workflowId, "", v1.Event_EVENT_GET.String(), nil)
+// Get retrieves the cart for a customer.
+func (uc *UC) Get(ctx context.Context, customerID uuid.UUID) (*v1.State, error) {
+	cart, err := uc.cartRepo.Load(ctx, customerID)
 	if err != nil {
+		if errors.Is(err, ports.ErrNotFound) {
+			// Return empty cart if not found
+			return v1.New(customerID), nil
+		}
 		return nil, err
 	}
 
-	var cartState v3.CartState
-	err = resp.Get(&cartState)
-	if err != nil {
-		return nil, err
-	}
-
-	state, err := dto.CartStateToCartState(&cartState)
-	if err != nil {
-		return nil, err
-	}
-
-	return state, nil
+	return cart, nil
 }

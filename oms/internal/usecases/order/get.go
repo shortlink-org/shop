@@ -2,33 +2,18 @@ package order
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/google/uuid"
 
 	v1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
-	v3 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/model/v1"
-	"github.com/shortlink-org/shop/oms/internal/usecases/order/dto"
 )
 
-func (uc *UC) Get(ctx context.Context, orderId uuid.UUID) (*v1.OrderState, error) {
-	workflowId := fmt.Sprintf("order-%s", orderId.String())
+// Get retrieves an order by ID from the database.
+func (uc *UC) Get(ctx context.Context, orderID uuid.UUID) (*v1.OrderState, error) {
+	return uc.orderRepo.Load(ctx, orderID)
+}
 
-	resp, err := uc.temporalClient.QueryWorkflow(ctx, workflowId, "", v1.WorkflowQueryGet, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	var orderState v3.OrderState
-	err = resp.Get(&orderState)
-	if err != nil {
-		return nil, err
-	}
-
-	state, err := dto.OrderStateToDomain(&orderState)
-	if err != nil {
-		return nil, err
-	}
-
-	return state, nil
+// ListByCustomer retrieves all orders for a customer.
+func (uc *UC) ListByCustomer(ctx context.Context, customerID uuid.UUID) ([]*v1.OrderState, error) {
+	return uc.orderRepo.ListByCustomer(ctx, customerID)
 }

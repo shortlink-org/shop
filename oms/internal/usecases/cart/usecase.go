@@ -1,13 +1,19 @@
 /*
 OMS UC. Application layer
+
+This package implements the Cart use case following the pattern:
+  Load -> domain method(s) -> Save
+
+Repository is a storage adapter (infrastructure layer), NOT a use-case.
+Business operations belong to domain aggregate methods.
 */
 package cart
 
 import (
 	"github.com/authzed/authzed-go/v1"
 	logger "github.com/shortlink-org/go-sdk/logger"
-	"go.temporal.io/sdk/client"
 
+	"github.com/shortlink-org/shop/oms/internal/boundary/ports"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/index"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/websocket"
 )
@@ -19,8 +25,8 @@ type UC struct {
 	// Security
 	permission *authzed.Client
 
-	// Temporal
-	temporalClient client.Client
+	// Repository for cart persistence
+	cartRepo ports.CartRepository
 
 	// Index for tracking goods in carts
 	goodsIndex *index.CartGoodsIndex
@@ -30,15 +36,15 @@ type UC struct {
 }
 
 // New creates a new cart usecase
-func New(log logger.Logger, permissionClient *authzed.Client, temporalClient client.Client) (*UC, error) {
+func New(log logger.Logger, permissionClient *authzed.Client, cartRepo ports.CartRepository) (*UC, error) {
 	service := &UC{
 		log: log,
 
 		// Security
 		permission: permissionClient,
 
-		// Temporal
-		temporalClient: temporalClient,
+		// Repository
+		cartRepo: cartRepo,
 
 		// Index for tracking goods in carts
 		goodsIndex: index.NewCartGoodsIndex(),

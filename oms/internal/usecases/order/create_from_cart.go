@@ -10,12 +10,8 @@ import (
 	orderDomain "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 )
 
-// CartRepository defines the interface for cart repository operations
-type CartRepository interface {
-	GetCart(ctx context.Context, customerId uuid.UUID) (*cartDomain.State, error)
-}
-
-// StockChecker defines the interface for checking stock availability
+// StockChecker defines the interface for checking stock availability.
+// This interface should be implemented by the stock service adapter.
 type StockChecker interface {
 	CheckStockAvailability(ctx context.Context, goodId uuid.UUID, requestedQuantity int32) (bool, uint32, error)
 }
@@ -44,22 +40,18 @@ type OrderCreationWarning struct {
 
 // CreateFromCart creates an order from a customer's cart.
 // This is an application layer service that orchestrates:
-// - Cart repository access
 // - Stock availability checking
 // - Domain logic for converting cart to order
 // - Business rules application
+//
+// Note: The cart should be loaded by the caller (using CartRepository.Load)
+// and passed directly. This follows the pattern where UseCase receives
+// already-loaded aggregates when orchestrating across bounded contexts.
 func (uc *UC) CreateFromCart(
 	ctx context.Context,
-	customerId uuid.UUID,
-	cartRepo CartRepository,
+	cart *cartDomain.State,
 	stockChecker StockChecker,
 ) (*CreateOrderFromCartResult, error) {
-	// Get the cart
-	cart, err := cartRepo.GetCart(ctx, customerId)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get cart: %w", err)
-	}
-
 	// Validate cart is not empty
 	cartItems := cart.GetItems()
 	if len(cartItems) == 0 {

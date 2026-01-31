@@ -13,6 +13,7 @@ import (
 	"github.com/shortlink-org/go-sdk/auth/permission"
 	"github.com/shortlink-org/go-sdk/config"
 	"github.com/shortlink-org/go-sdk/context"
+	"github.com/shortlink-org/go-sdk/db"
 	"github.com/shortlink-org/go-sdk/flags"
 	"github.com/shortlink-org/go-sdk/grpc"
 	"github.com/shortlink-org/go-sdk/logger"
@@ -20,11 +21,15 @@ import (
 	"github.com/shortlink-org/go-sdk/observability/profiling"
 	"github.com/shortlink-org/go-sdk/observability/tracing"
 	"github.com/shortlink-org/go-sdk/temporal"
+	"github.com/shortlink-org/shop/oms/internal/boundary/ports"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart"
+	postgres2 "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1"
 	v1_2 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/run"
 	"github.com/shortlink-org/shop/oms/internal/usecases/cart"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order"
+	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/trace"
 	"go.temporal.io/sdk/client"
 )
@@ -75,6 +80,31 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
+	meterProvider := monitoring.Metrics
+	db, err := newDatabase(context, logger, tracerProvider, meterProvider, config)
+	if err != nil {
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	store, err := newCartRepository(context, db)
+	if err != nil {
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	postgresStore, err := newOrderRepository(context, db)
+	if err != nil {
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
 	server, err := newGRPCServer(context, logger, tracerProvider, monitoring, config)
 	if err != nil {
 		cleanup4()
@@ -83,15 +113,7 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	clientClient, err := temporal.New(logger, config, tracerProvider, monitoring)
-	if err != nil {
-		cleanup4()
-		cleanup3()
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	uc, err := cart.New(logger, client, clientClient)
+	uc, err := cart.New(logger, client, store)
 	if err != nil {
 		cleanup4()
 		cleanup3()
@@ -115,7 +137,15 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	orderUC, err := order.New(logger, client, clientClient)
+	clientClient, err := temporal.New(logger, config, tracerProvider, monitoring)
+	if err != nil {
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	orderUC, err := order.New(logger, client, postgresStore, clientClient)
 	if err != nil {
 		cleanup4()
 		cleanup3()
@@ -131,7 +161,7 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	omsService, err := NewOMSService(logger, config, monitoring, tracerProvider, pprofEndpoint, client, response, cartRPC, orderRPC, clientClient)
+	omsService, err := NewOMSService(logger, config, monitoring, tracerProvider, pprofEndpoint, client, db, store, postgresStore, response, cartRPC, orderRPC, uc, orderUC, clientClient)
 	if err != nil {
 		cleanup4()
 		cleanup3()
@@ -162,13 +192,21 @@ type OMSService struct {
 	// Security
 	authPermission *authzed.Client
 
+	// Database
+	DB db.DB
+
+	// Repositories
+	CartRepo  ports.CartRepository
+	OrderRepo ports.OrderRepository
+
 	// Delivery
 	run            *run.Response
 	cartRPCServer  *v1.CartRPC
 	orderRPCServer *v1_2.OrderRPC
 
 	// Applications
-	cartService *cart.UC
+	CartService  *cart.UC
+	OrderService *order.UC
 
 	// Temporal
 	temporalClient client.Client
@@ -187,7 +225,10 @@ var OMSSet = wire.NewSet(
 	newGoSDKLogger,
 
 	newGoSDKTracer,
-	newGoSDKMonitoring, v1.New, v1_2.New, NewRunRPCServer, cart.New, order.New, temporal.New, NewOMSService,
+	newGoSDKMonitoring,
+
+	newDatabase, wire.FieldsOf(new(*metrics.Monitoring), "Metrics"), newCartRepository,
+	newOrderRepository, wire.Bind(new(ports.CartRepository), new(*postgres.Store)), wire.Bind(new(ports.OrderRepository), new(*postgres2.Store)), v1.New, v1_2.New, NewRunRPCServer, cart.New, order.New, temporal.New, NewOMSService,
 )
 
 // newGRPCServer creates a gRPC server using go-sdk/grpc
@@ -225,6 +266,21 @@ func newGoSDKProfiling(ctx2 context.Context, log logger.Logger, tracer trace.Tra
 	return profiling.New(ctx2, log, tracer, cfg)
 }
 
+// newDatabase creates a database connection using go-sdk/db
+func newDatabase(ctx2 context.Context, log logger.Logger, tracer trace.TracerProvider, meterProvider *metric.MeterProvider, cfg *config.Config) (db.DB, error) {
+	return db.New(ctx2, log, tracer, meterProvider, cfg)
+}
+
+// newCartRepository creates a PostgreSQL cart repository
+func newCartRepository(ctx2 context.Context, store db.DB) (*postgres.Store, error) {
+	return postgres.New(ctx2, store)
+}
+
+// newOrderRepository creates a PostgreSQL order repository
+func newOrderRepository(ctx2 context.Context, store db.DB) (*postgres2.Store, error) {
+	return postgres2.New(ctx2, store)
+}
+
 func NewOMSService(
 
 	log logger.Logger, config2 *config.Config,
@@ -233,9 +289,17 @@ func NewOMSService(
 	tracer trace.TracerProvider,
 	pprofHTTP profiling.PprofEndpoint,
 
-	authPermission *authzed.Client, run2 *run.Response,
+	authPermission *authzed.Client,
+
+	database db.DB,
+
+	cartRepository ports.CartRepository,
+	orderRepository ports.OrderRepository, run2 *run.Response,
 	cartRPCServer *v1.CartRPC,
 	orderRPCServer *v1_2.OrderRPC,
+
+	cartService *cart.UC,
+	orderService *order.UC,
 
 	temporalClient client.Client,
 ) (*OMSService, error) {
@@ -248,9 +312,17 @@ func NewOMSService(
 		Monitoring:    monitoring,
 		PprofEndpoint: pprofHTTP,
 
+		DB: database,
+
+		CartRepo:  cartRepository,
+		OrderRepo: orderRepository,
+
 		run:            run2,
 		cartRPCServer:  cartRPCServer,
 		orderRPCServer: orderRPCServer,
+
+		CartService:  cartService,
+		OrderService: orderService,
 
 		temporalClient: temporalClient,
 	}, nil

@@ -21,6 +21,8 @@ type OrderState struct {
 	items Items
 	// customerId is the customer ID
 	customerId uuid.UUID
+	// version is used for optimistic concurrency control
+	version int
 	// fsm is the finite state machine for the order status
 	fsm *fsm.FSM
 	// domainEvents stores domain events that occurred during aggregate operations
@@ -34,6 +36,7 @@ func NewOrderState(customerId uuid.UUID) *OrderState {
 		id:           uuid.New(),
 		items:        make(Items, 0),
 		customerId:   customerId,
+		version:      0,
 		domainEvents: make([]DomainEvent, 0),
 	}
 

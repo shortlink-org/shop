@@ -9,15 +9,15 @@ import (
 	v1 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1/model/v1"
 )
 
-// Add adds an item to the cart
+// Add adds items to the cart
 func (c *CartRPC) Add(ctx context.Context, in *v1.AddRequest) (*emptypb.Empty, error) {
-	request, err := dto.AddRequestToDomain(in)
+	params, err := dto.AddRequestToDomain(in)
 	if err != nil {
 		return nil, err
 	}
 
-	err = c.cartService.Add(ctx, request)
-	if err != nil {
+	// Add items using the new UseCase signature
+	if err := c.cartService.AddItems(ctx, params.CustomerID, params.Items); err != nil {
 		return nil, err
 	}
 

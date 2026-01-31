@@ -140,3 +140,6 @@ spec:
       databases:
         - shop
       options: "SUPERUSER"
+    - name: oms
+      databases:
+        - shop

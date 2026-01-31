@@ -9,15 +9,15 @@ import (
 	v1 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1/model/v1"
 )
 
+// Remove removes items from the cart
 func (c *CartRPC) Remove(ctx context.Context, in *v1.RemoveRequest) (*emptypb.Empty, error) {
-	request, err := dto.RemoveRequestToDomain(in)
+	params, err := dto.RemoveRequestToDomain(in)
 	if err != nil {
 		return nil, err
 	}
 
-	// Signal the Temporal workflow to remove the items
-	err = c.cartService.Remove(ctx, request)
-	if err != nil {
+	// Remove items using the new UseCase signature
+	if err := c.cartService.RemoveItems(ctx, params.CustomerID, params.Items); err != nil {
 		return nil, err
 	}
 
