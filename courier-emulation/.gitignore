@@ -1,5 +1,5 @@
-# Binary
-courier-emulation
+# Binary (in root of courier-emulation directory)
+/courier-emulation
 
 # OSRM generated files
 data/*.osrm

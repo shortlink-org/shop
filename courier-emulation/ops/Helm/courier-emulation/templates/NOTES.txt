@@ -1,0 +1,7 @@
+Courier Emulation has been deployed!
+
+To check the status:
+  kubectl get pods -l app.kubernetes.io/name={{ include "shortlink-template.name" . }}
+
+To view logs:
+  kubectl logs -l app.kubernetes.io/name={{ include "shortlink-template.name" . }} -f

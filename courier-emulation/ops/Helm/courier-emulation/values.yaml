@@ -1,0 +1,90 @@
+# Common default values for Courier Emulation.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# -- Pods Service Account
+# @ignored ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+serviceAccount:
+  create: true
+
+# ==============================================================================
+deploy:
+  # type: Deployment, Rollout, StatefulSet
+  type: Rollout
+
+  image:
+    repository: registry.gitlab.com/shortlink-org/shortlink/courier-emulation
+    tag: latest
+    # -- Global imagePullPolicy
+    # Default: 'Always' if image tag is 'latest', else 'IfNotPresent'
+    # Ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+    pullPolicy: Always
+
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+
+  env:
+    TRACER_URI: grafana-tempo.grafana:4317
+
+  # -- define a liveness probe that checks every 5 seconds, starting after 5 seconds
+  livenessProbe:
+    enabled: true
+    httpGet:
+      path: /live
+      port: 9090
+
+  # -- define a readiness probe that checks every 5 seconds, starting after 5 seconds
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /ready
+      port: 9090
+
+service:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      public: true
+    - name: metrics
+      port: 9090
+      protocol: TCP
+      public: true
+
+# ==============================================================================
+# Prometheus Operator ServiceMonitor configuration
+monitoring:
+  enabled: true
+
+# ==============================================================================
+# PodDisruptionBudget
+podDisruptionBudget:
+  enabled: false
+
+# ==============================================================================
+# NetworkPolicy
+networkPolicy:
+  enabled: true
+
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: shortlink-shop
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-system
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-ingress
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: prometheus-operator
+  policyTypes:
+    - Ingress
