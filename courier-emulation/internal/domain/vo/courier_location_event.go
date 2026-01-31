@@ -11,10 +11,10 @@ type CourierLocationEvent struct {
 	CourierID string    `json:"courier_id"`
 	Location  Location  `json:"location"`
 	Timestamp time.Time `json:"timestamp"`
-	Speed     float64   `json:"speed_kmh,omitempty"`  // current speed in km/h
-	Heading   float64   `json:"heading,omitempty"`    // heading in degrees (0-360)
-	RouteID   string    `json:"route_id,omitempty"`   // current route being followed
-	Status    string    `json:"status"`               // moving, idle, delivering
+	Speed     float64   `json:"speed_kmh,omitempty"` // current speed in km/h
+	Heading   float64   `json:"heading,omitempty"`   // heading in degrees (0-360)
+	RouteID   string    `json:"route_id,omitempty"`  // current route being followed
+	Status    string    `json:"status"`              // moving, idle, delivering
 }
 
 // NewCourierLocationEvent creates a new courier location event.

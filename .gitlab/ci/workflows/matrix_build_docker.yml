@@ -66,4 +66,4 @@
       - APPLICATION: ui
         REGISTRY_IMAGE: $CI_REGISTRY_IMAGE/$APPLICATION
         WORKDIR: $APPLICATION
-        DOCKERFILE_PATH: ops/Dockerfile
+        DOCKERFILE_PATH: ops/dockerfile/Dockerfile

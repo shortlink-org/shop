@@ -176,22 +176,3 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-// Local development - replace with local paths when developing
-// Comment out for CI/CD or production builds
-replace (
-	github.com/shortlink-org/go-sdk/auth => ../../go-sdk/auth
-	github.com/shortlink-org/go-sdk/config => ../../go-sdk/config
-	github.com/shortlink-org/go-sdk/context => ../../go-sdk/context
-	github.com/shortlink-org/go-sdk/db => ../../go-sdk/db
-	github.com/shortlink-org/go-sdk/flags => ../../go-sdk/flags
-	github.com/shortlink-org/go-sdk/flight_trace => ../../go-sdk/flight_trace
-	github.com/shortlink-org/go-sdk/fsm => ../../go-sdk/fsm
-	github.com/shortlink-org/go-sdk/graceful_shutdown => ../../go-sdk/graceful_shutdown
-	github.com/shortlink-org/go-sdk/grpc => ../../go-sdk/grpc
-	github.com/shortlink-org/go-sdk/http => ../../go-sdk/http
-	github.com/shortlink-org/go-sdk/logger => ../../go-sdk/logger
-	github.com/shortlink-org/go-sdk/observability => ../../go-sdk/observability
-	github.com/shortlink-org/go-sdk/specification => ../../go-sdk/specification
-	github.com/shortlink-org/go-sdk/temporal => ../../go-sdk/temporal
-)
