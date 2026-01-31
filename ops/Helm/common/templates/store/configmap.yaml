@@ -32,11 +32,14 @@ data:
 
     -- Grant OMS user access to oms schema
     GRANT CONNECT ON DATABASE shop TO oms;
-    GRANT USAGE ON SCHEMA oms TO oms;
+    GRANT USAGE, CREATE ON SCHEMA oms TO oms;
     GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA oms TO oms;
     GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA oms TO oms;
     ALTER DEFAULT PRIVILEGES FOR ROLE shop IN SCHEMA oms GRANT ALL ON TABLES TO oms;
     ALTER DEFAULT PRIVILEGES FOR ROLE shop IN SCHEMA oms GRANT ALL ON SEQUENCES TO oms;
+
+    -- Grant CREATE on public schema for migration tracking tables
+    GRANT USAGE, CREATE ON SCHEMA public TO oms;
 
     -- Grant grafana read access to oms schema for monitoring
     GRANT USAGE ON SCHEMA oms TO grafana;
@@ -48,11 +51,14 @@ data:
 
     -- Grant delivery user access to delivery schema
     GRANT CONNECT ON DATABASE shop TO delivery;
-    GRANT USAGE ON SCHEMA delivery TO delivery;
+    GRANT USAGE, CREATE ON SCHEMA delivery TO delivery;
     GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA delivery TO delivery;
     GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA delivery TO delivery;
     ALTER DEFAULT PRIVILEGES FOR ROLE shop IN SCHEMA delivery GRANT ALL ON TABLES TO delivery;
     ALTER DEFAULT PRIVILEGES FOR ROLE shop IN SCHEMA delivery GRANT ALL ON SEQUENCES TO delivery;
+
+    -- Grant CREATE on public schema for migration tracking tables
+    GRANT USAGE, CREATE ON SCHEMA public TO delivery;
 
     -- Grant grafana read access to delivery schema for monitoring
     GRANT USAGE ON SCHEMA delivery TO grafana;
