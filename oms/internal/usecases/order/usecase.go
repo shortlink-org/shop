@@ -2,7 +2,8 @@
 OMS UC. Application layer
 
 This package implements the Order use case following the pattern:
-  Load -> domain method(s) -> Save
+
+	Load -> domain method(s) -> Save
 
 For complex order workflows (sagas), Temporal is used for orchestration.
 Repository handles persistence, Temporal handles workflow coordination.

@@ -1,8 +1,8 @@
 package dto
 
 import (
-	commonv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common/v1"
 	orderDomain "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
+	commonv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common/v1"
 	"github.com/shortlink-org/shop/oms/internal/domain/order/v1/vo/address"
 	"github.com/shortlink-org/shop/oms/internal/domain/order/v1/vo/location"
 )

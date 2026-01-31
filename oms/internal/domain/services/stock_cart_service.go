@@ -91,4 +91,3 @@ func (s *StockCartService) ProcessStockDepletion(
 		Quantity:   itemQuantity,
 	}
 }
-

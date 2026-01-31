@@ -6,8 +6,8 @@ import (
 	"context"
 	"embed"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/shortlink-org/go-sdk/db"
 	"github.com/shortlink-org/go-sdk/db/drivers/postgres/migrate"

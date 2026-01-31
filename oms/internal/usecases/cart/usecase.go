@@ -2,7 +2,8 @@
 OMS UC. Application layer
 
 This package implements the Cart use case following the pattern:
-  Load -> domain method(s) -> Save
+
+	Load -> domain method(s) -> Save
 
 Repository is a storage adapter (infrastructure layer), NOT a use-case.
 Business operations belong to domain aggregate methods.

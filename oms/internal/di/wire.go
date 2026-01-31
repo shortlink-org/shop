@@ -13,9 +13,9 @@ import (
 
 	"github.com/authzed/authzed-go/v1"
 	"github.com/google/wire"
+	shopspringDecimal "github.com/jackc/pgx-shopspring-decimal"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	shopspringDecimal "github.com/jackc/pgx-shopspring-decimal"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/trace"
 	"go.temporal.io/sdk/client"
@@ -36,15 +36,15 @@ import (
 
 	"github.com/shortlink-org/shop/oms/internal/boundary/ports"
 	redisIndex "github.com/shortlink-org/shop/oms/internal/infrastructure/index/redis"
+	cartRepo "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart"
+	orderRepo "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order"
 	cartRPC "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1"
 	orderRPC "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/run"
-	cartRepo "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart"
-	orderRepo "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order"
-	pguow "github.com/shortlink-org/shop/oms/pkg/uow/postgres"
 	"github.com/shortlink-org/shop/oms/internal/usecases/cart"
 	"github.com/shortlink-org/shop/oms/internal/usecases/checkout"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order"
+	pguow "github.com/shortlink-org/shop/oms/pkg/uow/postgres"
 )
 
 type OMSService struct {

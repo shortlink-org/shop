@@ -49,4 +49,3 @@ func Reconstitute(customerId uuid.UUID, items itemsv1.Items, version int) *State
 func (s *State) GetVersion() int {
 	return s.version
 }
-
