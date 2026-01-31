@@ -21,6 +21,13 @@ const OrderWorkflowName = "OrderWorkflow"
 // Create creates a new order and persists it to the database.
 // For complex order processing (sagas), a Temporal workflow is started.
 func (uc *UC) Create(ctx context.Context, orderID uuid.UUID, customerID uuid.UUID, items v2.Items) error {
+	// Begin transaction
+	ctx, err := uc.uow.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() { _ = uc.uow.Rollback(ctx) }()
+
 	// 1. Create domain aggregate
 	order := v2.NewOrderState(customerID)
 	order.SetID(orderID)
@@ -35,11 +42,16 @@ func (uc *UC) Create(ctx context.Context, orderID uuid.UUID, customerID uuid.UUI
 		return err
 	}
 
+	// Commit transaction before starting workflow
+	if err := uc.uow.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
 	// 4. Start Temporal workflow for order processing (saga pattern)
 	// Note: We use workflow name string to avoid import cycle.
 	// The workflow is registered in the worker with this name.
 	workflowID := fmt.Sprintf("order-%s", orderID.String())
-	_, err := uc.temporalClient.ExecuteWorkflow(ctx, client.StartWorkflowOptions{
+	_, err = uc.temporalClient.ExecuteWorkflow(ctx, client.StartWorkflowOptions{
 		ID:        workflowID,
 		TaskQueue: temporal.GetQueueName(v1.OrderTaskQueue),
 	}, OrderWorkflowName, orderID, customerID, items)
@@ -58,6 +70,13 @@ func (uc *UC) Create(ctx context.Context, orderID uuid.UUID, customerID uuid.UUI
 // CreateInDB creates an order directly in the database without starting a workflow.
 // This is used by Temporal activities when the workflow orchestration calls this.
 func (uc *UC) CreateInDB(ctx context.Context, orderID uuid.UUID, customerID uuid.UUID, items v2.Items) error {
+	// Begin transaction
+	ctx, err := uc.uow.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() { _ = uc.uow.Rollback(ctx) }()
+
 	// 1. Create domain aggregate
 	order := v2.NewOrderState(customerID)
 	order.SetID(orderID)
@@ -68,5 +87,10 @@ func (uc *UC) CreateInDB(ctx context.Context, orderID uuid.UUID, customerID uuid
 	}
 
 	// 3. Persist to database
-	return uc.orderRepo.Save(ctx, order)
+	if err := uc.orderRepo.Save(ctx, order); err != nil {
+		return err
+	}
+
+	// Commit transaction
+	return uc.uow.Commit(ctx)
 }

@@ -13,6 +13,13 @@ import (
 // Cancel cancels an order using the pattern: Load -> domain method -> Save
 // Also signals the Temporal workflow if one exists.
 func (uc *UC) Cancel(ctx context.Context, orderID uuid.UUID) error {
+	// Begin transaction
+	ctx, err := uc.uow.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() { _ = uc.uow.Rollback(ctx) }()
+
 	// 1. Load aggregate
 	order, err := uc.orderRepo.Load(ctx, orderID)
 	if err != nil {
@@ -27,6 +34,11 @@ func (uc *UC) Cancel(ctx context.Context, orderID uuid.UUID) error {
 	// 3. Save aggregate
 	if err := uc.orderRepo.Save(ctx, order); err != nil {
 		return err
+	}
+
+	// Commit transaction before signaling workflow
+	if err := uc.uow.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
 	// 4. Signal Temporal workflow (if running)
@@ -44,6 +56,13 @@ func (uc *UC) Cancel(ctx context.Context, orderID uuid.UUID) error {
 // CancelInDB cancels an order directly in the database without signaling workflow.
 // This is used by Temporal activities when the workflow calls this for compensation.
 func (uc *UC) CancelInDB(ctx context.Context, orderID uuid.UUID) error {
+	// Begin transaction
+	ctx, err := uc.uow.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() { _ = uc.uow.Rollback(ctx) }()
+
 	// 1. Load aggregate
 	order, err := uc.orderRepo.Load(ctx, orderID)
 	if err != nil {
@@ -56,5 +75,10 @@ func (uc *UC) CancelInDB(ctx context.Context, orderID uuid.UUID) error {
 	}
 
 	// 3. Save aggregate
-	return uc.orderRepo.Save(ctx, order)
+	if err := uc.orderRepo.Save(ctx, order); err != nil {
+		return err
+	}
+
+	// Commit transaction
+	return uc.uow.Commit(ctx)
 }

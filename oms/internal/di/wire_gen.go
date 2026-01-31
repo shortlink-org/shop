@@ -10,6 +10,8 @@ import (
 	"context"
 	"github.com/authzed/authzed-go/v1"
 	"github.com/google/wire"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/rueidis"
 	"github.com/shortlink-org/go-sdk/auth/permission"
 	"github.com/shortlink-org/go-sdk/config"
 	"github.com/shortlink-org/go-sdk/context"
@@ -22,12 +24,15 @@ import (
 	"github.com/shortlink-org/go-sdk/observability/tracing"
 	"github.com/shortlink-org/go-sdk/temporal"
 	"github.com/shortlink-org/shop/oms/internal/boundary/ports"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/index/redis"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart"
 	postgres2 "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/uow"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1"
 	v1_2 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/run"
 	"github.com/shortlink-org/shop/oms/internal/usecases/cart"
+	"github.com/shortlink-org/shop/oms/internal/usecases/checkout"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/trace"
@@ -89,6 +94,14 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
+	postgresUoW, err := newUnitOfWork(db)
+	if err != nil {
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
 	store, err := newCartRepository(context, db)
 	if err != nil {
 		cleanup4()
@@ -113,8 +126,18 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	uc, err := cart.New(logger, client, store)
+	rueidisClient, cleanup5, err := newRedisClient(config)
 	if err != nil {
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	cartGoodsIndex := newCartGoodsIndex(rueidisClient)
+	uc, err := cart.New(logger, client, postgresUoW, store, cartGoodsIndex)
+	if err != nil {
+		cleanup5()
 		cleanup4()
 		cleanup3()
 		cleanup2()
@@ -123,6 +146,7 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	}
 	cartRPC, err := v1.New(server, logger, uc)
 	if err != nil {
+		cleanup5()
 		cleanup4()
 		cleanup3()
 		cleanup2()
@@ -131,6 +155,7 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	}
 	response, err := NewRunRPCServer(server, cartRPC)
 	if err != nil {
+		cleanup5()
 		cleanup4()
 		cleanup3()
 		cleanup2()
@@ -139,14 +164,16 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	}
 	clientClient, err := temporal.New(logger, config, tracerProvider, monitoring)
 	if err != nil {
+		cleanup5()
 		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	orderUC, err := order.New(logger, client, postgresStore, clientClient)
+	orderUC, err := order.New(logger, client, postgresUoW, postgresStore, clientClient)
 	if err != nil {
+		cleanup5()
 		cleanup4()
 		cleanup3()
 		cleanup2()
@@ -155,14 +182,17 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	}
 	orderRPC, err := v1_2.New(server, logger, orderUC)
 	if err != nil {
+		cleanup5()
 		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	omsService, err := NewOMSService(logger, config, monitoring, tracerProvider, pprofEndpoint, client, db, store, postgresStore, response, cartRPC, orderRPC, uc, orderUC, clientClient)
+	checkoutUC := checkout.New(logger, postgresUoW, store, postgresStore)
+	omsService, err := NewOMSService(logger, config, monitoring, tracerProvider, pprofEndpoint, client, db, postgresUoW, store, postgresStore, response, cartRPC, orderRPC, uc, orderUC, checkoutUC, clientClient)
 	if err != nil {
+		cleanup5()
 		cleanup4()
 		cleanup3()
 		cleanup2()
@@ -170,6 +200,7 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		return nil, nil, err
 	}
 	return omsService, func() {
+		cleanup5()
 		cleanup4()
 		cleanup3()
 		cleanup2()
@@ -195,6 +226,9 @@ type OMSService struct {
 	// Database
 	DB db.DB
 
+	// UnitOfWork
+	UoW ports.UnitOfWork
+
 	// Repositories
 	CartRepo  ports.CartRepository
 	OrderRepo ports.OrderRepository
@@ -205,8 +239,9 @@ type OMSService struct {
 	orderRPCServer *v1_2.OrderRPC
 
 	// Applications
-	CartService  *cart.UC
-	OrderService *order.UC
+	CartService     *cart.UC
+	OrderService    *order.UC
+	CheckoutService *checkout.UC
 
 	// Temporal
 	temporalClient client.Client
@@ -227,8 +262,10 @@ var OMSSet = wire.NewSet(
 	newGoSDKTracer,
 	newGoSDKMonitoring,
 
-	newDatabase, wire.FieldsOf(new(*metrics.Monitoring), "Metrics"), newCartRepository,
-	newOrderRepository, wire.Bind(new(ports.CartRepository), new(*postgres.Store)), wire.Bind(new(ports.OrderRepository), new(*postgres2.Store)), v1.New, v1_2.New, NewRunRPCServer, cart.New, order.New, temporal.New, NewOMSService,
+	newDatabase, wire.FieldsOf(new(*metrics.Monitoring), "Metrics"), newRedisClient,
+
+	newUnitOfWork, wire.Bind(new(ports.UnitOfWork), new(*uow.PostgresUoW)), newCartRepository,
+	newOrderRepository, wire.Bind(new(ports.CartRepository), new(*postgres.Store)), wire.Bind(new(ports.OrderRepository), new(*postgres2.Store)), newCartGoodsIndex, wire.Bind(new(ports.CartGoodsIndex), new(*redis.CartGoodsIndex)), v1.New, v1_2.New, NewRunRPCServer, cart.New, order.New, checkout.New, temporal.New, NewOMSService,
 )
 
 // newGRPCServer creates a gRPC server using go-sdk/grpc
@@ -271,6 +308,15 @@ func newDatabase(ctx2 context.Context, log logger.Logger, tracer trace.TracerPro
 	return db.New(ctx2, log, tracer, meterProvider, cfg)
 }
 
+// newUnitOfWork creates a PostgreSQL UnitOfWork
+func newUnitOfWork(store db.DB) (*uow.PostgresUoW, error) {
+	pool, ok := store.GetConn().(*pgxpool.Pool)
+	if !ok {
+		return nil, db.ErrGetConnection
+	}
+	return uow.New(pool), nil
+}
+
 // newCartRepository creates a PostgreSQL cart repository
 func newCartRepository(ctx2 context.Context, store db.DB) (*postgres.Store, error) {
 	return postgres.New(ctx2, store)
@@ -279,6 +325,33 @@ func newCartRepository(ctx2 context.Context, store db.DB) (*postgres.Store, erro
 // newOrderRepository creates a PostgreSQL order repository
 func newOrderRepository(ctx2 context.Context, store db.DB) (*postgres2.Store, error) {
 	return postgres2.New(ctx2, store)
+}
+
+// newRedisClient creates a Redis client using rueidis
+func newRedisClient(cfg *config.Config) (rueidis.Client, func(), error) {
+
+	redisURI := cfg.GetString("STORE_REDIS_URI")
+	if redisURI == "" {
+		redisURI = "localhost:6379"
+	}
+	client2, err := rueidis.NewClient(rueidis.ClientOption{
+		InitAddress: []string{redisURI},
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	cleanup := func() {
+		client2.
+			Close()
+	}
+
+	return client2, cleanup, nil
+}
+
+// newCartGoodsIndex creates a Redis-backed cart goods index
+func newCartGoodsIndex(client2 rueidis.Client) *redis.CartGoodsIndex {
+	return redis.New(client2)
 }
 
 func NewOMSService(
@@ -293,6 +366,8 @@ func NewOMSService(
 
 	database db.DB,
 
+	unitOfWork ports.UnitOfWork,
+
 	cartRepository ports.CartRepository,
 	orderRepository ports.OrderRepository, run2 *run.Response,
 	cartRPCServer *v1.CartRPC,
@@ -300,6 +375,7 @@ func NewOMSService(
 
 	cartService *cart.UC,
 	orderService *order.UC,
+	checkoutService *checkout.UC,
 
 	temporalClient client.Client,
 ) (*OMSService, error) {
@@ -314,6 +390,8 @@ func NewOMSService(
 
 		DB: database,
 
+		UoW: unitOfWork,
+
 		CartRepo:  cartRepository,
 		OrderRepo: orderRepository,
 
@@ -321,8 +399,9 @@ func NewOMSService(
 		cartRPCServer:  cartRPCServer,
 		orderRPCServer: orderRPCServer,
 
-		CartService:  cartService,
-		OrderService: orderService,
+		CartService:     cartService,
+		OrderService:    orderService,
+		CheckoutService: checkoutService,
 
 		temporalClient: temporalClient,
 	}, nil

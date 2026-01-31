@@ -13,6 +13,7 @@ import (
 
 	"github.com/authzed/authzed-go/v1"
 	"github.com/google/wire"
+	"github.com/jackc/pgx/v5/pgxpool"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/trace"
 	"go.temporal.io/sdk/client"
@@ -29,13 +30,18 @@ import (
 	"github.com/shortlink-org/go-sdk/observability/tracing"
 	"github.com/shortlink-org/go-sdk/temporal"
 
+	"github.com/redis/rueidis"
+
 	"github.com/shortlink-org/shop/oms/internal/boundary/ports"
+	redisIndex "github.com/shortlink-org/shop/oms/internal/infrastructure/index/redis"
 	cartRPC "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1"
 	orderRPC "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/run"
 	cartRepo "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart"
 	orderRepo "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/uow"
 	"github.com/shortlink-org/shop/oms/internal/usecases/cart"
+	"github.com/shortlink-org/shop/oms/internal/usecases/checkout"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order"
 )
 
@@ -55,6 +61,9 @@ type OMSService struct {
 	// Database
 	DB db.DB
 
+	// UnitOfWork
+	UoW ports.UnitOfWork
+
 	// Repositories
 	CartRepo  ports.CartRepository
 	OrderRepo ports.OrderRepository
@@ -65,8 +74,9 @@ type OMSService struct {
 	orderRPCServer *orderRPC.OrderRPC
 
 	// Applications
-	CartService  *cart.UC
-	OrderService *order.UC
+	CartService     *cart.UC
+	OrderService    *order.UC
+	CheckoutService *checkout.UC
 
 	// Temporal
 	temporalClient client.Client
@@ -98,11 +108,22 @@ var OMSSet = wire.NewSet(
 	newDatabase,
 	wire.FieldsOf(new(*metrics.Monitoring), "Metrics"),
 
+	// Redis
+	newRedisClient,
+
+	// UnitOfWork
+	newUnitOfWork,
+	wire.Bind(new(ports.UnitOfWork), new(*uow.PostgresUoW)),
+
 	// Repositories
 	newCartRepository,
 	newOrderRepository,
 	wire.Bind(new(ports.CartRepository), new(*cartRepo.Store)),
 	wire.Bind(new(ports.OrderRepository), new(*orderRepo.Store)),
+
+	// Indexes
+	newCartGoodsIndex,
+	wire.Bind(new(ports.CartGoodsIndex), new(*redisIndex.CartGoodsIndex)),
 
 	// Delivery
 	cartRPC.New,
@@ -112,6 +133,7 @@ var OMSSet = wire.NewSet(
 	// Applications
 	cart.New,
 	order.New,
+	checkout.New,
 
 	// Temporal
 	temporal.New,
@@ -159,6 +181,15 @@ func newDatabase(ctx context.Context, log logger.Logger, tracer trace.TracerProv
 	return db.New(ctx, log, tracer, meterProvider, cfg)
 }
 
+// newUnitOfWork creates a PostgreSQL UnitOfWork
+func newUnitOfWork(store db.DB) (*uow.PostgresUoW, error) {
+	pool, ok := store.GetConn().(*pgxpool.Pool)
+	if !ok {
+		return nil, db.ErrGetConnection
+	}
+	return uow.New(pool), nil
+}
+
 // newCartRepository creates a PostgreSQL cart repository
 func newCartRepository(ctx context.Context, store db.DB) (*cartRepo.Store, error) {
 	return cartRepo.New(ctx, store)
@@ -167,6 +198,33 @@ func newCartRepository(ctx context.Context, store db.DB) (*cartRepo.Store, error
 // newOrderRepository creates a PostgreSQL order repository
 func newOrderRepository(ctx context.Context, store db.DB) (*orderRepo.Store, error) {
 	return orderRepo.New(ctx, store)
+}
+
+// newRedisClient creates a Redis client using rueidis
+func newRedisClient(cfg *config.Config) (rueidis.Client, func(), error) {
+	// Get Redis URI from config (default: localhost:6379)
+	redisURI := cfg.GetString("STORE_REDIS_URI")
+	if redisURI == "" {
+		redisURI = "localhost:6379"
+	}
+
+	client, err := rueidis.NewClient(rueidis.ClientOption{
+		InitAddress: []string{redisURI},
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	cleanup := func() {
+		client.Close()
+	}
+
+	return client, cleanup, nil
+}
+
+// newCartGoodsIndex creates a Redis-backed cart goods index
+func newCartGoodsIndex(client rueidis.Client) *redisIndex.CartGoodsIndex {
+	return redisIndex.New(client)
 }
 
 func NewOMSService(
@@ -185,6 +243,9 @@ func NewOMSService(
 	// Database
 	database db.DB,
 
+	// UnitOfWork
+	unitOfWork ports.UnitOfWork,
+
 	// Repositories
 	cartRepository ports.CartRepository,
 	orderRepository ports.OrderRepository,
@@ -197,6 +258,7 @@ func NewOMSService(
 	// Applications
 	cartService *cart.UC,
 	orderService *order.UC,
+	checkoutService *checkout.UC,
 
 	// Temporal
 	temporalClient client.Client,
@@ -218,6 +280,9 @@ func NewOMSService(
 		// Database
 		DB: database,
 
+		// UnitOfWork
+		UoW: unitOfWork,
+
 		// Repositories
 		CartRepo:  cartRepository,
 		OrderRepo: orderRepository,
@@ -228,8 +293,9 @@ func NewOMSService(
 		orderRPCServer: orderRPCServer,
 
 		// Applications
-		CartService:  cartService,
-		OrderService: orderService,
+		CartService:     cartService,
+		OrderService:    orderService,
+		CheckoutService: checkoutService,
 
 		// Temporal
 		temporalClient: temporalClient,

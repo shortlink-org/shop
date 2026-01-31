@@ -10,12 +10,21 @@ import (
 	"github.com/shortlink-org/shop/oms/internal/boundary/ports"
 	cart "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart/dto"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/tx"
 )
 
 // Load retrieves a cart by customer ID.
+// Requires transaction in context (use UnitOfWork.Begin()).
 func (s *Store) Load(ctx context.Context, customerID uuid.UUID) (*cart.State, error) {
+	pgxTx := tx.FromContext(ctx)
+	if pgxTx == nil {
+		return nil, ErrTransactionRequired
+	}
+
+	qtx := s.query.WithTx(pgxTx)
+
 	// Get cart header
-	row, err := s.query.GetCart(ctx, uuidToPgtype(customerID))
+	row, err := qtx.GetCart(ctx, uuidToPgtype(customerID))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ports.ErrNotFound
@@ -24,7 +33,7 @@ func (s *Store) Load(ctx context.Context, customerID uuid.UUID) (*cart.State, er
 	}
 
 	// Get cart items
-	items, err := s.query.GetCartItems(ctx, uuidToPgtype(customerID))
+	items, err := qtx.GetCartItems(ctx, uuidToPgtype(customerID))
 	if err != nil {
 		return nil, err
 	}

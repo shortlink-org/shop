@@ -3,6 +3,8 @@ package cart
 import (
 	"context"
 	"errors"
+	"fmt"
+	"log/slog"
 
 	"github.com/google/uuid"
 
@@ -13,6 +15,13 @@ import (
 
 // Add adds an item to the cart using the pattern: Load -> domain method -> Save
 func (uc *UC) Add(ctx context.Context, customerID uuid.UUID, item itemv1.Item) error {
+	// Begin transaction
+	ctx, err := uc.uow.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() { _ = uc.uow.Rollback(ctx) }()
+
 	// 1. Load aggregate (or create new if not found)
 	cart, err := uc.cartRepo.Load(ctx, customerID)
 	if err != nil {
@@ -33,14 +42,29 @@ func (uc *UC) Add(ctx context.Context, customerID uuid.UUID, item itemv1.Item) e
 		return err
 	}
 
+	// Commit transaction
+	if err := uc.uow.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
 	// Update index: add goods to customer's cart index
-	uc.goodsIndex.AddGoodToCart(item.GetGoodId(), customerID)
+	if err := uc.goodsIndex.AddGoodToCart(ctx, item.GetGoodId(), customerID); err != nil {
+		// Log but don't fail - index is eventually consistent
+		uc.log.Warn("failed to update cart goods index", slog.Any("error", err))
+	}
 
 	return nil
 }
 
 // AddItems adds multiple items to the cart.
 func (uc *UC) AddItems(ctx context.Context, customerID uuid.UUID, items []itemv1.Item) error {
+	// Begin transaction
+	ctx, err := uc.uow.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() { _ = uc.uow.Rollback(ctx) }()
+
 	// 1. Load aggregate (or create new if not found)
 	cart, err := uc.cartRepo.Load(ctx, customerID)
 	if err != nil {
@@ -63,9 +87,17 @@ func (uc *UC) AddItems(ctx context.Context, customerID uuid.UUID, items []itemv1
 		return err
 	}
 
+	// Commit transaction
+	if err := uc.uow.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
 	// Update index
 	for _, item := range items {
-		uc.goodsIndex.AddGoodToCart(item.GetGoodId(), customerID)
+		if err := uc.goodsIndex.AddGoodToCart(ctx, item.GetGoodId(), customerID); err != nil {
+			// Log but don't fail - index is eventually consistent
+			uc.log.Warn("failed to update cart goods index", slog.Any("error", err))
+		}
 	}
 
 	return nil

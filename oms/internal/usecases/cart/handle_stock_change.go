@@ -19,7 +19,13 @@ func (uc *UC) HandleStockChange(ctx context.Context, goodId uuid.UUID, newQuanti
 	uc.log.Info("Stock depleted for good", slog.String("good_id", goodId.String()))
 
 	// Get all customers that have this good in their cart using the index
-	customerIds := uc.goodsIndex.GetCustomersWithGood(goodId)
+	customerIds, err := uc.goodsIndex.GetCustomersWithGood(ctx, goodId)
+	if err != nil {
+		uc.log.Warn("Failed to get customers with good from index",
+			slog.String("good_id", goodId.String()),
+			slog.String("error", err.Error()))
+		return err
+	}
 	if len(customerIds) == 0 {
 		uc.log.Info("No carts found with the out-of-stock item", slog.String("good_id", goodId.String()))
 		return nil
@@ -50,7 +56,12 @@ func (uc *UC) HandleStockChange(ctx context.Context, goodId uuid.UUID, newQuanti
 
 		if !found {
 			// Item was already removed, clean up index
-			uc.goodsIndex.RemoveGoodFromCart(goodId, customerId)
+			if err := uc.goodsIndex.RemoveGoodFromCart(ctx, goodId, customerId); err != nil {
+				uc.log.Warn("Failed to clean up index",
+					slog.String("customer_id", customerId.String()),
+					slog.String("good_id", goodId.String()),
+					slog.String("error", err.Error()))
+			}
 			continue
 		}
 
@@ -79,8 +90,7 @@ func (uc *UC) HandleStockChange(ctx context.Context, goodId uuid.UUID, newQuanti
 			continue
 		}
 
-		// Remove from index (already done in Remove, but ensure it's done)
-		uc.goodsIndex.RemoveGoodFromCart(goodId, customerId)
+		// Note: index is already updated in Remove method
 
 		// Send websocket notification to UI
 		if uc.notifier != nil {

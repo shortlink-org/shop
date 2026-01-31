@@ -6,6 +6,7 @@ This package implements the Order use case following the pattern:
 
 For complex order workflows (sagas), Temporal is used for orchestration.
 Repository handles persistence, Temporal handles workflow coordination.
+All operations are wrapped in UnitOfWork transactions.
 */
 package order
 
@@ -24,6 +25,9 @@ type UC struct {
 	// Security
 	permission *authzed.Client
 
+	// UnitOfWork for transaction management
+	uow ports.UnitOfWork
+
 	// Repository for order persistence
 	orderRepo ports.OrderRepository
 
@@ -32,12 +36,15 @@ type UC struct {
 }
 
 // New creates a new order usecase
-func New(log logger.Logger, permissionClient *authzed.Client, orderRepo ports.OrderRepository, temporalClient client.Client) (*UC, error) {
+func New(log logger.Logger, permissionClient *authzed.Client, uow ports.UnitOfWork, orderRepo ports.OrderRepository, temporalClient client.Client) (*UC, error) {
 	service := &UC{
 		log: log,
 
 		// Security
 		permission: permissionClient,
+
+		// UnitOfWork
+		uow: uow,
 
 		// Repository
 		orderRepo: orderRepo,

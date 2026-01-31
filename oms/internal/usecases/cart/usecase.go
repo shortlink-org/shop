@@ -6,6 +6,7 @@ This package implements the Cart use case following the pattern:
 
 Repository is a storage adapter (infrastructure layer), NOT a use-case.
 Business operations belong to domain aggregate methods.
+All operations are wrapped in UnitOfWork transactions.
 */
 package cart
 
@@ -14,7 +15,6 @@ import (
 	logger "github.com/shortlink-org/go-sdk/logger"
 
 	"github.com/shortlink-org/shop/oms/internal/boundary/ports"
-	"github.com/shortlink-org/shop/oms/internal/infrastructure/index"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/websocket"
 )
 
@@ -25,29 +25,35 @@ type UC struct {
 	// Security
 	permission *authzed.Client
 
+	// UnitOfWork for transaction management
+	uow ports.UnitOfWork
+
 	// Repository for cart persistence
 	cartRepo ports.CartRepository
 
-	// Index for tracking goods in carts
-	goodsIndex *index.CartGoodsIndex
+	// Index for tracking goods in carts (Redis-backed)
+	goodsIndex ports.CartGoodsIndex
 
 	// Websocket notifier for sending notifications to UI
 	notifier *websocket.Notifier
 }
 
 // New creates a new cart usecase
-func New(log logger.Logger, permissionClient *authzed.Client, cartRepo ports.CartRepository) (*UC, error) {
+func New(log logger.Logger, permissionClient *authzed.Client, uow ports.UnitOfWork, cartRepo ports.CartRepository, goodsIndex ports.CartGoodsIndex) (*UC, error) {
 	service := &UC{
 		log: log,
 
 		// Security
 		permission: permissionClient,
 
+		// UnitOfWork
+		uow: uow,
+
 		// Repository
 		cartRepo: cartRepo,
 
 		// Index for tracking goods in carts
-		goodsIndex: index.NewCartGoodsIndex(),
+		goodsIndex: goodsIndex,
 
 		// Websocket notifier (can be nil if not initialized)
 		notifier: nil,

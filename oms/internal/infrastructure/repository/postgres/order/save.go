@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -9,17 +10,21 @@ import (
 	"github.com/shortlink-org/shop/oms/internal/boundary/ports"
 	order "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order/schema/crud"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/tx"
 )
 
-// Save persists the order state with optimistic concurrency control.
-func (s *Store) Save(ctx context.Context, state *order.OrderState) error {
-	tx, err := s.client.Begin(ctx)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback(ctx) //nolint:errcheck
+// ErrTransactionRequired is returned when repository is called without UoW transaction.
+var ErrTransactionRequired = errors.New("transaction required: use UnitOfWork.Begin()")
 
-	qtx := s.query.WithTx(tx)
+// Save persists the order state with optimistic concurrency control.
+// Requires transaction in context (use UnitOfWork.Begin()).
+func (s *Store) Save(ctx context.Context, state *order.OrderState) error {
+	pgxTx := tx.FromContext(ctx)
+	if pgxTx == nil {
+		return ErrTransactionRequired
+	}
+
+	qtx := s.query.WithTx(pgxTx)
 
 	orderID := uuidToPgtype(state.GetOrderID())
 	customerID := uuidToPgtype(state.GetCustomerId())
@@ -69,7 +74,7 @@ func (s *Store) Save(ctx context.Context, state *order.OrderState) error {
 		}
 	}
 
-	return tx.Commit(ctx)
+	return nil
 }
 
 // uuidToPgtype converts uuid.UUID to pgtype.UUID

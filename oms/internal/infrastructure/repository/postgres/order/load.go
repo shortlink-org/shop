@@ -11,12 +11,21 @@ import (
 	"github.com/shortlink-org/shop/oms/internal/boundary/ports"
 	order "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order/dto"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/tx"
 )
 
 // Load retrieves an order by ID.
+// Requires transaction in context (use UnitOfWork.Begin()).
 func (s *Store) Load(ctx context.Context, orderID uuid.UUID) (*order.OrderState, error) {
+	pgxTx := tx.FromContext(ctx)
+	if pgxTx == nil {
+		return nil, ErrTransactionRequired
+	}
+
+	qtx := s.query.WithTx(pgxTx)
+
 	// Get order header
-	row, err := s.query.GetOrder(ctx, uuidToPgtype(orderID))
+	row, err := qtx.GetOrder(ctx, uuidToPgtype(orderID))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ports.ErrNotFound
@@ -25,7 +34,7 @@ func (s *Store) Load(ctx context.Context, orderID uuid.UUID) (*order.OrderState,
 	}
 
 	// Get order items
-	items, err := s.query.GetOrderItems(ctx, uuidToPgtype(orderID))
+	items, err := qtx.GetOrderItems(ctx, uuidToPgtype(orderID))
 	if err != nil {
 		return nil, err
 	}
@@ -34,8 +43,16 @@ func (s *Store) Load(ctx context.Context, orderID uuid.UUID) (*order.OrderState,
 }
 
 // ListByCustomer retrieves all orders for a customer.
+// Requires transaction in context (use UnitOfWork.Begin()).
 func (s *Store) ListByCustomer(ctx context.Context, customerID uuid.UUID) ([]*order.OrderState, error) {
-	rows, err := s.query.ListOrdersByCustomer(ctx, uuidToPgtype(customerID))
+	pgxTx := tx.FromContext(ctx)
+	if pgxTx == nil {
+		return nil, ErrTransactionRequired
+	}
+
+	qtx := s.query.WithTx(pgxTx)
+
+	rows, err := qtx.ListOrdersByCustomer(ctx, uuidToPgtype(customerID))
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +60,7 @@ func (s *Store) ListByCustomer(ctx context.Context, customerID uuid.UUID) ([]*or
 	orders := make([]*order.OrderState, 0, len(rows))
 	for _, row := range rows {
 		// Get items for each order
-		items, err := s.query.GetOrderItems(ctx, row.ID)
+		items, err := qtx.GetOrderItems(ctx, row.ID)
 		if err != nil {
 			return nil, err
 		}
