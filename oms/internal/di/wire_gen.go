@@ -23,16 +23,22 @@ import (
 	"github.com/shortlink-org/go-sdk/observability/profiling"
 	"github.com/shortlink-org/go-sdk/observability/tracing"
 	"github.com/shortlink-org/go-sdk/temporal"
-	"github.com/shortlink-org/shop/oms/internal/boundary/ports"
-	"github.com/shortlink-org/shop/oms/internal/infrastructure/index/redis"
+	"github.com/shortlink-org/shop/oms/internal/domain/ports"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/events"
 	postgres2 "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart"
 	postgres3 "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/redis/cart_goods_index"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1"
 	v1_2 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/run"
-	"github.com/shortlink-org/shop/oms/internal/usecases/cart"
-	"github.com/shortlink-org/shop/oms/internal/usecases/checkout"
-	"github.com/shortlink-org/shop/oms/internal/usecases/order"
+	temporal2 "github.com/shortlink-org/shop/oms/internal/infrastructure/temporal"
+	"github.com/shortlink-org/shop/oms/internal/usecases/cart/command/add_items"
+	"github.com/shortlink-org/shop/oms/internal/usecases/cart/command/remove_items"
+	"github.com/shortlink-org/shop/oms/internal/usecases/cart/command/reset"
+	"github.com/shortlink-org/shop/oms/internal/usecases/cart/query/get"
+	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/cancel"
+	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/create"
+	get2 "github.com/shortlink-org/shop/oms/internal/usecases/order/query/get"
 	"github.com/shortlink-org/shop/oms/pkg/uow/postgres"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/trace"
@@ -118,6 +124,7 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
+	inMemoryPublisher := newEventPublisher()
 	server, err := newGRPCServer(context, logger, tracerProvider, monitoring, config)
 	if err != nil {
 		cleanup4()
@@ -134,17 +141,12 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	cartGoodsIndex := newCartGoodsIndex(rueidisClient)
-	uc, err := cart.New(logger, client, uoW, store, cartGoodsIndex)
-	if err != nil {
-		cleanup5()
-		cleanup4()
-		cleanup3()
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	cartRPC, err := v1.New(server, logger, uc)
+	cart_goods_indexStore := newCartGoodsIndex(rueidisClient)
+	handler := newCartAddItemsHandler(logger, uoW, store, cart_goods_indexStore)
+	remove_itemsHandler := newCartRemoveItemsHandler(logger, uoW, store, cart_goods_indexStore)
+	resetHandler := newCartResetHandler(logger, uoW, store, cart_goods_indexStore)
+	getHandler := newCartGetHandler(uoW, store)
+	cartRPC, err := newCartRPC(server, logger, handler, remove_itemsHandler, resetHandler, getHandler)
 	if err != nil {
 		cleanup5()
 		cleanup4()
@@ -162,6 +164,18 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
+	createHandler := newOrderCreateHandler(logger, uoW, postgresStore, inMemoryPublisher)
+	cancelHandler := newOrderCancelHandler(logger, uoW, postgresStore, inMemoryPublisher)
+	handler2 := newOrderGetHandler(uoW, postgresStore)
+	orderRPC, err := newOrderRPC(server, logger, createHandler, cancelHandler, handler2)
+	if err != nil {
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
 	clientClient, err := temporal.New(logger, config, tracerProvider, monitoring)
 	if err != nil {
 		cleanup5()
@@ -171,26 +185,8 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	orderUC, err := order.New(logger, client, uoW, postgresStore, clientClient)
-	if err != nil {
-		cleanup5()
-		cleanup4()
-		cleanup3()
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	orderRPC, err := v1_2.New(server, logger, orderUC)
-	if err != nil {
-		cleanup5()
-		cleanup4()
-		cleanup3()
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	checkoutUC := checkout.New(logger, uoW, store, postgresStore)
-	omsService, err := NewOMSService(logger, config, monitoring, tracerProvider, pprofEndpoint, client, db, uoW, store, postgresStore, response, cartRPC, orderRPC, uc, orderUC, checkoutUC, clientClient)
+	orderEventSubscriber := newOrderEventSubscriber(logger, clientClient, inMemoryPublisher)
+	omsService, err := NewOMSService(logger, config, monitoring, tracerProvider, pprofEndpoint, client, db, uoW, store, postgresStore, inMemoryPublisher, response, cartRPC, orderRPC, clientClient, orderEventSubscriber)
 	if err != nil {
 		cleanup5()
 		cleanup4()
@@ -238,10 +234,8 @@ type OMSService struct {
 	cartRPCServer  *v1.CartRPC
 	orderRPCServer *v1_2.OrderRPC
 
-	// Applications
-	CartService     *cart.UC
-	OrderService    *order.UC
-	CheckoutService *checkout.UC
+	// Event Infrastructure
+	EventPublisher *events.InMemoryPublisher
 
 	// Temporal
 	temporalClient client.Client
@@ -265,7 +259,20 @@ var OMSSet = wire.NewSet(
 	newDatabase, wire.FieldsOf(new(*metrics.Monitoring), "Metrics"), newRedisClient,
 
 	newUnitOfWork, wire.Bind(new(ports.UnitOfWork), new(*postgres.UoW)), newCartRepository,
-	newOrderRepository, wire.Bind(new(ports.CartRepository), new(*postgres2.Store)), wire.Bind(new(ports.OrderRepository), new(*postgres3.Store)), newCartGoodsIndex, wire.Bind(new(ports.CartGoodsIndex), new(*redis.CartGoodsIndex)), v1.New, v1_2.New, NewRunRPCServer, cart.New, order.New, checkout.New, temporal.New, NewOMSService,
+	newOrderRepository, wire.Bind(new(ports.CartRepository), new(*postgres2.Store)), wire.Bind(new(ports.OrderRepository), new(*postgres3.Store)), newCartGoodsIndex, wire.Bind(new(ports.CartGoodsIndex), new(*cart_goods_index.Store)), newEventPublisher, wire.Bind(new(ports.EventPublisher), new(*events.InMemoryPublisher)), newCartAddItemsHandler,
+	newCartRemoveItemsHandler,
+	newCartResetHandler,
+	newCartGetHandler,
+
+	newOrderCreateHandler,
+	newOrderCancelHandler,
+	newOrderGetHandler,
+
+	newCartRPC,
+	newOrderRPC,
+	NewRunRPCServer, temporal.New, newOrderEventSubscriber,
+
+	NewOMSService,
 )
 
 // newGRPCServer creates a gRPC server using go-sdk/grpc
@@ -350,8 +357,73 @@ func newRedisClient(cfg *config.Config) (rueidis.Client, func(), error) {
 }
 
 // newCartGoodsIndex creates a Redis-backed cart goods index
-func newCartGoodsIndex(client2 rueidis.Client) *redis.CartGoodsIndex {
-	return redis.New(client2)
+func newCartGoodsIndex(client2 rueidis.Client) *cart_goods_index.Store {
+	return cart_goods_index.New(client2)
+}
+
+// newEventPublisher creates an in-memory event publisher
+func newEventPublisher() *events.InMemoryPublisher {
+	return events.NewInMemoryPublisher()
+}
+
+// Cart Handler Factories
+func newCartAddItemsHandler(log logger.Logger, uow ports.UnitOfWork, cartRepo ports.CartRepository, goodsIndex ports.CartGoodsIndex) *add_items.Handler {
+	return add_items.NewHandler(log, uow, cartRepo, goodsIndex)
+}
+
+func newCartRemoveItemsHandler(log logger.Logger, uow ports.UnitOfWork, cartRepo ports.CartRepository, goodsIndex ports.CartGoodsIndex) *remove_items.Handler {
+	return remove_items.NewHandler(log, uow, cartRepo, goodsIndex)
+}
+
+func newCartResetHandler(log logger.Logger, uow ports.UnitOfWork, cartRepo ports.CartRepository, goodsIndex ports.CartGoodsIndex) *reset.Handler {
+	return reset.NewHandler(log, uow, cartRepo, goodsIndex)
+}
+
+func newCartGetHandler(uow ports.UnitOfWork, cartRepo ports.CartRepository) *get.Handler {
+	return get.NewHandler(uow, cartRepo)
+}
+
+// Order Handler Factories
+func newOrderCreateHandler(log logger.Logger, uow ports.UnitOfWork, orderRepo ports.OrderRepository, publisher ports.EventPublisher) *create.Handler {
+	return create.NewHandler(log, uow, orderRepo, publisher)
+}
+
+func newOrderCancelHandler(log logger.Logger, uow ports.UnitOfWork, orderRepo ports.OrderRepository, publisher ports.EventPublisher) *cancel.Handler {
+	return cancel.NewHandler(log, uow, orderRepo, publisher)
+}
+
+func newOrderGetHandler(uow ports.UnitOfWork, orderRepo ports.OrderRepository) *get2.Handler {
+	return get2.NewHandler(uow, orderRepo)
+}
+
+// newOrderEventSubscriber creates and registers the order event subscriber
+func newOrderEventSubscriber(log logger.Logger, temporalClient client.Client, publisher *events.InMemoryPublisher) *temporal2.OrderEventSubscriber {
+	subscriber := temporal2.NewOrderEventSubscriber(log, temporalClient)
+	subscriber.Register(publisher)
+	return subscriber
+}
+
+// newCartRPC creates the Cart RPC server with handlers
+func newCartRPC(
+	runRPCServer *grpc.Server,
+	log logger.Logger,
+	addItemsHandler *add_items.Handler,
+	removeItemsHandler *remove_items.Handler,
+	resetHandler *reset.Handler,
+	getHandler *get.Handler,
+) (*v1.CartRPC, error) {
+	return v1.New(runRPCServer, log, addItemsHandler, removeItemsHandler, resetHandler, getHandler)
+}
+
+// newOrderRPC creates the Order RPC server with handlers
+func newOrderRPC(
+	runRPCServer *grpc.Server,
+	log logger.Logger,
+	createHandler *create.Handler,
+	cancelHandler *cancel.Handler,
+	getHandler *get2.Handler,
+) (*v1_2.OrderRPC, error) {
+	return v1_2.New(runRPCServer, log, createHandler, cancelHandler, getHandler)
 }
 
 func NewOMSService(
@@ -369,15 +441,14 @@ func NewOMSService(
 	unitOfWork ports.UnitOfWork,
 
 	cartRepository ports.CartRepository,
-	orderRepository ports.OrderRepository, run2 *run.Response,
+	orderRepository ports.OrderRepository,
+
+	eventPublisher *events.InMemoryPublisher, run2 *run.Response,
 	cartRPCServer *v1.CartRPC,
 	orderRPCServer *v1_2.OrderRPC,
 
-	cartService *cart.UC,
-	orderService *order.UC,
-	checkoutService *checkout.UC,
-
 	temporalClient client.Client,
+	_ *temporal2.OrderEventSubscriber,
 ) (*OMSService, error) {
 	return &OMSService{
 
@@ -395,13 +466,11 @@ func NewOMSService(
 		CartRepo:  cartRepository,
 		OrderRepo: orderRepository,
 
+		EventPublisher: eventPublisher,
+
 		run:            run2,
 		cartRPCServer:  cartRPCServer,
 		orderRPCServer: orderRPCServer,
-
-		CartService:     cartService,
-		OrderService:    orderService,
-		CheckoutService: checkoutService,
 
 		temporalClient: temporalClient,
 	}, nil

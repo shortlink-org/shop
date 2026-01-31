@@ -7,20 +7,21 @@ import (
 
 	"github.com/google/uuid"
 	logger "github.com/shortlink-org/go-sdk/logger"
-	"github.com/shortlink-org/shop/oms/internal/usecases/cart"
+
+	on_stock_changed "github.com/shortlink-org/shop/oms/internal/usecases/cart/event/on_stock_changed"
 )
 
 // StockChangeHandler handles HTTP requests for stock change events
 type StockChangeHandler struct {
-	log         logger.Logger
-	cartService *cart.UC
+	log                   logger.Logger
+	stockChangedHandler   *on_stock_changed.Handler
 }
 
 // NewStockChangeHandler creates a new stock change event handler
-func NewStockChangeHandler(log logger.Logger, cartService *cart.UC) *StockChangeHandler {
+func NewStockChangeHandler(log logger.Logger, stockChangedHandler *on_stock_changed.Handler) *StockChangeHandler {
 	return &StockChangeHandler{
-		log:         log,
-		cartService: cartService,
+		log:                   log,
+		stockChangedHandler:   stockChangedHandler,
 	}
 }
 
@@ -54,7 +55,8 @@ func (h *StockChangeHandler) Handle(w http.ResponseWriter, r *http.Request) {
 
 	// Handle stock change - remove item from carts if stock is zero
 	ctx := r.Context()
-	if err := h.cartService.HandleStockChange(ctx, goodId, req.NewQuantity); err != nil {
+	event := on_stock_changed.NewEvent(goodId, req.NewQuantity)
+	if err := h.stockChangedHandler.Handle(ctx, event); err != nil {
 		h.log.Error("Failed to handle stock change", slog.String("error", err.Error()))
 		// Don't return error to caller - event was received, processing may continue
 		// In production, you might want to return 202 Accepted and process asynchronously

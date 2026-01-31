@@ -5,35 +5,33 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	orderv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
-	orderuc "github.com/shortlink-org/shop/oms/internal/usecases/order"
+	orderCancel "github.com/shortlink-org/shop/oms/internal/usecases/order/command/cancel"
+	orderGet "github.com/shortlink-org/shop/oms/internal/usecases/order/query/get"
 )
 
-// Activities wraps order use case methods for Temporal activities.
+// Activities wraps order command/query handlers for Temporal activities.
 // Activities are the bridge between Temporal workflows and application use cases.
 // Temporal workflows must never access repositories directly - only through activities.
+//
+// Note: In the event-driven architecture, order creation happens before the workflow starts
+// (CreateOrder command handler publishes event, which triggers the workflow).
+// Activities are used for compensation (cancel) and queries during workflow execution.
 type Activities struct {
-	orderUC *orderuc.UC
+	cancelHandler ports.CommandHandler[orderCancel.Command]
+	getHandler    ports.QueryHandler[orderGet.Query, orderGet.Result]
 }
 
 // New creates a new Activities instance.
-func New(orderUC *orderuc.UC) *Activities {
+func New(
+	cancelHandler ports.CommandHandler[orderCancel.Command],
+	getHandler ports.QueryHandler[orderGet.Query, orderGet.Result],
+) *Activities {
 	return &Activities{
-		orderUC: orderUC,
+		cancelHandler: cancelHandler,
+		getHandler:    getHandler,
 	}
-}
-
-// CreateOrderRequest represents the request for CreateOrder activity.
-type CreateOrderRequest struct {
-	OrderID    uuid.UUID
-	CustomerID uuid.UUID
-	Items      orderv1.Items
-}
-
-// CreateOrder creates an order in the database.
-// This is called by the workflow after stock reservation.
-func (a *Activities) CreateOrder(ctx context.Context, req CreateOrderRequest) error {
-	return a.orderUC.CreateInDB(ctx, req.OrderID, req.CustomerID, req.Items)
 }
 
 // CancelOrderRequest represents the request for CancelOrder activity.
@@ -44,28 +42,8 @@ type CancelOrderRequest struct {
 // CancelOrder cancels an order in the database.
 // This is used for compensation in saga patterns.
 func (a *Activities) CancelOrder(ctx context.Context, req CancelOrderRequest) error {
-	return a.orderUC.CancelInDB(ctx, req.OrderID)
-}
-
-// CompleteOrderRequest represents the request for CompleteOrder activity.
-type CompleteOrderRequest struct {
-	OrderID uuid.UUID
-}
-
-// CompleteOrder marks an order as completed.
-func (a *Activities) CompleteOrder(ctx context.Context, req CompleteOrderRequest) error {
-	order, err := a.orderUC.Get(ctx, req.OrderID)
-	if err != nil {
-		return err
-	}
-
-	if err := order.CompleteOrder(); err != nil {
-		return err
-	}
-
-	// Note: We need direct access to repository here, or add CompleteInDB to usecase
-	// For now, this is a simplified implementation
-	return nil
+	cmd := orderCancel.NewCommand(req.OrderID)
+	return a.cancelHandler.Handle(ctx, cmd)
 }
 
 // GetOrderRequest represents the request for GetOrder activity.
@@ -80,7 +58,8 @@ type GetOrderResponse struct {
 
 // GetOrder retrieves an order from the database.
 func (a *Activities) GetOrder(ctx context.Context, req GetOrderRequest) (*GetOrderResponse, error) {
-	order, err := a.orderUC.Get(ctx, req.OrderID)
+	query := orderGet.NewQuery(req.OrderID)
+	order, err := a.getHandler.Handle(ctx, query)
 	if err != nil {
 		return nil, err
 	}

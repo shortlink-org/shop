@@ -13,8 +13,6 @@ import (
 
 	"github.com/authzed/authzed-go/v1"
 	"github.com/google/wire"
-	shopspringDecimal "github.com/jackc/pgx-shopspring-decimal"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/trace"
@@ -34,17 +32,27 @@ import (
 
 	"github.com/redis/rueidis"
 
-	"github.com/shortlink-org/shop/oms/internal/boundary/ports"
-	redisIndex "github.com/shortlink-org/shop/oms/internal/infrastructure/index/redis"
+	"github.com/shortlink-org/shop/oms/internal/domain/ports"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/events"
+	temporalInfra "github.com/shortlink-org/shop/oms/internal/infrastructure/temporal"
+	cartGoodsIndex "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/redis/cart_goods_index"
 	cartRepo "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart"
 	orderRepo "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order"
 	cartRPC "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1"
 	orderRPC "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/run"
-	"github.com/shortlink-org/shop/oms/internal/usecases/cart"
-	"github.com/shortlink-org/shop/oms/internal/usecases/checkout"
-	"github.com/shortlink-org/shop/oms/internal/usecases/order"
 	pguow "github.com/shortlink-org/shop/oms/pkg/uow/postgres"
+
+	// Cart handlers
+	cartAddItems "github.com/shortlink-org/shop/oms/internal/usecases/cart/command/add_items"
+	cartRemoveItems "github.com/shortlink-org/shop/oms/internal/usecases/cart/command/remove_items"
+	cartReset "github.com/shortlink-org/shop/oms/internal/usecases/cart/command/reset"
+	cartGet "github.com/shortlink-org/shop/oms/internal/usecases/cart/query/get"
+
+	// Order handlers
+	orderCancel "github.com/shortlink-org/shop/oms/internal/usecases/order/command/cancel"
+	orderCreate "github.com/shortlink-org/shop/oms/internal/usecases/order/command/create"
+	orderGet "github.com/shortlink-org/shop/oms/internal/usecases/order/query/get"
 )
 
 type OMSService struct {
@@ -75,10 +83,8 @@ type OMSService struct {
 	cartRPCServer  *cartRPC.CartRPC
 	orderRPCServer *orderRPC.OrderRPC
 
-	// Applications
-	CartService     *cart.UC
-	OrderService    *order.UC
-	CheckoutService *checkout.UC
+	// Event Infrastructure
+	EventPublisher *events.InMemoryPublisher
 
 	// Temporal
 	temporalClient client.Client
@@ -125,20 +131,31 @@ var OMSSet = wire.NewSet(
 
 	// Indexes
 	newCartGoodsIndex,
-	wire.Bind(new(ports.CartGoodsIndex), new(*redisIndex.CartGoodsIndex)),
+	wire.Bind(new(ports.CartGoodsIndex), new(*cartGoodsIndex.Store)),
+
+	// Event Infrastructure
+	newEventPublisher,
+	wire.Bind(new(ports.EventPublisher), new(*events.InMemoryPublisher)),
+
+	// Cart Handlers (concrete types, wire doesn't support generics)
+	newCartAddItemsHandler,
+	newCartRemoveItemsHandler,
+	newCartResetHandler,
+	newCartGetHandler,
+
+	// Order Handlers (concrete types)
+	newOrderCreateHandler,
+	newOrderCancelHandler,
+	newOrderGetHandler,
 
 	// Delivery
-	cartRPC.New,
-	orderRPC.New,
+	newCartRPC,
+	newOrderRPC,
 	NewRunRPCServer,
-
-	// Applications
-	cart.New,
-	order.New,
-	checkout.New,
 
 	// Temporal
 	temporal.New,
+	newOrderEventSubscriber,
 
 	NewOMSService,
 )
@@ -180,13 +197,7 @@ func newGoSDKProfiling(ctx context.Context, log logger.Logger, tracer trace.Trac
 
 // newDatabase creates a database connection using go-sdk/db
 func newDatabase(ctx context.Context, log logger.Logger, tracer trace.TracerProvider, meterProvider *sdkmetric.MeterProvider, cfg *config.Config) (db.DB, error) {
-	// Register shopspring/decimal type for PostgreSQL numeric columns
-	afterConnect := func(ctx context.Context, conn *pgx.Conn) error {
-		shopspringDecimal.Register(conn.TypeMap())
-		return nil
-	}
-
-	return db.New(ctx, log, tracer, meterProvider, cfg, db.WithPostgresAfterConnect(afterConnect))
+	return db.New(ctx, log, tracer, meterProvider, cfg)
 }
 
 // newUnitOfWork creates a PostgreSQL UnitOfWork
@@ -231,8 +242,73 @@ func newRedisClient(cfg *config.Config) (rueidis.Client, func(), error) {
 }
 
 // newCartGoodsIndex creates a Redis-backed cart goods index
-func newCartGoodsIndex(client rueidis.Client) *redisIndex.CartGoodsIndex {
-	return redisIndex.New(client)
+func newCartGoodsIndex(client rueidis.Client) *cartGoodsIndex.Store {
+	return cartGoodsIndex.New(client)
+}
+
+// newEventPublisher creates an in-memory event publisher
+func newEventPublisher() *events.InMemoryPublisher {
+	return events.NewInMemoryPublisher()
+}
+
+// Cart Handler Factories
+func newCartAddItemsHandler(log logger.Logger, uow ports.UnitOfWork, cartRepo ports.CartRepository, goodsIndex ports.CartGoodsIndex) *cartAddItems.Handler {
+	return cartAddItems.NewHandler(log, uow, cartRepo, goodsIndex)
+}
+
+func newCartRemoveItemsHandler(log logger.Logger, uow ports.UnitOfWork, cartRepo ports.CartRepository, goodsIndex ports.CartGoodsIndex) *cartRemoveItems.Handler {
+	return cartRemoveItems.NewHandler(log, uow, cartRepo, goodsIndex)
+}
+
+func newCartResetHandler(log logger.Logger, uow ports.UnitOfWork, cartRepo ports.CartRepository, goodsIndex ports.CartGoodsIndex) *cartReset.Handler {
+	return cartReset.NewHandler(log, uow, cartRepo, goodsIndex)
+}
+
+func newCartGetHandler(uow ports.UnitOfWork, cartRepo ports.CartRepository) *cartGet.Handler {
+	return cartGet.NewHandler(uow, cartRepo)
+}
+
+// Order Handler Factories
+func newOrderCreateHandler(log logger.Logger, uow ports.UnitOfWork, orderRepo ports.OrderRepository, publisher ports.EventPublisher) *orderCreate.Handler {
+	return orderCreate.NewHandler(log, uow, orderRepo, publisher)
+}
+
+func newOrderCancelHandler(log logger.Logger, uow ports.UnitOfWork, orderRepo ports.OrderRepository, publisher ports.EventPublisher) *orderCancel.Handler {
+	return orderCancel.NewHandler(log, uow, orderRepo, publisher)
+}
+
+func newOrderGetHandler(uow ports.UnitOfWork, orderRepo ports.OrderRepository) *orderGet.Handler {
+	return orderGet.NewHandler(uow, orderRepo)
+}
+
+// newOrderEventSubscriber creates and registers the order event subscriber
+func newOrderEventSubscriber(log logger.Logger, temporalClient client.Client, publisher *events.InMemoryPublisher) *temporalInfra.OrderEventSubscriber {
+	subscriber := temporalInfra.NewOrderEventSubscriber(log, temporalClient)
+	subscriber.Register(publisher)
+	return subscriber
+}
+
+// newCartRPC creates the Cart RPC server with handlers
+func newCartRPC(
+	runRPCServer *grpc.Server,
+	log logger.Logger,
+	addItemsHandler *cartAddItems.Handler,
+	removeItemsHandler *cartRemoveItems.Handler,
+	resetHandler *cartReset.Handler,
+	getHandler *cartGet.Handler,
+) (*cartRPC.CartRPC, error) {
+	return cartRPC.New(runRPCServer, log, addItemsHandler, removeItemsHandler, resetHandler, getHandler)
+}
+
+// newOrderRPC creates the Order RPC server with handlers
+func newOrderRPC(
+	runRPCServer *grpc.Server,
+	log logger.Logger,
+	createHandler *orderCreate.Handler,
+	cancelHandler *orderCancel.Handler,
+	getHandler *orderGet.Handler,
+) (*orderRPC.OrderRPC, error) {
+	return orderRPC.New(runRPCServer, log, createHandler, cancelHandler, getHandler)
 }
 
 func NewOMSService(
@@ -258,18 +334,17 @@ func NewOMSService(
 	cartRepository ports.CartRepository,
 	orderRepository ports.OrderRepository,
 
+	// Event Infrastructure
+	eventPublisher *events.InMemoryPublisher,
+
 	// Delivery
 	run *run.Response,
 	cartRPCServer *cartRPC.CartRPC,
 	orderRPCServer *orderRPC.OrderRPC,
 
-	// Applications
-	cartService *cart.UC,
-	orderService *order.UC,
-	checkoutService *checkout.UC,
-
 	// Temporal
 	temporalClient client.Client,
+	_ *temporalInfra.OrderEventSubscriber, // ensure subscriber is created
 ) (*OMSService, error) {
 	return &OMSService{
 		// Common
@@ -295,15 +370,13 @@ func NewOMSService(
 		CartRepo:  cartRepository,
 		OrderRepo: orderRepository,
 
+		// Event Infrastructure
+		EventPublisher: eventPublisher,
+
 		// Delivery
 		run:            run,
 		cartRPCServer:  cartRPCServer,
 		orderRPCServer: orderRPCServer,
-
-		// Applications
-		CartService:     cartService,
-		OrderService:    orderService,
-		CheckoutService: checkoutService,
 
 		// Temporal
 		temporalClient: temporalClient,

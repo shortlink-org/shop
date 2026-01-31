@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
-	"github.com/shortlink-org/shop/oms/internal/boundary/ports"
+	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	cart "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart/dto"
 	"github.com/shortlink-org/shop/oms/pkg/uow"

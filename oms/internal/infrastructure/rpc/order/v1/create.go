@@ -10,6 +10,7 @@ import (
 	v2 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/dto"
 	v1 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/model/v1"
+	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/create"
 )
 
 func (o *OrderRPC) Create(ctx context.Context, in *v1.CreateRequest) (*emptypb.Empty, error) {
@@ -41,8 +42,9 @@ func (o *OrderRPC) Create(ctx context.Context, in *v1.CreateRequest) (*emptypb.E
 	// Convert proto DeliveryInfo to domain DeliveryInfo
 	deliveryInfo := dto.ProtoDeliveryInfoToDomain(in.GetDeliveryInfo())
 
-	err = o.orderService.Create(ctx, orderId, customerId, items, deliveryInfo)
-	if err != nil {
+	// Create command and execute handler
+	cmd := create.NewCommand(orderId, customerId, items, deliveryInfo)
+	if err := o.createHandler.Handle(ctx, cmd); err != nil {
 		return nil, err
 	}
 

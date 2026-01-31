@@ -7,6 +7,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	v1 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/model/v1"
+	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/cancel"
 )
 
 func (o *OrderRPC) Cancel(ctx context.Context, in *v1.CancelRequest) (*emptypb.Empty, error) {
@@ -16,8 +17,9 @@ func (o *OrderRPC) Cancel(ctx context.Context, in *v1.CancelRequest) (*emptypb.E
 		return nil, err
 	}
 
-	err = o.orderService.Cancel(ctx, orderId)
-	if err != nil {
+	// Create command and execute handler
+	cmd := cancel.NewCommand(orderId)
+	if err := o.cancelHandler.Handle(ctx, cmd); err != nil {
 		return nil, err
 	}
 

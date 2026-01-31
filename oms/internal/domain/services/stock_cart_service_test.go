@@ -1,8 +1,6 @@
 package services
 
 import (
-	"context"
-	"errors"
 	"testing"
 
 	"github.com/google/uuid"
@@ -11,148 +9,107 @@ import (
 	item "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/item/v1"
 )
 
-// MockCartRepository is a mock implementation of CartRepository
-type MockCartRepository struct {
-	carts       map[uuid.UUID]*cart.State
-	removeError error
-}
-
-func NewMockCartRepository() *MockCartRepository {
-	return &MockCartRepository{
-		carts: make(map[uuid.UUID]*cart.State),
-	}
-}
-
-func (m *MockCartRepository) GetCart(ctx context.Context, customerId uuid.UUID) (*cart.State, error) {
-	if c, ok := m.carts[customerId]; ok {
-		return c, nil
-	}
-	return nil, errors.New("cart not found")
-}
-
-func (m *MockCartRepository) RemoveItemFromCart(ctx context.Context, customerId uuid.UUID, goodId uuid.UUID, quantity int32) error {
-	if m.removeError != nil {
-		return m.removeError
-	}
-	return nil
-}
-
-func (m *MockCartRepository) AddCart(customerId uuid.UUID, goodId uuid.UUID, quantity int32) {
+func createCartWithItem(customerId, goodId uuid.UUID, quantity int32) *cart.State {
 	state := cart.New(customerId)
 	i, _ := item.NewItem(goodId, quantity)
-	state.AddItem(i)
-	m.carts[customerId] = state
+	_ = state.AddItem(i)
+	return state
 }
 
-func TestStockCartService_HandleStockDepletion(t *testing.T) {
-	ctx := context.Background()
+func TestStockCartService_ProcessStockDepletion(t *testing.T) {
 	goodId := uuid.New()
-	customerId1 := uuid.New()
-	customerId2 := uuid.New()
+	customerId := uuid.New()
 
 	tests := []struct {
-		name                string
-		setupRepo           func(*MockCartRepository)
-		affectedCustomerIds []uuid.UUID
-		wantResults         int
-		wantRemovedCount    int
+		name         string
+		setupCart    func() *cart.State
+		wantRemoved  bool
+		wantQuantity int32
+		wantError    bool
 	}{
 		{
-			name: "removes item from affected carts",
-			setupRepo: func(repo *MockCartRepository) {
-				repo.AddCart(customerId1, goodId, 2)
-				repo.AddCart(customerId2, goodId, 1)
+			name: "removes item from cart",
+			setupCart: func() *cart.State {
+				return createCartWithItem(customerId, goodId, 2)
 			},
-			affectedCustomerIds: []uuid.UUID{customerId1, customerId2},
-			wantResults:         2,
-			wantRemovedCount:    2,
-		},
-		{
-			name: "handles cart not found",
-			setupRepo: func(repo *MockCartRepository) {
-				// Don't add any carts
-			},
-			affectedCustomerIds: []uuid.UUID{customerId1},
-			wantResults:         1,
-			wantRemovedCount:    0,
+			wantRemoved:  true,
+			wantQuantity: 2,
+			wantError:    false,
 		},
 		{
 			name: "handles item not in cart",
-			setupRepo: func(repo *MockCartRepository) {
+			setupCart: func() *cart.State {
 				otherGoodId := uuid.New()
-				repo.AddCart(customerId1, otherGoodId, 2) // Different good
+				return createCartWithItem(customerId, otherGoodId, 2)
 			},
-			affectedCustomerIds: []uuid.UUID{customerId1},
-			wantResults:         1,
-			wantRemovedCount:    0,
+			wantRemoved:  false,
+			wantQuantity: 0,
+			wantError:    false,
 		},
 		{
-			name: "handles empty affected list",
-			setupRepo: func(repo *MockCartRepository) {
-				repo.AddCart(customerId1, goodId, 2)
+			name: "handles empty cart",
+			setupCart: func() *cart.State {
+				return cart.New(customerId)
 			},
-			affectedCustomerIds: []uuid.UUID{},
-			wantResults:         0,
-			wantRemovedCount:    0,
+			wantRemoved:  false,
+			wantQuantity: 0,
+			wantError:    false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			repo := NewMockCartRepository()
-			tt.setupRepo(repo)
+			cartState := tt.setupCart()
+			service := NewStockCartService()
 
-			service := NewStockCartService(repo)
-			results, err := service.HandleStockDepletion(ctx, goodId, tt.affectedCustomerIds)
+			result := service.ProcessStockDepletion(cartState, goodId)
 
-			if err != nil {
-				t.Errorf("HandleStockDepletion() error = %v", err)
-				return
+			if result.Removed != tt.wantRemoved {
+				t.Errorf("ProcessStockDepletion() removed = %v, want %v", result.Removed, tt.wantRemoved)
 			}
 
-			if len(results) != tt.wantResults {
-				t.Errorf("HandleStockDepletion() got %d results, want %d", len(results), tt.wantResults)
+			if result.Quantity != tt.wantQuantity {
+				t.Errorf("ProcessStockDepletion() quantity = %d, want %d", result.Quantity, tt.wantQuantity)
 			}
 
-			removedCount := 0
-			for _, r := range results {
-				if r.Removed {
-					removedCount++
-				}
+			if (result.Error != nil) != tt.wantError {
+				t.Errorf("ProcessStockDepletion() error = %v, wantError = %v", result.Error, tt.wantError)
 			}
 
-			if removedCount != tt.wantRemovedCount {
-				t.Errorf("HandleStockDepletion() removed %d items, want %d", removedCount, tt.wantRemovedCount)
+			if result.CustomerID != customerId {
+				t.Errorf("ProcessStockDepletion() customerID = %v, want %v", result.CustomerID, customerId)
+			}
+
+			if result.GoodID != goodId {
+				t.Errorf("ProcessStockDepletion() goodID = %v, want %v", result.GoodID, goodId)
 			}
 		})
 	}
 }
 
-func TestStockCartService_HandleStockDepletion_RemoveError(t *testing.T) {
-	ctx := context.Background()
+func TestStockCartService_ProcessStockDepletion_ModifiesCart(t *testing.T) {
 	goodId := uuid.New()
 	customerId := uuid.New()
 
-	repo := NewMockCartRepository()
-	repo.AddCart(customerId, goodId, 2)
-	repo.removeError = errors.New("remove failed")
+	cartState := createCartWithItem(customerId, goodId, 3)
+	service := NewStockCartService()
 
-	service := NewStockCartService(repo)
-	results, err := service.HandleStockDepletion(ctx, goodId, []uuid.UUID{customerId})
-
-	if err != nil {
-		t.Errorf("HandleStockDepletion() unexpected error = %v", err)
+	// Verify item is in cart before
+	itemsBefore := cartState.GetItems()
+	if len(itemsBefore) != 1 {
+		t.Fatalf("Expected 1 item in cart, got %d", len(itemsBefore))
 	}
 
-	if len(results) != 1 {
-		t.Fatalf("HandleStockDepletion() got %d results, want 1", len(results))
+	// Process stock depletion
+	result := service.ProcessStockDepletion(cartState, goodId)
+
+	if !result.Removed {
+		t.Error("Expected item to be removed")
 	}
 
-	if results[0].Removed {
-		t.Error("HandleStockDepletion() should not mark as removed when remove fails")
-	}
-
-	if results[0].Error == nil {
-		t.Error("HandleStockDepletion() should have error when remove fails")
+	// Verify item is removed from cart after
+	itemsAfter := cartState.GetItems()
+	if len(itemsAfter) != 0 {
+		t.Errorf("Expected 0 items in cart after removal, got %d", len(itemsAfter))
 	}
 }

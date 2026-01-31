@@ -12,10 +12,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/shortlink-org/shop/oms/internal/boundary/ports"
+	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	order "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 	orderrepo "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order"
-	"github.com/shortlink-org/shop/oms/internal/testhelpers"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/testhelpers"
 	uowpg "github.com/shortlink-org/shop/oms/pkg/uow/postgres"
 )
 

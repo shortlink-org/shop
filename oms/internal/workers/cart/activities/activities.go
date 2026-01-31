@@ -7,20 +7,30 @@ import (
 	"github.com/shopspring/decimal"
 
 	itemv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/item/v1"
-	cartuc "github.com/shortlink-org/shop/oms/internal/usecases/cart"
+	add_item "github.com/shortlink-org/shop/oms/internal/usecases/cart/command/add_item"
+	remove_item "github.com/shortlink-org/shop/oms/internal/usecases/cart/command/remove_item"
+	reset "github.com/shortlink-org/shop/oms/internal/usecases/cart/command/reset"
 )
 
-// Activities wraps cart use case methods for Temporal activities.
+// Activities wraps cart command handlers for Temporal activities.
 // Activities are the bridge between Temporal workflows and application use cases.
 // Temporal workflows must never access repositories directly - only through activities.
 type Activities struct {
-	cartUC *cartuc.UC
+	addItemHandler    *add_item.Handler
+	removeItemHandler *remove_item.Handler
+	resetHandler      *reset.Handler
 }
 
 // New creates a new Activities instance.
-func New(cartUC *cartuc.UC) *Activities {
+func New(
+	addItemHandler *add_item.Handler,
+	removeItemHandler *remove_item.Handler,
+	resetHandler *reset.Handler,
+) *Activities {
 	return &Activities{
-		cartUC: cartUC,
+		addItemHandler:    addItemHandler,
+		removeItemHandler: removeItemHandler,
+		resetHandler:      resetHandler,
 	}
 }
 
@@ -40,7 +50,8 @@ func (a *Activities) AddItem(ctx context.Context, req AddItemRequest) error {
 		return err
 	}
 
-	return a.cartUC.Add(ctx, req.CustomerID, item)
+	cmd := add_item.NewCommand(req.CustomerID, item)
+	return a.addItemHandler.Handle(ctx, cmd)
 }
 
 // RemoveItemRequest represents the request for RemoveItem activity.
@@ -57,7 +68,8 @@ func (a *Activities) RemoveItem(ctx context.Context, req RemoveItemRequest) erro
 		return err
 	}
 
-	return a.cartUC.Remove(ctx, req.CustomerID, item)
+	cmd := remove_item.NewCommand(req.CustomerID, item)
+	return a.removeItemHandler.Handle(ctx, cmd)
 }
 
 // ResetCartRequest represents the request for ResetCart activity.
@@ -67,5 +79,6 @@ type ResetCartRequest struct {
 
 // ResetCart resets the cart.
 func (a *Activities) ResetCart(ctx context.Context, req ResetCartRequest) error {
-	return a.cartUC.Reset(ctx, req.CustomerID)
+	cmd := reset.NewCommand(req.CustomerID)
+	return a.resetHandler.Handle(ctx, cmd)
 }

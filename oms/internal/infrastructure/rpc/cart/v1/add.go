@@ -7,6 +7,7 @@ import (
 
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1/dto"
 	v1 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1/model/v1"
+	"github.com/shortlink-org/shop/oms/internal/usecases/cart/command/add_items"
 )
 
 // Add adds items to the cart
@@ -16,8 +17,9 @@ func (c *CartRPC) Add(ctx context.Context, in *v1.AddRequest) (*emptypb.Empty, e
 		return nil, err
 	}
 
-	// Add items using the new UseCase signature
-	if err := c.cartService.AddItems(ctx, params.CustomerID, params.Items); err != nil {
+	// Create command and execute handler
+	cmd := add_items.NewCommand(params.CustomerID, params.Items)
+	if err := c.addItemsHandler.Handle(ctx, cmd); err != nil {
 		return nil, err
 	}
 
