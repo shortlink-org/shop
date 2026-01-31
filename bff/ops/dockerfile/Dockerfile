@@ -1,14 +1,33 @@
-# Cosmo Router Dockerfile
+# Multi-stage build for Cosmo Router
 # https://cosmo-docs.wundergraph.com/deployments-and-hosting/docker
 
+# =============================================================================
+# Stage 1: Generate router-config.json (offline composition)
+# =============================================================================
+FROM node:22-alpine AS builder
+
+WORKDIR /build
+
+# Install Cosmo CLI
+RUN npm install -g wgc@latest
+
+# Copy schema files and configuration
+COPY schemas/ schemas/
+COPY graph-static.yaml .
+
+# Compose the federated schema from static SDL files
+RUN wgc router compose -i graph-static.yaml -o router-config.json
+
+# =============================================================================
+# Stage 2: Final router image
+# =============================================================================
 FROM ghcr.io/wundergraph/cosmo/router:latest
 
-# Set working directory
 WORKDIR /app
 
 # Copy router configuration
 COPY router.yaml /app/router.yaml
-COPY router-config.json /app/router-config.json
+COPY --from=builder /build/router-config.json /app/router-config.json
 
 # Environment variables
 ENV LISTEN_ADDR="0.0.0.0:9991"

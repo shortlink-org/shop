@@ -1,0 +1,20 @@
+# Static graph configuration for offline composition
+# Uses SDL schema files instead of introspection
+
+version: 1
+
+subgraphs:
+  - name: carts
+    routing_url: http://oms-graphql:8100/graphql
+    schema:
+      file: schemas/carts.graphql
+
+  - name: admin
+    routing_url: http://admin-graphql:8101/graphql
+    schema:
+      file: schemas/admin.graphql
+
+  - name: countries
+    routing_url: https://countries.trevorblades.com/
+    schema:
+      file: schemas/countries.graphql

@@ -1,0 +1,45 @@
+# Carts Subgraph SDL Schema
+# Auto-generated for federation composition
+
+type CartItem {
+  goodId: String
+  quantity: Int
+}
+
+type CartState {
+  cartId: String
+  customerId: String
+  items: [CartItem]
+}
+
+type GetCartResponse {
+  state: CartState
+}
+
+input CartRequest {
+  customerId: String
+}
+
+input CartItemInput {
+  goodId: String!
+  quantity: Int!
+}
+
+input ItemRequest {
+  customerId: String!
+  items: [CartItemInput!]!
+}
+
+type Empty {
+  _: Boolean
+}
+
+type Query {
+  getCart(customerId: CartRequest): GetCartResponse
+}
+
+type Mutation {
+  addItem(addRequest: ItemRequest): Empty!
+  removeItem(removeRequest: ItemRequest): Empty!
+  resetCart(customerId: CartRequest): Empty!
+}

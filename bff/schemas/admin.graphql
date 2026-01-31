@@ -1,0 +1,75 @@
+# Admin Subgraph SDL Schema
+# Auto-generated for federation composition
+
+"""
+Good entity representing a product in the shop.
+"""
+type Good {
+  id: Int!
+  name: String!
+  price: String!
+  description: String!
+  created_at: String!
+  updated_at: String!
+}
+
+"""
+Paginated list of goods.
+"""
+type GoodsList {
+  count: Int!
+  next: String
+  previous: String
+  results: [Good!]!
+}
+
+"""
+Office entity representing an order pickup location.
+"""
+type Office {
+  id: Int!
+  name: String!
+  address: String!
+  latitude: Float
+  longitude: Float
+  opening_time: String!
+  closing_time: String!
+  working_days: String!
+  phone: String
+  email: String
+  is_active: Boolean!
+  created_at: String!
+  updated_at: String!
+}
+
+"""
+Paginated list of offices.
+"""
+type OfficesList {
+  count: Int!
+  next: String
+  previous: String
+  results: [Office!]!
+}
+
+type Query {
+  """
+  Get a paginated list of goods.
+  """
+  goods(page: Int): GoodsList
+
+  """
+  Get a single good by ID.
+  """
+  good(id: Int!): Good
+
+  """
+  Get a paginated list of offices.
+  """
+  offices(page: Int): OfficesList
+
+  """
+  Get a single office by ID.
+  """
+  office(id: Int!): Office
+}

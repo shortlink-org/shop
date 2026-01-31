@@ -1,7 +1,7 @@
 # admin-graphql Dockerfile
 # Uses Tailcall for REST → GraphQL
 
-FROM ghcr.io/tailcallhq/tailcall/tailcall:latest
+FROM ghcr.io/tailcallhq/tailcall/tc-server:latest
 
 LABEL maintainer=batazor111@gmail.com
 LABEL org.opencontainers.image.title="shortlink-shop-admin-graphql"
