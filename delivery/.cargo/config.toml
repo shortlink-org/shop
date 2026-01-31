@@ -1,3 +1,1 @@
-[registries.buf]
-index = "sparse+https://buf.build/gen/cargo/"
-
+# Cargo configuration for delivery service

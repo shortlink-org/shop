@@ -9,7 +9,6 @@ prost = "0.14.3"
 prost-types = "0.14.3"
 pbjson-types = "0.6"
 tonic = "0.14.3"
-shortlink-org_shop-oms_community_neoeinstein-tonic = { version = "0.4.1-20251129220001-af22ed6b9578.1", registry = "buf" }
 
 # Async runtime
 tokio = { version = "1", features = ["full"] }
