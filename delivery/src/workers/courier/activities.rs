@@ -11,12 +11,11 @@ use std::sync::Arc;
 use thiserror::Error;
 use uuid::Uuid;
 
-use crate::boundary::ports::{CourierCache, CourierRepository};
+use crate::boundary::ports::{CourierCache, CourierRepository, QueryHandler, CommandHandlerWithResult};
 use crate::domain::model::courier::{Courier, CourierStatus, WorkHours};
 use crate::domain::model::vo::TransportType;
-use crate::usecases::{
-    CourierFilter, GetCourierPoolUseCase, RegisterCourierRequest, RegisterCourierUseCase,
-};
+use crate::usecases::courier::command::register::{Command as RegisterCommand, Handler as RegisterHandler};
+use crate::usecases::courier::query::get_pool::{Handler as GetPoolHandler, Query as GetPoolQuery};
 
 /// Errors from courier activities
 #[derive(Debug, Error)]
@@ -42,27 +41,27 @@ where
     R: CourierRepository + 'static,
     C: CourierCache + 'static,
 {
-    register_uc: Arc<RegisterCourierUseCase<R, C>>,
-    get_pool_uc: Arc<GetCourierPoolUseCase<R, C>>,
+    register_handler: Arc<RegisterHandler<R, C>>,
+    get_pool_handler: Arc<GetPoolHandler<R, C>>,
     repository: Arc<R>,
     cache: Arc<C>,
 }
 
 impl<R, C> CourierActivities<R, C>
 where
-    R: CourierRepository + 'static,
-    C: CourierCache + 'static,
+    R: CourierRepository + Send + Sync + 'static,
+    C: CourierCache + Send + Sync + 'static,
 {
     /// Create new courier activities
     pub fn new(
-        register_uc: Arc<RegisterCourierUseCase<R, C>>,
-        get_pool_uc: Arc<GetCourierPoolUseCase<R, C>>,
+        register_handler: Arc<RegisterHandler<R, C>>,
+        get_pool_handler: Arc<GetPoolHandler<R, C>>,
         repository: Arc<R>,
         cache: Arc<C>,
     ) -> Self {
         Self {
-            register_uc,
-            get_pool_uc,
+            register_handler,
+            get_pool_handler,
             repository,
             cache,
         }
@@ -74,7 +73,7 @@ where
 
     /// Register a new courier in the system
     ///
-    /// This activity delegates to RegisterCourierUseCase.
+    /// This activity delegates to RegisterHandler.
     pub async fn register_courier(
         &self,
         name: String,
@@ -86,7 +85,7 @@ where
         work_hours: WorkHours,
         push_token: Option<String>,
     ) -> Result<Courier, CourierActivityError> {
-        let request = RegisterCourierRequest {
+        let command = RegisterCommand::new(
             name,
             phone,
             email,
@@ -95,10 +94,10 @@ where
             work_zone,
             work_hours,
             push_token,
-        };
+        );
 
-        self.register_uc
-            .execute(request)
+        self.register_handler
+            .handle(command)
             .await
             .map(|r| r.courier)
             .map_err(|e| CourierActivityError::UseCaseError(e.to_string()))
@@ -110,15 +109,15 @@ where
 
     /// Get free couriers in a zone
     ///
-    /// This activity delegates to GetCourierPoolUseCase.
+    /// This activity delegates to GetPoolHandler.
     pub async fn get_free_couriers_in_zone(
         &self,
         zone: &str,
     ) -> Result<Vec<Courier>, CourierActivityError> {
-        let filter = CourierFilter::free_in_zone(zone);
+        let query = GetPoolQuery::free_in_zone(zone);
 
-        self.get_pool_uc
-            .execute(filter)
+        self.get_pool_handler
+            .handle(query)
             .await
             .map(|r| r.couriers.into_iter().map(|c| c.courier).collect())
             .map_err(|e| CourierActivityError::UseCaseError(e.to_string()))

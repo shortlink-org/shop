@@ -10,9 +10,9 @@ use std::sync::Arc;
 use thiserror::Error;
 use uuid::Uuid;
 
-use crate::boundary::ports::{CourierCache, CourierRepository};
+use crate::boundary::ports::{CourierCache, CourierRepository, QueryHandler};
 use crate::domain::services::dispatch::{CourierForDispatch, DispatchResult, DispatchService, PackageForDispatch};
-use crate::usecases::{CourierFilter, GetCourierPoolUseCase};
+use crate::usecases::courier::query::get_pool::{Handler as GetPoolHandler, Query as GetPoolQuery};
 
 /// Errors from delivery activities
 #[derive(Debug, Error)]
@@ -36,18 +36,18 @@ where
     R: CourierRepository + 'static,
     C: CourierCache + 'static,
 {
-    get_pool_uc: Arc<GetCourierPoolUseCase<R, C>>,
+    get_pool_handler: Arc<GetPoolHandler<R, C>>,
     cache: Arc<C>,
 }
 
 impl<R, C> DeliveryActivities<R, C>
 where
-    R: CourierRepository + 'static,
-    C: CourierCache + 'static,
+    R: CourierRepository + Send + Sync + 'static,
+    C: CourierCache + Send + Sync + 'static,
 {
     /// Create new delivery activities
-    pub fn new(get_pool_uc: Arc<GetCourierPoolUseCase<R, C>>, cache: Arc<C>) -> Self {
-        Self { get_pool_uc, cache }
+    pub fn new(get_pool_handler: Arc<GetPoolHandler<R, C>>, cache: Arc<C>) -> Self {
+        Self { get_pool_handler, cache }
     }
 
     // =========================================================================
@@ -59,11 +59,11 @@ where
         &self,
         zone: &str,
     ) -> Result<Vec<CourierForDispatch>, DeliveryActivityError> {
-        let filter = CourierFilter::free_in_zone(zone);
+        let query = GetPoolQuery::free_in_zone(zone);
 
         let result = self
-            .get_pool_uc
-            .execute(filter)
+            .get_pool_handler
+            .handle(query)
             .await
             .map_err(|e| DeliveryActivityError::UseCaseError(e.to_string()))?;
 
