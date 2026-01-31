@@ -7,7 +7,7 @@ ARG BUILDKIT_SBOM_SCAN_STAGE=true
 ARG BUILDKIT_SBOM_SCAN_CONTEXT=true
 
 # Build stage
-FROM --platform=$BUILDPLATFORM rust:1.84-alpine AS builder
+FROM --platform=$BUILDPLATFORM rust:1.85-alpine AS builder
 
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
