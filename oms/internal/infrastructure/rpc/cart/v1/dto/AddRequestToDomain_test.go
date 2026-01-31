@@ -70,15 +70,15 @@ func TestAddRequestToDomain(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			actualState, err := AddRequestToDomain(tt.request)
+			actualParams, err := AddRequestToDomain(tt.request)
 			if tt.expectedError != nil {
 				assert.NotNil(t, err)
 				assert.Equal(t, tt.expectedError.Error(), err.Error())
 			} else {
 				assert.NoError(t, err)
-				assert.NotNil(t, actualState)
-				assert.Equal(t, tt.expectedState.GetCustomerId(), actualState.GetCustomerId())
-				assert.Equal(t, len(tt.expectedState.GetItems()), len(actualState.GetItems()))
+				assert.NotNil(t, actualParams)
+				assert.Equal(t, tt.expectedState.GetCustomerId(), actualParams.CustomerID)
+				assert.Equal(t, len(tt.expectedState.GetItems()), len(actualParams.Items))
 			}
 		})
 	}
