@@ -235,12 +235,12 @@ export async function getCollectionProducts({ page }: {
     query: getCollectionProductsQuery,
   });
 
-  if (!res.body.data.goods) {
+  if (!res.body.data.goods_goods_list) {
     console.log(`No collection found for \`${res.body.data}\``);
     return [];
   }
 
-  return res.body.data.goods.results;
+  return res.body.data.goods_goods_list.results;
 }
 
 export async function getCollections(): Promise<Collection[]> {
