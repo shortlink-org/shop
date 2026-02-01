@@ -21,9 +21,9 @@ require (
 	github.com/shortlink-org/go-sdk/graceful_shutdown v0.0.0-20260130191740-6ca93b747e53
 	github.com/shortlink-org/go-sdk/grpc v0.0.0-20260130191740-6ca93b747e53
 	github.com/shortlink-org/go-sdk/logger v0.0.0-20260130191740-6ca93b747e53
-	github.com/shortlink-org/go-sdk/observability v0.0.0-20260130191740-6ca93b747e53
+	github.com/shortlink-org/go-sdk/observability v0.0.0-20260131202010-0fe4bdf647bf
 	github.com/shortlink-org/go-sdk/specification v0.0.0-20260130191740-6ca93b747e53
-	github.com/shortlink-org/go-sdk/temporal v0.0.0-20260130191740-6ca93b747e53
+	github.com/shortlink-org/go-sdk/temporal v0.0.0-20260201121039-0dcf44d0db33
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.40.0
