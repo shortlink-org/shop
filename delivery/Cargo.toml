@@ -13,7 +13,7 @@ tonic-prost = "0.14"
 tonic-health = "0.14"
 
 # Async runtime
-tokio = { version = "1", features = ["full"] }
+tokio = { version = "1.49.0", features = ["full"] }
 
 # Serialization
 serde = { version = "1.0.228", features = ["derive"] }
