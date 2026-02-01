@@ -22,6 +22,7 @@ ENV PYTHONUNBUFFERED=1
 ENV VIRTUAL_ENV=/app/.venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 ENV UV_CACHE_DIR=/home/shop/.cache/uv
+ENV PYTHONPATH=/app/src
 
 # HTTP API && Prometheus metrics
 EXPOSE 8000
@@ -57,4 +58,4 @@ COPY --chown=shop:shop . .
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=20s \
   CMD curl -f http://localhost:8000/healthz || exit 1
 
-CMD ["/app/.venv/bin/gunicorn", "src.admin.wsgi:application", "-b", "0.0.0.0:8000", "--workers", "2", "--threads", "4", "--timeout", "60", "--graceful-timeout", "30", "--worker-tmp-dir", "/dev/shm"]
+CMD ["/app/.venv/bin/gunicorn", "admin.wsgi:application", "-b", "0.0.0.0:8000", "--workers", "2", "--threads", "4", "--timeout", "60", "--graceful-timeout", "30", "--worker-tmp-dir", "/dev/shm"]
