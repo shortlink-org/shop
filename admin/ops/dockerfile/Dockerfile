@@ -23,10 +23,6 @@ ENV VIRTUAL_ENV=/app/.venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 ENV UV_CACHE_DIR=/home/shop/.cache/uv
 
-# GDAL/GEOS library paths for Django GeoDjango (Debian x86_64)
-ENV GDAL_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgdal.so
-ENV GEOS_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgeos_c.so
-
 # HTTP API && Prometheus metrics
 EXPOSE 8000
 
@@ -35,7 +31,14 @@ RUN apt-get update && \
       curl tini sqlite3 git \
       # GeoDjango dependencies (GDAL, GEOS, PROJ)
       gdal-bin libgdal-dev libgeos-dev libproj-dev && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    # Verify GDAL libraries are installed correctly
+    ls -la /usr/lib/x86_64-linux-gnu/libgdal* /usr/lib/x86_64-linux-gnu/libgeos_c* || true
+
+# GDAL/GEOS library paths for Django GeoDjango (Debian x86_64)
+# These must match the symlinks created by libgdal-dev
+ENV GDAL_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgdal.so
+ENV GEOS_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgeos_c.so
 
 RUN addgroup --system --gid 1000 shop && adduser --system --uid 1000 --gid 1000 shop
 

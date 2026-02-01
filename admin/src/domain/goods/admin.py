@@ -60,7 +60,7 @@ class GoodAdmin(admin.ModelAdmin):
                 lambda: f"{gen.food.fruit()} {gen.choice(['Jam', 'Juice', 'Smoothie', 'Preserve', 'Syrup'])}",
                 lambda: f"{gen.choice(['Organic', 'Premium', 'Fresh', 'Artisan', 'Natural'])} {gen.food.vegetable()}",
                 lambda: f"{gen.food.dish()} {gen.choice(['Mix', 'Kit', 'Set', 'Pack', 'Box'])}",
-                lambda: f"{gen.choice(['Gourmet', 'Classic', 'Traditional', 'Homestyle', 'Chef\\'s'])} {gen.food.dish()}",
+                lambda: f"{gen.choice(['Gourmet', 'Classic', 'Traditional', 'Homestyle', "Chef's"])} {gen.food.dish()}",
                 lambda: f"{gen.food.spices()} {gen.choice(['Blend', 'Seasoning', 'Mix', 'Powder'])}",
                 lambda: f"{gen.choice(['Sparkling', 'Craft', 'Imported', 'Local', 'Organic'])} {gen.food.drink()}",
                 lambda: f"{gen.food.fruit()} & {gen.food.fruit()} {gen.choice(['Salad', 'Mix', 'Combo', 'Duo'])}",
