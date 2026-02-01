@@ -6,18 +6,22 @@
 //! 1. Load package from repository
 //! 2. Validate courier is assigned to package
 //! 3. Update package status (DELIVERED or NOT_DELIVERED)
-//! 4. Update courier load
-//! 5. Save courier location
-//! 6. Generate PackageDeliveredEvent or PackageNotDeliveredEvent
-//! 7. Notify OMS
+//! 4. Update courier stats and load
+//! 5. Save package
+//! 6. Return response
 
 use std::sync::Arc;
 
+use chrono::{DateTime, Utc};
 use thiserror::Error;
+use uuid::Uuid;
 
-use crate::domain::ports::{CommandHandler, CourierCache, CourierRepository, RepositoryError};
+use crate::domain::model::package::{PackageId, PackageStatus};
+use crate::domain::ports::{
+    CommandHandlerWithResult, CourierCache, CourierRepository, PackageRepository, RepositoryError,
+};
 
-use super::command::DeliveryResult;
+use super::command::{DeliveryResult, NotDeliveredReason};
 use super::Command;
 
 /// Errors that can occur during delivery confirmation
@@ -25,121 +29,712 @@ use super::Command;
 pub enum DeliverOrderError {
     /// Package not found
     #[error("Package not found: {0}")]
-    PackageNotFound(String),
+    PackageNotFound(Uuid),
 
     /// Courier not found
     #[error("Courier not found: {0}")]
-    CourierNotFound(String),
+    CourierNotFound(Uuid),
 
     /// Courier not assigned to package
     #[error("Courier {0} is not assigned to package {1}")]
-    CourierNotAssigned(String, String),
+    CourierNotAssigned(Uuid, Uuid),
 
     /// Invalid package status
-    #[error("Invalid package status for delivery: {0}")]
-    InvalidPackageStatus(String),
+    #[error("Invalid package status for delivery: expected Assigned or InTransit, got {0}")]
+    InvalidPackageStatus(PackageStatus),
 
     /// Missing reason for failed delivery
     #[error("Reason required for failed delivery")]
     MissingNotDeliveredReason,
+
+    /// Package already delivered
+    #[error("Package already delivered: {0}")]
+    AlreadyDelivered(Uuid),
 
     /// Repository error
     #[error("Repository error: {0}")]
     RepositoryError(#[from] RepositoryError),
 }
 
-/// Deliver Order Handler
-pub struct Handler<R, C>
-where
-    R: CourierRepository,
-    C: CourierCache,
-{
-    repository: Arc<R>,
-    #[allow(dead_code)]
-    cache: Arc<C>,
+/// Response from delivering an order
+#[derive(Debug, Clone)]
+pub struct Response {
+    /// The package ID
+    pub package_id: Uuid,
+    /// The updated package status
+    pub status: PackageStatus,
+    /// When the package was updated
+    pub updated_at: DateTime<Utc>,
 }
 
-impl<R, C> Handler<R, C>
+/// Deliver Order Handler
+pub struct Handler<R, C, P>
 where
     R: CourierRepository,
     C: CourierCache,
+    P: PackageRepository,
+{
+    courier_repo: Arc<R>,
+    courier_cache: Arc<C>,
+    package_repo: Arc<P>,
+}
+
+impl<R, C, P> Handler<R, C, P>
+where
+    R: CourierRepository,
+    C: CourierCache,
+    P: PackageRepository,
 {
     /// Create a new handler instance
-    pub fn new(repository: Arc<R>, cache: Arc<C>) -> Self {
-        Self { repository, cache }
+    pub fn new(courier_repo: Arc<R>, courier_cache: Arc<C>, package_repo: Arc<P>) -> Self {
+        Self {
+            courier_repo,
+            courier_cache,
+            package_repo,
+        }
+    }
+
+    /// Convert NotDeliveredReason to string for storage
+    fn reason_to_string(reason: &NotDeliveredReason) -> String {
+        match reason {
+            NotDeliveredReason::CustomerUnavailable => "CUSTOMER_NOT_AVAILABLE".to_string(),
+            NotDeliveredReason::WrongAddress => "WRONG_ADDRESS".to_string(),
+            NotDeliveredReason::Refused => "CUSTOMER_REFUSED".to_string(),
+            NotDeliveredReason::AccessDenied => "ACCESS_DENIED".to_string(),
+            NotDeliveredReason::Other(desc) => format!("OTHER: {}", desc),
+        }
     }
 }
 
-impl<R, C> CommandHandler<Command> for Handler<R, C>
+impl<R, C, P> CommandHandlerWithResult<Command, Response> for Handler<R, C, P>
 where
     R: CourierRepository + Send + Sync,
     C: CourierCache + Send + Sync,
+    P: PackageRepository + Send + Sync,
 {
     type Error = DeliverOrderError;
 
     /// Handle the DeliverOrder command
-    async fn handle(&self, cmd: Command) -> Result<(), Self::Error> {
-        // 1. Validate courier exists
-        let _courier = self
-            .repository
-            .find_by_id(cmd.courier_id)
-            .await?
-            .ok_or_else(|| DeliverOrderError::CourierNotFound(cmd.courier_id.to_string()))?;
-
-        // 2. Load package from repository
-        // TODO: Implement PackageRepository
-        // let package = self.package_repository.find_by_id(cmd.package_id).await?
-        //     .ok_or_else(|| DeliverOrderError::PackageNotFound(cmd.package_id.to_string()))?;
-
-        // 3. Validate courier is assigned to package
-        // TODO: if package.assigned_courier_id != Some(cmd.courier_id) {
-        //     return Err(DeliverOrderError::CourierNotAssigned(...));
-        // }
-
-        // 4. Validate not_delivered_reason if result is NotDelivered
+    async fn handle(&self, cmd: Command) -> Result<Response, Self::Error> {
+        // 1. Validate reason is provided if result is NotDelivered
         if cmd.result == DeliveryResult::NotDelivered && cmd.not_delivered_reason.is_none() {
             return Err(DeliverOrderError::MissingNotDeliveredReason);
         }
 
-        // 5. Update package status
-        match cmd.result {
-            DeliveryResult::Delivered => {
-                // TODO: package.transition_to(PackageStatus::Delivered)?;
+        // 2. Load package from repository
+        let mut package = self
+            .package_repo
+            .find_by_id(PackageId::from_uuid(cmd.package_id))
+            .await?
+            .ok_or(DeliverOrderError::PackageNotFound(cmd.package_id))?;
 
-                // Update courier stats
-                // TODO: self.cache.increment_successful_deliveries(cmd.courier_id).await?;
+        // 3. Validate package status (must be Assigned or InTransit)
+        match package.status() {
+            PackageStatus::Assigned | PackageStatus::InTransit => {}
+            PackageStatus::Delivered => {
+                return Err(DeliverOrderError::AlreadyDelivered(cmd.package_id));
             }
-            DeliveryResult::NotDelivered => {
-                // TODO: package.transition_to(PackageStatus::NotDelivered)?;
-
-                // Update courier stats
-                // TODO: self.cache.increment_failed_deliveries(cmd.courier_id).await?;
+            status => {
+                return Err(DeliverOrderError::InvalidPackageStatus(status));
             }
         }
 
-        // 6. Update courier load (decrease by 1)
-        // TODO: self.cache.decrement_load(cmd.courier_id).await?;
+        // 4. Validate courier is assigned to this package
+        let assigned_courier = package
+            .courier_id()
+            .ok_or(DeliverOrderError::CourierNotAssigned(
+                cmd.courier_id,
+                cmd.package_id,
+            ))?;
 
-        // 7. Save courier location
-        // TODO: geolocation_client.save_location(cmd.confirmation_location).await?;
+        if assigned_courier != cmd.courier_id {
+            return Err(DeliverOrderError::CourierNotAssigned(
+                cmd.courier_id,
+                cmd.package_id,
+            ));
+        }
 
-        // 8. Save package changes
-        // TODO: self.package_repository.save(&package).await?;
+        // 5. Load courier to get current stats
+        let courier = self
+            .courier_repo
+            .find_by_id(cmd.courier_id)
+            .await?
+            .ok_or(DeliverOrderError::CourierNotFound(cmd.courier_id))?;
 
-        // 9. Generate and publish event
-        // TODO: match cmd.result {
-        //     DeliveryResult::Delivered => event_publisher.publish(PackageDeliveredEvent { ... }),
-        //     DeliveryResult::NotDelivered => event_publisher.publish(PackageNotDeliveredEvent { ... }),
-        // }
+        // 6. Update package status and courier stats based on result
+        match cmd.result {
+            DeliveryResult::Delivered => {
+                // Mark package as delivered
+                package.mark_delivered().map_err(|e| {
+                    DeliverOrderError::InvalidPackageStatus(package.status())
+                })?;
 
-        // 10. Notify OMS
-        // TODO: oms_client.notify_delivery_result(cmd.package_id, cmd.result).await?;
+                // Update courier stats - increment successful deliveries
+                self.courier_cache
+                    .update_stats(
+                        cmd.courier_id,
+                        courier.rating(),
+                        courier.successful_deliveries() + 1,
+                        courier.failed_deliveries(),
+                    )
+                    .await
+                    .map_err(|e| {
+                        RepositoryError::QueryError(format!("Failed to update courier stats: {}", e))
+                    })?;
+            }
+            DeliveryResult::NotDelivered => {
+                // Mark package as not delivered with reason
+                let reason = cmd
+                    .not_delivered_reason
+                    .as_ref()
+                    .map(Self::reason_to_string)
+                    .unwrap_or_default();
 
-        Ok(())
+                package.mark_not_delivered(reason).map_err(|e| {
+                    DeliverOrderError::InvalidPackageStatus(package.status())
+                })?;
+
+                // Update courier stats - increment failed deliveries
+                self.courier_cache
+                    .update_stats(
+                        cmd.courier_id,
+                        courier.rating(),
+                        courier.successful_deliveries(),
+                        courier.failed_deliveries() + 1,
+                    )
+                    .await
+                    .map_err(|e| {
+                        RepositoryError::QueryError(format!("Failed to update courier stats: {}", e))
+                    })?;
+            }
+        }
+
+        // 7. Update courier load (decrement by 1)
+        let new_load = courier.current_load().saturating_sub(1);
+        self.courier_cache
+            .update_load(cmd.courier_id, new_load, courier.max_load())
+            .await
+            .map_err(|e| {
+                RepositoryError::QueryError(format!("Failed to update courier load: {}", e))
+            })?;
+
+        // 8. Save package to repository
+        self.package_repo.save(&package).await?;
+
+        // 9. TODO: Generate and publish event (PackageDelivered or PackageNotDelivered)
+        // 10. TODO: Notify OMS about delivery result
+        // 11. TODO: Update courier location via Geolocation service
+
+        Ok(Response {
+            package_id: cmd.package_id,
+            status: package.status(),
+            updated_at: package.updated_at(),
+        })
     }
 }
 
 #[cfg(test)]
 mod tests {
-    // TODO: Add unit tests with mock repositories
+    use super::*;
+    use crate::domain::model::courier::{Courier, CourierId, WorkHours};
+    use crate::domain::model::package::{Address, DeliveryPeriod, Package, Priority};
+    use crate::domain::model::vo::location::Location;
+    use crate::domain::model::vo::TransportType;
+    use crate::domain::ports::{CacheError, CachedCourierState, PackageFilter};
+    use async_trait::async_trait;
+    use chrono::{NaiveTime, Utc};
+    use std::collections::HashMap;
+    use std::sync::Mutex;
+
+    // ==================== Mock Repositories ====================
+
+    struct MockCourierRepository {
+        couriers: Mutex<HashMap<Uuid, Courier>>,
+    }
+
+    impl MockCourierRepository {
+        fn new() -> Self {
+            Self {
+                couriers: Mutex::new(HashMap::new()),
+            }
+        }
+
+        fn add_courier(&self, courier: Courier) {
+            let mut couriers = self.couriers.lock().unwrap();
+            couriers.insert(courier.id().0, courier);
+        }
+    }
+
+    #[async_trait]
+    impl CourierRepository for MockCourierRepository {
+        async fn save(&self, courier: &Courier) -> Result<(), RepositoryError> {
+            let mut couriers = self.couriers.lock().unwrap();
+            couriers.insert(courier.id().0, courier.clone());
+            Ok(())
+        }
+
+        async fn find_by_id(&self, id: Uuid) -> Result<Option<Courier>, RepositoryError> {
+            let couriers = self.couriers.lock().unwrap();
+            Ok(couriers.get(&id).cloned())
+        }
+
+        async fn find_by_phone(&self, _phone: &str) -> Result<Option<Courier>, RepositoryError> {
+            Ok(None)
+        }
+
+        async fn find_by_email(&self, _email: &str) -> Result<Option<Courier>, RepositoryError> {
+            Ok(None)
+        }
+
+        async fn find_by_work_zone(&self, _zone: &str) -> Result<Vec<Courier>, RepositoryError> {
+            Ok(vec![])
+        }
+
+        async fn email_exists(&self, _email: &str) -> Result<bool, RepositoryError> {
+            Ok(false)
+        }
+
+        async fn phone_exists(&self, _phone: &str) -> Result<bool, RepositoryError> {
+            Ok(false)
+        }
+
+        async fn delete(&self, _id: Uuid) -> Result<(), RepositoryError> {
+            Ok(())
+        }
+
+        async fn archive(&self, _id: Uuid) -> Result<(), RepositoryError> {
+            Ok(())
+        }
+
+        async fn list(&self, _limit: u64, _offset: u64) -> Result<Vec<Courier>, RepositoryError> {
+            let couriers = self.couriers.lock().unwrap();
+            Ok(couriers.values().cloned().collect())
+        }
+    }
+
+    struct MockCourierCache;
+
+    #[async_trait]
+    impl CourierCache for MockCourierCache {
+        async fn initialize_state(
+            &self,
+            _courier_id: Uuid,
+            _state: CachedCourierState,
+            _work_zone: &str,
+        ) -> Result<(), CacheError> {
+            Ok(())
+        }
+
+        async fn get_state(&self, _courier_id: Uuid) -> Result<Option<CachedCourierState>, CacheError> {
+            Ok(None)
+        }
+
+        async fn set_status(
+            &self,
+            _courier_id: Uuid,
+            _status: crate::domain::model::courier::CourierStatus,
+            _work_zone: &str,
+        ) -> Result<(), CacheError> {
+            Ok(())
+        }
+
+        async fn get_status(
+            &self,
+            _courier_id: Uuid,
+        ) -> Result<Option<crate::domain::model::courier::CourierStatus>, CacheError> {
+            Ok(None)
+        }
+
+        async fn update_load(
+            &self,
+            _courier_id: Uuid,
+            _current_load: u32,
+            _max_load: u32,
+        ) -> Result<(), CacheError> {
+            Ok(())
+        }
+
+        async fn update_stats(
+            &self,
+            _courier_id: Uuid,
+            _rating: f64,
+            _successful_deliveries: u32,
+            _failed_deliveries: u32,
+        ) -> Result<(), CacheError> {
+            Ok(())
+        }
+
+        async fn get_free_couriers_in_zone(&self, _zone: &str) -> Result<Vec<Uuid>, CacheError> {
+            Ok(vec![])
+        }
+
+        async fn get_all_free_couriers(&self) -> Result<Vec<Uuid>, CacheError> {
+            Ok(vec![])
+        }
+
+        async fn remove(&self, _courier_id: Uuid, _work_zone: &str) -> Result<(), CacheError> {
+            Ok(())
+        }
+
+        async fn exists(&self, _courier_id: Uuid) -> Result<bool, CacheError> {
+            Ok(true)
+        }
+
+        async fn update_status(
+            &self,
+            _courier_id: Uuid,
+            _status: crate::domain::model::courier::CourierStatus,
+        ) -> Result<(), CacheError> {
+            Ok(())
+        }
+
+        async fn update_max_load(&self, _courier_id: Uuid, _max_load: u32) -> Result<(), CacheError> {
+            Ok(())
+        }
+
+        async fn add_to_free_pool(&self, _courier_id: Uuid, _work_zone: &str) -> Result<(), CacheError> {
+            Ok(())
+        }
+
+        async fn remove_from_free_pool(
+            &self,
+            _courier_id: Uuid,
+            _work_zone: &str,
+        ) -> Result<(), CacheError> {
+            Ok(())
+        }
+    }
+
+    struct MockPackageRepository {
+        packages: Mutex<HashMap<Uuid, Package>>,
+    }
+
+    impl MockPackageRepository {
+        fn new() -> Self {
+            Self {
+                packages: Mutex::new(HashMap::new()),
+            }
+        }
+
+        fn add_package(&self, package: Package) {
+            let mut packages = self.packages.lock().unwrap();
+            packages.insert(package.id().0, package);
+        }
+    }
+
+    #[async_trait]
+    impl PackageRepository for MockPackageRepository {
+        async fn save(&self, package: &Package) -> Result<(), RepositoryError> {
+            let mut packages = self.packages.lock().unwrap();
+            packages.insert(package.id().0, package.clone());
+            Ok(())
+        }
+
+        async fn find_by_id(&self, id: PackageId) -> Result<Option<Package>, RepositoryError> {
+            let packages = self.packages.lock().unwrap();
+            Ok(packages.get(&id.0).cloned())
+        }
+
+        async fn find_by_order_id(&self, _order_id: Uuid) -> Result<Option<Package>, RepositoryError> {
+            Ok(None)
+        }
+
+        async fn find_by_filter(
+            &self,
+            _filter: PackageFilter,
+            _limit: u64,
+            _offset: u64,
+        ) -> Result<Vec<Package>, RepositoryError> {
+            Ok(vec![])
+        }
+
+        async fn count_by_filter(&self, _filter: PackageFilter) -> Result<u64, RepositoryError> {
+            Ok(0)
+        }
+
+        async fn find_by_courier(&self, _courier_id: Uuid) -> Result<Vec<Package>, RepositoryError> {
+            Ok(vec![])
+        }
+
+        async fn delete(&self, _id: PackageId) -> Result<(), RepositoryError> {
+            Ok(())
+        }
+    }
+
+    // ==================== Test Helpers ====================
+
+    fn create_test_address() -> Address {
+        Address::new(
+            "123 Main St".to_string(),
+            "Berlin".to_string(),
+            "10115".to_string(),
+            Location::new(52.52, 13.405, 10.0).unwrap(),
+        )
+    }
+
+    fn create_test_location() -> Location {
+        Location::new(52.52, 13.405, 10.0).unwrap()
+    }
+
+    fn create_in_transit_package(courier_id: Uuid) -> Package {
+        let now = Utc::now();
+        let period = DeliveryPeriod::new(
+            now + chrono::Duration::hours(2),
+            now + chrono::Duration::hours(4),
+        )
+        .unwrap();
+
+        let mut package = Package::new(
+            Uuid::new_v4(),
+            Uuid::new_v4(),
+            create_test_address(),
+            create_test_address(),
+            period,
+            2.5,
+            Priority::Normal,
+            "Berlin-101".to_string(),
+        );
+
+        // Move to pool -> assign -> start transit
+        package.move_to_pool().unwrap();
+        package.assign_to(courier_id).unwrap();
+        package.start_transit().unwrap();
+        package
+    }
+
+    fn create_test_courier(id: Uuid) -> Courier {
+        let work_hours = WorkHours::new(
+            NaiveTime::from_hms_opt(9, 0, 0).unwrap(),
+            NaiveTime::from_hms_opt(18, 0, 0).unwrap(),
+            vec![1, 2, 3, 4, 5],
+        )
+        .unwrap();
+
+        Courier::reconstitute(
+            CourierId::from_uuid(id),
+            "Test Courier".to_string(),
+            "+1234567890".to_string(),
+            "test@example.com".to_string(),
+            TransportType::Car,
+            50.0,
+            "Berlin-101".to_string(),
+            work_hours,
+            None,
+            crate::domain::model::courier::CourierStatus::Free,
+            crate::domain::model::courier::CourierCapacity::new(5),
+            4.5,
+            10, // successful_deliveries
+            1,  // failed_deliveries
+            Utc::now(),
+            Utc::now(),
+            1,
+        )
+    }
+
+    // ==================== Tests ====================
+
+    #[tokio::test]
+    async fn test_deliver_order_success() {
+        let courier_repo = Arc::new(MockCourierRepository::new());
+        let courier_cache = Arc::new(MockCourierCache);
+        let package_repo = Arc::new(MockPackageRepository::new());
+
+        let courier_id = Uuid::new_v4();
+        let courier = create_test_courier(courier_id);
+        courier_repo.add_courier(courier);
+
+        let package = create_in_transit_package(courier_id);
+        let package_id = package.id().0;
+        package_repo.add_package(package);
+
+        let handler = Handler::new(courier_repo, courier_cache, package_repo.clone());
+
+        let cmd = Command::delivered(
+            package_id,
+            courier_id,
+            create_test_location(),
+            None,
+            None,
+        );
+        let result = handler.handle(cmd).await;
+
+        assert!(result.is_ok(), "Expected Ok, got: {:?}", result.err());
+        let response = result.unwrap();
+        assert_eq!(response.package_id, package_id);
+        assert_eq!(response.status, PackageStatus::Delivered);
+
+        // Verify package status changed
+        let updated_package = package_repo
+            .find_by_id(PackageId::from_uuid(package_id))
+            .await
+            .unwrap();
+        assert!(updated_package.is_some());
+        assert_eq!(updated_package.unwrap().status(), PackageStatus::Delivered);
+    }
+
+    #[tokio::test]
+    async fn test_deliver_order_not_delivered_success() {
+        let courier_repo = Arc::new(MockCourierRepository::new());
+        let courier_cache = Arc::new(MockCourierCache);
+        let package_repo = Arc::new(MockPackageRepository::new());
+
+        let courier_id = Uuid::new_v4();
+        let courier = create_test_courier(courier_id);
+        courier_repo.add_courier(courier);
+
+        let package = create_in_transit_package(courier_id);
+        let package_id = package.id().0;
+        package_repo.add_package(package);
+
+        let handler = Handler::new(courier_repo, courier_cache, package_repo.clone());
+
+        let cmd = Command::not_delivered(
+            package_id,
+            courier_id,
+            create_test_location(),
+            NotDeliveredReason::CustomerUnavailable,
+            None,
+        );
+        let result = handler.handle(cmd).await;
+
+        assert!(result.is_ok(), "Expected Ok, got: {:?}", result.err());
+        let response = result.unwrap();
+        assert_eq!(response.package_id, package_id);
+        assert_eq!(response.status, PackageStatus::NotDelivered);
+    }
+
+    #[tokio::test]
+    async fn test_deliver_order_package_not_found() {
+        let courier_repo = Arc::new(MockCourierRepository::new());
+        let courier_cache = Arc::new(MockCourierCache);
+        let package_repo = Arc::new(MockPackageRepository::new());
+
+        let handler = Handler::new(courier_repo, courier_cache, package_repo);
+
+        let cmd = Command::delivered(
+            Uuid::new_v4(),
+            Uuid::new_v4(),
+            create_test_location(),
+            None,
+            None,
+        );
+        let result = handler.handle(cmd).await;
+
+        assert!(matches!(result, Err(DeliverOrderError::PackageNotFound(_))));
+    }
+
+    #[tokio::test]
+    async fn test_deliver_order_courier_not_assigned() {
+        let courier_repo = Arc::new(MockCourierRepository::new());
+        let courier_cache = Arc::new(MockCourierCache);
+        let package_repo = Arc::new(MockPackageRepository::new());
+
+        let assigned_courier_id = Uuid::new_v4();
+        let wrong_courier_id = Uuid::new_v4();
+
+        // Add both couriers
+        let assigned_courier = create_test_courier(assigned_courier_id);
+        let wrong_courier = create_test_courier(wrong_courier_id);
+        courier_repo.add_courier(assigned_courier);
+        courier_repo.add_courier(wrong_courier);
+
+        // Package is assigned to assigned_courier_id
+        let package = create_in_transit_package(assigned_courier_id);
+        let package_id = package.id().0;
+        package_repo.add_package(package);
+
+        let handler = Handler::new(courier_repo, courier_cache, package_repo);
+
+        // Try to deliver with wrong courier
+        let cmd = Command::delivered(
+            package_id,
+            wrong_courier_id,
+            create_test_location(),
+            None,
+            None,
+        );
+        let result = handler.handle(cmd).await;
+
+        assert!(matches!(
+            result,
+            Err(DeliverOrderError::CourierNotAssigned(_, _))
+        ));
+    }
+
+    #[tokio::test]
+    async fn test_deliver_order_missing_reason() {
+        let courier_repo = Arc::new(MockCourierRepository::new());
+        let courier_cache = Arc::new(MockCourierCache);
+        let package_repo = Arc::new(MockPackageRepository::new());
+
+        let handler = Handler::new(courier_repo, courier_cache, package_repo);
+
+        // Create command with NotDelivered but no reason
+        let cmd = Command {
+            package_id: Uuid::new_v4(),
+            courier_id: Uuid::new_v4(),
+            result: DeliveryResult::NotDelivered,
+            not_delivered_reason: None, // Missing!
+            confirmation_location: create_test_location(),
+            photo_proof: None,
+            signature: None,
+            notes: None,
+        };
+        let result = handler.handle(cmd).await;
+
+        assert!(matches!(
+            result,
+            Err(DeliverOrderError::MissingNotDeliveredReason)
+        ));
+    }
+
+    #[tokio::test]
+    async fn test_deliver_order_invalid_status() {
+        let courier_repo = Arc::new(MockCourierRepository::new());
+        let courier_cache = Arc::new(MockCourierCache);
+        let package_repo = Arc::new(MockPackageRepository::new());
+
+        let courier_id = Uuid::new_v4();
+        let courier = create_test_courier(courier_id);
+        courier_repo.add_courier(courier);
+
+        // Create package in InPool status (not Assigned)
+        let now = Utc::now();
+        let period = DeliveryPeriod::new(
+            now + chrono::Duration::hours(2),
+            now + chrono::Duration::hours(4),
+        )
+        .unwrap();
+
+        let mut package = Package::new(
+            Uuid::new_v4(),
+            Uuid::new_v4(),
+            create_test_address(),
+            create_test_address(),
+            period,
+            2.5,
+            Priority::Normal,
+            "Berlin-101".to_string(),
+        );
+        package.move_to_pool().unwrap();
+        // NOT assigned - status is InPool
+        let package_id = package.id().0;
+        package_repo.add_package(package);
+
+        let handler = Handler::new(courier_repo, courier_cache, package_repo);
+
+        let cmd = Command::delivered(
+            package_id,
+            courier_id,
+            create_test_location(),
+            None,
+            None,
+        );
+        let result = handler.handle(cmd).await;
+
+        assert!(matches!(
+            result,
+            Err(DeliverOrderError::InvalidPackageStatus(_))
+        ));
+    }
 }

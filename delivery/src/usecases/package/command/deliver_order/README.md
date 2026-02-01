@@ -1,7 +1,8 @@
 ## Use Case: UC-3 Deliver Order
 
-### Описание
-Курьер подтверждает доставку заказа. Может быть успешной (доставлено) или неуспешной (не доставлено с указанием причины).
+### Description
+
+Courier confirms order delivery. Can be successful (delivered) or unsuccessful (not delivered with reason specified).
 
 ### Sequence Diagram
 
@@ -100,48 +101,47 @@ message DeliverOrderResponse {
 }
 ```
 
-### Причины не доставки (NOT_DELIVERED)
+### NOT_DELIVERED Reasons
 
-- `CUSTOMER_NOT_AVAILABLE` - Клиент недоступен
-- `WRONG_ADDRESS` - Неправильный адрес
-- `CUSTOMER_REFUSED` - Клиент отказался от заказа
-- `ACCESS_DENIED` - Нет доступа к адресу
-- `PACKAGE_DAMAGED` - Посылка повреждена
-- `OTHER` - Другая причина (требуется описание)
+- `CUSTOMER_NOT_AVAILABLE` - Customer not available
+- `WRONG_ADDRESS` - Wrong address
+- `CUSTOMER_REFUSED` - Customer refused the order
+- `ACCESS_DENIED` - No access to address
+- `PACKAGE_DAMAGED` - Package is damaged
+- `OTHER` - Other reason (description required)
 
 ### Business Rules
 
-**При успешной доставке (DELIVERED):**
+**On successful delivery (DELIVERED):**
 
-1. Статус посылки меняется на `DELIVERED`
-2. Устанавливается `delivered_at` timestamp
-3. Посылка удаляется из пула посылок
-4. Статус курьера меняется на `FREE`
-5. Уменьшается текущая загрузка курьера
-6. Увеличивается счетчик успешных доставок
-7. Обновляется рейтинг курьера
-8. Генерируется событие `PackageDelivered`
-9. Отправляется уведомление в OMS о завершении доставки
-10. Обновляется геолокация курьера
+1. Package status changes to `DELIVERED`
+2. `delivered_at` timestamp is set
+3. Package is removed from package pool
+4. Courier status changes to `FREE`
+5. Courier's current load is decremented
+6. Successful deliveries counter is incremented
+7. Courier rating is updated
+8. `PackageDelivered` event is generated
+9. Notification is sent to OMS about delivery completion
+10. Courier location is updated
 
-**При неуспешной доставке (NOT_DELIVERED):**
+**On unsuccessful delivery (NOT_DELIVERED):**
 
-1. Статус посылки меняется на `NOT_DELIVERED`
-2. Устанавливается причина не доставки
-3. Статус меняется на `REQUIRES_HANDLING`
-4. Посылка возвращается в пул или помечается для обработки диспетчером
-5. Статус курьера меняется на `FREE`
-6. Уменьшается текущая загрузка курьера
-7. Генерируется событие `PackageNotDelivered`
-8. Отправляется уведомление в OMS о проблеме
-9. Создается задача для диспетчера
-10. Обновляется геолокация курьера
+1. Package status changes to `NOT_DELIVERED`
+2. Not delivered reason is set
+3. Status changes to `REQUIRES_HANDLING`
+4. Package is returned to pool or marked for dispatcher handling
+5. Courier status changes to `FREE`
+6. Courier's current load is decremented
+7. `PackageNotDelivered` event is generated
+8. Notification is sent to OMS about the problem
+9. Task is created for dispatcher
+10. Courier location is updated
 
 ### Error Cases
 
-- `PACKAGE_NOT_FOUND`: Посылка не найдена
-- `COURIER_NOT_ASSIGNED`: Посылка не назначена на этого курьера
-- `INVALID_STATUS`: Некорректный статус доставки
-- `REASON_REQUIRED`: Требуется указать причину при статусе NOT_DELIVERED
-- `ALREADY_DELIVERED`: Посылка уже доставлена
-
+- `PACKAGE_NOT_FOUND`: Package not found
+- `COURIER_NOT_ASSIGNED`: Package is not assigned to this courier
+- `INVALID_STATUS`: Invalid delivery status
+- `REASON_REQUIRED`: Reason required when status is NOT_DELIVERED
+- `ALREADY_DELIVERED`: Package already delivered
