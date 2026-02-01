@@ -280,4 +280,36 @@ mod tests {
         );
         assert!(cmd.validate().is_err());
     }
+
+    #[test]
+    fn test_address_validation_empty_city() {
+        let mut addr = create_valid_address();
+        addr.city = "".to_string();
+        assert!(addr.validate().is_err());
+    }
+
+    #[test]
+    fn test_address_validation_empty_country() {
+        let mut addr = create_valid_address();
+        addr.country = "".to_string();
+        assert!(addr.validate().is_err());
+    }
+
+    #[test]
+    fn test_address_validation_invalid_longitude() {
+        let mut addr = create_valid_address();
+        addr.longitude = 200.0; // Invalid: must be [-180, 180]
+        assert!(addr.validate().is_err());
+    }
+
+    #[test]
+    fn test_delivery_period_start_equals_end() {
+        let now = Utc::now();
+        let same_time = now + chrono::Duration::hours(2);
+        let period = DeliveryPeriodInput {
+            start_time: same_time,
+            end_time: same_time, // Same as start
+        };
+        assert!(period.validate().is_err());
+    }
 }

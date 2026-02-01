@@ -1,7 +1,8 @@
 ## Use Case: UC-1 Accept Order
 
-### Описание
-Прием заказа от OMS для доставки. Заказ добавляется в пул посылок со статусом "Принят к доставке".
+### Description
+
+Accepts an order from OMS for delivery. The order is added to the package pool with status "Accepted for delivery".
 
 ### Sequence Diagram
 
@@ -60,14 +61,14 @@ message Address {
 }
 
 message DeliveryPeriod {
-  google.protobuf.Timestamp start_time = 1; // Начало желаемого периода доставки
-  google.protobuf.Timestamp end_time = 2;   // Конец желаемого периода доставки
+  google.protobuf.Timestamp start_time = 1; // Start of desired delivery period
+  google.protobuf.Timestamp end_time = 2;   // End of desired delivery period
 }
 
-// Пример:
+// Example:
 // start_time: "2024-01-15T10:00:00Z" (10:00)
 // end_time: "2024-01-15T12:00:00Z" (12:00)
-// Означает: доставка желательна с 10:00 до 12:00
+// Means: delivery is preferred between 10:00 and 12:00
 
 message PackageInfo {
   double weight_kg = 1;
@@ -103,49 +104,48 @@ enum PackageStatus {
 
 ### Business Rules
 
-1. Все обязательные поля должны быть заполнены
-2. Адреса должны иметь валидные координаты (latitude, longitude)
-3. **Период доставки:**
-   - Должен быть в будущем (start_time > текущее время)
-   - start_time должен быть раньше end_time
-   - Минимальная длительность периода: 1 час
-   - Максимальная длительность периода: 24 часа
-   - Период доставки используется для приоритизации и планирования маршрутов
-4. Вес и габариты должны быть положительными числами
-5. При создании посылка получает статус `ACCEPTED`
-6. Генерируется событие `PackageAccepted` для уведомления других сервисов
+1. All required fields must be provided
+2. Addresses must have valid coordinates (latitude, longitude)
+3. **Delivery period:**
+   - Must be in the future (start_time > current time)
+   - start_time must be before end_time
+   - Minimum duration: 1 hour
+   - Maximum duration: 24 hours
+   - Delivery period is used for prioritization and route planning
+4. Weight and dimensions must be positive numbers
+5. Upon creation, the package receives status `ACCEPTED`
+6. A `PackageAccepted` event is generated to notify other services
 
-### Как указать период доставки
+### How to Specify Delivery Period
 
-Период доставки указывается клиентом при оформлении заказа в OMS и передается в Delivery Service:
+The delivery period is specified by the customer when placing an order in OMS and passed to the Delivery Service:
 
-**Примеры периодов доставки:**
+**Delivery Period Examples:**
 
-1. **Утренняя доставка:**
+1. **Morning delivery:**
    - start_time: "2024-01-15T09:00:00Z"
    - end_time: "2024-01-15T12:00:00Z"
 
-2. **Дневная доставка:**
+2. **Afternoon delivery:**
    - start_time: "2024-01-15T12:00:00Z"
    - end_time: "2024-01-15T18:00:00Z"
 
-3. **Вечерняя доставка:**
+3. **Evening delivery:**
    - start_time: "2024-01-15T18:00:00Z"
    - end_time: "2024-01-15T21:00:00Z"
 
-4. **Срочная доставка (сегодня):**
-   - start_time: текущее время + 2 часа
-   - end_time: текущее время + 4 часа
+4. **Urgent delivery (today):**
+   - start_time: current time + 2 hours
+   - end_time: current time + 4 hours
 
-Период доставки учитывается при:
-- Диспетчеризации (приоритет посылкам с ближайшим периодом)
-- Планировании маршрутов курьеров
-- Уведомлениях курьерам
+The delivery period is considered for:
+- Dispatching (priority for packages with nearest delivery window)
+- Courier route planning
+- Courier notifications
 
 ### Error Cases
 
-- `INVALID_REQUEST`: Невалидные данные заказа
-- `INVALID_ADDRESS`: Адрес не может быть геокодирован
-- `INVALID_DELIVERY_PERIOD`: Период доставки в прошлом
-- `DUPLICATE_ORDER`: Заказ уже существует в системе
-
+- `INVALID_REQUEST`: Invalid order data
+- `INVALID_ADDRESS`: Address cannot be geocoded
+- `INVALID_DELIVERY_PERIOD`: Delivery period is in the past
+- `DUPLICATE_ORDER`: Order already exists in the system
