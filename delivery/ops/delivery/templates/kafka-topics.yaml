@@ -4,7 +4,7 @@
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaTopic
 metadata:
-  name: {{ $name }}
+  name: {{ $name | replace "_" "-" }}
   namespace: {{ $.Values.kafka.namespace | default "kafka" }}
   labels:
     strimzi.io/cluster: {{ $.Values.kafka.clusterName | default "shortlink" }}
@@ -12,6 +12,7 @@ metadata:
     app.kubernetes.io/instance: {{ $.Release.Name }}
     app.kubernetes.io/managed-by: {{ $.Release.Service }}
 spec:
+  topicName: {{ $name }}
   partitions: {{ $topic.partitions | default 3 }}
   replicas: {{ $topic.replicas | default 2 }}
   {{- if $topic.config }}
