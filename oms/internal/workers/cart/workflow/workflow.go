@@ -8,6 +8,7 @@ import (
 	"go.temporal.io/sdk/workflow"
 
 	v2 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
+	itemv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/item/v1"
 	"github.com/shortlink-org/shop/oms/internal/workers/cart/activities"
 )
 
@@ -32,6 +33,14 @@ func Workflow(ctx workflow.Context, customerID uuid.UUID) error {
 			BackoffCoefficient: 2.0,
 			MaximumInterval:    time.Minute,
 			MaximumAttempts:    3,
+			NonRetryableErrorTypes: []string{
+				itemv1.ErrItemGoodIdZero.Error(),
+				itemv1.ErrItemQuantityZero.Error(),
+				itemv1.ErrItemPriceNegative.Error(),
+				itemv1.ErrItemDiscountNegative.Error(),
+				itemv1.ErrItemTaxNegative.Error(),
+				itemv1.ErrItemDiscountExceedsPrice.Error(),
+			},
 		},
 	}
 	ctx = workflow.WithActivityOptions(ctx, ao)
@@ -42,7 +51,9 @@ func Workflow(ctx workflow.Context, customerID uuid.UUID) error {
 	resetChannel := workflow.GetSignalChannel(ctx, v2.Event_EVENT_RESET.String())
 
 	// Cart session timeout (e.g., 24 hours)
-	sessionTimeout := workflow.NewTimer(ctx, 24*time.Hour)
+	sessionTimeout := workflow.NewTimerWithOptions(ctx, 24*time.Hour, workflow.TimerOptions{
+		Summary: "Cart session TTL - auto-reset after 24 hours of inactivity",
+	})
 
 	selector := workflow.NewSelector(ctx)
 
@@ -52,7 +63,12 @@ func Workflow(ctx workflow.Context, customerID uuid.UUID) error {
 		c.Receive(ctx, &req)
 
 		logger.Info("Adding item to cart via activity", "customerID", customerID, "goodID", req.GoodID)
-		err := workflow.ExecuteActivity(ctx, "AddItem", req).Get(ctx, nil)
+		addItemCtx := workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+			StartToCloseTimeout: 10 * time.Second,
+			Summary:             "Add item to cart",
+			RetryPolicy:         ao.RetryPolicy,
+		})
+		err := workflow.ExecuteActivity(addItemCtx, "AddItem", req).Get(ctx, nil)
 		if err != nil {
 			logger.Error("Failed to add item", "error", err)
 		}
@@ -64,7 +80,12 @@ func Workflow(ctx workflow.Context, customerID uuid.UUID) error {
 		c.Receive(ctx, &req)
 
 		logger.Info("Removing item from cart via activity", "customerID", customerID, "goodID", req.GoodID)
-		err := workflow.ExecuteActivity(ctx, "RemoveItem", req).Get(ctx, nil)
+		removeItemCtx := workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+			StartToCloseTimeout: 10 * time.Second,
+			Summary:             "Remove item from cart",
+			RetryPolicy:         ao.RetryPolicy,
+		})
+		err := workflow.ExecuteActivity(removeItemCtx, "RemoveItem", req).Get(ctx, nil)
 		if err != nil {
 			logger.Error("Failed to remove item", "error", err)
 		}
@@ -75,7 +96,12 @@ func Workflow(ctx workflow.Context, customerID uuid.UUID) error {
 		c.Receive(ctx, nil)
 
 		logger.Info("Resetting cart via activity", "customerID", customerID)
-		err := workflow.ExecuteActivity(ctx, "ResetCart", activities.ResetCartRequest{
+		resetCartCtx := workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+			StartToCloseTimeout: 10 * time.Second,
+			Summary:             "Reset cart (clear all items)",
+			RetryPolicy:         ao.RetryPolicy,
+		})
+		err := workflow.ExecuteActivity(resetCartCtx, "ResetCart", activities.ResetCartRequest{
 			CustomerID: customerID,
 		}).Get(ctx, nil)
 		if err != nil {
@@ -86,7 +112,12 @@ func Workflow(ctx workflow.Context, customerID uuid.UUID) error {
 	// Handle session timeout
 	selector.AddFuture(sessionTimeout, func(f workflow.Future) {
 		logger.Info("Cart session timed out, resetting cart", "customerID", customerID)
-		_ = workflow.ExecuteActivity(ctx, "ResetCart", activities.ResetCartRequest{
+		timeoutResetCtx := workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+			StartToCloseTimeout: 10 * time.Second,
+			Summary:             "Reset cart after session timeout",
+			RetryPolicy:         ao.RetryPolicy,
+		})
+		_ = workflow.ExecuteActivity(timeoutResetCtx, "ResetCart", activities.ResetCartRequest{
 			CustomerID: customerID,
 		}).Get(ctx, nil)
 	})

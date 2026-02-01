@@ -9,21 +9,18 @@ OMS DI-package
 package oms_di
 
 import (
-	"context"
-
 	"github.com/authzed/authzed-go/v1"
 	"github.com/google/wire"
 	"github.com/jackc/pgx/v5/pgxpool"
-	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/trace"
 	"go.temporal.io/sdk/client"
-	"go.temporal.io/sdk/worker"
 
 	"github.com/shortlink-org/go-sdk/auth/permission"
 	config "github.com/shortlink-org/go-sdk/config"
 	sdkctx "github.com/shortlink-org/go-sdk/context"
 	"github.com/shortlink-org/go-sdk/db"
 	"github.com/shortlink-org/go-sdk/flags"
+	"github.com/shortlink-org/go-sdk/flight_trace"
 	grpc "github.com/shortlink-org/go-sdk/grpc"
 	logger "github.com/shortlink-org/go-sdk/logger"
 	"github.com/shortlink-org/go-sdk/observability/metrics"
@@ -97,18 +94,8 @@ type OMSService struct {
 
 	// Temporal
 	temporalClient client.Client
-	cartWorker     CartWorker
-	orderWorker    OrderWorker
-}
-
-// CartWorker is a wrapper type for Cart Temporal worker
-type CartWorker struct {
-	Worker worker.Worker
-}
-
-// OrderWorker is a wrapper type for Order Temporal worker
-type OrderWorker struct {
-	Worker worker.Worker
+	cartWorker     cart_worker.CartWorker
+	orderWorker    order_worker.OrderWorker
 }
 
 // OMSService ==========================================================================================================
@@ -116,26 +103,27 @@ type OrderWorker struct {
 var CustomDefaultSet = wire.NewSet(
 	sdkctx.New,
 	flags.New,
-	newGoSDKProfiling,
+	profiling.New,
 	permission.New, // For authzed.Client
 )
 
 var OMSSet = wire.NewSet(
 	// Common (custom DefaultSet)
 	CustomDefaultSet,
-	newGRPCServer,
+	flight_trace.New,
+	grpc.InitServer,
 
 	// Config & Observability (go-sdk)
-	newGoSDKConfig,
-	newGoSDKLogger,
+	config.New,
+	logger.NewDefault,
 
 	// Observability (go-sdk)
-	newGoSDKTracer,
-	newGoSDKMonitoring,
+	tracing.New,
+	metrics.New,
 
 	// Database
-	newDatabase,
-	wire.FieldsOf(new(*metrics.Monitoring), "Metrics"),
+	db.New,
+	wire.FieldsOf(new(*metrics.Monitoring), "Metrics", "Prometheus"),
 
 	// Redis
 	newRedisClient,
@@ -145,37 +133,37 @@ var OMSSet = wire.NewSet(
 	wire.Bind(new(ports.UnitOfWork), new(*pguow.UoW)),
 
 	// Repositories
-	newCartRepository,
-	newOrderRepository,
+	cartRepo.New,
+	orderRepo.New,
 	wire.Bind(new(ports.CartRepository), new(*cartRepo.Store)),
 	wire.Bind(new(ports.OrderRepository), new(*orderRepo.Store)),
 
 	// Indexes
-	newCartGoodsIndex,
+	cartGoodsIndex.New,
 	wire.Bind(new(ports.CartGoodsIndex), new(*cartGoodsIndex.Store)),
 
 	// Event Infrastructure
-	newEventPublisher,
+	events.NewInMemoryPublisher,
 	wire.Bind(new(ports.EventPublisher), new(*events.InMemoryPublisher)),
 
-	// Cart Handlers (concrete types, wire doesn't support generics)
-	newCartAddItemsHandler,
-	newCartRemoveItemsHandler,
-	newCartResetHandler,
-	newCartGetHandler,
+	// Cart Handlers
+	cartAddItems.NewHandler,
+	cartRemoveItems.NewHandler,
+	cartReset.NewHandler,
+	cartGet.NewHandler,
 
-	// Order Handlers (concrete types)
-	newOrderCreateHandler,
-	newOrderCancelHandler,
-	newOrderUpdateDeliveryInfoHandler,
-	newOrderGetHandler,
+	// Order Handlers
+	orderCreate.NewHandler,
+	orderCancel.NewHandler,
+	orderUpdateDeliveryInfo.NewHandler,
+	orderGet.NewHandler,
 
 	// Checkout Handlers
-	newCheckoutHandler,
+	checkout.NewHandler,
 
 	// Delivery
-	newCartRPC,
-	newOrderRPC,
+	cartRPC.New,
+	orderRPC.New,
 	NewRunRPCServer,
 
 	// Temporal
@@ -183,50 +171,15 @@ var OMSSet = wire.NewSet(
 	newOrderEventSubscriber,
 
 	// Temporal Workers
-	newCartWorker,
-	newOrderWorker,
+	cart_worker.New,
+	order_worker.New,
 
 	NewOMSService,
 )
 
-// newGRPCServer creates a gRPC server using go-sdk/grpc
-func newGRPCServer(ctx context.Context, log logger.Logger, tracer trace.TracerProvider, monitoring *metrics.Monitoring, cfg *config.Config) (*grpc.Server, error) {
-	return grpc.InitServer(ctx, log, tracer, monitoring.Prometheus, nil, cfg)
-}
-
 // NewRunRPCServer starts the gRPC server
 func NewRunRPCServer(runRPCServer *grpc.Server, _ *cartRPC.CartRPC) (*run.Response, error) {
 	return run.Run(runRPCServer)
-}
-
-// newGoSDKConfig creates a go-sdk config instance
-func newGoSDKConfig() (*config.Config, error) {
-	return config.New()
-}
-
-// newGoSDKLogger creates a go-sdk logger instance for observability
-func newGoSDKLogger(ctx context.Context, cfg *config.Config) (logger.Logger, func(), error) {
-	return logger.NewDefault(ctx, cfg)
-}
-
-// newGoSDKTracer creates a tracer using go-sdk observability
-func newGoSDKTracer(ctx context.Context, log logger.Logger, cfg *config.Config) (trace.TracerProvider, func(), error) {
-	return tracing.New(ctx, log, cfg)
-}
-
-// newGoSDKMonitoring creates monitoring using go-sdk observability
-func newGoSDKMonitoring(ctx context.Context, log logger.Logger, tracer trace.TracerProvider, cfg *config.Config) (*metrics.Monitoring, func(), error) {
-	return metrics.New(ctx, log, tracer, cfg)
-}
-
-// newGoSDKProfiling creates profiling endpoint using go-sdk observability
-func newGoSDKProfiling(ctx context.Context, log logger.Logger, tracer trace.TracerProvider, cfg *config.Config) (profiling.PprofEndpoint, error) {
-	return profiling.New(ctx, log, tracer, cfg)
-}
-
-// newDatabase creates a database connection using go-sdk/db
-func newDatabase(ctx context.Context, log logger.Logger, tracer trace.TracerProvider, meterProvider *sdkmetric.MeterProvider, cfg *config.Config) (db.DB, error) {
-	return db.New(ctx, log, tracer, meterProvider, cfg)
 }
 
 // newUnitOfWork creates a PostgreSQL UnitOfWork
@@ -236,16 +189,6 @@ func newUnitOfWork(store db.DB) (*pguow.UoW, error) {
 		return nil, db.ErrGetConnection
 	}
 	return pguow.New(pool), nil
-}
-
-// newCartRepository creates a PostgreSQL cart repository
-func newCartRepository(ctx context.Context, store db.DB) (*cartRepo.Store, error) {
-	return cartRepo.New(ctx, store)
-}
-
-// newOrderRepository creates a PostgreSQL order repository
-func newOrderRepository(ctx context.Context, store db.DB) (*orderRepo.Store, error) {
-	return orderRepo.New(ctx, store)
 }
 
 // newRedisClient creates a Redis client using rueidis
@@ -270,103 +213,11 @@ func newRedisClient(cfg *config.Config) (rueidis.Client, func(), error) {
 	return client, cleanup, nil
 }
 
-// newCartGoodsIndex creates a Redis-backed cart goods index
-func newCartGoodsIndex(client rueidis.Client) *cartGoodsIndex.Store {
-	return cartGoodsIndex.New(client)
-}
-
-// newEventPublisher creates an in-memory event publisher
-func newEventPublisher() *events.InMemoryPublisher {
-	return events.NewInMemoryPublisher()
-}
-
-// Cart Handler Factories
-func newCartAddItemsHandler(log logger.Logger, uow ports.UnitOfWork, cartRepo ports.CartRepository, goodsIndex ports.CartGoodsIndex) *cartAddItems.Handler {
-	return cartAddItems.NewHandler(log, uow, cartRepo, goodsIndex)
-}
-
-func newCartRemoveItemsHandler(log logger.Logger, uow ports.UnitOfWork, cartRepo ports.CartRepository, goodsIndex ports.CartGoodsIndex) *cartRemoveItems.Handler {
-	return cartRemoveItems.NewHandler(log, uow, cartRepo, goodsIndex)
-}
-
-func newCartResetHandler(log logger.Logger, uow ports.UnitOfWork, cartRepo ports.CartRepository, goodsIndex ports.CartGoodsIndex) *cartReset.Handler {
-	return cartReset.NewHandler(log, uow, cartRepo, goodsIndex)
-}
-
-func newCartGetHandler(uow ports.UnitOfWork, cartRepo ports.CartRepository) *cartGet.Handler {
-	return cartGet.NewHandler(uow, cartRepo)
-}
-
-// Order Handler Factories
-func newOrderCreateHandler(log logger.Logger, uow ports.UnitOfWork, orderRepo ports.OrderRepository, publisher ports.EventPublisher) *orderCreate.Handler {
-	return orderCreate.NewHandler(log, uow, orderRepo, publisher)
-}
-
-func newOrderCancelHandler(log logger.Logger, uow ports.UnitOfWork, orderRepo ports.OrderRepository, publisher ports.EventPublisher) *orderCancel.Handler {
-	return orderCancel.NewHandler(log, uow, orderRepo, publisher)
-}
-
-func newOrderUpdateDeliveryInfoHandler(log logger.Logger, uow ports.UnitOfWork, orderRepo ports.OrderRepository, publisher ports.EventPublisher) *orderUpdateDeliveryInfo.Handler {
-	return orderUpdateDeliveryInfo.NewHandler(log, uow, orderRepo, publisher)
-}
-
-func newOrderGetHandler(uow ports.UnitOfWork, orderRepo ports.OrderRepository) *orderGet.Handler {
-	return orderGet.NewHandler(uow, orderRepo)
-}
-
-// Checkout Handler Factory
-func newCheckoutHandler(log logger.Logger, uow ports.UnitOfWork, cartRepo ports.CartRepository, orderRepo ports.OrderRepository, publisher ports.EventPublisher) *checkout.Handler {
-	return checkout.NewHandler(log, uow, cartRepo, orderRepo, publisher)
-}
-
 // newOrderEventSubscriber creates and registers the order event subscriber
 func newOrderEventSubscriber(log logger.Logger, temporalClient client.Client, publisher *events.InMemoryPublisher) *temporalInfra.OrderEventSubscriber {
 	subscriber := temporalInfra.NewOrderEventSubscriber(log, temporalClient)
 	subscriber.Register(publisher)
 	return subscriber
-}
-
-// newCartWorker creates and starts the Cart Temporal worker
-func newCartWorker(ctx context.Context, c client.Client, log logger.Logger) (CartWorker, error) {
-	w, err := cart_worker.New(ctx, c, log)
-	if err != nil {
-		return CartWorker{}, err
-	}
-	return CartWorker{Worker: w}, nil
-}
-
-// newOrderWorker creates and starts the Order Temporal worker
-func newOrderWorker(ctx context.Context, c client.Client, log logger.Logger) (OrderWorker, error) {
-	w, err := order_worker.New(ctx, c, log)
-	if err != nil {
-		return OrderWorker{}, err
-	}
-	return OrderWorker{Worker: w}, nil
-}
-
-// newCartRPC creates the Cart RPC server with handlers
-func newCartRPC(
-	runRPCServer *grpc.Server,
-	log logger.Logger,
-	addItemsHandler *cartAddItems.Handler,
-	removeItemsHandler *cartRemoveItems.Handler,
-	resetHandler *cartReset.Handler,
-	getHandler *cartGet.Handler,
-) (*cartRPC.CartRPC, error) {
-	return cartRPC.New(runRPCServer, log, addItemsHandler, removeItemsHandler, resetHandler, getHandler)
-}
-
-// newOrderRPC creates the Order RPC server with handlers
-func newOrderRPC(
-	runRPCServer *grpc.Server,
-	log logger.Logger,
-	createHandler *orderCreate.Handler,
-	cancelHandler *orderCancel.Handler,
-	updateDeliveryInfoHandler *orderUpdateDeliveryInfo.Handler,
-	checkoutHandler *checkout.Handler,
-	getHandler *orderGet.Handler,
-) (*orderRPC.OrderRPC, error) {
-	return orderRPC.New(runRPCServer, log, createHandler, cancelHandler, updateDeliveryInfoHandler, checkoutHandler, getHandler)
 }
 
 func NewOMSService(
@@ -403,8 +254,8 @@ func NewOMSService(
 	// Temporal
 	temporalClient client.Client,
 	_ *temporalInfra.OrderEventSubscriber, // ensure subscriber is created
-	cartWorker CartWorker,
-	orderWorker OrderWorker,
+	cartWorker cart_worker.CartWorker,
+	orderWorker order_worker.OrderWorker,
 ) (*OMSService, error) {
 	return &OMSService{
 		// Common

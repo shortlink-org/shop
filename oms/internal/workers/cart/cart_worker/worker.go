@@ -12,7 +12,12 @@ import (
 	cart_workflow "github.com/shortlink-org/shop/oms/internal/workers/cart/workflow"
 )
 
-func New(ctx context.Context, c client.Client, log logger.Logger) (worker.Worker, error) {
+// CartWorker is a wrapper type for Cart Temporal worker (needed for wire DI disambiguation)
+type CartWorker struct {
+	Worker worker.Worker
+}
+
+func New(ctx context.Context, c client.Client, log logger.Logger) (CartWorker, error) {
 	// This worker hosts both Worker and Activity functions
 	w := worker.New(c, temporal.GetQueueName(v1.CartTaskQueue), worker.Options{})
 
@@ -28,5 +33,5 @@ func New(ctx context.Context, c client.Client, log logger.Logger) (worker.Worker
 
 	log.Info("Worker started")
 
-	return w, nil
+	return CartWorker{Worker: w}, nil
 }

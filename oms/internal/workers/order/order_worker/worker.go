@@ -13,7 +13,12 @@ import (
 	order_workflow "github.com/shortlink-org/shop/oms/internal/workers/order/workflow"
 )
 
-func New(ctx context.Context, c client.Client, log logger.Logger) (worker.Worker, error) {
+// OrderWorker is a wrapper type for Order Temporal worker (needed for wire DI disambiguation)
+type OrderWorker struct {
+	Worker worker.Worker
+}
+
+func New(ctx context.Context, c client.Client, log logger.Logger) (OrderWorker, error) {
 	// This worker hosts Workflow functions
 	// Activities are registered separately when order UC is available
 	w := worker.New(c, temporalInfra.GetQueueName(v1.OrderTaskQueue), worker.Options{})
@@ -37,5 +42,5 @@ func New(ctx context.Context, c client.Client, log logger.Logger) (worker.Worker
 
 	log.Info("Worker started")
 
-	return w, nil
+	return OrderWorker{Worker: w}, nil
 }

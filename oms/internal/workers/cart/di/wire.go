@@ -14,7 +14,6 @@ import (
 	"github.com/google/wire"
 	"go.opentelemetry.io/otel/trace"
 	"go.temporal.io/sdk/client"
-	"go.temporal.io/sdk/worker"
 
 	config "github.com/shortlink-org/go-sdk/config"
 	sdkctx "github.com/shortlink-org/go-sdk/context"
@@ -39,7 +38,7 @@ type OMSCartWorkerService struct {
 
 	// Temporal
 	temporalClient client.Client
-	cartWorker     worker.Worker
+	cartWorker     cart_worker.CartWorker
 }
 
 // OMSCartWorkerService ================================================================================================
@@ -98,7 +97,7 @@ func NewOMSCartWorkerService(
 
 	// Temporal
 	temporalClient client.Client,
-	cartWorker worker.Worker,
+	cartWorker cart_worker.CartWorker,
 ) (*OMSCartWorkerService, error) {
 	return &OMSCartWorkerService{
 		// Common

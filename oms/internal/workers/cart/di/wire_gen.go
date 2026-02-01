@@ -20,7 +20,6 @@ import (
 	"github.com/shortlink-org/shop/oms/internal/workers/cart/cart_worker"
 	"go.opentelemetry.io/otel/trace"
 	"go.temporal.io/sdk/client"
-	"go.temporal.io/sdk/worker"
 )
 
 // Injectors from wire.go:
@@ -69,7 +68,7 @@ func InitializeOMSCartWorkerService() (*OMSCartWorkerService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	worker, err := cart_worker.New(context, client, logger)
+	cartWorker, err := cart_worker.New(context, client, logger)
 	if err != nil {
 		cleanup4()
 		cleanup3()
@@ -77,7 +76,7 @@ func InitializeOMSCartWorkerService() (*OMSCartWorkerService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	omsCartWorkerService, err := NewOMSCartWorkerService(logger, config, monitoring, tracerProvider, pprofEndpoint, client, worker)
+	omsCartWorkerService, err := NewOMSCartWorkerService(logger, config, monitoring, tracerProvider, pprofEndpoint, client, cartWorker)
 	if err != nil {
 		cleanup4()
 		cleanup3()
@@ -107,7 +106,7 @@ type OMSCartWorkerService struct {
 
 	// Temporal
 	temporalClient client.Client
-	cartWorker     worker.Worker
+	cartWorker     cart_worker.CartWorker
 }
 
 // OMSCartWorkerService ================================================================================================
@@ -154,7 +153,7 @@ func NewOMSCartWorkerService(
 	pprofHTTP profiling.PprofEndpoint,
 
 	temporalClient client.Client,
-	cartWorker worker.Worker,
+	cartWorker cart_worker.CartWorker,
 ) (*OMSCartWorkerService, error) {
 	return &OMSCartWorkerService{
 

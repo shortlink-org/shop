@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/shortlink-org/go-sdk/logger"
 	"go.temporal.io/sdk/client"
@@ -50,8 +51,25 @@ func (s *OrderEventSubscriber) OnOrderCreated(ctx context.Context, event *orderv
 		slog.String("customer_id", event.CustomerID.String()))
 
 	_, err := s.temporalClient.ExecuteWorkflow(ctx, client.StartWorkflowOptions{
-		ID:        workflowID,
-		TaskQueue: GetQueueName(queuev1.OrderTaskQueue),
+		ID:                       workflowID,
+		TaskQueue:                GetQueueName(queuev1.OrderTaskQueue),
+		WorkflowExecutionTimeout: 24 * time.Hour, // Maximum order processing time
+		// UI enrichment for better visibility in Temporal Web UI
+		StaticSummary: fmt.Sprintf("Order %s for customer %s", event.OrderID.String()[:8], event.CustomerID.String()[:8]),
+		StaticDetails: fmt.Sprintf(`**Order Processing Workflow**
+
+- **Order ID:** %s
+- **Customer ID:** %s
+- **Items count:** %d
+
+This workflow orchestrates the order processing saga:
+1. Create order in database
+2. Reserve stock
+3. Process payment
+4. Complete order`,
+			event.OrderID.String(),
+			event.CustomerID.String(),
+			len(event.Items)),
 	}, OrderWorkflowName, event.OrderID, event.CustomerID, event.Items)
 
 	if err != nil {
