@@ -262,6 +262,7 @@ mod tests {
         Command::new(
             Uuid::new_v4(),
             Uuid::new_v4(),
+            None, // customer_phone
             create_valid_address(),
             create_valid_address(),
             create_valid_period(),
@@ -303,6 +304,7 @@ mod tests {
         let duplicate_cmd = Command::new(
             order_id, // Same order_id
             Uuid::new_v4(),
+            None, // customer_phone
             create_valid_address(),
             create_valid_address(),
             create_valid_period(),
@@ -323,6 +325,7 @@ mod tests {
         let cmd = Command::new(
             Uuid::new_v4(),
             Uuid::new_v4(),
+            None, // customer_phone
             create_valid_address(),
             create_valid_address(),
             create_valid_period(),

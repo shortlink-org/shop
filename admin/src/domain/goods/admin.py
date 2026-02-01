@@ -9,6 +9,7 @@ from django.urls import path
 from mimesis import Generic
 from mimesis import Locale
 from unfold.admin import ModelAdmin
+from unfold.contrib.filters.admin import RangeDateTimeFilter
 from unfold.paginator import InfinitePaginator
 
 from .models import Good
@@ -21,7 +22,11 @@ class GoodAdmin(ModelAdmin):
     search_fields = ("name", "price")
     paginator = InfinitePaginator
     show_full_result_count = False
-    list_filter = ("created_at", "updated_at")
+    list_filter = (
+        ("created_at", RangeDateTimeFilter),
+        ("updated_at", RangeDateTimeFilter),
+    )
+    list_filter_submit = True
     ordering = ("created_at",)
     change_list_template = "admin/goods/good/change_list.html"
 

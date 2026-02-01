@@ -66,6 +66,40 @@ class CourierPoolResult:
     total_pages: int
 
 
+@dataclass
+class Address:
+    """Delivery address."""
+
+    street: str
+    city: str
+    postal_code: str
+    country: str
+    latitude: float
+    longitude: float
+
+
+@dataclass
+class DeliveryRecord:
+    """A delivery record for a courier."""
+
+    package_id: str
+    order_id: str
+    status: str
+    pickup_address: Optional[Address]
+    delivery_address: Optional[Address]
+    assigned_at: Optional[datetime]
+    delivered_at: Optional[datetime]
+    priority: str
+
+
+@dataclass
+class CourierDeliveriesResult:
+    """Result of GetCourierDeliveries query."""
+
+    deliveries: list[DeliveryRecord]
+    total_count: int
+
+
 class DeliveryServiceError(Exception):
     """Base exception for Delivery Service errors."""
 
@@ -117,6 +151,23 @@ class DeliveryClient:
         "FREE": 2,
         "BUSY": 3,
         "ARCHIVED": 4,
+    }
+
+    PACKAGE_STATUSES = {
+        0: "UNSPECIFIED",
+        1: "ACCEPTED",
+        2: "IN_POOL",
+        3: "ASSIGNED",
+        4: "IN_TRANSIT",
+        5: "DELIVERED",
+        6: "NOT_DELIVERED",
+        7: "REQUIRES_HANDLING",
+    }
+
+    PRIORITIES = {
+        0: "UNSPECIFIED",
+        1: "NORMAL",
+        2: "URGENT",
     }
 
     def __init__(self, host: Optional[str] = None):
@@ -222,6 +273,86 @@ class DeliveryClient:
                 return None
             logger.error(f"gRPC error getting courier: {e}")
             raise DeliveryServiceError(f"Failed to get courier: {e}")
+
+    def get_courier_deliveries(
+        self, courier_id: str, limit: int = 5
+    ) -> CourierDeliveriesResult:
+        """Get recent deliveries for a courier.
+
+        Args:
+            courier_id: The courier's unique identifier.
+            limit: Maximum number of deliveries to return (default 5).
+
+        Returns:
+            CourierDeliveriesResult with deliveries and total count.
+        """
+        self._ensure_connected()
+
+        import delivery_pb2
+
+        request = delivery_pb2.GetCourierDeliveriesRequest(
+            courier_id=courier_id,
+            limit=limit,
+        )
+
+        try:
+            response = self._stub.GetCourierDeliveries(request)
+            deliveries = []
+            for proto_delivery in response.deliveries:
+                pickup = None
+                if proto_delivery.HasField("pickup_address"):
+                    pa = proto_delivery.pickup_address
+                    pickup = Address(
+                        street=pa.street,
+                        city=pa.city,
+                        postal_code=pa.postal_code,
+                        country=pa.country,
+                        latitude=pa.latitude,
+                        longitude=pa.longitude,
+                    )
+
+                delivery_addr = None
+                if proto_delivery.HasField("delivery_address"):
+                    da = proto_delivery.delivery_address
+                    delivery_addr = Address(
+                        street=da.street,
+                        city=da.city,
+                        postal_code=da.postal_code,
+                        country=da.country,
+                        latitude=da.latitude,
+                        longitude=da.longitude,
+                    )
+
+                assigned_at = None
+                if proto_delivery.HasField("assigned_at"):
+                    assigned_at = proto_delivery.assigned_at.ToDatetime()
+
+                delivered_at = None
+                if proto_delivery.HasField("delivered_at"):
+                    delivered_at = proto_delivery.delivered_at.ToDatetime()
+
+                deliveries.append(
+                    DeliveryRecord(
+                        package_id=proto_delivery.package_id,
+                        order_id=proto_delivery.order_id,
+                        status=self.PACKAGE_STATUSES.get(proto_delivery.status, "UNSPECIFIED"),
+                        pickup_address=pickup,
+                        delivery_address=delivery_addr,
+                        assigned_at=assigned_at,
+                        delivered_at=delivered_at,
+                        priority=self.PRIORITIES.get(proto_delivery.priority, "UNSPECIFIED"),
+                    )
+                )
+
+            return CourierDeliveriesResult(
+                deliveries=deliveries,
+                total_count=response.total_count,
+            )
+        except grpc.RpcError as e:
+            if e.code() == grpc.StatusCode.NOT_FOUND:
+                return CourierDeliveriesResult(deliveries=[], total_count=0)
+            logger.error(f"gRPC error getting courier deliveries: {e}")
+            raise DeliveryServiceError(f"Failed to get courier deliveries: {e}")
 
     def get_courier_pool(
         self,

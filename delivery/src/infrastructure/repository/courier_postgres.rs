@@ -270,19 +270,24 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_list_returns_empty_when_no_couriers() {
+    async fn test_list_returns_seeded_couriers() {
         let (_container, db) = setup_db().await;
         let repo = CourierPostgresRepository::new(db);
 
         let result = repo.list(10, 0).await.unwrap();
 
-        assert!(result.is_empty());
+        // Seed migration adds 2 MVP couriers
+        assert_eq!(result.len(), 2);
     }
 
     #[tokio::test]
     async fn test_list_returns_couriers_with_pagination() {
         let (_container, db) = setup_db().await;
         let repo = CourierPostgresRepository::new(db);
+
+        // Get initial count (seed data may exist)
+        let initial = repo.list(100, 0).await.unwrap();
+        let initial_count = initial.len();
 
         // Insert 3 test couriers
         let courier1 = create_test_courier("Courier 1", "+79001111111", "courier1@test.com");
@@ -297,19 +302,23 @@ mod tests {
         let result = repo.list(2, 0).await.unwrap();
         assert_eq!(result.len(), 2);
 
-        // Test offset
+        // Test offset - skip first 2, should get remaining
         let result = repo.list(10, 2).await.unwrap();
-        assert_eq!(result.len(), 1);
+        assert_eq!(result.len(), initial_count + 3 - 2);
 
         // Test all
-        let result = repo.list(10, 0).await.unwrap();
-        assert_eq!(result.len(), 3);
+        let result = repo.list(100, 0).await.unwrap();
+        assert_eq!(result.len(), initial_count + 3);
     }
 
     #[tokio::test]
     async fn test_list_returns_couriers_ordered_by_created_at_desc() {
         let (_container, db) = setup_db().await;
         let repo = CourierPostgresRepository::new(db);
+
+        // Get initial count (seed data)
+        let initial = repo.list(100, 0).await.unwrap();
+        let initial_count = initial.len();
 
         // Insert couriers with small delay to ensure different created_at
         let courier1 = create_test_courier("First", "+79001111111", "first@test.com");
@@ -321,11 +330,11 @@ mod tests {
         let courier3 = create_test_courier("Third", "+79003333333", "third@test.com");
         repo.save(&courier3).await.unwrap();
 
-        let result = repo.list(10, 0).await.unwrap();
+        let result = repo.list(100, 0).await.unwrap();
 
-        // Most recent should be first (Third)
-        assert_eq!(result.len(), 3);
-        // Note: created_at is set at build time, so order depends on insertion order
-        // The last inserted should appear first due to DESC ordering
+        // Should have seed data + 3 new couriers
+        assert_eq!(result.len(), initial_count + 3);
+        // Most recent should be first (Third) - check the first item is our latest insert
+        assert_eq!(result[0].name(), "Third");
     }
 }

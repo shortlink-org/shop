@@ -65,7 +65,7 @@ impl MigrationTrait for Migration {
                     )
                     .col(
                         ColumnDef::new(Couriers::MaxDistanceKm)
-                            .decimal_len(5, 2)
+                            .decimal_len(8, 2)
                             .not_null(),
                     )
                     .col(

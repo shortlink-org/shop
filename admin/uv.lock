@@ -413,14 +413,14 @@ wheels = [
 
 [[package]]
 name = "gunicorn"
-version = "24.1.1"
+version = "25.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "packaging" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/78/0a/10739c03537ec5b131a867bf94df2e412b437696c7e5d26970e2198a80d2/gunicorn-24.1.1.tar.gz", hash = "sha256:f006d110e5cb3102859b4f5cd48335dbd9cc28d0d27cd24ddbdafa6c60929408", size = 287567 }
+sdist = { url = "https://files.pythonhosted.org/packages/46/4d/74e685d22a7d8dcc920e4e84da2842c057141236757143e1c167e7bd64df/gunicorn-25.0.0.tar.gz", hash = "sha256:4b1ab820ffc316352da7146005a9e66044a131434b17a7d2a9fb0604f1268864", size = 9618408 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/96/90/cfe637677916fc6f53cd2b05d5746e249f683e1fa14c9e745a88c66f7290/gunicorn-24.1.1-py3-none-any.whl", hash = "sha256:757f6b621fc4f7581a90600b2cd9df593461f06a41d7259cb9b94499dc4095a8", size = 114920 },
+    { url = "https://files.pythonhosted.org/packages/bf/9e/1be849edbea786424848e206e38a8b6025d140b7b9430037c5dc91e8a83f/gunicorn-25.0.0-py3-none-any.whl", hash = "sha256:b9b88f0ebc5a0fcd1e9e29a1f045f56f5402c6423ee3e3f675f679d0db5345d1", size = 169675 },
 ]
 
 [[package]]
@@ -1204,38 +1204,38 @@ requires-dist = [
 
 [[package]]
 name = "shortlink-org-shop-delivery-rpc-grpc-python"
-version = "1.76.0.2.20260201222625+791bc0e04fee"
+version = "1.76.0.2.20260201223305+e49b77bf12c8"
 source = { registry = "https://buf.build/gen/python" }
 dependencies = [
     { name = "grpcio" },
     { name = "shortlink-org-shop-delivery-rpc-protocolbuffers-python" },
 ]
 wheels = [
-    { url = "https://buf.build/gen/python/shortlink-org-shop-delivery-rpc-grpc-python/shortlink_org_shop_delivery_rpc_grpc_python-1.76.0.2.20260201222625+791bc0e04fee-py3-none-any.whl" },
+    { url = "https://buf.build/gen/python/shortlink-org-shop-delivery-rpc-grpc-python/shortlink_org_shop_delivery_rpc_grpc_python-1.76.0.2.20260201223305+e49b77bf12c8-py3-none-any.whl" },
 ]
 
 [[package]]
 name = "shortlink-org-shop-delivery-rpc-protocolbuffers-pyi"
-version = "33.5.0.1.20260201222625+791bc0e04fee"
+version = "33.5.0.1.20260201223305+e49b77bf12c8"
 source = { registry = "https://buf.build/gen/python" }
 dependencies = [
     { name = "protobuf" },
     { name = "types-protobuf" },
 ]
 wheels = [
-    { url = "https://buf.build/gen/python/shortlink-org-shop-delivery-rpc-protocolbuffers-pyi/shortlink_org_shop_delivery_rpc_protocolbuffers_pyi-33.5.0.1.20260201222625+791bc0e04fee-py3-none-any.whl" },
+    { url = "https://buf.build/gen/python/shortlink-org-shop-delivery-rpc-protocolbuffers-pyi/shortlink_org_shop_delivery_rpc_protocolbuffers_pyi-33.5.0.1.20260201223305+e49b77bf12c8-py3-none-any.whl" },
 ]
 
 [[package]]
 name = "shortlink-org-shop-delivery-rpc-protocolbuffers-python"
-version = "33.5.0.1.20260201222625+791bc0e04fee"
+version = "33.5.0.1.20260201223305+e49b77bf12c8"
 source = { registry = "https://buf.build/gen/python" }
 dependencies = [
     { name = "protobuf" },
     { name = "shortlink-org-shop-delivery-rpc-protocolbuffers-pyi" },
 ]
 wheels = [
-    { url = "https://buf.build/gen/python/shortlink-org-shop-delivery-rpc-protocolbuffers-python/shortlink_org_shop_delivery_rpc_protocolbuffers_python-33.5.0.1.20260201222625+791bc0e04fee-py3-none-any.whl" },
+    { url = "https://buf.build/gen/python/shortlink-org-shop-delivery-rpc-protocolbuffers-python/shortlink_org_shop_delivery_rpc_protocolbuffers_python-33.5.0.1.20260201223305+e49b77bf12c8-py3-none-any.whl" },
 ]
 
 [[package]]

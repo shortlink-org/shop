@@ -1,5 +1,5 @@
 {% extends "admin/base_site.html" %}
-{% load static crispy_forms_tags %}
+{% load static crispy_forms_tags i18n unfold %}
 
 {% block title %}{{ title }} | {{ site_title }}{% endblock %}
 
@@ -18,16 +18,35 @@
 .status-archived { background: #dc3545; color: white; }
 .inline-form { display: inline-block; margin-right: 5px; }
 .action-buttons { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--hairline-color); }
+/* Delivery status badges */
+.delivery-status { padding: 3px 8px; border-radius: 3px; font-size: 0.85em; text-transform: uppercase; }
+.status-accepted { background: #17a2b8; color: white; }
+.status-in_pool { background: #6c757d; color: white; }
+.status-assigned { background: #007bff; color: white; }
+.status-in_transit { background: #fd7e14; color: white; }
+.status-delivered { background: #28a745; color: white; }
+.status-not_delivered { background: #dc3545; color: white; }
+.status-requires_handling { background: #ffc107; color: #000; }
 </style>
 {% endblock %}
 
-{% block breadcrumbs %}
-<div class="breadcrumbs">
-    <a href="{% url 'admin:index' %}">Home</a>
-    &rsaquo; <a href="{% url 'couriers:list' %}">Courier Management</a>
-    &rsaquo; {{ courier.name }}
+{% block breadcrumbs %}{% if not is_popup %}
+<div class="px-4">
+    <div class="container mb-6 mx-auto -my-3 lg:mb-12">
+        <ul class="flex flex-wrap">
+            {% url 'admin:index' as link %}
+            {% trans 'Home' as name %}
+            {% include 'unfold/helpers/breadcrumb_item.html' with link=link name=name %}
+
+            {% url 'couriers:list' as link %}
+            {% trans 'Courier Management' as name %}
+            {% include 'unfold/helpers/breadcrumb_item.html' with link=link name=name %}
+
+            {% include 'unfold/helpers/breadcrumb_item.html' with name=courier.name %}
+        </ul>
+    </div>
 </div>
-{% endblock %}
+{% endif %}{% endblock %}
 
 {% block content %}
 <div id="content-main">
@@ -71,6 +90,52 @@
         <div class="form-row"><div><label>Failed:</label> {{ courier.failed_deliveries }}</div></div>
         <div class="form-row"><div><label>Created:</label> {{ courier.created_at }}</div></div>
         <div class="form-row"><div><label>Last Active:</label> {{ courier.last_active_at|default:"-" }}</div></div>
+    </fieldset>
+
+    <fieldset class="module aligned">
+        <h2>Recent Deliveries {% if total_deliveries > 0 %}({{ total_deliveries }} total){% endif %}</h2>
+        {% if recent_deliveries %}
+        <table style="width:100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: var(--darkened-bg);">
+                    <th style="padding: 8px; text-align: left;">Order ID</th>
+                    <th style="padding: 8px; text-align: left;">Status</th>
+                    <th style="padding: 8px; text-align: left;">Delivery Address</th>
+                    <th style="padding: 8px; text-align: left;">Assigned</th>
+                    <th style="padding: 8px; text-align: left;">Delivered</th>
+                    <th style="padding: 8px; text-align: left;">Priority</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for delivery in recent_deliveries %}
+                <tr style="border-bottom: 1px solid var(--hairline-color);">
+                    <td style="padding: 8px;"><a href="{% url 'orders:detail' order_id=delivery.order_id %}">{{ delivery.order_id|truncatechars:12 }}</a></td>
+                    <td style="padding: 8px;">
+                        <span class="delivery-status status-{{ delivery.status|lower }}">{{ delivery.status }}</span>
+                    </td>
+                    <td style="padding: 8px;">
+                        {% if delivery.delivery_address %}
+                            {{ delivery.delivery_address.street }}, {{ delivery.delivery_address.city }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td style="padding: 8px;">{{ delivery.assigned_at|date:"d.m.Y H:i"|default:"-" }}</td>
+                    <td style="padding: 8px;">{{ delivery.delivered_at|date:"d.m.Y H:i"|default:"-" }}</td>
+                    <td style="padding: 8px;">
+                        {% if delivery.priority == 'URGENT' %}
+                            <span style="color: #dc3545; font-weight: bold;">{{ delivery.priority }}</span>
+                        {% else %}
+                            {{ delivery.priority }}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="form-row"><div>No deliveries yet.</div></div>
+        {% endif %}
     </fieldset>
 
     {% if courier.current_location %}

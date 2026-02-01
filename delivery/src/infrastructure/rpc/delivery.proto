@@ -9,7 +9,7 @@ import "google/protobuf/timestamp.proto";
 // DeliveryService provides gRPC API for delivery operations
 service DeliveryService {
   // ==================== Courier Queries ====================
-  // Получение данных о курьерах
+  // Retrieving courier data
   
   // GetCourier retrieves a single courier by ID
   rpc GetCourier(GetCourierRequest) returns (GetCourierResponse);
@@ -18,7 +18,7 @@ service DeliveryService {
   rpc GetCourierPool(GetCourierPoolRequest) returns (GetCourierPoolResponse);
   
   // ==================== Courier Lifecycle ====================
-  // Жизненный цикл курьера: регистрация, активация, архивация
+  // Courier lifecycle: registration, activation, archival
   
   // RegisterCourier registers a new courier in the system
   rpc RegisterCourier(RegisterCourierRequest) returns (RegisterCourierResponse);
@@ -33,7 +33,7 @@ service DeliveryService {
   rpc ArchiveCourier(ArchiveCourierRequest) returns (ArchiveCourierResponse);
   
   // ==================== Courier Profile ====================
-  // Управление профилем курьера
+  // Managing courier profile
   
   // UpdateContactInfo updates courier phone and email
   rpc UpdateContactInfo(UpdateContactInfoRequest) returns (UpdateContactInfoResponse);
@@ -45,13 +45,19 @@ service DeliveryService {
   rpc ChangeTransportType(ChangeTransportTypeRequest) returns (ChangeTransportTypeResponse);
   
   // ==================== Order Operations ====================
-  // Операции с заказами
+  // Order-related operations
   
   // AcceptOrder accepts an order from OMS for delivery
   rpc AcceptOrder(AcceptOrderRequest) returns (AcceptOrderResponse);
   
   // AssignOrder assigns a package to a courier
   rpc AssignOrder(AssignOrderRequest) returns (AssignOrderResponse);
+  
+  // ==================== Courier Deliveries ====================
+  // Courier delivery history
+  
+  // GetCourierDeliveries retrieves recent deliveries for a courier
+  rpc GetCourierDeliveries(GetCourierDeliveriesRequest) returns (GetCourierDeliveriesResponse);
 }
 
 // ==================== Common Types ====================
@@ -350,4 +356,30 @@ message ChangeTransportTypeResponse {
   TransportType transport_type = 2;
   int32 max_load = 3;
   google.protobuf.Timestamp updated_at = 4;
+}
+
+// ==================== GetCourierDeliveries ====================
+
+// GetCourierDeliveriesRequest contains courier ID and pagination
+message GetCourierDeliveriesRequest {
+  string courier_id = 1;
+  int32 limit = 2;  // Max number of deliveries to return (default 5)
+}
+
+// DeliveryRecord represents a completed or in-progress delivery
+message DeliveryRecord {
+  string package_id = 1;
+  string order_id = 2;
+  PackageStatus status = 3;
+  Address pickup_address = 4;
+  Address delivery_address = 5;
+  google.protobuf.Timestamp assigned_at = 6;
+  optional google.protobuf.Timestamp delivered_at = 7;
+  Priority priority = 8;
+}
+
+// GetCourierDeliveriesResponse returns list of courier's deliveries
+message GetCourierDeliveriesResponse {
+  repeated DeliveryRecord deliveries = 1;
+  int32 total_count = 2;  // Total deliveries for this courier
 }

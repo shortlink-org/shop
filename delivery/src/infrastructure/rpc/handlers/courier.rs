@@ -8,7 +8,8 @@ use tonic::{Response, Status};
 use tracing::{error, info};
 
 use crate::domain::ports::{
-    CommandHandlerWithResult, CourierCache, CourierRepository, QueryHandler,
+    CommandHandlerWithResult, CourierCache, CourierRepository, PackageFilter, PackageRepository,
+    QueryHandler,
 };
 use crate::di::AppState;
 use crate::domain::model::courier::CourierStatus as DomainCourierStatus;
@@ -21,15 +22,17 @@ use crate::usecases::courier::query::get_pool::{
 
 use crate::infrastructure::rpc::converters::{
     courier_to_proto, domain_to_proto_transport, domain_to_proto_work_hours, now_timestamp,
-    parse_work_hours, proto_to_domain_status, proto_to_domain_transport,
+    package_to_delivery_record, parse_work_hours, proto_to_domain_status,
+    proto_to_domain_transport,
 };
 use crate::infrastructure::rpc::{
     ActivateCourierRequest, ActivateCourierResponse, ArchiveCourierRequest, ArchiveCourierResponse,
     ChangeTransportTypeRequest, ChangeTransportTypeResponse, CourierStatus,
-    DeactivateCourierRequest, DeactivateCourierResponse, GetCourierPoolRequest,
-    GetCourierPoolResponse, GetCourierRequest, GetCourierResponse, PaginationInfo,
-    RegisterCourierRequest, RegisterCourierResponse, TransportType, UpdateContactInfoRequest,
-    UpdateContactInfoResponse, UpdateWorkScheduleRequest, UpdateWorkScheduleResponse,
+    DeactivateCourierRequest, DeactivateCourierResponse, GetCourierDeliveriesRequest,
+    GetCourierDeliveriesResponse, GetCourierPoolRequest, GetCourierPoolResponse,
+    GetCourierRequest, GetCourierResponse, PaginationInfo, RegisterCourierRequest,
+    RegisterCourierResponse, TransportType, UpdateContactInfoRequest, UpdateContactInfoResponse,
+    UpdateWorkScheduleRequest, UpdateWorkScheduleResponse,
 };
 
 /// Handle RegisterCourier request
@@ -476,6 +479,71 @@ pub async fn change_transport_type(
         transport_type: domain_to_proto_transport(new_transport).into(),
         max_load: new_max_load as i32,
         updated_at: Some(now_timestamp()),
+    }))
+}
+
+/// Handle GetCourierDeliveries request
+pub async fn get_courier_deliveries(
+    state: &Arc<AppState>,
+    req: GetCourierDeliveriesRequest,
+) -> Result<Response<GetCourierDeliveriesResponse>, Status> {
+    info!("GetCourierDeliveries request received");
+
+    let courier_id = uuid::Uuid::parse_str(&req.courier_id)
+        .map_err(|_| Status::invalid_argument("invalid courier_id format"))?;
+
+    // Validate limit (default 5, max 50)
+    let limit = if req.limit <= 0 { 5 } else { req.limit.min(50) } as u64;
+
+    // Verify courier exists
+    let courier_exists = state
+        .courier_repo
+        .find_by_id(courier_id)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?
+        .is_some();
+
+    if !courier_exists {
+        return Err(Status::not_found("Courier not found"));
+    }
+
+    // Get packages assigned to this courier
+    let filter = PackageFilter::by_courier(courier_id);
+
+    // Get total count first
+    let total_count = state
+        .package_repo
+        .count_by_filter(filter.clone())
+        .await
+        .map_err(|e| Status::internal(e.to_string()))? as i32;
+
+    // Get packages with limit, sorted by assigned_at desc (most recent first)
+    let mut packages = state
+        .package_repo
+        .find_by_filter(filter, limit, 0)
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?;
+
+    // Sort by assigned_at descending (most recent first)
+    packages.sort_by(|a, b| {
+        b.assigned_at()
+            .unwrap_or_default()
+            .cmp(&a.assigned_at().unwrap_or_default())
+    });
+
+    // Convert to proto
+    let deliveries = packages.iter().map(package_to_delivery_record).collect();
+
+    info!(
+        courier_id = %courier_id,
+        count = packages.len(),
+        total = total_count,
+        "GetCourierDeliveries completed"
+    );
+
+    Ok(Response::new(GetCourierDeliveriesResponse {
+        deliveries,
+        total_count,
     }))
 }
 

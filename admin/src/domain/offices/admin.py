@@ -3,6 +3,7 @@
 from django.contrib import admin
 from mapwidgets import LeafletPointFieldWidget
 from unfold.admin import ModelAdmin
+from unfold.contrib.filters.admin import BooleanRadioFilter, RangeDateTimeFilter
 from unfold.paginator import InfinitePaginator
 
 from .models import Office
@@ -20,7 +21,12 @@ class OfficeAdmin(ModelAdmin):
         "is_active",
         "created_at",
     )
-    list_filter = ("is_active", "working_days", "created_at")
+    list_filter = (
+        ("is_active", BooleanRadioFilter),
+        "working_days",
+        ("created_at", RangeDateTimeFilter),
+    )
+    list_filter_submit = True
     search_fields = ("name", "address", "phone", "email")
     ordering = ("name",)
     paginator = InfinitePaginator

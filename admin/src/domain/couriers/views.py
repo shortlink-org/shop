@@ -111,6 +111,9 @@ def courier_detail(request, courier_id):
             messages.error(request, f"Courier not found: {courier_id}")
             return redirect("couriers:list")
 
+        # Fetch recent deliveries for this courier
+        deliveries_result = client.get_courier_deliveries(courier_id, limit=5)
+
     except DeliveryServiceError as e:
         logger.error(f"Error fetching courier: {e}")
         messages.error(request, f"Error connecting to Delivery Service: {e}")
@@ -119,6 +122,8 @@ def courier_detail(request, courier_id):
     context = {
         "title": f"Courier: {courier.name}",
         "courier": courier,
+        "recent_deliveries": deliveries_result.deliveries,
+        "total_deliveries": deliveries_result.total_count,
         "update_contact_form": UpdateContactInfoForm(
             initial={"phone": courier.phone, "email": courier.email}
         ),

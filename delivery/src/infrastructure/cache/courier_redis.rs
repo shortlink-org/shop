@@ -384,11 +384,11 @@ impl CourierCache for CourierRedisCache {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use testcontainers::{runners::AsyncRunner, ContainerAsync};
+    use testcontainers::{runners::AsyncRunner, ContainerAsync, ImageExt};
     use testcontainers_modules::redis::Redis;
 
     async fn setup_redis() -> (ContainerAsync<Redis>, CourierRedisCache) {
-        let container = Redis::default().start().await.unwrap();
+        let container = Redis::default().with_tag("7-alpine").start().await.unwrap();
         let port = container.get_host_port_ipv4(6379).await.unwrap();
         let url = format!("redis://localhost:{}", port);
 

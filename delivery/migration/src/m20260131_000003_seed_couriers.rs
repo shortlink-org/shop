@@ -21,11 +21,11 @@ impl MigrationTrait for Migration {
                 ) VALUES
                 -- MVP courier 1 - car, unlimited range
                 ('Max Müller', '+49 151 1234 0001', 'max.mueller@courier.de', 'car', 9999.00,
-                 '*', '00:00', '23:59', ARRAY[0,1,2,3,4,5,6]),
+                 '*', '00:00', '23:59', ARRAY[1,2,3,4,5,6,7]),
                 
                 -- MVP courier 2 - motorcycle, unlimited range
                 ('Anna Schmidt', '+49 151 1234 0002', 'anna.schmidt@courier.de', 'motorcycle', 9999.00,
-                 '*', '00:00', '23:59', ARRAY[0,1,2,3,4,5,6])
+                 '*', '00:00', '23:59', ARRAY[1,2,3,4,5,6,7])
                 
                 ON CONFLICT DO NOTHING;
                 "#,

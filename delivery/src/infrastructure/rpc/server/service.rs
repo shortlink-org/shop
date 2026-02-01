@@ -12,7 +12,8 @@ use crate::infrastructure::rpc::{
     AcceptOrderRequest, AcceptOrderResponse, ActivateCourierRequest, ActivateCourierResponse,
     ArchiveCourierRequest, ArchiveCourierResponse, AssignOrderRequest, AssignOrderResponse,
     ChangeTransportTypeRequest, ChangeTransportTypeResponse, DeactivateCourierRequest,
-    DeactivateCourierResponse, DeliveryService, GetCourierPoolRequest, GetCourierPoolResponse,
+    DeactivateCourierResponse, DeliveryService, GetCourierDeliveriesRequest,
+    GetCourierDeliveriesResponse, GetCourierPoolRequest, GetCourierPoolResponse,
     GetCourierRequest, GetCourierResponse, RegisterCourierRequest, RegisterCourierResponse,
     UpdateContactInfoRequest, UpdateContactInfoResponse, UpdateWorkScheduleRequest,
     UpdateWorkScheduleResponse,
@@ -114,5 +115,15 @@ impl DeliveryService for DeliveryServiceImpl {
         request: Request<AssignOrderRequest>,
     ) -> Result<Response<AssignOrderResponse>, Status> {
         order::assign_order(&self.state, request.into_inner()).await
+    }
+
+    // ==================== Courier Deliveries ====================
+
+    #[instrument(skip(self, request), fields(courier_id = %request.get_ref().courier_id))]
+    async fn get_courier_deliveries(
+        &self,
+        request: Request<GetCourierDeliveriesRequest>,
+    ) -> Result<Response<GetCourierDeliveriesResponse>, Status> {
+        courier::get_courier_deliveries(&self.state, request.into_inner()).await
     }
 }

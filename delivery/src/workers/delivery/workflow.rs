@@ -66,7 +66,7 @@ impl DeliverOrderWorkflowState {
 /// Delivery status
 ///
 /// Represents the current stage of the delivery process.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum DeliveryStatus {
     /// Courier heading to pickup location
     HeadingToPickup,
@@ -86,7 +86,7 @@ pub enum DeliveryStatus {
 ///
 /// These signals can be sent to a running delivery workflow
 /// to trigger state transitions.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum DeliverySignal {
     /// Courier arrived at pickup location
     ArrivedAtPickup,

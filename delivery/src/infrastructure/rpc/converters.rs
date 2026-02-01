@@ -2,14 +2,21 @@
 //!
 //! Conversion utilities between gRPC protobuf types and domain types.
 
-use chrono::NaiveTime;
+use chrono::{DateTime, NaiveTime, Utc};
 use tonic::Status;
 
 use crate::domain::ports::CachedCourierState;
 use crate::domain::model::courier::{Courier, CourierStatus as DomainCourierStatus, WorkHours as DomainWorkHours};
+use crate::domain::model::package::{
+    Address as DomainAddress, Package, PackageStatus as DomainPackageStatus,
+    Priority as DomainPriority,
+};
 use crate::domain::model::vo::TransportType as DomainTransportType;
 
-use super::{Courier as ProtoCourier, CourierStatus, TransportType, WorkHours as ProtoWorkHours};
+use super::{
+    Address as ProtoAddress, Courier as ProtoCourier, CourierStatus, DeliveryRecord,
+    PackageStatus, Priority, TransportType, WorkHours as ProtoWorkHours,
+};
 
 /// Convert proto TransportType to domain
 pub fn proto_to_domain_transport(t: TransportType) -> DomainTransportType {
@@ -114,6 +121,61 @@ pub fn now_timestamp() -> prost_types::Timestamp {
     prost_types::Timestamp {
         seconds: now.timestamp(),
         nanos: now.timestamp_subsec_nanos() as i32,
+    }
+}
+
+/// Convert DateTime to proto Timestamp
+pub fn datetime_to_timestamp(dt: DateTime<Utc>) -> prost_types::Timestamp {
+    prost_types::Timestamp {
+        seconds: dt.timestamp(),
+        nanos: dt.timestamp_subsec_nanos() as i32,
+    }
+}
+
+/// Convert domain PackageStatus to proto
+pub fn domain_to_proto_package_status(s: DomainPackageStatus) -> PackageStatus {
+    match s {
+        DomainPackageStatus::Accepted => PackageStatus::Accepted,
+        DomainPackageStatus::InPool => PackageStatus::InPool,
+        DomainPackageStatus::Assigned => PackageStatus::Assigned,
+        DomainPackageStatus::InTransit => PackageStatus::InTransit,
+        DomainPackageStatus::Delivered => PackageStatus::Delivered,
+        DomainPackageStatus::NotDelivered => PackageStatus::NotDelivered,
+        DomainPackageStatus::RequiresHandling => PackageStatus::RequiresHandling,
+    }
+}
+
+/// Convert domain Priority to proto
+pub fn domain_to_proto_priority(p: DomainPriority) -> Priority {
+    match p {
+        DomainPriority::Normal => Priority::Normal,
+        DomainPriority::Urgent => Priority::Urgent,
+    }
+}
+
+/// Convert domain Address to proto
+pub fn domain_to_proto_address(addr: &DomainAddress) -> ProtoAddress {
+    ProtoAddress {
+        street: addr.street.clone(),
+        city: addr.city.clone(),
+        postal_code: addr.postal_code.clone(),
+        country: String::new(), // Domain doesn't have country field
+        latitude: addr.location.latitude(),
+        longitude: addr.location.longitude(),
+    }
+}
+
+/// Convert Package to DeliveryRecord proto
+pub fn package_to_delivery_record(pkg: &Package) -> DeliveryRecord {
+    DeliveryRecord {
+        package_id: pkg.id().0.to_string(),
+        order_id: pkg.order_id().to_string(),
+        status: domain_to_proto_package_status(pkg.status()).into(),
+        pickup_address: Some(domain_to_proto_address(pkg.pickup_address())),
+        delivery_address: Some(domain_to_proto_address(pkg.delivery_address())),
+        assigned_at: pkg.assigned_at().map(datetime_to_timestamp),
+        delivered_at: pkg.delivered_at().map(datetime_to_timestamp),
+        priority: domain_to_proto_priority(pkg.priority()).into(),
     }
 }
 

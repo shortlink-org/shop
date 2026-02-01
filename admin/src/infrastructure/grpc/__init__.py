@@ -4,9 +4,12 @@ This package contains gRPC clients for external services.
 """
 
 from .delivery_client import (
+    Address,
     Courier,
+    CourierDeliveriesResult,
     CourierPoolResult,
     DeliveryClient,
+    DeliveryRecord,
     DeliveryServiceError,
     Location,
     WorkHours,
@@ -28,9 +31,12 @@ from .oms_client import (
 
 __all__ = [
     # Delivery
+    "Address",
     "Courier",
+    "CourierDeliveriesResult",
     "CourierPoolResult",
     "DeliveryClient",
+    "DeliveryRecord",
     "DeliveryServiceError",
     "Location",
     "WorkHours",
