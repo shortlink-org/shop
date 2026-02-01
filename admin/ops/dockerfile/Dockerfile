@@ -6,7 +6,7 @@ ARG BUILDKIT_SBOM_SCAN_STAGE=true
 # scan the build context only if the build is run to completion
 ARG BUILDKIT_SBOM_SCAN_CONTEXT=true
 
-FROM --platform=$BUILDPLATFORM python:3.14-slim
+FROM ghcr.io/astral-sh/uv:python3.14-bookworm
 
 LABEL maintainer=batazor111@gmail.com
 LABEL org.opencontainers.image.title="shortlink-shop-admin"
@@ -19,11 +19,13 @@ LABEL org.opencontainers.image.source="https://github.com/shortlink-org/shortlin
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-ENV UV_SYSTEM_PYTHON=1
+ENV VIRTUAL_ENV=/app/.venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+ENV UV_CACHE_DIR=/home/shop/.cache/uv
 
-# Kratos ENV
-ENV ORY_SDK_URL="http://host.docker.internal:4433"
-ENV ORY_UI_URL="http://host.docker.internal:3000/next/auth"
+# GDAL/GEOS library paths for Django GeoDjango (Debian x86_64)
+ENV GDAL_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgdal.so
+ENV GEOS_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgeos_c.so
 
 # HTTP API && Prometheus metrics
 EXPOSE 8000
@@ -33,38 +35,28 @@ RUN apt-get update && \
       curl tini sqlite3 git \
       # GeoDjango dependencies (GDAL, GEOS, PROJ)
       gdal-bin libgdal-dev libgeos-dev libproj-dev && \
-    apt-get clean && \
     rm -rf /var/lib/apt/lists/*
-
-# Install dependency manager
-# https://github.com/astral-sh/uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
-
-WORKDIR /app
-
-COPY pyproject.toml .
-COPY requirements.txt .
-
-# Create a virtual environment at .venv
-RUN uv venv
-
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv pip install -r requirements.txt
-
-ENTRYPOINT ["/usr/bin/tini", "--"]
-
-HEALTHCHECK \
-  --interval=5s \
-  --timeout=5s \
-  --retries=3 \
-  CMD curl -f localhost:8000/healthz || exit 1
 
 RUN addgroup --system shop && adduser --system --group shop
 
-COPY . .
+WORKDIR /app
 
-RUN chown -R shop:shop /app/src
+RUN chown shop:shop /app && \
+    mkdir -p /home/shop/.cache/uv && \
+    chown -R shop:shop /home/shop/.cache
+
+COPY --chown=shop:shop pyproject.toml uv.lock ./
 
 USER shop
 
-CMD ["python", "src/manage.py", "runserver", "0.0.0.0:8000"]
+RUN --mount=type=cache,target=/home/shop/.cache/uv \
+    uv sync --frozen
+
+COPY --chown=shop:shop . .
+
+ENTRYPOINT ["/usr/bin/tini", "--"]
+
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=20s \
+  CMD curl -f http://localhost:8000/healthz || exit 1
+
+CMD ["gunicorn", "src.wsgi:application", "-b", "0.0.0.0:8000", "--workers", "2", "--threads", "4", "--timeout", "60", "--graceful-timeout", "30"]
