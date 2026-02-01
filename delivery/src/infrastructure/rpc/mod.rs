@@ -3,7 +3,7 @@
 //! Contains gRPC service implementations and generated code.
 
 pub mod converters;
-mod handlers;
+pub(crate) mod handlers;
 pub mod server;
 
 // Include generated gRPC code

@@ -1,17 +1,14 @@
-//! gRPC Server Implementation
+//! DeliveryService trait implementation
 //!
-//! Implements the DeliveryService gRPC interface.
-//! Handler logic is delegated to specialized modules.
-
-use std::sync::Arc;
+//! This module contains the tonic gRPC trait implementation.
+//! Each method delegates to the appropriate handler in `handlers/`.
 
 use tonic::{Request, Response, Status};
 use tracing::instrument;
 
-use crate::di::AppState;
-
-use super::handlers::{courier, order};
-use super::{
+use super::DeliveryServiceImpl;
+use crate::infrastructure::rpc::handlers::{courier, order};
+use crate::infrastructure::rpc::{
     AcceptOrderRequest, AcceptOrderResponse, ActivateCourierRequest, ActivateCourierResponse,
     ArchiveCourierRequest, ArchiveCourierResponse, AssignOrderRequest, AssignOrderResponse,
     ChangeTransportTypeRequest, ChangeTransportTypeResponse, DeactivateCourierRequest,
@@ -20,18 +17,6 @@ use super::{
     UpdateContactInfoRequest, UpdateContactInfoResponse, UpdateWorkScheduleRequest,
     UpdateWorkScheduleResponse,
 };
-
-/// gRPC service implementation
-pub struct DeliveryServiceImpl {
-    state: Arc<AppState>,
-}
-
-impl DeliveryServiceImpl {
-    /// Create a new service instance
-    pub fn new(state: Arc<AppState>) -> Self {
-        Self { state }
-    }
-}
 
 #[tonic::async_trait]
 impl DeliveryService for DeliveryServiceImpl {
