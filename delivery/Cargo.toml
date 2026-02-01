@@ -10,6 +10,7 @@ prost-types = "0.14.3"
 pbjson-types = "0.6"
 tonic = "0.14.3"
 tonic-prost = "0.14"
+tonic-health = "0.14"
 
 # Async runtime
 tokio = { version = "1", features = ["full"] }

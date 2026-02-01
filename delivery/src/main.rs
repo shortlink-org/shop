@@ -5,6 +5,7 @@
 use std::sync::Arc;
 
 use tonic::transport::Server;
+use tonic_health::server::health_reporter;
 use tracing::{error, info};
 use tracing_subscriber::EnvFilter;
 
@@ -36,6 +37,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         e
     })?);
 
+    // Create gRPC health service
+    let (health_reporter, health_service) = health_reporter();
+    // Set the service as serving
+    health_reporter
+        .set_serving::<DeliveryServiceServer<DeliveryServiceImpl>>()
+        .await;
+
     // Create gRPC service
     let delivery_service = DeliveryServiceImpl::new(state);
 
@@ -44,6 +52,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!(address = %addr, "gRPC server starting");
 
     Server::builder()
+        .add_service(health_service)
         .add_service(DeliveryServiceServer::new(delivery_service))
         .serve(addr)
         .await?;
