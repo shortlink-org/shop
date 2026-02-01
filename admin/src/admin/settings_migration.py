@@ -19,8 +19,8 @@ env = environ.Env()
 
 # GDAL/GEOS library paths for GeoDjango
 # These are required for django.contrib.gis to find the libraries
-GDAL_LIBRARY_PATH = env("GDAL_LIBRARY_PATH", default="/usr/lib/x86_64-linux-gnu/libgdal.so")
-GEOS_LIBRARY_PATH = env("GEOS_LIBRARY_PATH", default="/usr/lib/x86_64-linux-gnu/libgeos_c.so")
+GDAL_LIBRARY_PATH = env("GDAL_LIBRARY_PATH", default=None)
+GEOS_LIBRARY_PATH = env("GEOS_LIBRARY_PATH", default=None)
 
 # Read .env file if it exists
 environ.Env.read_env(os.path.join(Path(__file__).resolve().parent.parent, ".env"))
