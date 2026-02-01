@@ -13,3 +13,7 @@
 {{ include "shortlink-common.PodDisruptionBudget" . }}
 
 {{ include "shortlink-common.NetworkPolicy" . }}
+
+{{ include "shortlink-common.RequestAuthentication" . }}
+
+{{ include "shortlink-common.AuthorizationPolicy" . }}
