@@ -12,6 +12,10 @@ ingress:
   enabled: false
 
 # ==============================================================================
+httpRoute:
+  enabled: false
+
+# ==============================================================================
 deploy:
   # type: Deployment, Rollout, StatefulSet
   type: Rollout
