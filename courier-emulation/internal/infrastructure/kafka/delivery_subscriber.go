@@ -23,6 +23,7 @@ const (
 // OrderAssignedEvent represents an order assigned to a courier.
 type OrderAssignedEvent struct {
 	OrderID     string    `json:"order_id"`
+	PackageID   string    `json:"package_id"`
 	CourierID   string    `json:"courier_id"`
 	PickupLat   float64   `json:"pickup_lat"`
 	PickupLon   float64   `json:"pickup_lon"`
@@ -141,21 +142,24 @@ func (s *DeliverySubscriber) Stop() error {
 	return s.subscriber.Close()
 }
 
-// CourierEmulationHandler implements OrderAssignmentHandler.
-type CourierEmulationHandler struct {
-	startCourierFunc func(ctx context.Context, courierID string, pickup, delivery vo.Location) error
+// DeliverySimulatorInterface defines the interface for starting deliveries.
+type DeliverySimulatorInterface interface {
+	StartDelivery(ctx context.Context, courierID string, order vo.DeliveryOrder) error
 }
 
-// NewCourierEmulationHandler creates a new handler.
-func NewCourierEmulationHandler(
-	startCourierFunc func(ctx context.Context, courierID string, pickup, delivery vo.Location) error,
-) *CourierEmulationHandler {
+// CourierEmulationHandler implements OrderAssignmentHandler using DeliverySimulator.
+type CourierEmulationHandler struct {
+	deliverySimulator DeliverySimulatorInterface
+}
+
+// NewCourierEmulationHandler creates a new handler with the delivery simulator.
+func NewCourierEmulationHandler(deliverySimulator DeliverySimulatorInterface) *CourierEmulationHandler {
 	return &CourierEmulationHandler{
-		startCourierFunc: startCourierFunc,
+		deliverySimulator: deliverySimulator,
 	}
 }
 
-// HandleOrderAssigned handles an order assignment by starting a courier simulation.
+// HandleOrderAssigned handles an order assignment by starting a delivery simulation.
 func (h *CourierEmulationHandler) HandleOrderAssigned(ctx context.Context, event OrderAssignedEvent) error {
 	pickup, err := vo.NewLocation(event.PickupLat, event.PickupLon)
 	if err != nil {
@@ -167,5 +171,19 @@ func (h *CourierEmulationHandler) HandleOrderAssigned(ctx context.Context, event
 		return err
 	}
 
-	return h.startCourierFunc(ctx, event.CourierID, pickup, delivery)
+	// Use PackageID if available, otherwise fall back to OrderID
+	packageID := event.PackageID
+	if packageID == "" {
+		packageID = event.OrderID
+	}
+
+	order := vo.NewDeliveryOrder(
+		event.OrderID,
+		packageID,
+		pickup,
+		delivery,
+		event.AssignedAt,
+	)
+
+	return h.deliverySimulator.StartDelivery(ctx, event.CourierID, order)
 }

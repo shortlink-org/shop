@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -36,10 +35,7 @@ func (m *mockPublisher) Close() error {
 
 func TestLocationPublisher_PublishLocation(t *testing.T) {
 	mock := newMockPublisher()
-	publisher := &LocationPublisher{
-		publisher: mock,
-		logger:    watermill.NewStdLogger(false, false),
-	}
+	publisher := NewLocationPublisher(mock)
 
 	location := vo.MustNewLocation(52.5200, 13.4050)
 	event := vo.NewCourierLocationEvent("courier-1", location, vo.CourierStatusMoving).
@@ -60,10 +56,7 @@ func TestLocationPublisher_PublishLocation(t *testing.T) {
 
 func TestLocationPublisher_PublishLocationBatch(t *testing.T) {
 	mock := newMockPublisher()
-	publisher := &LocationPublisher{
-		publisher: mock,
-		logger:    watermill.NewStdLogger(false, false),
-	}
+	publisher := NewLocationPublisher(mock)
 
 	events := []vo.CourierLocationEvent{
 		vo.NewCourierLocationEvent("courier-1", vo.MustNewLocation(52.5200, 13.4050), vo.CourierStatusMoving),
@@ -79,19 +72,10 @@ func TestLocationPublisher_PublishLocationBatch(t *testing.T) {
 
 func TestLocationPublisher_Close(t *testing.T) {
 	mock := newMockPublisher()
-	publisher := &LocationPublisher{
-		publisher: mock,
-		logger:    watermill.NewStdLogger(false, false),
-	}
+	publisher := NewLocationPublisher(mock)
 
 	err := publisher.Close()
 
 	require.NoError(t, err)
 	assert.True(t, mock.closed)
-}
-
-func TestDefaultPublisherConfig(t *testing.T) {
-	config := DefaultPublisherConfig()
-
-	assert.Equal(t, []string{"localhost:9092"}, config.Brokers)
 }

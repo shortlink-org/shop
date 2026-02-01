@@ -36,11 +36,13 @@ type CourierEmulationService struct {
 	PprofEndpoint profiling.PprofEndpoint
 
 	// Domain services
-	RouteGenerator   *services.RouteGenerator
-	CourierSimulator *services.CourierSimulator
+	RouteGenerator    *services.RouteGenerator
+	CourierSimulator  *services.CourierSimulator
+	DeliverySimulator *services.DeliverySimulator
 
 	// Infrastructure
 	LocationPublisher *kafka.LocationPublisher
+	StatusPublisher   *kafka.KafkaStatusPublisher
 }
 
 // DefaultSet ==========================================================================================================
@@ -62,9 +64,11 @@ var CourierEmulationSet = wire.NewSet(
 	// Domain services
 	pkg_di.NewOSRMClient,
 	pkg_di.NewCourierSimulator,
+	pkg_di.NewDeliverySimulator,
 
 	// Infrastructure
 	pkg_di.NewLocationPublisher,
+	pkg_di.NewStatusPublisher,
 
 	NewCourierEmulationService,
 )
@@ -82,18 +86,21 @@ func NewCourierEmulationService(
 	// Domain services
 	routeGen *services.RouteGenerator,
 	simulator *services.CourierSimulator,
+	deliverySimulator *services.DeliverySimulator,
 
 	// Infrastructure
-	publisher *kafka.LocationPublisher,
+	locationPublisher *kafka.LocationPublisher,
+	statusPublisher *kafka.KafkaStatusPublisher,
 ) (*CourierEmulationService, func(), error) {
 	cleanup := func() {
 		log.Info("Shutting down courier simulation...")
 
-		// Stop all couriers
+		// Stop all simulations
 		simulator.Stop()
+		deliverySimulator.Stop()
 
 		// Note: Kafka publisher cleanup is handled by Wire via the cleanup function
-		// returned by pkg_di.NewLocationPublisher
+		// returned by pkg_di.NewLocationPublisher and pkg_di.NewStatusPublisher
 	}
 
 	return &CourierEmulationService{
@@ -107,11 +114,13 @@ func NewCourierEmulationService(
 		PprofEndpoint: pprofHTTP,
 
 		// Domain services
-		RouteGenerator:   routeGen,
-		CourierSimulator: simulator,
+		RouteGenerator:    routeGen,
+		CourierSimulator:  simulator,
+		DeliverySimulator: deliverySimulator,
 
 		// Infrastructure
-		LocationPublisher: publisher,
+		LocationPublisher: locationPublisher,
+		StatusPublisher:   statusPublisher,
 	}, cleanup, nil
 }
 

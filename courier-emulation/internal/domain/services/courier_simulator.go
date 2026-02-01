@@ -27,6 +27,13 @@ type CourierState struct {
 	Speed           float64 // km/h
 	StartedAt       time.Time
 	LastUpdateAt    time.Time
+
+	// Delivery workflow fields
+	CurrentOrder   *vo.DeliveryOrder // Current order being delivered
+	Phase          vo.DeliveryPhase  // Current phase in delivery workflow
+	PhaseStartedAt time.Time         // When current phase started
+	PickupRoute    *vo.Route         // Route to pickup point
+	DeliveryRoute  *vo.Route         // Route from pickup to customer
 }
 
 // CourierSimulatorConfig holds configuration for the courier simulator.

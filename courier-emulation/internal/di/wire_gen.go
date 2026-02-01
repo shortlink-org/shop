@@ -76,7 +76,7 @@ func InitializeCourierEmulationService() (*CourierEmulationService, func(), erro
 		return nil, nil, err
 	}
 	courierSimulator := pkg_di.NewCourierSimulator(configConfig, routeGenerator, locationPublisher)
-	courierEmulationService, cleanup6, err := NewCourierEmulationService(loggerLogger, configConfig, monitoring, tracerProvider, pprofEndpoint, routeGenerator, courierSimulator, locationPublisher)
+	kafkaStatusPublisher, cleanup6, err := pkg_di.NewStatusPublisher(configConfig, loggerLogger)
 	if err != nil {
 		cleanup5()
 		cleanup4()
@@ -85,7 +85,19 @@ func InitializeCourierEmulationService() (*CourierEmulationService, func(), erro
 		cleanup()
 		return nil, nil, err
 	}
+	deliverySimulator := pkg_di.NewDeliverySimulator(configConfig, routeGenerator, locationPublisher, kafkaStatusPublisher)
+	courierEmulationService, cleanup7, err := NewCourierEmulationService(loggerLogger, configConfig, monitoring, tracerProvider, pprofEndpoint, routeGenerator, courierSimulator, deliverySimulator, locationPublisher, kafkaStatusPublisher)
+	if err != nil {
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
 	return courierEmulationService, func() {
+		cleanup7()
 		cleanup6()
 		cleanup5()
 		cleanup4()
@@ -108,11 +120,13 @@ type CourierEmulationService struct {
 	PprofEndpoint profiling.PprofEndpoint
 
 	// Domain services
-	RouteGenerator   *services.RouteGenerator
-	CourierSimulator *services.CourierSimulator
+	RouteGenerator    *services.RouteGenerator
+	CourierSimulator  *services.CourierSimulator
+	DeliverySimulator *services.DeliverySimulator
 
 	// Infrastructure
 	LocationPublisher *kafka.LocationPublisher
+	StatusPublisher   *kafka.KafkaStatusPublisher
 }
 
 // DefaultSet ==========================================================================================================
@@ -121,7 +135,7 @@ var DefaultSet = wire.NewSet(ctx.New, flags.New, config.New, logger.NewDefault, 
 // CourierEmulationSet =================================================================================================
 var CourierEmulationSet = wire.NewSet(
 
-	DefaultSet, pkg_di.NewOSRMClient, pkg_di.NewCourierSimulator, pkg_di.NewLocationPublisher, NewCourierEmulationService,
+	DefaultSet, pkg_di.NewOSRMClient, pkg_di.NewCourierSimulator, pkg_di.NewDeliverySimulator, pkg_di.NewLocationPublisher, pkg_di.NewStatusPublisher, NewCourierEmulationService,
 )
 
 func NewCourierEmulationService(
@@ -135,13 +149,16 @@ func NewCourierEmulationService(
 
 	routeGen *services.RouteGenerator,
 	simulator *services.CourierSimulator,
+	deliverySimulator *services.DeliverySimulator,
 
-	publisher *kafka.LocationPublisher,
+	locationPublisher *kafka.LocationPublisher,
+	statusPublisher *kafka.KafkaStatusPublisher,
 ) (*CourierEmulationService, func(), error) {
 	cleanup := func() {
 		log.Info("Shutting down courier simulation...")
 
 		simulator.Stop()
+		deliverySimulator.Stop()
 
 	}
 
@@ -154,9 +171,11 @@ func NewCourierEmulationService(
 		Monitoring:    monitoring,
 		PprofEndpoint: pprofHTTP,
 
-		RouteGenerator:   routeGen,
-		CourierSimulator: simulator,
+		RouteGenerator:    routeGen,
+		CourierSimulator:  simulator,
+		DeliverySimulator: deliverySimulator,
 
-		LocationPublisher: publisher,
+		LocationPublisher: locationPublisher,
+		StatusPublisher:   statusPublisher,
 	}, cleanup, nil
 }
