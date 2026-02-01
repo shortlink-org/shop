@@ -7,6 +7,6 @@ plugins:
 inputs:
   # Domain models from Buf Registry
   - module: buf.build/shortlink-org/shop-delivery
-  - module: buf.build/shortlink-org/shop-oms
+  # Note: OMS is installed via pip from buf.build/gen/python
   # Infrastructure RPC (local) - Delivery
   - directory: ../delivery/src/infrastructure/rpc

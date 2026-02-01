@@ -143,8 +143,8 @@ class OmsClient:
         """Ensure gRPC channel is connected."""
         if self._channel is None:
             self._channel = grpc.insecure_channel(self.host)
-            # Import generated stubs
-            from .generated.infrastructure.rpc.order.v1 import order_rpc_pb2_grpc
+            # Import from Buf-generated package
+            from infrastructure.rpc.order.v1 import order_rpc_pb2_grpc
 
             self._stub = order_rpc_pb2_grpc.OrderServiceStub(self._channel)
 
@@ -228,7 +228,7 @@ class OmsClient:
         """
         self._ensure_connected()
 
-        from .generated.infrastructure.rpc.order.v1.model.v1 import model_pb2
+        from infrastructure.rpc.order.v1.model.v1 import model_pb2
 
         request = model_pb2.GetRequest(id=order_id)
 
@@ -261,7 +261,7 @@ class OmsClient:
         """
         self._ensure_connected()
 
-        from .generated.infrastructure.rpc.order.v1.model.v1 import model_pb2
+        from infrastructure.rpc.order.v1.model.v1 import model_pb2
 
         # Build request
         pagination = model_pb2.Pagination(page=page, page_size=page_size)
@@ -297,7 +297,7 @@ class OmsClient:
         """
         self._ensure_connected()
 
-        from .generated.infrastructure.rpc.order.v1.model.v1 import model_pb2
+        from infrastructure.rpc.order.v1.model.v1 import model_pb2
 
         request = model_pb2.CancelRequest(id=order_id)
 

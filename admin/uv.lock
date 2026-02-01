@@ -1104,6 +1104,7 @@ dependencies = [
     { name = "requests" },
     { name = "rpds-py" },
     { name = "setuptools" },
+    { name = "shortlink-org-shop-oms-grpc-python" },
     { name = "sqlparse" },
     { name = "typing-extensions" },
     { name = "uritemplate" },
@@ -1188,6 +1189,7 @@ requires-dist = [
     { name = "requests", specifier = "==2.32.5" },
     { name = "rpds-py", specifier = "==0.27.1" },
     { name = "setuptools", specifier = "==80.10.2" },
+    { name = "shortlink-org-shop-oms-grpc-python", specifier = "==1.76.0.2.20260201221610+71e3c8b3c462" },
     { name = "sqlparse", specifier = "==0.5.5" },
     { name = "typing-extensions", specifier = "==4.15.0" },
     { name = "uritemplate", specifier = "==4.2.0" },
@@ -1199,12 +1201,57 @@ requires-dist = [
 ]
 
 [[package]]
+name = "shortlink-org-shop-oms-grpc-python"
+version = "1.76.0.2.20260201221610+71e3c8b3c462"
+source = { registry = "https://buf.build/gen/python" }
+dependencies = [
+    { name = "grpcio" },
+    { name = "shortlink-org-shop-oms-protocolbuffers-python" },
+]
+wheels = [
+    { url = "https://buf.build/gen/python/shortlink-org-shop-oms-grpc-python/shortlink_org_shop_oms_grpc_python-1.76.0.2.20260201221610+71e3c8b3c462-py3-none-any.whl" },
+]
+
+[[package]]
+name = "shortlink-org-shop-oms-protocolbuffers-pyi"
+version = "33.5.0.1.20260201221610+71e3c8b3c462"
+source = { registry = "https://buf.build/gen/python" }
+dependencies = [
+    { name = "protobuf" },
+    { name = "types-protobuf" },
+]
+wheels = [
+    { url = "https://buf.build/gen/python/shortlink-org-shop-oms-protocolbuffers-pyi/shortlink_org_shop_oms_protocolbuffers_pyi-33.5.0.1.20260201221610+71e3c8b3c462-py3-none-any.whl" },
+]
+
+[[package]]
+name = "shortlink-org-shop-oms-protocolbuffers-python"
+version = "33.5.0.1.20260201221610+71e3c8b3c462"
+source = { registry = "https://buf.build/gen/python" }
+dependencies = [
+    { name = "protobuf" },
+    { name = "shortlink-org-shop-oms-protocolbuffers-pyi" },
+]
+wheels = [
+    { url = "https://buf.build/gen/python/shortlink-org-shop-oms-protocolbuffers-python/shortlink_org_shop_oms_protocolbuffers_python-33.5.0.1.20260201221610+71e3c8b3c462-py3-none-any.whl" },
+]
+
+[[package]]
 name = "sqlparse"
 version = "0.5.5"
 source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/90/76/437d71068094df0726366574cf3432a4ed754217b436eb7429415cf2d480/sqlparse-0.5.5.tar.gz", hash = "sha256:e20d4a9b0b8585fdf63b10d30066c7c94c5d7a7ec47c889a2d83a3caa93ff28e", size = 120815 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/49/4b/359f28a903c13438ef59ebeee215fb25da53066db67b305c125f1c6d2a25/sqlparse-0.5.5-py3-none-any.whl", hash = "sha256:12a08b3bf3eec877c519589833aed092e2444e68240a3577e8e26148acc7b1ba", size = 46138 },
+]
+
+[[package]]
+name = "types-protobuf"
+version = "6.32.1.20251210"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/c2/59/c743a842911887cd96d56aa8936522b0cd5f7a7f228c96e81b59fced45be/types_protobuf-6.32.1.20251210.tar.gz", hash = "sha256:c698bb3f020274b1a2798ae09dc773728ce3f75209a35187bd11916ebfde6763", size = 63900 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/aa/43/58e75bac4219cbafee83179505ff44cae3153ec279be0e30583a73b8f108/types_protobuf-6.32.1.20251210-py3-none-any.whl", hash = "sha256:2641f78f3696822a048cfb8d0ff42ccd85c25f12f871fbebe86da63793692140", size = 77921 },
 ]
 
 [[package]]
