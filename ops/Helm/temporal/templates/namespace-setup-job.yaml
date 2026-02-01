@@ -9,9 +9,8 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
   annotations:
-    # ArgoCD hook - run after sync
-    argocd.argoproj.io/hook: PostSync
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+    # Run after main Temporal resources are deployed
+    argocd.argoproj.io/sync-wave: "10"
 spec:
   ttlSecondsAfterFinished: 300
   backoffLimit: 5
