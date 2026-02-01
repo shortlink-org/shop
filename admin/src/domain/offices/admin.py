@@ -2,12 +2,13 @@
 
 from django.contrib import admin
 from mapwidgets import LeafletPointFieldWidget
+from unfold.admin import ModelAdmin
 
 from .models import Office
 
 
 @admin.register(Office)
-class OfficeAdmin(admin.ModelAdmin):
+class OfficeAdmin(ModelAdmin):
     """Admin view for Office model with map widget for location selection."""
 
     list_display = (

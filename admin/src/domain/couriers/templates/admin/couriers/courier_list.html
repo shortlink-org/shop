@@ -3,126 +3,8 @@
 
 {% block title %}{{ title }} | {{ site_title }}{% endblock %}
 
-{% block breadcrumbs %}
-<div class="breadcrumbs">
-    <a href="{% url 'admin:index' %}">Home</a>
-    &rsaquo; Courier Management
-</div>
-{% endblock %}
-
-{% block content %}
-<div id="content-main">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h1>{{ title }}</h1>
-        <div>
-            <a href="{% url 'couriers:register' %}" class="addlink" style="margin-right: 10px;">Add Courier</a>
-            <a href="{% url 'couriers:map' %}" class="viewlink">View Map</a>
-        </div>
-    </div>
-
-    <!-- Filters -->
-    <form method="get" style="background: var(--body-bg); padding: 15px; margin-bottom: 20px; border-radius: 4px;">
-        <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
-            <div>
-                <label for="id_status">Status:</label>
-                {{ filter_form.status }}
-            </div>
-            <div>
-                <label for="id_transport_type">Transport:</label>
-                {{ filter_form.transport_type }}
-            </div>
-            <div>
-                <label for="id_work_zone">Zone:</label>
-                {{ filter_form.work_zone }}
-            </div>
-            <div style="display: flex; align-items: center; gap: 5px;">
-                {{ filter_form.available_only }}
-                <label for="id_available_only">Available only</label>
-            </div>
-            <div>
-                <button type="submit" class="default">Filter</button>
-                <a href="{% url 'couriers:list' %}" class="button">Clear</a>
-            </div>
-        </div>
-    </form>
-
-    <!-- Results -->
-    <p style="margin-bottom: 10px;">
-        <strong>{{ total_count }}</strong> courier{% if total_count != 1 %}s{% endif %} found
-    </p>
-
-    {% if couriers %}
-    <table id="result_list">
-        <thead>
-            <tr>
-                <th scope="col"><span>Name</span></th>
-                <th scope="col"><span>Status</span></th>
-                <th scope="col"><span>Transport</span></th>
-                <th scope="col"><span>Zone</span></th>
-                <th scope="col"><span>Load</span></th>
-                <th scope="col"><span>Rating</span></th>
-                <th scope="col"><span>Phone</span></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for courier in couriers %}
-            <tr class="row{% cycle '1' '2' %}">
-                <td>
-                    <a href="{% url 'couriers:detail' courier_id=courier.courier_id %}">
-                        <strong>{{ courier.name }}</strong>
-                    </a>
-                </td>
-                <td>
-                    <span class="courier-status status-{{ courier.status|lower }}">
-                        {{ courier.status }}
-                    </span>
-                </td>
-                <td>{{ courier.transport_type }}</td>
-                <td>{{ courier.work_zone }}</td>
-                <td>{{ courier.current_load }} / {{ courier.max_load }}</td>
-                <td>
-                    {% if courier.rating > 0 %}
-                        {{ courier.rating|floatformat:1 }} / 5.0
-                    {% else %}
-                        -
-                    {% endif %}
-                </td>
-                <td>{{ courier.phone }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    <!-- Pagination -->
-    {% if total_pages > 1 %}
-    <p class="paginator" style="margin-top: 20px;">
-        {% if has_previous %}
-            <a href="?page=1&status={{ filter_form.status.value|default:'' }}&transport_type={{ filter_form.transport_type.value|default:'' }}&work_zone={{ filter_form.work_zone.value|default:'' }}">&laquo; First</a>
-            <a href="?page={{ page|add:'-1' }}&status={{ filter_form.status.value|default:'' }}&transport_type={{ filter_form.transport_type.value|default:'' }}&work_zone={{ filter_form.work_zone.value|default:'' }}">Previous</a>
-        {% endif %}
-
-        {% for p in page_range %}
-            {% if p == page %}
-                <span class="this-page">{{ p }}</span>
-            {% else %}
-                <a href="?page={{ p }}&status={{ filter_form.status.value|default:'' }}&transport_type={{ filter_form.transport_type.value|default:'' }}&work_zone={{ filter_form.work_zone.value|default:'' }}">{{ p }}</a>
-            {% endif %}
-        {% endfor %}
-
-        {% if has_next %}
-            <a href="?page={{ page|add:'1' }}&status={{ filter_form.status.value|default:'' }}&transport_type={{ filter_form.transport_type.value|default:'' }}&work_zone={{ filter_form.work_zone.value|default:'' }}">Next</a>
-            <a href="?page={{ total_pages }}&status={{ filter_form.status.value|default:'' }}&transport_type={{ filter_form.transport_type.value|default:'' }}&work_zone={{ filter_form.work_zone.value|default:'' }}">Last &raquo;</a>
-        {% endif %}
-
-        <span style="margin-left: 20px;">Page {{ page }} of {{ total_pages }}</span>
-    </p>
-    {% endif %}
-
-    {% else %}
-    <p class="empty-results">No couriers found matching your criteria.</p>
-    {% endif %}
-</div>
-
+{% block extrahead %}
+{{ block.super }}
 <style>
 .courier-status {
     padding: 3px 8px;
@@ -131,27 +13,123 @@
     font-weight: bold;
     text-transform: uppercase;
 }
-.status-free {
-    background: #28a745;
-    color: white;
-}
-.status-busy {
-    background: #ffc107;
-    color: #000;
-}
-.status-unavailable {
-    background: #6c757d;
-    color: white;
-}
-.status-archived {
-    background: #dc3545;
-    color: white;
-}
-.empty-results {
-    padding: 20px;
-    text-align: center;
-    background: var(--body-bg);
-    border-radius: 4px;
-}
+.status-free { background: #28a745; color: white; }
+.status-busy { background: #ffc107; color: #000; }
+.status-unavailable { background: #6c757d; color: white; }
+.status-archived { background: #dc3545; color: white; }
+#changelist-filter h2 { font-size: 14px; margin: 0 0 10px; }
+#changelist-filter h3 { font-size: 12px; margin: 10px 0 5px; font-weight: bold; }
+#changelist-filter ul { margin: 0 0 15px; padding: 0; list-style: none; }
+#changelist-filter li { padding: 3px 0; }
 </style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; Courier Management
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="changelist">
+    <div id="toolbar">
+        <form id="changelist-search" method="get">
+            {{ filter_form.status }}
+            {{ filter_form.transport_type }}
+            {{ filter_form.work_zone }}
+            <label>{{ filter_form.available_only }} Available only</label>
+            <input type="submit" value="Filter">
+        </form>
+    </div>
+
+    <div id="changelist-filter">
+        <h2>Quick Links</h2>
+        <ul>
+            <li><a href="{% url 'couriers:register' %}" class="addlink">Add Courier</a></li>
+            <li><a href="{% url 'couriers:map' %}" class="viewlink">View Map</a></li>
+        </ul>
+        <h3>By Status</h3>
+        <ul>
+            <li><a href="{% url 'couriers:list' %}">All</a></li>
+            <li><a href="?status=FREE">Free</a></li>
+            <li><a href="?status=BUSY">Busy</a></li>
+            <li><a href="?status=UNAVAILABLE">Unavailable</a></li>
+            <li><a href="?status=ARCHIVED">Archived</a></li>
+        </ul>
+        <h3>By Transport</h3>
+        <ul>
+            <li><a href="{% url 'couriers:list' %}">All</a></li>
+            <li><a href="?transport_type=WALKING">Walking</a></li>
+            <li><a href="?transport_type=BICYCLE">Bicycle</a></li>
+            <li><a href="?transport_type=MOTORCYCLE">Motorcycle</a></li>
+            <li><a href="?transport_type=CAR">Car</a></li>
+        </ul>
+    </div>
+
+    <div id="changelist-form">
+        <div class="results">
+            <p class="paginator">{{ total_count }} courier{% if total_count != 1 %}s{% endif %}</p>
+
+            {% if couriers %}
+            <table id="result_list">
+                <thead>
+                    <tr>
+                        <th scope="col" class="sortable column-name"><div class="text"><span>Name</span></div></th>
+                        <th scope="col" class="column-status"><div class="text"><span>Status</span></div></th>
+                        <th scope="col" class="column-transport"><div class="text"><span>Transport</span></div></th>
+                        <th scope="col" class="column-zone"><div class="text"><span>Zone</span></div></th>
+                        <th scope="col" class="column-load"><div class="text"><span>Load</span></div></th>
+                        <th scope="col" class="column-rating"><div class="text"><span>Rating</span></div></th>
+                        <th scope="col" class="column-phone"><div class="text"><span>Phone</span></div></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for courier in couriers %}
+                    <tr class="row{% cycle '1' '2' %}">
+                        <td class="field-name">
+                            <a href="{% url 'couriers:detail' courier_id=courier.courier_id %}">{{ courier.name }}</a>
+                        </td>
+                        <td class="field-status">
+                            <span class="courier-status status-{{ courier.status|lower }}">{{ courier.status }}</span>
+                        </td>
+                        <td class="field-transport">{{ courier.transport_type }}</td>
+                        <td class="field-zone">{{ courier.work_zone|default:"-" }}</td>
+                        <td class="field-load">{{ courier.current_load }}/{{ courier.max_load }}</td>
+                        <td class="field-rating">{% if courier.rating > 0 %}{{ courier.rating|floatformat:1 }}{% else %}-{% endif %}</td>
+                        <td class="field-phone">{{ courier.phone }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% if total_pages > 1 %}
+            <p class="paginator">
+                {% if has_previous %}
+                <a href="?page=1&status={{ filter_form.status.value|default:'' }}&transport_type={{ filter_form.transport_type.value|default:'' }}&work_zone={{ filter_form.work_zone.value|default:'' }}">&laquo; first</a>
+                <a href="?page={{ page|add:'-1' }}&status={{ filter_form.status.value|default:'' }}&transport_type={{ filter_form.transport_type.value|default:'' }}&work_zone={{ filter_form.work_zone.value|default:'' }}">previous</a>
+                {% endif %}
+
+                {% for p in page_range %}
+                    {% if p == page %}
+                    <span class="this-page">{{ p }}</span>
+                    {% else %}
+                    <a href="?page={{ p }}&status={{ filter_form.status.value|default:'' }}&transport_type={{ filter_form.transport_type.value|default:'' }}&work_zone={{ filter_form.work_zone.value|default:'' }}">{{ p }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if has_next %}
+                <a href="?page={{ page|add:'1' }}&status={{ filter_form.status.value|default:'' }}&transport_type={{ filter_form.transport_type.value|default:'' }}&work_zone={{ filter_form.work_zone.value|default:'' }}">next</a>
+                <a href="?page={{ total_pages }}&status={{ filter_form.status.value|default:'' }}&transport_type={{ filter_form.transport_type.value|default:'' }}&work_zone={{ filter_form.work_zone.value|default:'' }}">last &raquo;</a>
+                {% endif %}
+                {{ page }} of {{ total_pages }}
+            </p>
+            {% endif %}
+
+            {% else %}
+            <p class="paginator">0 couriers</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
 {% endblock %}

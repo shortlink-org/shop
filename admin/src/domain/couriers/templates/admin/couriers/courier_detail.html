@@ -3,6 +3,19 @@
 
 {% block title %}{{ title }} | {{ site_title }}{% endblock %}
 
+{% block extrahead %}
+{{ block.super }}
+<style>
+.courier-status { padding: 5px 12px; border-radius: 3px; font-weight: bold; text-transform: uppercase; }
+.status-free { background: #28a745; color: white; }
+.status-busy { background: #ffc107; color: #000; }
+.status-unavailable { background: #6c757d; color: white; }
+.status-archived { background: #dc3545; color: white; }
+.inline-form { display: inline-block; margin-right: 5px; }
+.action-buttons { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--hairline-color); }
+</style>
+{% endblock %}
+
 {% block breadcrumbs %}
 <div class="breadcrumbs">
     <a href="{% url 'admin:index' %}">Home</a>
@@ -13,296 +26,116 @@
 
 {% block content %}
 <div id="content-main">
-    <h1>{{ courier.name }}</h1>
-
-    <!-- Status and Quick Actions -->
-    <div class="module" style="margin-bottom: 20px;">
-        <h2>Status</h2>
-        <div style="padding: 15px;">
-            <span class="courier-status status-{{ courier.status|lower }}" style="font-size: 14px;">
-                {{ courier.status }}
-            </span>
-
-            <div style="margin-top: 15px;">
-                {% if courier.status == 'UNAVAILABLE' %}
-                    <form method="post" action="{% url 'couriers:activate' courier_id=courier.courier_id %}" style="display: inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="default">Activate</button>
-                    </form>
-                {% elif courier.status == 'FREE' %}
-                    <form method="post" action="{% url 'couriers:deactivate' courier_id=courier.courier_id %}" style="display: inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="default">Deactivate</button>
-                    </form>
-                {% endif %}
-
-                {% if courier.status != 'ARCHIVED' %}
-                    <button type="button" class="default" onclick="document.getElementById('archive-modal').style.display='block'" style="background: #dc3545;">
-                        Archive
-                    </button>
-                {% endif %}
-            </div>
+    <fieldset class="module aligned">
+        <h2>Status: <span class="courier-status status-{{ courier.status|lower }}">{{ courier.status }}</span></h2>
+        <div class="form-row action-buttons">
+            {% if courier.status == 'UNAVAILABLE' %}
+            <form method="post" action="{% url 'couriers:activate' courier_id=courier.courier_id %}" class="inline-form">
+                {% csrf_token %}
+                <input type="submit" value="Activate" class="default">
+            </form>
+            {% elif courier.status == 'FREE' %}
+            <form method="post" action="{% url 'couriers:deactivate' courier_id=courier.courier_id %}" class="inline-form">
+                {% csrf_token %}
+                <input type="submit" value="Deactivate" class="default">
+            </form>
+            {% endif %}
+            {% if courier.status != 'ARCHIVED' %}
+            <input type="button" value="Archive..." class="default" onclick="document.getElementById('archive-modal').style.display='block'">
+            {% endif %}
         </div>
-    </div>
+    </fieldset>
 
-    <!-- Courier Info -->
-    <div class="module">
+    <fieldset class="module aligned">
         <h2>Courier Information</h2>
-        <table>
-            <tr>
-                <th>ID:</th>
-                <td><code>{{ courier.courier_id }}</code></td>
-            </tr>
-            <tr>
-                <th>Name:</th>
-                <td>{{ courier.name }}</td>
-            </tr>
-            <tr>
-                <th>Phone:</th>
-                <td>{{ courier.phone }}</td>
-            </tr>
-            <tr>
-                <th>Email:</th>
-                <td>{{ courier.email }}</td>
-            </tr>
-            <tr>
-                <th>Transport Type:</th>
-                <td>{{ courier.transport_type }}</td>
-            </tr>
-            <tr>
-                <th>Work Zone:</th>
-                <td>{{ courier.work_zone }}</td>
-            </tr>
-            <tr>
-                <th>Max Distance:</th>
-                <td>{{ courier.max_distance_km }} km</td>
-            </tr>
-            <tr>
-                <th>Work Hours:</th>
-                <td>
-                    {% if courier.work_hours %}
-                        {{ courier.work_hours.start_time }} - {{ courier.work_hours.end_time }}
-                        (Days: {{ courier.work_hours.work_days|join:", " }})
-                    {% else %}
-                        -
-                    {% endif %}
-                </td>
-            </tr>
-        </table>
-    </div>
+        <div class="form-row"><div><label>ID:</label> <code>{{ courier.courier_id }}</code></div></div>
+        <div class="form-row"><div><label>Name:</label> {{ courier.name }}</div></div>
+        <div class="form-row"><div><label>Phone:</label> {{ courier.phone }}</div></div>
+        <div class="form-row"><div><label>Email:</label> {{ courier.email }}</div></div>
+        <div class="form-row"><div><label>Transport:</label> {{ courier.transport_type }}</div></div>
+        <div class="form-row"><div><label>Zone:</label> {{ courier.work_zone|default:"-" }}</div></div>
+        <div class="form-row"><div><label>Max Distance:</label> {{ courier.max_distance_km }} km</div></div>
+        <div class="form-row"><div><label>Work Hours:</label> {% if courier.work_hours %}{{ courier.work_hours.start_time }} - {{ courier.work_hours.end_time }} (Days: {{ courier.work_hours.work_days|join:", " }}){% else %}-{% endif %}</div></div>
+    </fieldset>
 
-    <!-- Performance -->
-    <div class="module">
+    <fieldset class="module aligned">
         <h2>Performance</h2>
-        <table>
-            <tr>
-                <th>Current Load:</th>
-                <td>{{ courier.current_load }} / {{ courier.max_load }} packages</td>
-            </tr>
-            <tr>
-                <th>Rating:</th>
-                <td>
-                    {% if courier.rating > 0 %}
-                        {{ courier.rating|floatformat:1 }} / 5.0
-                    {% else %}
-                        No rating yet
-                    {% endif %}
-                </td>
-            </tr>
-            <tr>
-                <th>Successful Deliveries:</th>
-                <td>{{ courier.successful_deliveries }}</td>
-            </tr>
-            <tr>
-                <th>Failed Deliveries:</th>
-                <td>{{ courier.failed_deliveries }}</td>
-            </tr>
-            <tr>
-                <th>Created:</th>
-                <td>{{ courier.created_at }}</td>
-            </tr>
-            <tr>
-                <th>Last Active:</th>
-                <td>{{ courier.last_active_at|default:"-" }}</td>
-            </tr>
-        </table>
-    </div>
+        <div class="form-row"><div><label>Current Load:</label> {{ courier.current_load }}/{{ courier.max_load }} packages</div></div>
+        <div class="form-row"><div><label>Rating:</label> {% if courier.rating > 0 %}{{ courier.rating|floatformat:1 }}/5.0{% else %}No rating yet{% endif %}</div></div>
+        <div class="form-row"><div><label>Successful:</label> {{ courier.successful_deliveries }}</div></div>
+        <div class="form-row"><div><label>Failed:</label> {{ courier.failed_deliveries }}</div></div>
+        <div class="form-row"><div><label>Created:</label> {{ courier.created_at }}</div></div>
+        <div class="form-row"><div><label>Last Active:</label> {{ courier.last_active_at|default:"-" }}</div></div>
+    </fieldset>
 
     {% if courier.current_location %}
-    <!-- Location -->
-    <div class="module">
+    <fieldset class="module aligned">
         <h2>Current Location</h2>
-        <p>
-            Latitude: {{ courier.current_location.latitude|floatformat:6 }}<br>
-            Longitude: {{ courier.current_location.longitude|floatformat:6 }}
-        </p>
-        <div id="courier-map" style="height: 300px; border-radius: 4px;"></div>
-    </div>
+        <div class="form-row">
+            <div><label>Coordinates:</label> {{ courier.current_location.latitude|floatformat:6 }}, {{ courier.current_location.longitude|floatformat:6 }}</div>
+        </div>
+        <div class="form-row">
+            <div id="courier-map" style="height: 300px; margin-top: 10px;"></div>
+        </div>
+    </fieldset>
     {% endif %}
 
     {% if courier.status != 'ARCHIVED' %}
-    <!-- Actions -->
-    <div class="module">
+    <fieldset class="module aligned collapse">
         <h2>Update Contact Info</h2>
         <form method="post" action="{% url 'couriers:update_contact' courier_id=courier.courier_id %}">
             {% csrf_token %}
-            <table>
-                <tr>
-                    <th>Phone:</th>
-                    <td>{{ update_contact_form.phone }}</td>
-                </tr>
-                <tr>
-                    <th>Email:</th>
-                    <td>{{ update_contact_form.email }}</td>
-                </tr>
-            </table>
-            <div style="padding: 10px;">
-                <button type="submit" class="default">Update Contact Info</button>
-            </div>
+            <div class="form-row"><div><label for="id_phone">Phone:</label> {{ update_contact_form.phone }}</div></div>
+            <div class="form-row"><div><label for="id_email">Email:</label> {{ update_contact_form.email }}</div></div>
+            <div class="form-row"><input type="submit" value="Update Contact" class="default"></div>
         </form>
-    </div>
+    </fieldset>
 
-    <div class="module">
+    <fieldset class="module aligned collapse">
         <h2>Update Work Schedule</h2>
         <form method="post" action="{% url 'couriers:update_schedule' courier_id=courier.courier_id %}">
             {% csrf_token %}
-            <table>
-                <tr>
-                    <th>Work Start:</th>
-                    <td>{{ update_schedule_form.work_start }}</td>
-                </tr>
-                <tr>
-                    <th>Work End:</th>
-                    <td>{{ update_schedule_form.work_end }}</td>
-                </tr>
-                <tr>
-                    <th>Work Days:</th>
-                    <td>{{ update_schedule_form.work_days }}</td>
-                </tr>
-                <tr>
-                    <th>Work Zone:</th>
-                    <td>{{ update_schedule_form.work_zone }}</td>
-                </tr>
-                <tr>
-                    <th>Max Distance (km):</th>
-                    <td>{{ update_schedule_form.max_distance_km }}</td>
-                </tr>
-            </table>
-            <div style="padding: 10px;">
-                <button type="submit" class="default">Update Schedule</button>
-            </div>
+            <div class="form-row"><div><label>Work Start:</label> {{ update_schedule_form.work_start }}</div></div>
+            <div class="form-row"><div><label>Work End:</label> {{ update_schedule_form.work_end }}</div></div>
+            <div class="form-row"><div><label>Work Days:</label> {{ update_schedule_form.work_days }}</div></div>
+            <div class="form-row"><div><label>Zone:</label> {{ update_schedule_form.work_zone }}</div></div>
+            <div class="form-row"><div><label>Max Distance:</label> {{ update_schedule_form.max_distance_km }} km</div></div>
+            <div class="form-row"><input type="submit" value="Update Schedule" class="default"></div>
         </form>
-    </div>
+    </fieldset>
 
-    <div class="module">
+    <fieldset class="module aligned collapse">
         <h2>Change Transport Type</h2>
         <form method="post" action="{% url 'couriers:change_transport' courier_id=courier.courier_id %}">
             {% csrf_token %}
-            <table>
-                <tr>
-                    <th>Transport Type:</th>
-                    <td>{{ change_transport_form.transport_type }}</td>
-                </tr>
-            </table>
-            <div style="padding: 10px;">
-                <button type="submit" class="default">Change Transport</button>
-            </div>
-            <p class="help" style="padding: 0 10px;">
-                Note: Changing transport type will reset current load to 0 and update max load capacity.
-            </p>
+            <div class="form-row"><div><label>Transport:</label> {{ change_transport_form.transport_type }}</div></div>
+            <p class="help">Changing transport type will reset current load to 0 and update max load capacity.</p>
+            <div class="form-row"><input type="submit" value="Change Transport" class="default"></div>
         </form>
-    </div>
+    </fieldset>
     {% endif %}
+
+    <div class="submit-row">
+        <p class="deletelink-box"><a href="{% url 'couriers:list' %}">Back to list</a></p>
+    </div>
 </div>
 
 <!-- Archive Modal -->
-<div id="archive-modal" class="modal" style="display: none;">
-    <div class="modal-content">
+<div id="archive-modal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
+    <div style="background:var(--body-bg); margin:10% auto; padding:20px; border-radius:4px; width:500px; max-width:90%;">
         <h2>Archive Courier</h2>
         <p>Are you sure you want to archive <strong>{{ courier.name }}</strong>?</p>
-        <p>This action will make the courier inactive and they will no longer appear in active courier lists.</p>
         <form method="post" action="{% url 'couriers:archive' courier_id=courier.courier_id %}">
             {% csrf_token %}
-            <table>
-                <tr>
-                    <th>Reason:</th>
-                    <td>{{ archive_form.reason }}</td>
-                </tr>
-                <tr>
-                    <th></th>
-                    <td>
-                        {{ archive_form.confirm }}
-                        <label for="id_confirm">{{ archive_form.confirm.label }}</label>
-                    </td>
-                </tr>
-            </table>
-            <div style="margin-top: 15px;">
-                <button type="submit" class="default" style="background: #dc3545;">Archive</button>
-                <button type="button" onclick="document.getElementById('archive-modal').style.display='none'">Cancel</button>
+            <div class="form-row"><div><label>Reason:</label> {{ archive_form.reason }}</div></div>
+            <div class="form-row"><div>{{ archive_form.confirm }} <label for="id_confirm">{{ archive_form.confirm.label }}</label></div></div>
+            <div class="submit-row">
+                <input type="submit" value="Archive" class="default deletelink">
+                <input type="button" value="Cancel" onclick="document.getElementById('archive-modal').style.display='none'">
             </div>
         </form>
     </div>
 </div>
-
-<style>
-.courier-status {
-    padding: 5px 12px;
-    border-radius: 3px;
-    font-weight: bold;
-    text-transform: uppercase;
-}
-.status-free {
-    background: #28a745;
-    color: white;
-}
-.status-busy {
-    background: #ffc107;
-    color: #000;
-}
-.status-unavailable {
-    background: #6c757d;
-    color: white;
-}
-.status-archived {
-    background: #dc3545;
-    color: white;
-}
-.module h2 {
-    background: var(--primary);
-    color: var(--header-link-color);
-    padding: 8px 15px;
-    margin: 0;
-}
-.module table {
-    width: 100%;
-    padding: 15px;
-}
-.module table th {
-    text-align: right;
-    padding: 8px;
-    width: 150px;
-}
-.module table td {
-    padding: 8px;
-}
-.modal {
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-}
-.modal-content {
-    background-color: var(--body-bg);
-    margin: 10% auto;
-    padding: 20px;
-    border-radius: 4px;
-    width: 500px;
-    max-width: 90%;
-}
-</style>
 
 {% if courier.current_location %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />

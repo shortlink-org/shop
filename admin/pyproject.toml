@@ -13,7 +13,7 @@ dependencies = [
   'charset-normalizer==3.4.4',
   'deprecated==1.2.18',
   'django==6.0.1',
-  'django-admin-tailwind==0.0.31',
+  'django-unfold>=0.49.0',
   'django-debug-toolbar==6.2.0',
   'django-environ==0.12.0',
   'django-health-check==3.20.8',

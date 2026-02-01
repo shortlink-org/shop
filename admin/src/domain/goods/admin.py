@@ -8,11 +8,12 @@ from django.shortcuts import render
 from django.urls import path
 from mimesis import Generic
 from mimesis import Locale
+from unfold.admin import ModelAdmin
 
 from .models import Good
 
 
-class GoodAdmin(admin.ModelAdmin):
+class GoodAdmin(ModelAdmin):
     """Define the admin view for the Good model."""
 
     list_display = ("name", "price", "created_at")

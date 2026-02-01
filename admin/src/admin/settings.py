@@ -52,7 +52,9 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
-    "django_admin_tailwind",
+    "unfold",  # before django.contrib.admin
+    "unfold.contrib.filters",  # optional, if special filters are needed
+    "unfold.contrib.forms",  # optional, if special form elements are needed
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -134,15 +136,13 @@ SECURE_CSP = {
     "script-src": [
         CSP.SELF,
         CSP.NONCE,
-        CSP.UNSAFE_INLINE,  # Tailwind CDN injects inline scripts at runtime
-        CSP.UNSAFE_EVAL,
-        "https://cdn.tailwindcss.com",
+        CSP.UNSAFE_INLINE,  # Unfold admin requires inline scripts
         "https://cdn.jsdelivr.net",
         "https://unpkg.com",  # Leaflet
     ],
     "style-src": [
         CSP.SELF,
-        CSP.UNSAFE_INLINE,  # Tailwind requires unsafe-inline for styles
+        CSP.UNSAFE_INLINE,  # Unfold admin requires inline styles
         "https://unpkg.com",  # Leaflet CSS
     ],
     "img-src": [

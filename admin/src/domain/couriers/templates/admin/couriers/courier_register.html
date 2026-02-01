@@ -7,160 +7,92 @@
 <div class="breadcrumbs">
     <a href="{% url 'admin:index' %}">Home</a>
     &rsaquo; <a href="{% url 'couriers:list' %}">Courier Management</a>
-    &rsaquo; Register New Courier
+    &rsaquo; Add Courier
 </div>
 {% endblock %}
 
 {% block content %}
 <div id="content-main">
-    <h1>{{ title }}</h1>
-
-    <form method="post" id="courier-form">
+    <form method="post" id="courier_form">
         {% csrf_token %}
 
         {% if form.non_field_errors %}
-        <div class="errornote">
-            {{ form.non_field_errors }}
-        </div>
+        <p class="errornote">{{ form.non_field_errors }}</p>
         {% endif %}
 
-        <div class="module">
+        <fieldset class="module aligned">
             <h2>Personal Information</h2>
-            <table>
-                <tr>
-                    <th>{{ form.name.label }}:</th>
-                    <td>
-                        {{ form.name }}
-                        {% if form.name.errors %}
-                            <ul class="errorlist">
-                                {% for error in form.name.errors %}<li>{{ error }}</li>{% endfor %}
-                            </ul>
-                        {% endif %}
-                    </td>
-                </tr>
-                <tr>
-                    <th>{{ form.phone.label }}:</th>
-                    <td>
-                        {{ form.phone }}
-                        {% if form.phone.help_text %}<p class="help">{{ form.phone.help_text }}</p>{% endif %}
-                        {% if form.phone.errors %}
-                            <ul class="errorlist">
-                                {% for error in form.phone.errors %}<li>{{ error }}</li>{% endfor %}
-                            </ul>
-                        {% endif %}
-                    </td>
-                </tr>
-                <tr>
-                    <th>{{ form.email.label }}:</th>
-                    <td>
-                        {{ form.email }}
-                        {% if form.email.errors %}
-                            <ul class="errorlist">
-                                {% for error in form.email.errors %}<li>{{ error }}</li>{% endfor %}
-                            </ul>
-                        {% endif %}
-                    </td>
-                </tr>
-            </table>
-        </div>
+            <div class="form-row field-name">
+                <div>
+                    <label class="required" for="id_name">{{ form.name.label }}:</label>
+                    {{ form.name }}
+                </div>
+                {% if form.name.errors %}<ul class="errorlist">{% for e in form.name.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+            <div class="form-row field-phone">
+                <div>
+                    <label class="required" for="id_phone">{{ form.phone.label }}:</label>
+                    {{ form.phone }}
+                </div>
+                {% if form.phone.help_text %}<p class="help">{{ form.phone.help_text }}</p>{% endif %}
+                {% if form.phone.errors %}<ul class="errorlist">{% for e in form.phone.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+            <div class="form-row field-email">
+                <div>
+                    <label class="required" for="id_email">{{ form.email.label }}:</label>
+                    {{ form.email }}
+                </div>
+                {% if form.email.errors %}<ul class="errorlist">{% for e in form.email.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+        </fieldset>
 
-        <div class="module">
+        <fieldset class="module aligned">
             <h2>Transport & Zone</h2>
-            <table>
-                <tr>
-                    <th>{{ form.transport_type.label }}:</th>
-                    <td>
-                        {{ form.transport_type }}
-                        <p class="help">
-                            Capacity: Walking (1), Bicycle (2), Motorcycle (3), Car (5) packages
-                        </p>
-                    </td>
-                </tr>
-                <tr>
-                    <th>{{ form.max_distance_km.label }}:</th>
-                    <td>
-                        {{ form.max_distance_km }} km
-                        {% if form.max_distance_km.errors %}
-                            <ul class="errorlist">
-                                {% for error in form.max_distance_km.errors %}<li>{{ error }}</li>{% endfor %}
-                            </ul>
-                        {% endif %}
-                    </td>
-                </tr>
-                <tr>
-                    <th>{{ form.work_zone.label }}:</th>
-                    <td>
-                        {{ form.work_zone }}
-                        {% if form.work_zone.errors %}
-                            <ul class="errorlist">
-                                {% for error in form.work_zone.errors %}<li>{{ error }}</li>{% endfor %}
-                            </ul>
-                        {% endif %}
-                    </td>
-                </tr>
-            </table>
-        </div>
+            <div class="form-row field-transport_type">
+                <div>
+                    <label class="required" for="id_transport_type">{{ form.transport_type.label }}:</label>
+                    {{ form.transport_type }}
+                </div>
+                <p class="help">Capacity: Walking (1), Bicycle (2), Motorcycle (3), Car (5) packages</p>
+            </div>
+            <div class="form-row field-max_distance_km">
+                <div>
+                    <label class="required" for="id_max_distance_km">{{ form.max_distance_km.label }}:</label>
+                    {{ form.max_distance_km }} km
+                </div>
+                {% if form.max_distance_km.errors %}<ul class="errorlist">{% for e in form.max_distance_km.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+            <div class="form-row field-work_zone">
+                <div>
+                    <label class="required" for="id_work_zone">{{ form.work_zone.label }}:</label>
+                    {{ form.work_zone }}
+                </div>
+                {% if form.work_zone.errors %}<ul class="errorlist">{% for e in form.work_zone.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+        </fieldset>
 
-        <div class="module">
+        <fieldset class="module aligned">
             <h2>Work Schedule</h2>
-            <table>
-                <tr>
-                    <th>Work Hours:</th>
-                    <td>
-                        {{ form.work_start }} to {{ form.work_end }}
-                        {% if form.work_start.errors %}
-                            <ul class="errorlist">
-                                {% for error in form.work_start.errors %}<li>{{ error }}</li>{% endfor %}
-                            </ul>
-                        {% endif %}
-                    </td>
-                </tr>
-                <tr>
-                    <th>{{ form.work_days.label }}:</th>
-                    <td>
-                        {{ form.work_days }}
-                        {% if form.work_days.errors %}
-                            <ul class="errorlist">
-                                {% for error in form.work_days.errors %}<li>{{ error }}</li>{% endfor %}
-                            </ul>
-                        {% endif %}
-                    </td>
-                </tr>
-            </table>
-        </div>
+            <div class="form-row field-work_hours">
+                <div>
+                    <label class="required" for="id_work_start">Work Hours:</label>
+                    {{ form.work_start }} to {{ form.work_end }}
+                </div>
+                {% if form.work_start.errors %}<ul class="errorlist">{% for e in form.work_start.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+            <div class="form-row field-work_days">
+                <div>
+                    <label class="required" for="id_work_days">{{ form.work_days.label }}:</label>
+                    {{ form.work_days }}
+                </div>
+                {% if form.work_days.errors %}<ul class="errorlist">{% for e in form.work_days.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+        </fieldset>
 
         <div class="submit-row">
-            <input type="submit" value="Register Courier" class="default">
-            <a href="{% url 'couriers:list' %}" class="closelink">Cancel</a>
+            <input type="submit" value="Save" class="default" name="_save">
+            <p class="deletelink-box"><a href="{% url 'couriers:list' %}" class="closelink">Cancel</a></p>
         </div>
     </form>
 </div>
-
-<style>
-.module h2 {
-    background: var(--primary);
-    color: var(--header-link-color);
-    padding: 8px 15px;
-    margin: 0;
-}
-.module table {
-    width: 100%;
-    padding: 15px;
-}
-.module table th {
-    text-align: right;
-    padding: 8px;
-    width: 150px;
-    vertical-align: top;
-}
-.module table td {
-    padding: 8px;
-}
-.submit-row {
-    padding: 12px 14px;
-    margin: 20px 0;
-    background: var(--darkened-bg);
-    border-radius: 4px;
-}
-</style>
 {% endblock %}

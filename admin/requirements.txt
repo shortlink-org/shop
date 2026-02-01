@@ -152,13 +152,10 @@ django==6.0.1 \
     #   django-prometheus
     #   django-redis
     #   django-request-logging
+    #   django-unfold
     #   djangorestframework
     #   drf-spectacular
     #   drf-yasg
-django-admin-tailwind==0.0.31 \
-    --hash=sha256:8acbea7a6e4a94b1650832b4de626904cc1c8ef27bc473132683a55bb3168cad \
-    --hash=sha256:fa35b013fedc4d834e9cb30131dcfbb7793b71839c2e9f755dfa068fea8a976e
-    # via shop-admin (pyproject.toml)
 django-debug-toolbar==6.2.0 \
     --hash=sha256:1575461954e6befa720e999dec13fe4f1cc8baf40b6c3ac2aec5f340c0f9c85f \
     --hash=sha256:dc1c174d8fb0ea01435e02d9ceef735cf62daf37c1a6a5692d33b4127327679b
@@ -190,6 +187,10 @@ django-redis==6.0.0 \
 django-request-logging==0.7.5 \
     --hash=sha256:4d9e520842303aaf654c6ffd39831b04513ea343574f8579a59ada46ffb95fb6 \
     --hash=sha256:94934d77c2d0fd76fdb9879b874368aa7d55672f0c7e1f59dd39b991c3e123b4
+    # via shop-admin (pyproject.toml)
+django-unfold==0.77.1 \
+    --hash=sha256:9a4305d4c65eff4de37800f60c176e242f6cb4fa2c5e96b69a5d300390c86d11 \
+    --hash=sha256:c8611a74cc1a944787c89e950bfbe29a8b8351078a79269f80fd974dc578dbd5
     # via shop-admin (pyproject.toml)
 djangorestframework==3.16.1 \
     --hash=sha256:166809528b1aced0a17dc66c24492af18049f2c9420dbd0be29422029cfc3ff7 \
@@ -278,6 +279,10 @@ grpcio==1.76.0 \
     # via
     #   shop-admin (pyproject.toml)
     #   opentelemetry-exporter-otlp-proto-grpc
+gunicorn==25.0.0 \
+    --hash=sha256:4b1ab820ffc316352da7146005a9e66044a131434b17a7d2a9fb0604f1268864 \
+    --hash=sha256:b9b88f0ebc5a0fcd1e9e29a1f045f56f5402c6423ee3e3f675f679d0db5345d1
+    # via shop-admin (pyproject.toml)
 idna==3.11 \
     --hash=sha256:771a87f49d9defaf64091e6e6fe9c18d4833f140bd19464795bc32d966ca37ea \
     --hash=sha256:795dafcc9c04ed0c1fb032c2aa73654d8e8c5023a7df64a53f39190ada629902
@@ -438,6 +443,7 @@ packaging==26.0 \
     # via
     #   shop-admin (pyproject.toml)
     #   drf-yasg
+    #   gunicorn
     #   opentelemetry-instrumentation
 pip==25.3 \
     --hash=sha256:8d0538dbbd7babbd207f261ed969c65de439f6bc9e5dbd3b3b9a77f25d95f343 \
@@ -834,6 +840,10 @@ uv==0.9.28 \
     --hash=sha256:d267280b3878aa6ef8e00bff1f11bf61580d0a8bbb69fa95b5d3526d00f77485 \
     --hash=sha256:d5cb780d5b821f837f63e7fd14e2bf75f01824b4575a1e89639888771bfd9efd \
     --hash=sha256:e479cc5cbfd72ebdbea3c909d0ab997162e0dfa1ee622b50e2f9dc8d07d4eee3
+    # via shop-admin (pyproject.toml)
+whitenoise==6.11.0 \
+    --hash=sha256:0f5bfce6061ae6611cd9396a8231e088722e4fc67bc13a111be74c738d99375f \
+    --hash=sha256:b2aeb45950597236f53b5342b3121c5de69c8da0109362aee506ce88e022d258
     # via shop-admin (pyproject.toml)
 wrapt==1.17.3 \
     --hash=sha256:02b551d101f31694fc785e58e0720ef7d9a10c4e62c1c9358ce6f63f23e30a56 \

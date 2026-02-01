@@ -166,15 +166,6 @@ wheels = [
 ]
 
 [[package]]
-name = "django-admin-tailwind"
-version = "0.0.31"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/45/ce/2b150744a0ee0b55bf9c0ddbc68f9bb430eabf10e3f2c2284ee52032f62c/django-admin-tailwind-0.0.31.tar.gz", hash = "sha256:8acbea7a6e4a94b1650832b4de626904cc1c8ef27bc473132683a55bb3168cad", size = 58624 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/62/26/f560eac27f9ae6f3e8a307ec54a96aaa644e6a26f20dc2010c053d42fb70/django_admin_tailwind-0.0.31-py3-none-any.whl", hash = "sha256:fa35b013fedc4d834e9cb30131dcfbb7793b71839c2e9f755dfa068fea8a976e", size = 86880 },
-]
-
-[[package]]
 name = "django-debug-toolbar"
 version = "6.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -271,6 +262,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/e2/85/abeea9f92bcdc16595047850ed1d73433fbec0e66a62701949ad95dd9f84/django-request-logging-0.7.5.tar.gz", hash = "sha256:94934d77c2d0fd76fdb9879b874368aa7d55672f0c7e1f59dd39b991c3e123b4", size = 9885 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/60/9e/a1e2a8c5a270b101f1713c485c486a292be06215ee11289030ae4d15ddd1/django_request_logging-0.7.5-py2.py3-none-any.whl", hash = "sha256:4d9e520842303aaf654c6ffd39831b04513ea343574f8579a59ada46ffb95fb6", size = 9714 },
+]
+
+[[package]]
+name = "django-unfold"
+version = "0.77.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/10/61/242b2b4b325951fded9497b0e058fb97f6c30e0b08b72cf8e70fd3e0b9d9/django_unfold-0.77.1.tar.gz", hash = "sha256:c8611a74cc1a944787c89e950bfbe29a8b8351078a79269f80fd974dc578dbd5", size = 1108615 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8a/d4/c0004a8d5369060c92a1419623de2866375a73180f16732e7cc4c9ad3e32/django_unfold-0.77.1-py3-none-any.whl", hash = "sha256:9a4305d4c65eff4de37800f60c176e242f6cb4fa2c5e96b69a5d300390c86d11", size = 1223570 },
 ]
 
 [[package]]
@@ -1002,7 +1005,6 @@ dependencies = [
     { name = "charset-normalizer" },
     { name = "deprecated" },
     { name = "django" },
-    { name = "django-admin-tailwind" },
     { name = "django-debug-toolbar" },
     { name = "django-environ" },
     { name = "django-filter" },
@@ -1012,6 +1014,7 @@ dependencies = [
     { name = "django-prometheus" },
     { name = "django-redis" },
     { name = "django-request-logging" },
+    { name = "django-unfold" },
     { name = "djangorestframework" },
     { name = "drf-spectacular" },
     { name = "drf-yasg" },
@@ -1080,7 +1083,6 @@ requires-dist = [
     { name = "charset-normalizer", specifier = "==3.4.4" },
     { name = "deprecated", specifier = "==1.2.18" },
     { name = "django", specifier = "==6.0.1" },
-    { name = "django-admin-tailwind", specifier = "==0.0.31" },
     { name = "django-debug-toolbar", specifier = "==6.2.0" },
     { name = "django-environ", specifier = "==0.12.0" },
     { name = "django-filter" },
@@ -1090,6 +1092,7 @@ requires-dist = [
     { name = "django-prometheus", git = "https://github.com/django-commons/django-prometheus?rev=master" },
     { name = "django-redis" },
     { name = "django-request-logging", specifier = "==0.7.5" },
+    { name = "django-unfold", specifier = ">=0.49.0" },
     { name = "djangorestframework", specifier = "==3.16.1" },
     { name = "drf-spectacular", specifier = "==0.28.0" },
     { name = "drf-yasg", specifier = "==1.21.14" },

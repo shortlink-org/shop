@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import delivery_pb2 as delivery__pb2
+from . import delivery_pb2 as delivery__pb2
 
 
 class DeliveryServiceStub(object):
