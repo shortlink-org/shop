@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	OrderService_Create_FullMethodName             = "/infrastructure.rpc.order.v1.OrderService/Create"
 	OrderService_Get_FullMethodName                = "/infrastructure.rpc.order.v1.OrderService/Get"
+	OrderService_List_FullMethodName               = "/infrastructure.rpc.order.v1.OrderService/List"
 	OrderService_Cancel_FullMethodName             = "/infrastructure.rpc.order.v1.OrderService/Cancel"
 	OrderService_UpdateDeliveryInfo_FullMethodName = "/infrastructure.rpc.order.v1.OrderService/UpdateDeliveryInfo"
 	OrderService_Checkout_FullMethodName           = "/infrastructure.rpc.order.v1.OrderService/Checkout"
@@ -38,6 +39,8 @@ type OrderServiceClient interface {
 	Create(ctx context.Context, in *v1.CreateRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// Get retrieves an order by its ID.
 	Get(ctx context.Context, in *v1.GetRequest, opts ...grpc.CallOption) (*v1.GetResponse, error)
+	// List retrieves orders with filtering and pagination.
+	List(ctx context.Context, in *v1.ListRequest, opts ...grpc.CallOption) (*v1.ListResponse, error)
 	// Delete deletes an order by its ID.
 	Cancel(ctx context.Context, in *v1.CancelRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// UpdateDeliveryInfo updates delivery information for an order.
@@ -68,6 +71,16 @@ func (c *orderServiceClient) Get(ctx context.Context, in *v1.GetRequest, opts ..
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(v1.GetResponse)
 	err := c.cc.Invoke(ctx, OrderService_Get_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *orderServiceClient) List(ctx context.Context, in *v1.ListRequest, opts ...grpc.CallOption) (*v1.ListResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(v1.ListResponse)
+	err := c.cc.Invoke(ctx, OrderService_List_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -114,6 +127,8 @@ type OrderServiceServer interface {
 	Create(context.Context, *v1.CreateRequest) (*emptypb.Empty, error)
 	// Get retrieves an order by its ID.
 	Get(context.Context, *v1.GetRequest) (*v1.GetResponse, error)
+	// List retrieves orders with filtering and pagination.
+	List(context.Context, *v1.ListRequest) (*v1.ListResponse, error)
 	// Delete deletes an order by its ID.
 	Cancel(context.Context, *v1.CancelRequest) (*emptypb.Empty, error)
 	// UpdateDeliveryInfo updates delivery information for an order.
@@ -135,6 +150,9 @@ func (UnimplementedOrderServiceServer) Create(context.Context, *v1.CreateRequest
 }
 func (UnimplementedOrderServiceServer) Get(context.Context, *v1.GetRequest) (*v1.GetResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Get not implemented")
+}
+func (UnimplementedOrderServiceServer) List(context.Context, *v1.ListRequest) (*v1.ListResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method List not implemented")
 }
 func (UnimplementedOrderServiceServer) Cancel(context.Context, *v1.CancelRequest) (*emptypb.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method Cancel not implemented")
@@ -198,6 +216,24 @@ func _OrderService_Get_Handler(srv interface{}, ctx context.Context, dec func(in
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(OrderServiceServer).Get(ctx, req.(*v1.GetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OrderService_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(v1.ListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderServiceServer).List(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OrderService_List_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderServiceServer).List(ctx, req.(*v1.ListRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -270,6 +306,10 @@ var OrderService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Get",
 			Handler:    _OrderService_Get_Handler,
+		},
+		{
+			MethodName: "List",
+			Handler:    _OrderService_List_Handler,
 		},
 		{
 			MethodName: "Cancel",

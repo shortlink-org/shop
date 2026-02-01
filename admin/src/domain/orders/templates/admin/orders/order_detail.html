@@ -1,0 +1,158 @@
+{% extends "admin/base_site.html" %}
+{% load static crispy_forms_tags %}
+
+{% block title %}{{ title }} | {{ site_title }}{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<script src="{% url 'admin:jsi18n' %}"></script>
+{{ cancel_form.media }}
+<style>
+.order-status { padding: 5px 12px; border-radius: 3px; font-weight: bold; text-transform: uppercase; }
+.status-pending { background: #ffc107; color: #000; }
+.status-processing { background: #17a2b8; color: white; }
+.status-completed { background: #28a745; color: white; }
+.status-cancelled { background: #dc3545; color: white; }
+.status-unspecified { background: #6c757d; color: white; }
+.inline-form { display: inline-block; margin-right: 5px; }
+.action-buttons { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--hairline-color); }
+.item-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.item-table th, .item-table td { padding: 8px; text-align: left; border-bottom: 1px solid var(--hairline-color); }
+.item-table th { font-weight: bold; }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; <a href="{% url 'orders:list' %}">Order Management</a>
+    &rsaquo; {{ order.order_id|truncatechars:12 }}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <fieldset class="module aligned">
+        <h2>Status: <span class="order-status status-{{ order.status_name|lower }}">{{ order.status_name }}</span></h2>
+        <div class="form-row action-buttons">
+            {% if order.status.value == 1 or order.status.value == 2 %}
+            <input type="button" value="Cancel Order..." class="default deletelink" onclick="document.getElementById('cancel-modal').style.display='block'">
+            {% endif %}
+        </div>
+    </fieldset>
+
+    <fieldset class="module aligned">
+        <h2>Order Information</h2>
+        <div class="form-row"><div><label>Order ID:</label> <code>{{ order.order_id }}</code></div></div>
+        <div class="form-row"><div><label>Customer ID:</label> <code>{{ order.customer_id }}</code></div></div>
+        <div class="form-row"><div><label>Created:</label> {{ order.created_at|date:"Y-m-d H:i:s" }}</div></div>
+        <div class="form-row"><div><label>Updated:</label> {{ order.updated_at|date:"Y-m-d H:i:s" }}</div></div>
+        <div class="form-row"><div><label>Total Amount:</label> <strong>${{ order.total_amount|floatformat:2 }}</strong></div></div>
+    </fieldset>
+
+    <fieldset class="module aligned">
+        <h2>Order Items ({{ order.item_count }})</h2>
+        <table class="item-table">
+            <thead>
+                <tr>
+                    <th>Good ID</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order.items %}
+                <tr>
+                    <td><code>{{ item.good_id }}</code></td>
+                    <td>{{ item.quantity }}</td>
+                    <td>${{ item.price|floatformat:2 }}</td>
+                    <td>${{ item.price|floatformat:2 }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4">No items</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </fieldset>
+
+    {% if order.delivery_info %}
+    <fieldset class="module aligned">
+        <h2>Delivery Information</h2>
+        {% if order.delivery_info.pickup_address %}
+        <div class="form-row">
+            <div>
+                <label>Pickup Address:</label>
+                {{ order.delivery_info.pickup_address.street }}, 
+                {{ order.delivery_info.pickup_address.city }}, 
+                {{ order.delivery_info.pickup_address.postal_code }}, 
+                {{ order.delivery_info.pickup_address.country }}
+            </div>
+        </div>
+        {% endif %}
+        {% if order.delivery_info.delivery_address %}
+        <div class="form-row">
+            <div>
+                <label>Delivery Address:</label>
+                {{ order.delivery_info.delivery_address.street }}, 
+                {{ order.delivery_info.delivery_address.city }}, 
+                {{ order.delivery_info.delivery_address.postal_code }}, 
+                {{ order.delivery_info.delivery_address.country }}
+            </div>
+        </div>
+        {% endif %}
+        {% if order.delivery_info.delivery_period %}
+        <div class="form-row">
+            <div>
+                <label>Delivery Window:</label>
+                {{ order.delivery_info.delivery_period.start_time|date:"Y-m-d H:i" }} - 
+                {{ order.delivery_info.delivery_period.end_time|date:"Y-m-d H:i" }}
+            </div>
+        </div>
+        {% endif %}
+        <div class="form-row">
+            <div>
+                <label>Priority:</label>
+                {% if order.delivery_info.priority == 2 %}
+                <span class="order-status" style="background: #dc3545; color: white;">Urgent</span>
+                {% elif order.delivery_info.priority == 1 %}
+                <span class="order-status" style="background: #28a745; color: white;">Normal</span>
+                {% else %}
+                <span class="order-status" style="background: #6c757d; color: white;">Unspecified</span>
+                {% endif %}
+            </div>
+        </div>
+    </fieldset>
+    {% else %}
+    <fieldset class="module aligned">
+        <h2>Delivery Information</h2>
+        <div class="form-row"><div><label>Type:</label> Self-Pickup</div></div>
+    </fieldset>
+    {% endif %}
+
+    <div class="submit-row">
+        <p class="deletelink-box"><a href="{% url 'orders:list' %}">Back to list</a></p>
+    </div>
+</div>
+
+<!-- Cancel Modal -->
+<div id="cancel-modal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
+    <div style="background:var(--body-bg); margin:10% auto; padding:20px; border-radius:4px; width:500px; max-width:90%;">
+        <h2>Cancel Order</h2>
+        <p>Are you sure you want to cancel order <strong>{{ order.order_id|truncatechars:12 }}</strong>?</p>
+        <p>This action cannot be undone.</p>
+        <form method="post" action="{% url 'orders:cancel' order_id=order.order_id %}">
+            {% csrf_token %}
+            <div class="flex flex-col gap-4">
+                {% crispy cancel_form "unfold_crispy" %}
+            </div>
+            <div class="submit-row mt-4">
+                <input type="submit" value="Cancel Order" class="default deletelink">
+                <input type="button" value="Go Back" onclick="document.getElementById('cancel-modal').style.display='none'">
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

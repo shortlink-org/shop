@@ -12,6 +12,10 @@ import (
 )
 
 type Querier interface {
+	CountOrders(ctx context.Context) (int64, error)
+	CountOrdersByCustomer(ctx context.Context, customerID uuid.UUID) (int64, error)
+	CountOrdersByStatus(ctx context.Context, dollar_1 []int32) (int64, error)
+	CountOrdersWithFilters(ctx context.Context, arg CountOrdersWithFiltersParams) (int64, error)
 	DeleteOrderDeliveryInfo(ctx context.Context, orderID uuid.UUID) error
 	DeleteOrderItems(ctx context.Context, orderID uuid.UUID) error
 	GetOrder(ctx context.Context, id uuid.UUID) (OmsOrder, error)
@@ -20,7 +24,11 @@ type Querier interface {
 	InsertOrder(ctx context.Context, arg InsertOrderParams) error
 	InsertOrderDeliveryInfo(ctx context.Context, arg InsertOrderDeliveryInfoParams) error
 	InsertOrderItem(ctx context.Context, arg InsertOrderItemParams) error
+	ListOrders(ctx context.Context, arg ListOrdersParams) ([]OmsOrder, error)
 	ListOrdersByCustomer(ctx context.Context, customerID uuid.UUID) ([]OmsOrder, error)
+	ListOrdersWithCustomerFilter(ctx context.Context, arg ListOrdersWithCustomerFilterParams) ([]OmsOrder, error)
+	ListOrdersWithFilters(ctx context.Context, arg ListOrdersWithFiltersParams) ([]OmsOrder, error)
+	ListOrdersWithStatusFilter(ctx context.Context, arg ListOrdersWithStatusFilterParams) ([]OmsOrder, error)
 	UpdateOrder(ctx context.Context, arg UpdateOrderParams) (pgconn.CommandTag, error)
 	UpdateOrderDeliveryInfo(ctx context.Context, arg UpdateOrderDeliveryInfoParams) error
 }

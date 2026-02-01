@@ -41,6 +41,7 @@ import (
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/create"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/update_delivery_info"
 	get2 "github.com/shortlink-org/shop/oms/internal/usecases/order/query/get"
+	"github.com/shortlink-org/shop/oms/internal/usecases/order/query/list"
 	"github.com/shortlink-org/shop/oms/internal/workers/cart/cart_worker"
 	"github.com/shortlink-org/shop/oms/internal/workers/order/order_worker"
 	postgres3 "github.com/shortlink-org/shop/oms/pkg/uow/postgres"
@@ -181,7 +182,8 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	update_delivery_infoHandler := update_delivery_info.NewHandler(loggerLogger, uoW, postgresStore, inMemoryPublisher)
 	create_order_from_cartHandler := create_order_from_cart.NewHandler(loggerLogger, uoW, store, postgresStore, inMemoryPublisher)
 	handler2 := get2.NewHandler(uoW, postgresStore)
-	orderRPC, err := v1_2.New(server, loggerLogger, createHandler, cancelHandler, update_delivery_infoHandler, create_order_from_cartHandler, handler2)
+	listHandler := list.NewHandler(uoW, postgresStore)
+	orderRPC, err := v1_2.New(server, loggerLogger, createHandler, cancelHandler, update_delivery_infoHandler, create_order_from_cartHandler, handler2, listHandler)
 	if err != nil {
 		cleanup5()
 		cleanup4()
@@ -283,7 +285,7 @@ var OMSSet = wire.NewSet(
 
 	CustomDefaultSet, flight_trace.New, grpc.InitServer, config.New, logger.NewDefault, tracing.New, metrics.New, db.New, wire.FieldsOf(new(*metrics.Monitoring), "Metrics", "Prometheus"), newRedisClient,
 
-	newUnitOfWork, wire.Bind(new(ports.UnitOfWork), new(*postgres3.UoW)), postgres.New, postgres2.New, wire.Bind(new(ports.CartRepository), new(*postgres.Store)), wire.Bind(new(ports.OrderRepository), new(*postgres2.Store)), cart_goods_index.New, wire.Bind(new(ports.CartGoodsIndex), new(*cart_goods_index.Store)), events.NewInMemoryPublisher, wire.Bind(new(ports.EventPublisher), new(*events.InMemoryPublisher)), add_items.NewHandler, remove_items.NewHandler, reset.NewHandler, get.NewHandler, create.NewHandler, cancel.NewHandler, update_delivery_info.NewHandler, get2.NewHandler, create_order_from_cart.NewHandler, v1.New, v1_2.New, NewRunRPCServer, temporal.New, newOrderEventSubscriber, cart_worker.New, order_worker.New, NewOMSService,
+	newUnitOfWork, wire.Bind(new(ports.UnitOfWork), new(*postgres3.UoW)), postgres.New, postgres2.New, wire.Bind(new(ports.CartRepository), new(*postgres.Store)), wire.Bind(new(ports.OrderRepository), new(*postgres2.Store)), cart_goods_index.New, wire.Bind(new(ports.CartGoodsIndex), new(*cart_goods_index.Store)), events.NewInMemoryPublisher, wire.Bind(new(ports.EventPublisher), new(*events.InMemoryPublisher)), add_items.NewHandler, remove_items.NewHandler, reset.NewHandler, get.NewHandler, create.NewHandler, cancel.NewHandler, update_delivery_info.NewHandler, get2.NewHandler, list.NewHandler, create_order_from_cart.NewHandler, v1.New, v1_2.New, NewRunRPCServer, temporal.New, newOrderEventSubscriber, cart_worker.New, order_worker.New, NewOMSService,
 )
 
 // NewRunRPCServer starts the gRPC server

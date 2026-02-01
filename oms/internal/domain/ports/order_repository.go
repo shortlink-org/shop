@@ -8,6 +8,21 @@ import (
 	order "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 )
 
+// ListFilter contains optional filters for listing orders.
+type ListFilter struct {
+	// CustomerID filters by customer (optional)
+	CustomerID *uuid.UUID
+	// StatusFilter filters by order status (optional)
+	StatusFilter []order.OrderStatus
+}
+
+// ListResult contains paginated list results.
+type ListResult struct {
+	Orders     []*order.OrderState
+	TotalCount int64
+	TotalPages int32
+}
+
 // OrderRepository defines the minimal interface for order persistence.
 // Repository is a storage adapter (infrastructure layer), NOT a use-case.
 //
@@ -28,4 +43,8 @@ type OrderRepository interface {
 	// ListByCustomer retrieves all orders for a customer.
 	// Returns empty slice if no orders exist.
 	ListByCustomer(ctx context.Context, customerID uuid.UUID) ([]*order.OrderState, error)
+
+	// List retrieves orders with filtering and pagination.
+	// Returns empty slice if no orders match the filter.
+	List(ctx context.Context, filter ListFilter, page, pageSize int32) (*ListResult, error)
 }

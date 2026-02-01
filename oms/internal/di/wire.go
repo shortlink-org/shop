@@ -52,6 +52,7 @@ import (
 	orderCreate "github.com/shortlink-org/shop/oms/internal/usecases/order/command/create"
 	orderUpdateDeliveryInfo "github.com/shortlink-org/shop/oms/internal/usecases/order/command/update_delivery_info"
 	orderGet "github.com/shortlink-org/shop/oms/internal/usecases/order/query/get"
+	orderList "github.com/shortlink-org/shop/oms/internal/usecases/order/query/list"
 
 	// Checkout handlers
 	checkout "github.com/shortlink-org/shop/oms/internal/usecases/checkout/command/create_order_from_cart"
@@ -157,6 +158,7 @@ var OMSSet = wire.NewSet(
 	orderCancel.NewHandler,
 	orderUpdateDeliveryInfo.NewHandler,
 	orderGet.NewHandler,
+	orderList.NewHandler,
 
 	// Checkout Handlers
 	checkout.NewHandler,

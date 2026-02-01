@@ -13,6 +13,7 @@ import (
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/create"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/update_delivery_info"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/query/get"
+	"github.com/shortlink-org/shop/oms/internal/usecases/order/query/list"
 )
 
 type OrderRPC struct {
@@ -28,7 +29,8 @@ type OrderRPC struct {
 	checkoutHandler           *create_order_from_cart.Handler
 
 	// Query Handlers
-	getHandler *get.Handler
+	getHandler  *get.Handler
+	listHandler *list.Handler
 }
 
 func New(
@@ -39,6 +41,7 @@ func New(
 	updateDeliveryInfoHandler *update_delivery_info.Handler,
 	checkoutHandler *create_order_from_cart.Handler,
 	getHandler *get.Handler,
+	listHandler *list.Handler,
 ) (*OrderRPC, error) {
 	server := &OrderRPC{
 		// Common
@@ -51,7 +54,8 @@ func New(
 		checkoutHandler:           checkoutHandler,
 
 		// Query Handlers
-		getHandler: getHandler,
+		getHandler:  getHandler,
+		listHandler: listHandler,
 	}
 
 	// Register services

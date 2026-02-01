@@ -14,6 +14,45 @@ FROM oms.orders
 WHERE customer_id = $1
 ORDER BY created_at DESC;
 
+-- name: ListOrders :many
+SELECT id, customer_id, status, version, created_at, updated_at
+FROM oms.orders
+ORDER BY created_at DESC
+LIMIT $1 OFFSET $2;
+
+-- name: ListOrdersWithCustomerFilter :many
+SELECT id, customer_id, status, version, created_at, updated_at
+FROM oms.orders
+WHERE customer_id = $1
+ORDER BY created_at DESC
+LIMIT $2 OFFSET $3;
+
+-- name: ListOrdersWithStatusFilter :many
+SELECT id, customer_id, status, version, created_at, updated_at
+FROM oms.orders
+WHERE status = ANY($1::int[])
+ORDER BY created_at DESC
+LIMIT $2 OFFSET $3;
+
+-- name: ListOrdersWithFilters :many
+SELECT id, customer_id, status, version, created_at, updated_at
+FROM oms.orders
+WHERE customer_id = $1 AND status = ANY($2::int[])
+ORDER BY created_at DESC
+LIMIT $3 OFFSET $4;
+
+-- name: CountOrders :one
+SELECT COUNT(*) FROM oms.orders;
+
+-- name: CountOrdersByCustomer :one
+SELECT COUNT(*) FROM oms.orders WHERE customer_id = $1;
+
+-- name: CountOrdersByStatus :one
+SELECT COUNT(*) FROM oms.orders WHERE status = ANY($1::int[]);
+
+-- name: CountOrdersWithFilters :one
+SELECT COUNT(*) FROM oms.orders WHERE customer_id = $1 AND status = ANY($2::int[]);
+
 -- name: InsertOrder :exec
 INSERT INTO oms.orders (id, customer_id, status, version, created_at, updated_at)
 VALUES ($1, $2, $3, 1, NOW(), NOW());

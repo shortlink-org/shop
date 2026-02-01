@@ -1,0 +1,121 @@
+{% extends "admin/base_site.html" %}
+{% load static crispy_forms_tags %}
+
+{% block title %}{{ title }} | {{ site_title }}{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+.order-status {
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+.status-pending { background: #ffc107; color: #000; }
+.status-processing { background: #17a2b8; color: white; }
+.status-completed { background: #28a745; color: white; }
+.status-cancelled { background: #dc3545; color: white; }
+.status-unspecified { background: #6c757d; color: white; }
+#changelist-filter h2 { font-size: 14px; margin: 0 0 10px; }
+#changelist-filter h3 { font-size: 12px; margin: 10px 0 5px; font-weight: bold; }
+#changelist-filter ul { margin: 0 0 15px; padding: 0; list-style: none; }
+#changelist-filter li { padding: 3px 0; }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; Order Management
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="changelist">
+    <div id="toolbar" class="mb-4">
+        <form id="changelist-search" method="get" class="flex flex-wrap gap-4 items-end">
+            {% crispy filter_form "unfold_crispy" %}
+            <button type="submit" class="border font-medium rounded-md text-white bg-primary-600 hover:bg-primary-500 px-3 py-2">
+                Filter
+            </button>
+        </form>
+    </div>
+
+    <div id="changelist-filter">
+        <h2>Quick Links</h2>
+        <h3>By Status</h3>
+        <ul>
+            <li><a href="{% url 'orders:list' %}">All</a></li>
+            <li><a href="?status=1">Pending</a></li>
+            <li><a href="?status=2">Processing</a></li>
+            <li><a href="?status=3">Completed</a></li>
+            <li><a href="?status=4">Cancelled</a></li>
+        </ul>
+    </div>
+
+    <div id="changelist-form">
+        <div class="results">
+            <p class="paginator">{{ total_count }} order{% if total_count != 1 %}s{% endif %}</p>
+
+            {% if orders %}
+            <table id="result_list">
+                <thead>
+                    <tr>
+                        <th scope="col" class="sortable column-id"><div class="text"><span>Order ID</span></div></th>
+                        <th scope="col" class="column-customer"><div class="text"><span>Customer</span></div></th>
+                        <th scope="col" class="column-status"><div class="text"><span>Status</span></div></th>
+                        <th scope="col" class="column-items"><div class="text"><span>Items</span></div></th>
+                        <th scope="col" class="column-total"><div class="text"><span>Total</span></div></th>
+                        <th scope="col" class="column-created"><div class="text"><span>Created</span></div></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr class="row{% cycle '1' '2' %}">
+                        <td class="field-id">
+                            <a href="{% url 'orders:detail' order_id=order.order_id %}">{{ order.order_id|truncatechars:12 }}</a>
+                        </td>
+                        <td class="field-customer">{{ order.customer_id|truncatechars:12 }}</td>
+                        <td class="field-status">
+                            <span class="order-status status-{{ order.status_name|lower }}">{{ order.status_name }}</span>
+                        </td>
+                        <td class="field-items">{{ order.item_count }}</td>
+                        <td class="field-total">${{ order.total_amount|floatformat:2 }}</td>
+                        <td class="field-created">{{ order.created_at|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% if total_pages > 1 %}
+            <p class="paginator">
+                {% if has_previous %}
+                <a href="?page=1&status={{ filter_form.status.value|default:'' }}&customer_id={{ filter_form.customer_id.value|default:'' }}">&laquo; first</a>
+                <a href="?page={{ page|add:'-1' }}&status={{ filter_form.status.value|default:'' }}&customer_id={{ filter_form.customer_id.value|default:'' }}">previous</a>
+                {% endif %}
+
+                {% for p in page_range %}
+                    {% if p == page %}
+                    <span class="this-page">{{ p }}</span>
+                    {% else %}
+                    <a href="?page={{ p }}&status={{ filter_form.status.value|default:'' }}&customer_id={{ filter_form.customer_id.value|default:'' }}">{{ p }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if has_next %}
+                <a href="?page={{ page|add:'1' }}&status={{ filter_form.status.value|default:'' }}&customer_id={{ filter_form.customer_id.value|default:'' }}">next</a>
+                <a href="?page={{ total_pages }}&status={{ filter_form.status.value|default:'' }}&customer_id={{ filter_form.customer_id.value|default:'' }}">last &raquo;</a>
+                {% endif %}
+                {{ page }} of {{ total_pages }}
+            </p>
+            {% endif %}
+
+            {% else %}
+            <p class="paginator">0 orders</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

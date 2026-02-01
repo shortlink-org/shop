@@ -34,6 +34,9 @@ LOGIN_URL = env("LOGIN_URL", default="http://127.0.0.1:3000/next/auth/login")
 # Delivery Service gRPC configuration
 DELIVERY_GRPC_HOST = env("DELIVERY_GRPC_HOST", default="localhost:50051")
 
+# OMS (Order Management System) gRPC configuration
+OMS_GRPC_HOST = env("OMS_GRPC_HOST", default="localhost:50052")
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -78,6 +81,7 @@ INSTALLED_APPS = [
     "domain.goods",
     "domain.offices",
     "domain.couriers",
+    "domain.orders",
     "drf_spectacular",
 ]
 
@@ -151,6 +155,18 @@ UNFOLD = {
                         "title": _("Goods"),
                         "icon": "inventory_2",
                         "link": reverse_lazy("admin:goods_good_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Orders"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("All Orders"),
+                        "icon": "receipt_long",
+                        "link": reverse_lazy("orders:list"),
                     },
                 ],
             },

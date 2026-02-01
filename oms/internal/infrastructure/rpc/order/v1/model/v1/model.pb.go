@@ -593,6 +593,253 @@ func (x *CheckoutResponse) GetOrderId() string {
 	return ""
 }
 
+// Pagination info for list requests
+type Pagination struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Current page number (1-indexed)
+	Page int32 `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`
+	// Number of items per page
+	PageSize      int32 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Pagination) Reset() {
+	*x = Pagination{}
+	mi := &file_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Pagination) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Pagination) ProtoMessage() {}
+
+func (x *Pagination) ProtoReflect() protoreflect.Message {
+	mi := &file_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Pagination.ProtoReflect.Descriptor instead.
+func (*Pagination) Descriptor() ([]byte, []int) {
+	return file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *Pagination) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *Pagination) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+// Pagination info for list responses
+type PaginationResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Current page number
+	CurrentPage int32 `protobuf:"varint,1,opt,name=current_page,json=currentPage,proto3" json:"current_page,omitempty"`
+	// Number of items per page
+	PageSize int32 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	// Total number of pages
+	TotalPages    int32 `protobuf:"varint,3,opt,name=total_pages,json=totalPages,proto3" json:"total_pages,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PaginationResponse) Reset() {
+	*x = PaginationResponse{}
+	mi := &file_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PaginationResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PaginationResponse) ProtoMessage() {}
+
+func (x *PaginationResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PaginationResponse.ProtoReflect.Descriptor instead.
+func (*PaginationResponse) Descriptor() ([]byte, []int) {
+	return file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *PaginationResponse) GetCurrentPage() int32 {
+	if x != nil {
+		return x.CurrentPage
+	}
+	return 0
+}
+
+func (x *PaginationResponse) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+func (x *PaginationResponse) GetTotalPages() int32 {
+	if x != nil {
+		return x.TotalPages
+	}
+	return 0
+}
+
+// Request message for listing orders
+type ListRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Optional filter by customer ID
+	CustomerId string `protobuf:"bytes,1,opt,name=customer_id,json=customerId,proto3" json:"customer_id,omitempty"`
+	// Optional filter by order status
+	StatusFilter []v1.OrderStatus `protobuf:"varint,2,rep,packed,name=status_filter,json=statusFilter,proto3,enum=domain.order.common.v1.OrderStatus" json:"status_filter,omitempty"`
+	// Pagination
+	Pagination    *Pagination `protobuf:"bytes,3,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListRequest) Reset() {
+	*x = ListRequest{}
+	mi := &file_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListRequest) ProtoMessage() {}
+
+func (x *ListRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListRequest.ProtoReflect.Descriptor instead.
+func (*ListRequest) Descriptor() ([]byte, []int) {
+	return file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *ListRequest) GetCustomerId() string {
+	if x != nil {
+		return x.CustomerId
+	}
+	return ""
+}
+
+func (x *ListRequest) GetStatusFilter() []v1.OrderStatus {
+	if x != nil {
+		return x.StatusFilter
+	}
+	return nil
+}
+
+func (x *ListRequest) GetPagination() *Pagination {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
+// Response message for listing orders
+type ListResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// List of orders
+	Orders []*OrderState `protobuf:"bytes,1,rep,name=orders,proto3" json:"orders,omitempty"`
+	// Total count of orders matching the filter
+	TotalCount int32 `protobuf:"varint,2,opt,name=total_count,json=totalCount,proto3" json:"total_count,omitempty"`
+	// Pagination info
+	Pagination    *PaginationResponse `protobuf:"bytes,3,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListResponse) Reset() {
+	*x = ListResponse{}
+	mi := &file_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListResponse) ProtoMessage() {}
+
+func (x *ListResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListResponse.ProtoReflect.Descriptor instead.
+func (*ListResponse) Descriptor() ([]byte, []int) {
+	return file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *ListResponse) GetOrders() []*OrderState {
+	if x != nil {
+		return x.Orders
+	}
+	return nil
+}
+
+func (x *ListResponse) GetTotalCount() int32 {
+	if x != nil {
+		return x.TotalCount
+	}
+	return 0
+}
+
+func (x *ListResponse) GetPagination() *PaginationResponse {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
 var File_infrastructure_rpc_order_v1_model_v1_model_proto protoreflect.FileDescriptor
 
 const file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDesc = "" +
@@ -636,7 +883,30 @@ const file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDesc = "" +
 	"customerId\x12I\n" +
 	"\rdelivery_info\x18\x02 \x01(\v2$.domain.order.common.v1.DeliveryInfoR\fdeliveryInfo\"-\n" +
 	"\x10CheckoutResponse\x12\x19\n" +
-	"\border_id\x18\x01 \x01(\tR\aorderIdB\xbe\x02\n" +
+	"\border_id\x18\x01 \x01(\tR\aorderId\"=\n" +
+	"\n" +
+	"Pagination\x12\x12\n" +
+	"\x04page\x18\x01 \x01(\x05R\x04page\x12\x1b\n" +
+	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\"u\n" +
+	"\x12PaginationResponse\x12!\n" +
+	"\fcurrent_page\x18\x01 \x01(\x05R\vcurrentPage\x12\x1b\n" +
+	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\x12\x1f\n" +
+	"\vtotal_pages\x18\x03 \x01(\x05R\n" +
+	"totalPages\"\xca\x01\n" +
+	"\vListRequest\x12\x1f\n" +
+	"\vcustomer_id\x18\x01 \x01(\tR\n" +
+	"customerId\x12H\n" +
+	"\rstatus_filter\x18\x02 \x03(\x0e2#.domain.order.common.v1.OrderStatusR\fstatusFilter\x12P\n" +
+	"\n" +
+	"pagination\x18\x03 \x01(\v20.infrastructure.rpc.order.v1.model.v1.PaginationR\n" +
+	"pagination\"\xd3\x01\n" +
+	"\fListResponse\x12H\n" +
+	"\x06orders\x18\x01 \x03(\v20.infrastructure.rpc.order.v1.model.v1.OrderStateR\x06orders\x12\x1f\n" +
+	"\vtotal_count\x18\x02 \x01(\x05R\n" +
+	"totalCount\x12X\n" +
+	"\n" +
+	"pagination\x18\x03 \x01(\v28.infrastructure.rpc.order.v1.model.v1.PaginationResponseR\n" +
+	"paginationB\xbe\x02\n" +
 	"(com.infrastructure.rpc.order.v1.model.v1B\n" +
 	"ModelProtoP\x01ZOgithub.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/model/v1\xa2\x02\x05IROVM\xaa\x02$Infrastructure.Rpc.Order.V1.Model.V1\xca\x02$Infrastructure\\Rpc\\Order\\V1\\Model\\V1\xe2\x020Infrastructure\\Rpc\\Order\\V1\\Model\\V1\\GPBMetadata\xea\x02)Infrastructure::Rpc::Order::V1::Model::V1b\x06proto3"
 
@@ -652,7 +922,7 @@ func file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP() []byte 
 	return file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescData
 }
 
-var file_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_infrastructure_rpc_order_v1_model_v1_model_proto_goTypes = []any{
 	(*OrderState)(nil),                // 0: infrastructure.rpc.order.v1.model.v1.OrderState
 	(*OrderItem)(nil),                 // 1: infrastructure.rpc.order.v1.model.v1.OrderItem
@@ -664,29 +934,37 @@ var file_infrastructure_rpc_order_v1_model_v1_model_proto_goTypes = []any{
 	(*UpdateDeliveryInfoRequest)(nil), // 7: infrastructure.rpc.order.v1.model.v1.UpdateDeliveryInfoRequest
 	(*CheckoutRequest)(nil),           // 8: infrastructure.rpc.order.v1.model.v1.CheckoutRequest
 	(*CheckoutResponse)(nil),          // 9: infrastructure.rpc.order.v1.model.v1.CheckoutResponse
-	(v1.OrderStatus)(0),               // 10: domain.order.common.v1.OrderStatus
-	(*timestamppb.Timestamp)(nil),     // 11: google.protobuf.Timestamp
-	(*v1.DeliveryInfo)(nil),           // 12: domain.order.common.v1.DeliveryInfo
-	(*fieldmaskpb.FieldMask)(nil),     // 13: google.protobuf.FieldMask
+	(*Pagination)(nil),                // 10: infrastructure.rpc.order.v1.model.v1.Pagination
+	(*PaginationResponse)(nil),        // 11: infrastructure.rpc.order.v1.model.v1.PaginationResponse
+	(*ListRequest)(nil),               // 12: infrastructure.rpc.order.v1.model.v1.ListRequest
+	(*ListResponse)(nil),              // 13: infrastructure.rpc.order.v1.model.v1.ListResponse
+	(v1.OrderStatus)(0),               // 14: domain.order.common.v1.OrderStatus
+	(*timestamppb.Timestamp)(nil),     // 15: google.protobuf.Timestamp
+	(*v1.DeliveryInfo)(nil),           // 16: domain.order.common.v1.DeliveryInfo
+	(*fieldmaskpb.FieldMask)(nil),     // 17: google.protobuf.FieldMask
 }
 var file_infrastructure_rpc_order_v1_model_v1_model_proto_depIdxs = []int32{
 	1,  // 0: infrastructure.rpc.order.v1.model.v1.OrderState.items:type_name -> infrastructure.rpc.order.v1.model.v1.OrderItem
-	10, // 1: infrastructure.rpc.order.v1.model.v1.OrderState.status:type_name -> domain.order.common.v1.OrderStatus
-	11, // 2: infrastructure.rpc.order.v1.model.v1.OrderState.created_at:type_name -> google.protobuf.Timestamp
-	11, // 3: infrastructure.rpc.order.v1.model.v1.OrderState.updated_at:type_name -> google.protobuf.Timestamp
-	12, // 4: infrastructure.rpc.order.v1.model.v1.OrderState.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
+	14, // 1: infrastructure.rpc.order.v1.model.v1.OrderState.status:type_name -> domain.order.common.v1.OrderStatus
+	15, // 2: infrastructure.rpc.order.v1.model.v1.OrderState.created_at:type_name -> google.protobuf.Timestamp
+	15, // 3: infrastructure.rpc.order.v1.model.v1.OrderState.updated_at:type_name -> google.protobuf.Timestamp
+	16, // 4: infrastructure.rpc.order.v1.model.v1.OrderState.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
 	0,  // 5: infrastructure.rpc.order.v1.model.v1.CreateRequest.order:type_name -> infrastructure.rpc.order.v1.model.v1.OrderState
-	12, // 6: infrastructure.rpc.order.v1.model.v1.CreateRequest.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
+	16, // 6: infrastructure.rpc.order.v1.model.v1.CreateRequest.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
 	0,  // 7: infrastructure.rpc.order.v1.model.v1.GetResponse.order:type_name -> infrastructure.rpc.order.v1.model.v1.OrderState
 	0,  // 8: infrastructure.rpc.order.v1.model.v1.UpdateRequest.order:type_name -> infrastructure.rpc.order.v1.model.v1.OrderState
-	13, // 9: infrastructure.rpc.order.v1.model.v1.UpdateRequest.update_mask:type_name -> google.protobuf.FieldMask
-	12, // 10: infrastructure.rpc.order.v1.model.v1.UpdateDeliveryInfoRequest.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
-	12, // 11: infrastructure.rpc.order.v1.model.v1.CheckoutRequest.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
-	12, // [12:12] is the sub-list for method output_type
-	12, // [12:12] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	17, // 9: infrastructure.rpc.order.v1.model.v1.UpdateRequest.update_mask:type_name -> google.protobuf.FieldMask
+	16, // 10: infrastructure.rpc.order.v1.model.v1.UpdateDeliveryInfoRequest.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
+	16, // 11: infrastructure.rpc.order.v1.model.v1.CheckoutRequest.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
+	14, // 12: infrastructure.rpc.order.v1.model.v1.ListRequest.status_filter:type_name -> domain.order.common.v1.OrderStatus
+	10, // 13: infrastructure.rpc.order.v1.model.v1.ListRequest.pagination:type_name -> infrastructure.rpc.order.v1.model.v1.Pagination
+	0,  // 14: infrastructure.rpc.order.v1.model.v1.ListResponse.orders:type_name -> infrastructure.rpc.order.v1.model.v1.OrderState
+	11, // 15: infrastructure.rpc.order.v1.model.v1.ListResponse.pagination:type_name -> infrastructure.rpc.order.v1.model.v1.PaginationResponse
+	16, // [16:16] is the sub-list for method output_type
+	16, // [16:16] is the sub-list for method input_type
+	16, // [16:16] is the sub-list for extension type_name
+	16, // [16:16] is the sub-list for extension extendee
+	0,  // [0:16] is the sub-list for field type_name
 }
 
 func init() { file_infrastructure_rpc_order_v1_model_v1_model_proto_init() }
@@ -700,7 +978,7 @@ func file_infrastructure_rpc_order_v1_model_v1_model_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDesc), len(file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

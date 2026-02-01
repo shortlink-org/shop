@@ -14,6 +14,55 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+const countOrders = `-- name: CountOrders :one
+SELECT COUNT(*) FROM oms.orders
+`
+
+func (q *Queries) CountOrders(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, countOrders)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countOrdersByCustomer = `-- name: CountOrdersByCustomer :one
+SELECT COUNT(*) FROM oms.orders WHERE customer_id = $1
+`
+
+func (q *Queries) CountOrdersByCustomer(ctx context.Context, customerID uuid.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countOrdersByCustomer, customerID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countOrdersByStatus = `-- name: CountOrdersByStatus :one
+SELECT COUNT(*) FROM oms.orders WHERE status = ANY($1::int[])
+`
+
+func (q *Queries) CountOrdersByStatus(ctx context.Context, dollar_1 []int32) (int64, error) {
+	row := q.db.QueryRow(ctx, countOrdersByStatus, dollar_1)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countOrdersWithFilters = `-- name: CountOrdersWithFilters :one
+SELECT COUNT(*) FROM oms.orders WHERE customer_id = $1 AND status = ANY($2::int[])
+`
+
+type CountOrdersWithFiltersParams struct {
+	CustomerID uuid.UUID
+	Column2    []int32
+}
+
+func (q *Queries) CountOrdersWithFilters(ctx context.Context, arg CountOrdersWithFiltersParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countOrdersWithFilters, arg.CustomerID, arg.Column2)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const deleteOrderDeliveryInfo = `-- name: DeleteOrderDeliveryInfo :exec
 DELETE FROM oms.order_delivery_info
 WHERE order_id = $1
@@ -228,6 +277,45 @@ func (q *Queries) InsertOrderItem(ctx context.Context, arg InsertOrderItemParams
 	return err
 }
 
+const listOrders = `-- name: ListOrders :many
+SELECT id, customer_id, status, version, created_at, updated_at
+FROM oms.orders
+ORDER BY created_at DESC
+LIMIT $1 OFFSET $2
+`
+
+type ListOrdersParams struct {
+	Limit  int32
+	Offset int32
+}
+
+func (q *Queries) ListOrders(ctx context.Context, arg ListOrdersParams) ([]OmsOrder, error) {
+	rows, err := q.db.Query(ctx, listOrders, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []OmsOrder
+	for rows.Next() {
+		var i OmsOrder
+		if err := rows.Scan(
+			&i.ID,
+			&i.CustomerID,
+			&i.Status,
+			&i.Version,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listOrdersByCustomer = `-- name: ListOrdersByCustomer :many
 SELECT id, customer_id, status, version, created_at, updated_at
 FROM oms.orders
@@ -237,6 +325,135 @@ ORDER BY created_at DESC
 
 func (q *Queries) ListOrdersByCustomer(ctx context.Context, customerID uuid.UUID) ([]OmsOrder, error) {
 	rows, err := q.db.Query(ctx, listOrdersByCustomer, customerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []OmsOrder
+	for rows.Next() {
+		var i OmsOrder
+		if err := rows.Scan(
+			&i.ID,
+			&i.CustomerID,
+			&i.Status,
+			&i.Version,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listOrdersWithCustomerFilter = `-- name: ListOrdersWithCustomerFilter :many
+SELECT id, customer_id, status, version, created_at, updated_at
+FROM oms.orders
+WHERE customer_id = $1
+ORDER BY created_at DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListOrdersWithCustomerFilterParams struct {
+	CustomerID uuid.UUID
+	Limit      int32
+	Offset     int32
+}
+
+func (q *Queries) ListOrdersWithCustomerFilter(ctx context.Context, arg ListOrdersWithCustomerFilterParams) ([]OmsOrder, error) {
+	rows, err := q.db.Query(ctx, listOrdersWithCustomerFilter, arg.CustomerID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []OmsOrder
+	for rows.Next() {
+		var i OmsOrder
+		if err := rows.Scan(
+			&i.ID,
+			&i.CustomerID,
+			&i.Status,
+			&i.Version,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listOrdersWithFilters = `-- name: ListOrdersWithFilters :many
+SELECT id, customer_id, status, version, created_at, updated_at
+FROM oms.orders
+WHERE customer_id = $1 AND status = ANY($2::int[])
+ORDER BY created_at DESC
+LIMIT $3 OFFSET $4
+`
+
+type ListOrdersWithFiltersParams struct {
+	CustomerID uuid.UUID
+	Column2    []int32
+	Limit      int32
+	Offset     int32
+}
+
+func (q *Queries) ListOrdersWithFilters(ctx context.Context, arg ListOrdersWithFiltersParams) ([]OmsOrder, error) {
+	rows, err := q.db.Query(ctx, listOrdersWithFilters,
+		arg.CustomerID,
+		arg.Column2,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []OmsOrder
+	for rows.Next() {
+		var i OmsOrder
+		if err := rows.Scan(
+			&i.ID,
+			&i.CustomerID,
+			&i.Status,
+			&i.Version,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listOrdersWithStatusFilter = `-- name: ListOrdersWithStatusFilter :many
+SELECT id, customer_id, status, version, created_at, updated_at
+FROM oms.orders
+WHERE status = ANY($1::int[])
+ORDER BY created_at DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListOrdersWithStatusFilterParams struct {
+	Column1 []int32
+	Limit   int32
+	Offset  int32
+}
+
+func (q *Queries) ListOrdersWithStatusFilter(ctx context.Context, arg ListOrdersWithStatusFilterParams) ([]OmsOrder, error) {
+	rows, err := q.db.Query(ctx, listOrdersWithStatusFilter, arg.Column1, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

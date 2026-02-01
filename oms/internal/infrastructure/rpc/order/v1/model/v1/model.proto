@@ -92,3 +92,41 @@ message CheckoutResponse {
   // ID of the created order
   string order_id = 1;
 }
+
+// Pagination info for list requests
+message Pagination {
+  // Current page number (1-indexed)
+  int32 page = 1;
+  // Number of items per page
+  int32 page_size = 2;
+}
+
+// Pagination info for list responses
+message PaginationResponse {
+  // Current page number
+  int32 current_page = 1;
+  // Number of items per page
+  int32 page_size = 2;
+  // Total number of pages
+  int32 total_pages = 3;
+}
+
+// Request message for listing orders
+message ListRequest {
+  // Optional filter by customer ID
+  string customer_id = 1;
+  // Optional filter by order status
+  repeated domain.order.common.v1.OrderStatus status_filter = 2;
+  // Pagination
+  Pagination pagination = 3;
+}
+
+// Response message for listing orders
+message ListResponse {
+  // List of orders
+  repeated OrderState orders = 1;
+  // Total count of orders matching the filter
+  int32 total_count = 2;
+  // Pagination info
+  PaginationResponse pagination = 3;
+}

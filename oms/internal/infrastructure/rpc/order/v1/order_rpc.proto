@@ -17,6 +17,9 @@ service OrderService {
   // Get retrieves an order by its ID.
   rpc Get(infrastructure.rpc.order.v1.model.v1.GetRequest) returns (infrastructure.rpc.order.v1.model.v1.GetResponse);
 
+  // List retrieves orders with filtering and pagination.
+  rpc List(infrastructure.rpc.order.v1.model.v1.ListRequest) returns (infrastructure.rpc.order.v1.model.v1.ListResponse);
+
   // Delete deletes an order by its ID.
   rpc Cancel(infrastructure.rpc.order.v1.model.v1.CancelRequest) returns (google.protobuf.Empty);
 
