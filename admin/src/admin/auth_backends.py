@@ -30,24 +30,29 @@ class OryRemoteUserBackend(RemoteUserBackend):
     def configure_user(self, request, user, created=True):
         """Configure a newly created or existing user.
 
-        For new users:
+        All users authenticated via Oathkeeper are trusted admins:
         - Sets is_staff=True to allow Django admin access
+        - Sets is_superuser=True to grant full permissions
         - Updates email from X-Email header if available
 
         Args:
             request: The HTTP request object.
             user: The User instance being configured.
-            created: Whether the user was just created.
+            created: Whether the user was just created (unused, we update all users).
 
         Returns:
             The configured User instance.
         """
         update_fields = []
         
-        # New users get staff access for Django admin
-        if created and not user.is_staff:
+        # All users authenticated via Oathkeeper are trusted admins
+        # Grant staff and superuser access for Django admin
+        if not user.is_staff:
             user.is_staff = True
             update_fields.append("is_staff")
+        if not user.is_superuser:
+            user.is_superuser = True
+            update_fields.append("is_superuser")
         
         # Update email from Oathkeeper header
         email = request.META.get("HTTP_X_EMAIL")
