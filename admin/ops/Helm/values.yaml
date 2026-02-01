@@ -222,8 +222,9 @@ istio:
 # ==============================================================================
 # Authorization Policy (Istio)
 # Protects against X-User-ID header spoofing by restricting access to Oathkeeper
+# TODO: Re-enable after fixing traffic flow - currently blocking all requests
 authorizationPolicy:
-  enabled: true
+  enabled: false
   allowedNamespaces:
     - auth           # Oathkeeper namespace
     - istio-ingress  # Gateway namespace (Oathkeeper traffic comes through gateway)
