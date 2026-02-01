@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.gis",  # GeoDjango
+    "django.contrib.postgres",  # PostgreSQL-specific fields (ArrayField, etc.)
     "django_prometheus",
     "debug_toolbar",
     # django_ory_auth removed - using Oathkeeper header-based auth instead
