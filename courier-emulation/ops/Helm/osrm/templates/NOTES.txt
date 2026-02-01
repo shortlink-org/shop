@@ -1,0 +1,14 @@
+OSRM Routing Server has been deployed!
+
+To test the routing API:
+
+  export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "shortlink-template.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
+  kubectl port-forward $POD_NAME 5000:5000
+
+Then try:
+
+  curl 'http://localhost:5000/route/v1/driving/13.388860,52.517037;13.397634,52.529407?overview=full'
+
+Service endpoint for internal use:
+
+  http://{{ include "shortlink-template.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:5000

@@ -1,4 +1,4 @@
-# Common default values for Courier Emulation.
+# Common default values for OSRM Routing Server.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -18,17 +18,12 @@ httpRoute:
 # ==============================================================================
 deploy:
   # type: Deployment, Rollout, StatefulSet
-  type: Rollout
+  type: Deployment
 
-  # Argo Rollouts strategy configuration
-  strategy:
-    type: Canary
-    canary:
-      steps:
-        - setWeight: 100
+  replicaCount: 1
 
   image:
-    repository: registry.gitlab.com/shortlink-org/shop/courier-emulation
+    repository: registry.gitlab.com/shortlink-org/shop/osrm
     tag: latest
     # -- Global imagePullPolicy
     # Default: 'Always' if image tag is 'latest', else 'IfNotPresent'
@@ -37,47 +32,44 @@ deploy:
 
   resources:
     limits:
-      cpu: 200m
-      memory: 256Mi
+      cpu: 1000m
+      memory: 1Gi
     requests:
-      cpu: 50m
-      memory: 128Mi
+      cpu: 200m
+      memory: 512Mi
 
-  env:
-    USER: courier
-    TRACER_URI: grafana-tempo.grafana:4317
-    OSRM_URL: http://osrm.shortlink-shop.svc.cluster.local:5000
-
-  # -- define a liveness probe that checks every 5 seconds, starting after 5 seconds
+  # -- define a liveness probe
   livenessProbe:
     enabled: true
     httpGet:
-      path: /live
-      port: 9090
+      path: /health
+      port: 5000
+    initialDelaySeconds: 10
+    periodSeconds: 30
+    timeoutSeconds: 5
 
-  # -- define a readiness probe that checks every 5 seconds, starting after 5 seconds
+  # -- define a readiness probe
   readinessProbe:
     enabled: true
     httpGet:
-      path: /ready
-      port: 9090
+      path: /health
+      port: 5000
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
 
 service:
   type: ClusterIP
   ports:
     - name: http
-      port: 8080
-      protocol: TCP
-      public: true
-    - name: metrics
-      port: 9090
+      port: 5000
       protocol: TCP
       public: true
 
 # ==============================================================================
 # Prometheus Operator ServiceMonitor configuration
 monitoring:
-  enabled: true
+  enabled: false
 
 # ==============================================================================
 # PodDisruptionBudget
@@ -100,8 +92,5 @@ networkPolicy:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: istio-ingress
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: prometheus-operator
   policyTypes:
     - Ingress
