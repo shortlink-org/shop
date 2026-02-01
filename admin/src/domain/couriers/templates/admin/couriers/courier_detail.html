@@ -1,10 +1,15 @@
 {% extends "admin/base_site.html" %}
-{% load static %}
+{% load static crispy_forms_tags %}
 
 {% block title %}{{ title }} | {{ site_title }}{% endblock %}
 
 {% block extrahead %}
 {{ block.super }}
+<script src="{% url 'admin:jsi18n' %}"></script>
+{{ update_contact_form.media }}
+{{ update_schedule_form.media }}
+{{ change_transport_form.media }}
+{{ archive_form.media }}
 <style>
 .courier-status { padding: 5px 12px; border-radius: 3px; font-weight: bold; text-transform: uppercase; }
 .status-free { background: #28a745; color: white; }
@@ -85,9 +90,12 @@
         <h2>Update Contact Info</h2>
         <form method="post" action="{% url 'couriers:update_contact' courier_id=courier.courier_id %}">
             {% csrf_token %}
-            <div class="form-row"><div><label for="id_phone">Phone:</label> {{ update_contact_form.phone }}</div></div>
-            <div class="form-row"><div><label for="id_email">Email:</label> {{ update_contact_form.email }}</div></div>
-            <div class="form-row"><input type="submit" value="Update Contact" class="default"></div>
+            <div class="flex flex-col gap-4">
+                {% crispy update_contact_form "unfold_crispy" %}
+            </div>
+            <div class="form-row mt-4">
+                <input type="submit" value="Update Contact" class="default">
+            </div>
         </form>
     </fieldset>
 
@@ -95,12 +103,12 @@
         <h2>Update Work Schedule</h2>
         <form method="post" action="{% url 'couriers:update_schedule' courier_id=courier.courier_id %}">
             {% csrf_token %}
-            <div class="form-row"><div><label>Work Start:</label> {{ update_schedule_form.work_start }}</div></div>
-            <div class="form-row"><div><label>Work End:</label> {{ update_schedule_form.work_end }}</div></div>
-            <div class="form-row"><div><label>Work Days:</label> {{ update_schedule_form.work_days }}</div></div>
-            <div class="form-row"><div><label>Zone:</label> {{ update_schedule_form.work_zone }}</div></div>
-            <div class="form-row"><div><label>Max Distance:</label> {{ update_schedule_form.max_distance_km }} km</div></div>
-            <div class="form-row"><input type="submit" value="Update Schedule" class="default"></div>
+            <div class="flex flex-col gap-4">
+                {% crispy update_schedule_form "unfold_crispy" %}
+            </div>
+            <div class="form-row mt-4">
+                <input type="submit" value="Update Schedule" class="default">
+            </div>
         </form>
     </fieldset>
 
@@ -108,9 +116,13 @@
         <h2>Change Transport Type</h2>
         <form method="post" action="{% url 'couriers:change_transport' courier_id=courier.courier_id %}">
             {% csrf_token %}
-            <div class="form-row"><div><label>Transport:</label> {{ change_transport_form.transport_type }}</div></div>
+            <div class="flex flex-col gap-4">
+                {% crispy change_transport_form "unfold_crispy" %}
+            </div>
             <p class="help">Changing transport type will reset current load to 0 and update max load capacity.</p>
-            <div class="form-row"><input type="submit" value="Change Transport" class="default"></div>
+            <div class="form-row mt-4">
+                <input type="submit" value="Change Transport" class="default">
+            </div>
         </form>
     </fieldset>
     {% endif %}
@@ -127,9 +139,10 @@
         <p>Are you sure you want to archive <strong>{{ courier.name }}</strong>?</p>
         <form method="post" action="{% url 'couriers:archive' courier_id=courier.courier_id %}">
             {% csrf_token %}
-            <div class="form-row"><div><label>Reason:</label> {{ archive_form.reason }}</div></div>
-            <div class="form-row"><div>{{ archive_form.confirm }} <label for="id_confirm">{{ archive_form.confirm.label }}</label></div></div>
-            <div class="submit-row">
+            <div class="flex flex-col gap-4">
+                {% crispy archive_form "unfold_crispy" %}
+            </div>
+            <div class="submit-row mt-4">
                 <input type="submit" value="Archive" class="default deletelink">
                 <input type="button" value="Cancel" onclick="document.getElementById('archive-modal').style.display='none'">
             </div>

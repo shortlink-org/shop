@@ -1,5 +1,5 @@
 {% extends "admin/base_site.html" %}
-{% load static %}
+{% load static crispy_forms_tags %}
 
 {% block title %}{{ title }} | {{ site_title }}{% endblock %}
 
@@ -33,13 +33,12 @@
 
 {% block content %}
 <div id="changelist">
-    <div id="toolbar">
-        <form id="changelist-search" method="get">
-            {{ filter_form.status }}
-            {{ filter_form.transport_type }}
-            {{ filter_form.work_zone }}
-            <label>{{ filter_form.available_only }} Available only</label>
-            <input type="submit" value="Filter">
+    <div id="toolbar" class="mb-4">
+        <form id="changelist-search" method="get" class="flex flex-wrap gap-4 items-end">
+            {% crispy filter_form "unfold_crispy" %}
+            <button type="submit" class="border font-medium rounded-md text-white bg-primary-600 hover:bg-primary-500 px-3 py-2">
+                Filter
+            </button>
         </form>
     </div>
 

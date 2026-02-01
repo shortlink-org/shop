@@ -14,6 +14,7 @@ dependencies = [
   'deprecated==1.2.18',
   'django==6.0.1',
   'django-unfold>=0.49.0',
+  'django-crispy-forms>=2.3',
   'django-debug-toolbar==6.2.0',
   'django-environ==0.12.0',
   'django-health-check==3.20.8',

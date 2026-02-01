@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     "health_check.cache",
     "health_check.contrib.migrations",
     "rest_framework",
+    "crispy_forms",  # Django Crispy Forms
     "mapwidgets",  # Django Map Widgets for GeoDjango
     "domain.goods",
     "domain.offices",
@@ -495,3 +496,8 @@ MAP_WIDGETS = {
         },
     },
 }
+
+# Django Crispy Forms configuration
+# https://unfoldadmin.com/docs/configuration/crispy-forms/
+CRISPY_TEMPLATE_PACK = "unfold_crispy"
+CRISPY_ALLOWED_TEMPLATE_PACKS = ["unfold_crispy"]
