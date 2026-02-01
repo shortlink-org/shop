@@ -8,6 +8,10 @@ serviceAccount:
   create: true
 
 # ==============================================================================
+ingress:
+  enabled: false
+
+# ==============================================================================
 deploy:
   # type: Deployment, Rollout, StatefulSet
   type: Rollout

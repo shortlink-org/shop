@@ -8,6 +8,10 @@ serviceAccount:
   create: true
 
 # ==============================================================================
+ingress:
+  enabled: false
+
+# ==============================================================================
 # Istio RequestAuthentication for JWT validation
 # ref: https://istio.io/latest/docs/reference/config/security/request_authentication/
 requestAuthentication:
