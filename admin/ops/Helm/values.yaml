@@ -21,14 +21,25 @@ ingress:
 
 # ==============================================================================
 # HTTPRoute configuration for Gateway API
+# Traffic goes through Oathkeeper for cookie session authentication
+# See: docs/ADR/decisions/0005-oathkeeper-auth.md
 httpRoute:
   enabled: true
-  gatewayName: external-gateway
-  gatewayNamespace: istio-ingress
+  parentRefs:
+    - name: external-gateway
+      namespace: istio-ingress
+      sectionName: https
   hostnames:
     - shop.shortlink.best
-  path: /admin
-  port: 8000
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /admin
+      backendRefs:
+        - name: oathkeeper-proxy
+          namespace: auth
+          port: 4455
 
 # ==============================================================================
 deploy:
