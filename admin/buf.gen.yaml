@@ -7,5 +7,6 @@ plugins:
 inputs:
   # Domain models from Buf Registry
   - module: buf.build/shortlink-org/shop-delivery
+  - module: buf.build/shortlink-org/shop-oms
   # Infrastructure RPC (local) - Delivery
   - directory: ../delivery/src/infrastructure/rpc

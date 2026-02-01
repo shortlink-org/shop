@@ -1,8 +1,7 @@
 """OMS (Order Management System) gRPC Client.
 
 This module provides a client for communicating with the OMS Service
-via gRPC. Since OMS proto files have complex dependencies, we define
-the data structures inline and use a simple gRPC channel approach.
+via gRPC using generated protobuf stubs.
 """
 
 import logging
@@ -128,12 +127,7 @@ class OrderNotFoundError(OmsServiceError):
 
 
 class OmsClient:
-    """Client for OMS gRPC API.
-
-    Note: This is a simplified client that uses raw gRPC calls
-    since the OMS proto files have complex cross-module dependencies.
-    In production, you would generate proper stubs.
-    """
+    """Client for OMS gRPC API."""
 
     def __init__(self, host: Optional[str] = None):
         """Initialize the OMS client.
@@ -141,7 +135,7 @@ class OmsClient:
         Args:
             host: gRPC host address. Defaults to settings.OMS_GRPC_HOST.
         """
-        self.host = host or getattr(settings, "OMS_GRPC_HOST", "localhost:50051")
+        self.host = host or getattr(settings, "OMS_GRPC_HOST", "localhost:50052")
         self._channel: Optional[grpc.Channel] = None
         self._stub = None
 
@@ -149,18 +143,10 @@ class OmsClient:
         """Ensure gRPC channel is connected."""
         if self._channel is None:
             self._channel = grpc.insecure_channel(self.host)
-            # Try to import generated stubs
-            try:
-                from .generated.oms import order_rpc_pb2_grpc
+            # Import generated stubs
+            from .generated.infrastructure.rpc.order.v1 import order_rpc_pb2_grpc
 
-                self._stub = order_rpc_pb2_grpc.OrderServiceStub(self._channel)
-            except ImportError:
-                logger.warning(
-                    "Generated OMS gRPC stubs not found. OMS integration unavailable."
-                )
-                raise OmsServiceError(
-                    "OMS gRPC stubs not generated. OMS integration unavailable."
-                )
+            self._stub = order_rpc_pb2_grpc.OrderServiceStub(self._channel)
 
     def _proto_to_order(self, proto_order) -> Order:
         """Convert protobuf Order to dataclass."""
@@ -203,8 +189,8 @@ class OmsClient:
             if di.HasField("delivery_period"):
                 dp = di.delivery_period
                 period = DeliveryPeriod(
-                    start_time=dp.start_time.ToDatetime() if dp.start_time else None,
-                    end_time=dp.end_time.ToDatetime() if dp.end_time else None,
+                    start_time=dp.start_time.ToDatetime() if dp.HasField("start_time") else None,
+                    end_time=dp.end_time.ToDatetime() if dp.HasField("end_time") else None,
                 )
             delivery_info = DeliveryInfo(
                 pickup_address=pickup,
@@ -214,11 +200,11 @@ class OmsClient:
             )
 
         created_at = None
-        if proto_order.created_at:
+        if proto_order.HasField("created_at"):
             created_at = proto_order.created_at.ToDatetime()
 
         updated_at = None
-        if proto_order.updated_at:
+        if proto_order.HasField("updated_at"):
             updated_at = proto_order.updated_at.ToDatetime()
 
         return Order(
@@ -242,9 +228,9 @@ class OmsClient:
         """
         self._ensure_connected()
 
-        from .generated.oms import order_rpc_pb2
+        from .generated.infrastructure.rpc.order.v1.model.v1 import model_pb2
 
-        request = order_rpc_pb2.GetRequest(id=order_id)
+        request = model_pb2.GetRequest(id=order_id)
 
         try:
             response = self._stub.Get(request)
@@ -275,11 +261,11 @@ class OmsClient:
         """
         self._ensure_connected()
 
-        from .generated.oms import order_rpc_pb2
+        from .generated.infrastructure.rpc.order.v1.model.v1 import model_pb2
 
         # Build request
-        pagination = order_rpc_pb2.Pagination(page=page, page_size=page_size)
-        request = order_rpc_pb2.ListRequest(
+        pagination = model_pb2.Pagination(page=page, page_size=page_size)
+        request = model_pb2.ListRequest(
             customer_id=customer_id or "",
             status_filter=[int(s) for s in (status_filter or [])],
             pagination=pagination,
@@ -311,9 +297,9 @@ class OmsClient:
         """
         self._ensure_connected()
 
-        from .generated.oms import order_rpc_pb2
+        from .generated.infrastructure.rpc.order.v1.model.v1 import model_pb2
 
-        request = order_rpc_pb2.CancelRequest(id=order_id)
+        request = model_pb2.CancelRequest(id=order_id)
 
         try:
             self._stub.Cancel(request)

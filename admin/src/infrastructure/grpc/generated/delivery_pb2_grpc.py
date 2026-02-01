@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-from . import delivery_pb2 as delivery__pb2
+import delivery_pb2 as delivery__pb2
 
 
 class DeliveryServiceStub(object):
@@ -61,6 +61,11 @@ class DeliveryServiceStub(object):
                 '/infrastructure.rpc.delivery.v1.DeliveryService/ChangeTransportType',
                 request_serializer=delivery__pb2.ChangeTransportTypeRequest.SerializeToString,
                 response_deserializer=delivery__pb2.ChangeTransportTypeResponse.FromString,
+                _registered_method=True)
+        self.AcceptOrder = channel.unary_unary(
+                '/infrastructure.rpc.delivery.v1.DeliveryService/AcceptOrder',
+                request_serializer=delivery__pb2.AcceptOrderRequest.SerializeToString,
+                response_deserializer=delivery__pb2.AcceptOrderResponse.FromString,
                 _registered_method=True)
         self.AssignOrder = channel.unary_unary(
                 '/infrastructure.rpc.delivery.v1.DeliveryService/AssignOrder',
@@ -144,11 +149,18 @@ class DeliveryServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def AssignOrder(self, request, context):
-        """==================== Order Assignment ====================
-        Назначение заказов курьерам
+    def AcceptOrder(self, request, context):
+        """==================== Order Operations ====================
+        Операции с заказами
 
-        AssignOrder assigns a package to a courier
+        AcceptOrder accepts an order from OMS for delivery
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def AssignOrder(self, request, context):
+        """AssignOrder assigns a package to a courier
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -201,6 +213,11 @@ def add_DeliveryServiceServicer_to_server(servicer, server):
                     servicer.ChangeTransportType,
                     request_deserializer=delivery__pb2.ChangeTransportTypeRequest.FromString,
                     response_serializer=delivery__pb2.ChangeTransportTypeResponse.SerializeToString,
+            ),
+            'AcceptOrder': grpc.unary_unary_rpc_method_handler(
+                    servicer.AcceptOrder,
+                    request_deserializer=delivery__pb2.AcceptOrderRequest.FromString,
+                    response_serializer=delivery__pb2.AcceptOrderResponse.SerializeToString,
             ),
             'AssignOrder': grpc.unary_unary_rpc_method_handler(
                     servicer.AssignOrder,
@@ -454,6 +471,33 @@ class DeliveryService(object):
             '/infrastructure.rpc.delivery.v1.DeliveryService/ChangeTransportType',
             delivery__pb2.ChangeTransportTypeRequest.SerializeToString,
             delivery__pb2.ChangeTransportTypeResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def AcceptOrder(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/infrastructure.rpc.delivery.v1.DeliveryService/AcceptOrder',
+            delivery__pb2.AcceptOrderRequest.SerializeToString,
+            delivery__pb2.AcceptOrderResponse.FromString,
             options,
             channel_credentials,
             insecure,
