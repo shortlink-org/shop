@@ -154,10 +154,8 @@ deploy:
   livenessProbe:
     enabled: true
     failureThreshold: 5
-    httpGet:
-      path: /app-health/application/livez
-      port: 15020
-      scheme: HTTP
+    grpc:
+      port: 50051
     initialDelaySeconds: 5
     periodSeconds: 5
     successThreshold: 1
@@ -168,10 +166,8 @@ deploy:
   readinessProbe:
     enabled: true
     failureThreshold: 30
-    httpGet:
-      path: /app-health/application/readyz
-      port: 15020
-      scheme: HTTP
+    grpc:
+      port: 50051
     initialDelaySeconds: 5
     periodSeconds: 5
     successThreshold: 1
