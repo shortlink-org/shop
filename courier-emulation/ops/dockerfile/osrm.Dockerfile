@@ -1,19 +1,27 @@
 # syntax=docker/dockerfile:1.12
 
 # =============================================================================
-# Stage 1: Download and build OSRM graph
+# Stage 1: Download OSM data using modern image
 # =============================================================================
-FROM osrm/osrm-backend:latest AS builder
+FROM alpine:3.21 AS downloader
 
 ARG REGION_URL=https://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf
 ARG REGION_NAME=berlin-latest
 
+RUN apk add --no-cache wget
+RUN mkdir -p /data && wget -q ${REGION_URL} -O /data/${REGION_NAME}.osm.pbf
+
+# =============================================================================
+# Stage 2: Build OSRM graph
+# =============================================================================
+FROM osrm/osrm-backend:latest AS builder
+
+ARG REGION_NAME=berlin-latest
+
 WORKDIR /data
 
-# Download OSM data from Geofabrik
-RUN apt-get update && apt-get install -y --no-install-recommends wget \
-    && wget -q ${REGION_URL} -O /data/${REGION_NAME}.osm.pbf \
-    && rm -rf /var/lib/apt/lists/*
+# Copy downloaded OSM data from downloader stage
+COPY --from=downloader /data/${REGION_NAME}.osm.pbf /data/
 
 # Extract: parse OSM data, create road graph
 RUN osrm-extract -p /opt/car.lua /data/${REGION_NAME}.osm.pbf
@@ -28,7 +36,7 @@ RUN osrm-customize /data/${REGION_NAME}.osrm
 RUN rm -f /data/${REGION_NAME}.osm.pbf
 
 # =============================================================================
-# Stage 2: Runtime image with pre-built graph
+# Stage 3: Runtime image with pre-built graph
 # =============================================================================
 FROM osrm/osrm-backend:latest
 

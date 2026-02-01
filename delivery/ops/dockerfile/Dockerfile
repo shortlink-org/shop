@@ -15,7 +15,8 @@ ARG BUILDPLATFORM
 WORKDIR /app
 
 # Install build dependencies
-RUN apk add --no-cache musl-dev protobuf-dev
+# bash and make are required for rdkafka-sys to build librdkafka from source
+RUN apk add --no-cache musl-dev protobuf-dev bash make
 
 # Create a new empty shell project for caching dependencies
 RUN cargo new --bin delivery

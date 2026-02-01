@@ -34,11 +34,6 @@ RUN apt-get update && \
       gdal-bin libgdal-dev libgeos-dev libproj-dev && \
     rm -rf /var/lib/apt/lists/*
 
-# GDAL/GEOS library paths for Django GeoDjango (Debian x86_64)
-# These must match the symlinks created by libgdal-dev
-ENV GDAL_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgdal.so
-ENV GEOS_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgeos_c.so
-
 RUN addgroup --system --gid 1000 shop && adduser --system --uid 1000 --gid 1000 shop
 
 WORKDIR /app
