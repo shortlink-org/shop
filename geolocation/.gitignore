@@ -1,0 +1,19 @@
+# Build artifacts
+/target/
+/migration/target/
+
+# Cargo lock (library)
+Cargo.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
