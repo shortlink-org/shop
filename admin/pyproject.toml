@@ -76,6 +76,9 @@ dependencies = [
   "grpcio-tools>=1.76.0",
   "shortlink-org-shop-oms-grpc-python==1.76.0.2.20260201221610+71e3c8b3c462",
   "shortlink-org-shop-delivery-rpc-grpc-python>=1.76.0.2.20260201222625",
+  "django-money>=3.6.0",
+  "django-import-export>=4.4.0",
+  "django-simple-history>=3.11.0",
 ]
 
 [project.optional-dependencies]

@@ -1,5 +1,35 @@
 {% extends "admin/index.html" %}
-{% load i18n %}
+{% load i18n unfold %}
+
+{% block content %}
+{{ block.super }}
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+    <div class="lg:col-span-2">
+        <div class="border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 rounded-md shadow-sm">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-base-200 dark:border-base-700">
+                <h3 class="font-semibold text-base-700 dark:text-base-200">{% trans "Delivery History (Last 30 Days)" %}</h3>
+            </div>
+            <div class="p-4">
+                {% component "unfold/components/tracker.html" with component_class="DeliveryTrackerComponent" %}
+                {% endcomponent %}
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <div class="border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 rounded-md shadow-sm">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-base-200 dark:border-base-700">
+                <h3 class="font-semibold text-base-700 dark:text-base-200">{% trans "Courier Status" %}</h3>
+            </div>
+            <div class="p-4">
+                {% component "unfold/components/tracker.html" with component_class="CourierStatusTrackerComponent" %}
+                {% endcomponent %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
 
 {% block sidebar %}
 {{ block.super }}

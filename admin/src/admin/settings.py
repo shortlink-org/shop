@@ -60,6 +60,11 @@ INSTALLED_APPS = [
     "unfold",  # before django.contrib.admin
     "unfold.contrib.filters",  # optional, if special filters are needed
     "unfold.contrib.forms",  # optional, if special form elements are needed
+    "unfold.contrib.import_export",  # styled import/export forms
+    "unfold.contrib.simple_history",  # styled history tracking
+    "djmoney",  # django-money for currency handling
+    "import_export",  # django-import-export
+    "simple_history",  # django-simple-history
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -94,6 +99,7 @@ UNFOLD = {
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,
     "SHOW_BACK_BUTTON": True,
+    "DASHBOARD_CALLBACK": "admin.dashboard.dashboard_callback",
     "COMMAND": {
         "search_models": True,  # Enable searching through model data (cmd+K / ctrl+K)
         "show_history": True,  # Show search history in localStorage
@@ -206,6 +212,95 @@ UNFOLD = {
             },
         ],
     },
+    "TABS": [
+        {
+            # Users & Groups share tab navigation (changelist)
+            "models": [
+                "auth.user",
+                "auth.group",
+            ],
+            "items": [
+                {
+                    "title": _("Users"),
+                    "icon": "person",
+                    "link": reverse_lazy("admin:auth_user_changelist"),
+                },
+                {
+                    "title": _("Groups"),
+                    "icon": "group",
+                    "link": reverse_lazy("admin:auth_group_changelist"),
+                },
+            ],
+        },
+        {
+            # Users & Groups share tab navigation (changeform)
+            "models": [
+                {"name": "auth.user", "detail": True},
+                {"name": "auth.group", "detail": True},
+            ],
+            "items": [
+                {
+                    "title": _("Users"),
+                    "icon": "person",
+                    "link": reverse_lazy("admin:auth_user_changelist"),
+                },
+                {
+                    "title": _("Groups"),
+                    "icon": "group",
+                    "link": reverse_lazy("admin:auth_group_changelist"),
+                },
+            ],
+        },
+        {
+            # Delivery-related models share tab navigation (changelist)
+            "models": [
+                "offices.office",
+            ],
+            "items": [
+                {
+                    "title": _("Offices"),
+                    "icon": "location_on",
+                    "link": reverse_lazy("admin:offices_office_changelist"),
+                },
+                {
+                    "title": _("Couriers"),
+                    "icon": "local_shipping",
+                    "link": reverse_lazy("couriers:courier_list"),
+                },
+            ],
+        },
+        {
+            # Delivery-related models share tab navigation (changeform)
+            "models": [
+                {"name": "offices.office", "detail": True},
+            ],
+            "items": [
+                {
+                    "title": _("Offices"),
+                    "icon": "location_on",
+                    "link": reverse_lazy("admin:offices_office_changelist"),
+                },
+                {
+                    "title": _("Couriers"),
+                    "icon": "local_shipping",
+                    "link": reverse_lazy("couriers:courier_list"),
+                },
+            ],
+        },
+        {
+            # Goods changeform tabs
+            "models": [
+                {"name": "goods.good", "detail": True},
+            ],
+            "items": [
+                {
+                    "title": _("All Goods"),
+                    "icon": "inventory_2",
+                    "link": reverse_lazy("admin:goods_good_changelist"),
+                },
+            ],
+        },
+    ],
 }
 
 MIDDLEWARE = [
@@ -219,6 +314,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "admin.remote_user_middleware.OathkeeperRemoteUserMiddleware",  # Oathkeeper X-User-ID header auth
+    "simple_history.middleware.HistoryRequestMiddleware",  # Track user in history
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",

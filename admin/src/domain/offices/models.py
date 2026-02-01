@@ -1,6 +1,7 @@
 """Define the Office model for order pickup locations."""
 
 from django.contrib.gis.db import models
+from simple_history.models import HistoricalRecords
 
 
 class Office(models.Model):
@@ -64,6 +65,9 @@ class Office(models.Model):
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    # History tracking
+    history = HistoricalRecords()
 
     class Meta:
         """Meta options for Office model."""
