@@ -41,10 +41,13 @@ import (
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/create"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/update_delivery_info"
 	get2 "github.com/shortlink-org/shop/oms/internal/usecases/order/query/get"
+	"github.com/shortlink-org/shop/oms/internal/workers/cart/cart_worker"
+	"github.com/shortlink-org/shop/oms/internal/workers/order/order_worker"
 	"github.com/shortlink-org/shop/oms/pkg/uow/postgres"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/trace"
 	"go.temporal.io/sdk/client"
+	"go.temporal.io/sdk/worker"
 )
 
 // Injectors from wire.go:
@@ -190,7 +193,25 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		return nil, nil, err
 	}
 	orderEventSubscriber := newOrderEventSubscriber(logger, clientClient, inMemoryPublisher)
-	omsService, err := NewOMSService(logger, config, monitoring, tracerProvider, pprofEndpoint, client, db, uoW, store, postgresStore, inMemoryPublisher, response, cartRPC, orderRPC, clientClient, orderEventSubscriber)
+	cartWorker, err := newCartWorker(context, clientClient, logger)
+	if err != nil {
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	orderWorker, err := newOrderWorker(context, clientClient, logger)
+	if err != nil {
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	omsService, err := NewOMSService(logger, config, monitoring, tracerProvider, pprofEndpoint, client, db, uoW, store, postgresStore, inMemoryPublisher, response, cartRPC, orderRPC, clientClient, orderEventSubscriber, cartWorker, orderWorker)
 	if err != nil {
 		cleanup5()
 		cleanup4()
@@ -243,6 +264,18 @@ type OMSService struct {
 
 	// Temporal
 	temporalClient client.Client
+	cartWorker     CartWorker
+	orderWorker    OrderWorker
+}
+
+// CartWorker is a wrapper type for Cart Temporal worker
+type CartWorker struct {
+	Worker worker.Worker
+}
+
+// OrderWorker is a wrapper type for Order Temporal worker
+type OrderWorker struct {
+	Worker worker.Worker
 }
 
 // OMSService ==========================================================================================================
@@ -278,6 +311,9 @@ var OMSSet = wire.NewSet(
 	newCartRPC,
 	newOrderRPC,
 	NewRunRPCServer, temporal.New, newOrderEventSubscriber,
+
+	newCartWorker,
+	newOrderWorker,
 
 	NewOMSService,
 )
@@ -419,6 +455,24 @@ func newOrderEventSubscriber(log logger.Logger, temporalClient client.Client, pu
 	return subscriber
 }
 
+// newCartWorker creates and starts the Cart Temporal worker
+func newCartWorker(ctx2 context.Context, c client.Client, log logger.Logger) (CartWorker, error) {
+	w, err := cart_worker.New(ctx2, c, log)
+	if err != nil {
+		return CartWorker{}, err
+	}
+	return CartWorker{Worker: w}, nil
+}
+
+// newOrderWorker creates and starts the Order Temporal worker
+func newOrderWorker(ctx2 context.Context, c client.Client, log logger.Logger) (OrderWorker, error) {
+	w, err := order_worker.New(ctx2, c, log)
+	if err != nil {
+		return OrderWorker{}, err
+	}
+	return OrderWorker{Worker: w}, nil
+}
+
 // newCartRPC creates the Cart RPC server with handlers
 func newCartRPC(
 	runRPCServer *grpc.Server,
@@ -467,6 +521,8 @@ func NewOMSService(
 
 	temporalClient client.Client,
 	_ *temporal2.OrderEventSubscriber,
+	cartWorker CartWorker,
+	orderWorker OrderWorker,
 ) (*OMSService, error) {
 	return &OMSService{
 
@@ -491,5 +547,7 @@ func NewOMSService(
 		orderRPCServer: orderRPCServer,
 
 		temporalClient: temporalClient,
+		cartWorker:     cartWorker,
+		orderWorker:    orderWorker,
 	}, nil
 }
