@@ -9,14 +9,14 @@ use crate::domain::model::package::PackageStatus;
 /// Filter criteria for package pool
 #[derive(Debug, Clone, Default)]
 pub struct PackageFilter {
-    /// Filter by status
+    /// Filter by single status
     pub status: Option<PackageStatus>,
+    /// Filter by multiple statuses
+    pub statuses: Option<Vec<PackageStatus>>,
     /// Filter by delivery zone
     pub zone: Option<String>,
     /// Filter by assigned courier
     pub courier_id: Option<Uuid>,
-    /// Filter by priority (minimum)
-    pub min_priority: Option<u8>,
     /// Only include unassigned packages
     pub unassigned_only: bool,
 }
@@ -47,12 +47,24 @@ impl PackageFilter {
         }
     }
 
-    /// Create a filter for high priority packages
-    pub fn high_priority() -> Self {
+    /// Create a filter with multiple statuses
+    pub fn with_statuses(statuses: Vec<PackageStatus>) -> Self {
         Self {
-            min_priority: Some(4),
+            statuses: Some(statuses),
             ..Default::default()
         }
+    }
+
+    /// Add zone filter
+    pub fn and_zone(mut self, zone: &str) -> Self {
+        self.zone = Some(zone.to_string());
+        self
+    }
+
+    /// Add courier filter
+    pub fn and_courier(mut self, courier_id: Uuid) -> Self {
+        self.courier_id = Some(courier_id);
+        self
     }
 }
 
@@ -61,10 +73,10 @@ impl PackageFilter {
 pub struct Query {
     /// Filter criteria
     pub filter: PackageFilter,
-    /// Maximum number of results to return
-    pub limit: Option<usize>,
-    /// Offset for pagination
-    pub offset: Option<usize>,
+    /// Page number (1-based)
+    pub page: Option<u32>,
+    /// Number of items per page
+    pub page_size: Option<u32>,
 }
 
 impl Query {
@@ -72,17 +84,17 @@ impl Query {
     pub fn new(filter: PackageFilter) -> Self {
         Self {
             filter,
-            limit: None,
-            offset: None,
+            page: None,
+            page_size: None,
         }
     }
 
     /// Create a query with pagination
-    pub fn with_pagination(filter: PackageFilter, limit: usize, offset: usize) -> Self {
+    pub fn with_pagination(filter: PackageFilter, page: u32, page_size: u32) -> Self {
         Self {
             filter,
-            limit: Some(limit),
-            offset: Some(offset),
+            page: Some(page),
+            page_size: Some(page_size),
         }
     }
 
@@ -91,8 +103,20 @@ impl Query {
         Self::new(PackageFilter::in_pool())
     }
 
+    /// Create a query for packages in a specific zone
+    pub fn in_zone(zone: &str) -> Self {
+        Self::new(PackageFilter::in_zone(zone))
+    }
+
     /// Create a query for packages by courier
     pub fn by_courier(courier_id: Uuid) -> Self {
         Self::new(PackageFilter::by_courier(courier_id))
+    }
+
+    /// Set pagination
+    pub fn paginate(mut self, page: u32, page_size: u32) -> Self {
+        self.page = Some(page);
+        self.page_size = Some(page_size);
+        self
     }
 }

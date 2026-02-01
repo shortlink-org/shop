@@ -6,6 +6,7 @@ pub use sea_orm_migration::prelude::*;
 
 mod m20260131_000001_create_couriers;
 mod m20260131_000002_create_packages;
+mod m20260131_000003_seed_couriers;
 
 pub struct Migrator;
 
@@ -15,6 +16,7 @@ impl MigratorTrait for Migrator {
         vec![
             Box::new(m20260131_000001_create_couriers::Migration),
             Box::new(m20260131_000002_create_packages::Migration),
+            Box::new(m20260131_000003_seed_couriers::Migration),
         ]
     }
 }

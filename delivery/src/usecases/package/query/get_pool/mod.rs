@@ -5,5 +5,5 @@
 mod handler;
 mod query;
 
-pub use handler::{GetPackagePoolError, Handler, Response};
+pub use handler::{GetPackagePoolError, Handler, PackageInfo, PaginationInfo, Response};
 pub use query::{PackageFilter, Query};

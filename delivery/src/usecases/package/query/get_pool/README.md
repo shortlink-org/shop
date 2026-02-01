@@ -1,7 +1,8 @@
 ## Use Case: UC-6 Get Package Pool
 
-### Описание
-Получение списка посылок в пуле с возможностью фильтрации по статусу, приоритету, региону и другим параметрам.
+### Description
+
+Retrieve a list of packages in the pool with filtering capabilities by status, priority, region, and other parameters.
 
 ### Sequence Diagram
 
@@ -101,57 +102,56 @@ message PaginationInfo {
 ### Filters
 
 **Status Filter:**
-- `ACCEPTED` - Приняты в пул
-- `IN_POOL` - В пуле, ожидают назначения
-- `ASSIGNED` - Назначены курьеру
-- `IN_TRANSIT` - В пути
-- `DELIVERED` - Доставлены
-- `NOT_DELIVERED` - Не доставлены
-- `REQUIRES_HANDLING` - Требуют обработки
+- `ACCEPTED` - Accepted into pool
+- `IN_POOL` - In pool, awaiting assignment
+- `ASSIGNED` - Assigned to courier
+- `IN_TRANSIT` - In transit
+- `DELIVERED` - Delivered
+- `NOT_DELIVERED` - Not delivered
+- `REQUIRES_HANDLING` - Requires handling
 
 **Priority Filter:**
-- `NORMAL` - Обычные
-- `URGENT` - Срочные
+- `NORMAL` - Regular packages
+- `URGENT` - Urgent packages
 
 **Region Filter:**
-- Фильтрация по городу/району доставки
+- Filter by delivery city/district
 
 **Date Range:**
-- Фильтрация по дате создания посылки
+- Filter by package creation date
 
 **Courier Filter:**
-- Фильтрация по назначенному курьеру
+- Filter by assigned courier
 
 ### Business Rules
 
-1. По умолчанию возвращаются посылки со статусом `IN_POOL`
-2. Максимальный размер страницы: 100
-3. Сортировка по умолчанию: по приоритету (срочные первые), затем по дате создания
-4. При сортировке по расстоянию требуется указать координаты курьера
-5. Приоритетные посылки всегда показываются первыми
+1. By default, packages with `IN_POOL` status are returned
+2. Maximum page size: 100
+3. Default sorting: by priority (urgent first), then by creation date
+4. Sorting by distance requires courier coordinates
+5. Priority packages are always shown first
 
 ### Use Cases
 
-- **Диспетчер просматривает пул:**
-  - Фильтр: `IN_POOL`
-  - Сортировка: по приоритету и дате
-  - Показывает посылки, ожидающие назначения
+- **Dispatcher views pool:**
+  - Filter: `IN_POOL`
+  - Sort: by priority and date
+  - Shows packages awaiting assignment
 
-- **Просмотр назначенных посылок:**
-  - Фильтр: `ASSIGNED`, `courier_id`
-  - Показывает все посылки конкретного курьера
+- **View assigned packages:**
+  - Filter: `ASSIGNED`, `courier_id`
+  - Shows all packages for a specific courier
 
-- **Аналитика доставок:**
-  - Фильтр: `DELIVERED`, date range
-  - Статистика успешных доставок за период
+- **Delivery analytics:**
+  - Filter: `DELIVERED`, date range
+  - Statistics of successful deliveries for a period
 
-- **Обработка проблем:**
-  - Фильтр: `REQUIRES_HANDLING`
-  - Посылки, требующие вмешательства диспетчера
+- **Problem handling:**
+  - Filter: `REQUIRES_HANDLING`
+  - Packages requiring dispatcher intervention
 
 ### Error Cases
 
-- `INVALID_PAGINATION`: Некорректные параметры пагинации
-- `INVALID_DATE_RANGE`: Некорректный диапазон дат
-- `INVALID_SORT_BY`: Некорректная сортировка
-
+- `INVALID_PAGINATION`: Invalid pagination parameters
+- `INVALID_DATE_RANGE`: Invalid date range
+- `INVALID_SORT_BY`: Invalid sort option
