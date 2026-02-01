@@ -3,6 +3,7 @@ module github.com/shortlink-org/shop/pricer
 go 1.25.6
 
 require (
+	github.com/dgraph-io/ristretto/v2 v2.4.0
 	github.com/google/uuid v1.6.0
 	github.com/google/wire v0.7.0
 	github.com/open-policy-agent/opa v1.12.3
@@ -27,6 +28,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
+	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/felixge/fgprof v0.9.5 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect

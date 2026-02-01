@@ -15,6 +15,7 @@ import (
 	"github.com/shortlink-org/go-sdk/observability/metrics"
 	"github.com/shortlink-org/go-sdk/observability/profiling"
 	"github.com/shortlink-org/go-sdk/observability/tracing"
+	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/di/pkg"
 	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/domain/services"
 	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/infrastructure/kafka"
 	"go.opentelemetry.io/otel/trace"
@@ -58,8 +59,7 @@ func InitializeCourierEmulationService() (*CourierEmulationService, func(), erro
 		cleanup()
 		return nil, nil, err
 	}
-	routeGenerator := newRouteGenerator(configConfig)
-	locationPublisher, err := newLocationPublisher(configConfig, loggerLogger)
+	routeGenerator, err := pkg_di.NewOSRMClient(configConfig)
 	if err != nil {
 		cleanup4()
 		cleanup3()
@@ -67,9 +67,18 @@ func InitializeCourierEmulationService() (*CourierEmulationService, func(), erro
 		cleanup()
 		return nil, nil, err
 	}
-	courierSimulator := newCourierSimulator(configConfig, routeGenerator, locationPublisher)
-	courierEmulationService, cleanup5, err := NewCourierEmulationService(loggerLogger, configConfig, monitoring, tracerProvider, pprofEndpoint, routeGenerator, courierSimulator, locationPublisher)
+	locationPublisher, cleanup5, err := pkg_di.NewLocationPublisher(configConfig, loggerLogger)
 	if err != nil {
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	courierSimulator := pkg_di.NewCourierSimulator(configConfig, routeGenerator, locationPublisher)
+	courierEmulationService, cleanup6, err := NewCourierEmulationService(loggerLogger, configConfig, monitoring, tracerProvider, pprofEndpoint, routeGenerator, courierSimulator, locationPublisher)
+	if err != nil {
+		cleanup5()
 		cleanup4()
 		cleanup3()
 		cleanup2()
@@ -77,6 +86,7 @@ func InitializeCourierEmulationService() (*CourierEmulationService, func(), erro
 		return nil, nil, err
 	}
 	return courierEmulationService, func() {
+		cleanup6()
 		cleanup5()
 		cleanup4()
 		cleanup3()
@@ -111,80 +121,8 @@ var DefaultSet = wire.NewSet(ctx.New, flags.New, config.New, logger.NewDefault, 
 // CourierEmulationSet =================================================================================================
 var CourierEmulationSet = wire.NewSet(
 
-	DefaultSet,
-
-	newRouteGenerator,
-	newCourierSimulator,
-
-	newLocationPublisher,
-
-	NewCourierEmulationService,
+	DefaultSet, pkg_di.NewOSRMClient, pkg_di.NewCourierSimulator, pkg_di.NewLocationPublisher, NewCourierEmulationService,
 )
-
-// newRouteGenerator creates the route generator service
-func newRouteGenerator(cfg *config.Config) *services.RouteGenerator {
-	osrmURL := cfg.GetString("OSRM_URL")
-	if osrmURL == "" {
-		osrmURL = "http://localhost:5000"
-	}
-
-	timeout := cfg.GetDuration("OSRM_TIMEOUT")
-	if timeout == 0 {
-		timeout = services.DefaultRouteGeneratorConfig().Timeout
-	}
-
-	return services.NewRouteGenerator(services.RouteGeneratorConfig{
-		OSRMBaseURL: osrmURL,
-		Timeout:     timeout,
-	})
-}
-
-// newLocationPublisher creates the Kafka location publisher
-func newLocationPublisher(cfg *config.Config, log logger.Logger) (*kafka.LocationPublisher, error) {
-	brokers := cfg.GetStringSlice("KAFKA_BROKERS")
-	if len(brokers) == 0 {
-		brokers = []string{"localhost:9092"}
-	}
-
-	publisher, err := kafka.NewLocationPublisher(kafka.PublisherConfig{
-		Brokers: brokers,
-	}, nil)
-
-	if err != nil {
-		log.Warn("Failed to create Kafka publisher, running without Kafka")
-		return nil, nil
-	}
-
-	return publisher, nil
-}
-
-// newCourierSimulator creates the courier simulator
-func newCourierSimulator(cfg *config.Config, routeGen *services.RouteGenerator, publisher *kafka.LocationPublisher) *services.CourierSimulator {
-	defaultCfg := services.DefaultCourierSimulatorConfig()
-
-	updateInterval := cfg.GetDuration("SIMULATION_UPDATE_INTERVAL")
-	if updateInterval == 0 {
-		updateInterval = defaultCfg.UpdateInterval
-	}
-
-	speedKmH := cfg.GetFloat64("SIMULATION_SPEED_KMH")
-	if speedKmH == 0 {
-		speedKmH = defaultCfg.SpeedKmH
-	}
-
-	timeMultiplier := cfg.GetFloat64("SIMULATION_TIME_MULTIPLIER")
-	if timeMultiplier == 0 {
-		timeMultiplier = defaultCfg.TimeMultiplier
-	}
-
-	return services.NewCourierSimulator(services.CourierSimulatorConfig{
-		UpdateInterval: updateInterval,
-		SpeedKmH:       speedKmH,
-		TimeMultiplier: timeMultiplier,
-	}, routeGen,
-		publisher,
-	)
-}
 
 func NewCourierEmulationService(
 
@@ -205,11 +143,6 @@ func NewCourierEmulationService(
 
 		simulator.Stop()
 
-		if publisher != nil {
-			if err := publisher.Close(); err != nil {
-				log.Error(err.Error())
-			}
-		}
 	}
 
 	return &CourierEmulationService{

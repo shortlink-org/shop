@@ -4,6 +4,7 @@ go 1.25.6
 
 require (
 	github.com/authzed/authzed-go v1.7.0
+	github.com/dgraph-io/ristretto/v2 v2.4.0
 	github.com/golang-migrate/migrate/v4 v4.19.1
 	github.com/google/uuid v1.6.0
 	github.com/google/wire v0.7.0
@@ -57,7 +58,6 @@ require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgraph-io/badger/v4 v4.9.0 // indirect
 	github.com/dgraph-io/dgo/v2 v2.2.0 // indirect
-	github.com/dgraph-io/ristretto/v2 v2.2.0 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/docker/docker v28.5.1+incompatible // indirect
 	github.com/docker/go-connections v0.6.0 // indirect

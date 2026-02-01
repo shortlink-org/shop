@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	cart "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
+	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart/schema/crud"
 	"github.com/shortlink-org/shop/oms/pkg/uow"
 )
@@ -14,6 +14,7 @@ import (
 var ErrTransactionRequired = errors.New("transaction required: use UnitOfWork.Begin()")
 
 // Save persists the cart state with optimistic concurrency control.
+// Invalidates the L1 cache after successful save.
 // Requires transaction in context (use UnitOfWork.Begin()).
 func (s *Store) Save(ctx context.Context, state *cart.State) error {
 	pgxTx := uow.FromContext(ctx)
@@ -65,6 +66,9 @@ func (s *Store) Save(ctx context.Context, state *cart.State) error {
 			return err
 		}
 	}
+
+	// Invalidate L1 cache after successful save
+	s.cache.Del(customerID.String())
 
 	return nil
 }

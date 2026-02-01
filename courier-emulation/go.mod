@@ -3,9 +3,10 @@ module github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation
 go 1.25.5
 
 require (
-	github.com/IBM/sarama v1.43.3
-	github.com/ThreeDotsLabs/watermill v1.4.6
-	github.com/ThreeDotsLabs/watermill-kafka/v3 v3.1.1
+	github.com/IBM/sarama v1.46.3
+	github.com/ThreeDotsLabs/watermill v1.5.1
+	github.com/ThreeDotsLabs/watermill-kafka/v3 v3.1.2
+	github.com/dgraph-io/ristretto/v2 v2.4.0
 	github.com/google/wire v0.6.0
 	github.com/shortlink-org/go-sdk/config v0.0.0-20260130191740-6ca93b747e53
 	github.com/shortlink-org/go-sdk/context v0.0.0-20260130191740-6ca93b747e53
@@ -13,6 +14,7 @@ require (
 	github.com/shortlink-org/go-sdk/graceful_shutdown v0.0.0-20260130191740-6ca93b747e53
 	github.com/shortlink-org/go-sdk/logger v0.0.0-20260130191740-6ca93b747e53
 	github.com/shortlink-org/go-sdk/observability v0.0.0-20260130191740-6ca93b747e53
+	github.com/shortlink-org/go-sdk/watermill v0.0.0-20260131202010-0fe4bdf647bf
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
 	go.opentelemetry.io/otel/trace v1.39.0
@@ -26,6 +28,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dnwe/otelsarama v0.0.0-20240308230250-9388d9d40bc0 // indirect
+	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/eapache/go-resiliency v1.7.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20230731223053-c322873962e3 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
@@ -34,7 +37,7 @@ require (
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
-	github.com/golang/snappy v0.0.4 // indirect
+	github.com/golang/snappy v1.0.0 // indirect
 	github.com/google/pprof v0.0.0-20251213031049-b05bdaca462f // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/grafana/otel-profiling-go v0.5.1 // indirect
@@ -54,7 +57,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
-	github.com/pierrec/lz4/v4 v4.1.21 // indirect
+	github.com/pierrec/lz4/v4 v4.1.22 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.23.2 // indirect
@@ -62,9 +65,10 @@ require (
 	github.com/prometheus/common v0.67.4 // indirect
 	github.com/prometheus/otlptranslator v1.0.0 // indirect
 	github.com/prometheus/procfs v0.19.2 // indirect
-	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
+	github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
 	github.com/shortlink-org/go-sdk/http v0.0.0-20260107222411-453281b10921 // indirect
+	github.com/sony/gobreaker v1.0.0 // indirect
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/cast v1.10.0 // indirect

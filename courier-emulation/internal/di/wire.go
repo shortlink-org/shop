@@ -20,6 +20,7 @@ import (
 	"github.com/shortlink-org/go-sdk/observability/profiling"
 	"github.com/shortlink-org/go-sdk/observability/tracing"
 
+	pkg_di "github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/di/pkg"
 	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/domain/services"
 	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/infrastructure/kafka"
 )
@@ -59,81 +60,14 @@ var CourierEmulationSet = wire.NewSet(
 	DefaultSet,
 
 	// Domain services
-	newRouteGenerator,
-	newCourierSimulator,
+	pkg_di.NewOSRMClient,
+	pkg_di.NewCourierSimulator,
 
 	// Infrastructure
-	newLocationPublisher,
+	pkg_di.NewLocationPublisher,
 
 	NewCourierEmulationService,
 )
-
-// newRouteGenerator creates the route generator service
-func newRouteGenerator(cfg *config.Config) *services.RouteGenerator {
-	osrmURL := cfg.GetString("OSRM_URL")
-	if osrmURL == "" {
-		osrmURL = "http://localhost:5000"
-	}
-
-	timeout := cfg.GetDuration("OSRM_TIMEOUT")
-	if timeout == 0 {
-		timeout = services.DefaultRouteGeneratorConfig().Timeout
-	}
-
-	return services.NewRouteGenerator(services.RouteGeneratorConfig{
-		OSRMBaseURL: osrmURL,
-		Timeout:     timeout,
-	})
-}
-
-// newLocationPublisher creates the Kafka location publisher
-func newLocationPublisher(cfg *config.Config, log logger.Logger) (*kafka.LocationPublisher, error) {
-	brokers := cfg.GetStringSlice("KAFKA_BROKERS")
-	if len(brokers) == 0 {
-		brokers = []string{"localhost:9092"}
-	}
-
-	publisher, err := kafka.NewLocationPublisher(kafka.PublisherConfig{
-		Brokers: brokers,
-	}, nil)
-
-	if err != nil {
-		log.Warn("Failed to create Kafka publisher, running without Kafka")
-		return nil, nil //nolint:nilerr // intentionally returning nil to continue without Kafka
-	}
-
-	return publisher, nil
-}
-
-// newCourierSimulator creates the courier simulator
-func newCourierSimulator(cfg *config.Config, routeGen *services.RouteGenerator, publisher *kafka.LocationPublisher) *services.CourierSimulator {
-	defaultCfg := services.DefaultCourierSimulatorConfig()
-
-	updateInterval := cfg.GetDuration("SIMULATION_UPDATE_INTERVAL")
-	if updateInterval == 0 {
-		updateInterval = defaultCfg.UpdateInterval
-	}
-
-	speedKmH := cfg.GetFloat64("SIMULATION_SPEED_KMH")
-	if speedKmH == 0 {
-		speedKmH = defaultCfg.SpeedKmH
-	}
-
-	timeMultiplier := cfg.GetFloat64("SIMULATION_TIME_MULTIPLIER")
-	if timeMultiplier == 0 {
-		timeMultiplier = defaultCfg.TimeMultiplier
-	}
-
-	return services.NewCourierSimulator(
-		services.CourierSimulatorConfig{
-			UpdateInterval: updateInterval,
-			SpeedKmH:       speedKmH,
-			TimeMultiplier: timeMultiplier,
-		},
-		routeGen,
-		publisher,
-	)
-}
 
 func NewCourierEmulationService(
 	// Common
@@ -158,12 +92,8 @@ func NewCourierEmulationService(
 		// Stop all couriers
 		simulator.Stop()
 
-		// Close Kafka publisher
-		if publisher != nil {
-			if err := publisher.Close(); err != nil {
-				log.Error(err.Error())
-			}
-		}
+		// Note: Kafka publisher cleanup is handled by Wire via the cleanup function
+		// returned by pkg_di.NewLocationPublisher
 	}
 
 	return &CourierEmulationService{

@@ -79,6 +79,9 @@ func (s *Store) Save(ctx context.Context, state *order.OrderState) error {
 		return err
 	}
 
+	// Invalidate L1 cache after successful save
+	s.invalidateCache(orderID.String())
+
 	return nil
 }
 
@@ -134,6 +137,11 @@ func (s *Store) saveDeliveryInfo(ctx context.Context, qtx *crud.Queries, orderID
 		return err
 	}
 	return qtx.InsertOrderDeliveryInfo(ctx, params)
+}
+
+// invalidateCache removes an order from the L1 cache.
+func (s *Store) invalidateCache(orderID string) {
+	s.cache.Del(orderID)
 }
 
 // float64ToNumeric converts a float64 to pgtype.Numeric.

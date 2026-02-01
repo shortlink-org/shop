@@ -8,7 +8,17 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/dgraph-io/ristretto/v2"
+
 	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/domain/vo"
+)
+
+const (
+	// Cache configuration for route caching
+	routeCacheNumCounters = 100_000   // track 100k routes
+	routeCacheMaxCost     = 50_000_00 // ~50MB
+	routeCacheBufferItems = 64
+	routeCacheTTL         = 24 * time.Hour // routes rarely change
 )
 
 // RouteGenerator errors
@@ -47,21 +57,62 @@ type RouteGenerator struct {
 	config     RouteGeneratorConfig
 	httpClient *http.Client
 	idCounter  int
+	cache      *ristretto.Cache[string, vo.Route]
 }
 
 // NewRouteGenerator creates a new RouteGenerator service.
-func NewRouteGenerator(config RouteGeneratorConfig) *RouteGenerator {
+func NewRouteGenerator(config RouteGeneratorConfig) (*RouteGenerator, error) {
+	cache, err := ristretto.NewCache(&ristretto.Config[string, vo.Route]{
+		NumCounters: routeCacheNumCounters,
+		MaxCost:     routeCacheMaxCost,
+		BufferItems: routeCacheBufferItems,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create route cache: %w", err)
+	}
+
 	return &RouteGenerator{
 		config: config,
 		httpClient: &http.Client{
 			Timeout: config.Timeout,
 		},
 		idCounter: 0,
+		cache:     cache,
+	}, nil
+}
+
+// Close closes the route generator and its cache.
+func (rg *RouteGenerator) Close() {
+	if rg.cache != nil {
+		rg.cache.Close()
 	}
 }
 
 // GenerateRoute generates a route between two locations using OSRM.
+// Routes are cached by origin+destination coordinates for 24 hours.
 func (rg *RouteGenerator) GenerateRoute(ctx context.Context, origin, destination vo.Location) (vo.Route, error) {
+	// Create cache key from origin and destination coordinates
+	cacheKey := fmt.Sprintf("%s:%s", origin.ToOSRMFormat(), destination.ToOSRMFormat())
+
+	// Check cache first
+	if cachedRoute, found := rg.cache.Get(cacheKey); found {
+		return cachedRoute, nil
+	}
+
+	// Cache miss - fetch from OSRM
+	route, err := rg.fetchRouteFromOSRM(ctx, origin, destination)
+	if err != nil {
+		return vo.Route{}, err
+	}
+
+	// Store in cache with TTL (cost=1 since all routes are similar size)
+	rg.cache.SetWithTTL(cacheKey, route, 1, routeCacheTTL)
+
+	return route, nil
+}
+
+// fetchRouteFromOSRM fetches a route from the OSRM API.
+func (rg *RouteGenerator) fetchRouteFromOSRM(ctx context.Context, origin, destination vo.Location) (vo.Route, error) {
 	url := fmt.Sprintf("%s/route/v1/driving/%s;%s?overview=full",
 		rg.config.OSRMBaseURL,
 		origin.ToOSRMFormat(),
@@ -92,9 +143,9 @@ func (rg *RouteGenerator) GenerateRoute(ctx context.Context, origin, destination
 		return vo.Route{}, ErrNoRouteFound
 	}
 
-	route := osrmResp.Routes[0]
+	osrmRoute := osrmResp.Routes[0]
 
-	polyline, err := vo.NewPolyline(route.Geometry)
+	polyline, err := vo.NewPolyline(osrmRoute.Geometry)
 	if err != nil {
 		return vo.Route{}, fmt.Errorf("invalid polyline: %w", err)
 	}
@@ -107,8 +158,8 @@ func (rg *RouteGenerator) GenerateRoute(ctx context.Context, origin, destination
 		origin,
 		destination,
 		polyline,
-		route.Distance,
-		time.Duration(route.Duration)*time.Second,
+		osrmRoute.Distance,
+		time.Duration(osrmRoute.Duration)*time.Second,
 	)
 }
 

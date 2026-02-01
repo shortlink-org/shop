@@ -15,8 +15,16 @@ import (
 )
 
 // Load retrieves an order by ID.
+// Uses L1 cache for frequently accessed orders.
 // Requires transaction in context (use UnitOfWork.Begin()).
 func (s *Store) Load(ctx context.Context, orderID uuid.UUID) (*order.OrderState, error) {
+	// Check L1 cache first
+	cacheKey := orderID.String()
+	if cachedOrder, found := s.cache.Get(cacheKey); found {
+		return cachedOrder, nil
+	}
+
+	// Cache miss - fetch from database
 	pgxTx := uow.FromContext(ctx)
 	if pgxTx == nil {
 		return nil, ErrTransactionRequired
@@ -51,7 +59,13 @@ func (s *Store) Load(ctx context.Context, orderID uuid.UUID) (*order.OrderState,
 		deliveryInfoRow = &deliveryRow
 	}
 
-	return dto.ToDomain(row, items, deliveryInfoRow), nil
+	result := dto.ToDomain(row, items, deliveryInfoRow)
+
+	// Store in L1 cache: cost = base + items * per-item cost
+	cost := int64(200 + len(items)*50)
+	s.cache.SetWithTTL(cacheKey, result, cost, cacheTTL)
+
+	return result, nil
 }
 
 // ListByCustomer retrieves all orders for a customer.

@@ -2,29 +2,45 @@ package policy_evaluator
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
+	"time"
 
+	"github.com/dgraph-io/ristretto/v2"
 	"github.com/open-policy-agent/opa/rego"
 
 	logger "github.com/shortlink-org/go-sdk/logger"
 	"github.com/shortlink-org/shop/pricer/internal/domain"
 )
 
+const (
+	// Cache configuration for OPA evaluation results
+	cacheNumCounters = 10_000    // track 10k evaluations
+	cacheMaxCost     = 1_000_000 // ~1MB (results are small float64 values)
+	cacheBufferItems = 64
+	cacheTTL         = 30 * time.Minute // pricing rules don't change frequently
+)
+
 // PolicyEvaluator interface as defined
 type PolicyEvaluator interface {
 	Evaluate(ctx context.Context, cart *domain.Cart, params map[string]interface{}) (float64, error)
+	Close()
 }
 
 // OPAEvaluator implements the PolicyEvaluator interface using OPA's rego package
+// with L1 Ristretto cache for evaluation results.
 type OPAEvaluator struct {
 	preparedQuery rego.PreparedEvalQuery
 	query         string
 	policyPath    string
+	cache         *ristretto.Cache[string, float64]
 }
 
 func NewOPAEvaluator(log logger.Logger, policyPath string, query string) (*OPAEvaluator, error) {
@@ -50,19 +66,45 @@ func NewOPAEvaluator(log logger.Logger, policyPath string, query string) (*OPAEv
 		return nil, fmt.Errorf("failed to prepare OPA query: %w", err)
 	}
 
+	// Initialize L1 cache
+	cache, err := ristretto.NewCache(&ristretto.Config[string, float64]{
+		NumCounters: cacheNumCounters,
+		MaxCost:     cacheMaxCost,
+		BufferItems: cacheBufferItems,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create evaluation cache: %w", err)
+	}
+
 	return &OPAEvaluator{
 		preparedQuery: preparedQuery,
 		query:         query,
 		policyPath:    policyPath,
+		cache:         cache,
 	}, nil
 }
 
-// Evaluate executes the OPA policy against the provided cart and parameters
+// Close closes the evaluator and releases resources.
+func (e *OPAEvaluator) Close() {
+	if e.cache != nil {
+		e.cache.Close()
+	}
+}
+
+// Evaluate executes the OPA policy against the provided cart and parameters.
+// Uses L1 cache to avoid re-evaluating identical inputs.
 func (e *OPAEvaluator) Evaluate(ctx context.Context, cart *domain.Cart, params map[string]interface{}) (float64, error) {
-	// Transform Cart to OPA input
+	// Generate cache key from cart and params
+	cacheKey := e.generateCacheKey(cart, params)
+
+	// Check L1 cache first
+	if cachedResult, found := e.cache.Get(cacheKey); found {
+		return cachedResult, nil
+	}
+
+	// Cache miss - evaluate the policy
 	input := transformCartToInput(cart, params)
 
-	// Evaluate the policy
 	rs, err := e.preparedQuery.Eval(ctx, rego.EvalInput(input))
 	if err != nil {
 		return 0.0, fmt.Errorf("OPA evaluation error: %w", err)
@@ -79,7 +121,42 @@ func (e *OPAEvaluator) Evaluate(ctx context.Context, cart *domain.Cart, params m
 		return 0.0, err
 	}
 
+	// Store in L1 cache (cost=1 since float64 is small)
+	e.cache.SetWithTTL(cacheKey, result, 1, cacheTTL)
+
 	return result, nil
+}
+
+// generateCacheKey creates a deterministic hash key from cart and params.
+func (e *OPAEvaluator) generateCacheKey(cart *domain.Cart, params map[string]interface{}) string {
+	h := sha256.New()
+
+	// Include policy path in the key (different policies = different results)
+	h.Write([]byte(e.policyPath))
+	h.Write([]byte(e.query))
+
+	// Hash cart items in a deterministic order
+	for _, item := range cart.Items {
+		h.Write([]byte(item.GoodID.String()))
+		h.Write([]byte(fmt.Sprintf("%d", item.Quantity)))
+		h.Write([]byte(item.Price.String()))
+		h.Write([]byte(item.Brand))
+	}
+
+	// Hash params in sorted order for determinism
+	if params != nil {
+		keys := make([]string, 0, len(params))
+		for k := range params {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			h.Write([]byte(k))
+			h.Write([]byte(fmt.Sprintf("%v", params[k])))
+		}
+	}
+
+	return hex.EncodeToString(h.Sum(nil))
 }
 
 // transformCartToInput converts the domain.Cart to the input format expected by OPA
