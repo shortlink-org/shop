@@ -190,7 +190,7 @@ UNFOLD = {
                     {
                         "title": _("Couriers"),
                         "icon": "local_shipping",
-                        "link": reverse_lazy("couriers:courier_list"),
+                        "link": reverse_lazy("couriers:list"),
                     },
                 ],
             },
@@ -266,7 +266,7 @@ UNFOLD = {
                 {
                     "title": _("Couriers"),
                     "icon": "local_shipping",
-                    "link": reverse_lazy("couriers:courier_list"),
+                    "link": reverse_lazy("couriers:list"),
                 },
             ],
         },
@@ -284,7 +284,7 @@ UNFOLD = {
                 {
                     "title": _("Couriers"),
                     "icon": "local_shipping",
-                    "link": reverse_lazy("couriers:courier_list"),
+                    "link": reverse_lazy("couriers:list"),
                 },
             ],
         },
