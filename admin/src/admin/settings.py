@@ -134,12 +134,17 @@ SECURE_CSP = {
     "script-src": [
         CSP.SELF,
         CSP.NONCE,
+        CSP.UNSAFE_INLINE,  # Tailwind CDN injects inline scripts at runtime
         CSP.UNSAFE_EVAL,
         "https://cdn.tailwindcss.com",
         "https://cdn.jsdelivr.net",
         "https://unpkg.com",  # Leaflet
     ],
-    "style-src": [CSP.SELF, CSP.UNSAFE_INLINE],  # Tailwind requires unsafe-inline for styles
+    "style-src": [
+        CSP.SELF,
+        CSP.UNSAFE_INLINE,  # Tailwind requires unsafe-inline for styles
+        "https://unpkg.com",  # Leaflet CSS
+    ],
     "img-src": [
         CSP.SELF,
         "data:",
