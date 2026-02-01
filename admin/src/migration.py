@@ -1,34 +1,24 @@
 #!/usr/bin/env python
-"""Django's command-line utility for administrative tasks."""
+"""Lightweight Django migration runner.
 
-import logging
+This script is optimized for running migrations in init containers.
+It uses settings_migration.py by default for faster startup.
+
+To use full settings, set DJANGO_SETTINGS_MODULE=admin.settings
+"""
+
 import os
 import sys
 
-from opentelemetry.instrumentation.django import DjangoInstrumentor
-from opentelemetry.instrumentation.requests import RequestsInstrumentor
-
-from admin.otel_logging import CustomLogRecord
-
-logging.setLogRecordFactory(CustomLogRecord)
-
 
 def main():
-    """Run administrative tasks."""
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "admin.settings")
+    """Run migration tasks with minimal overhead."""
+    # Use lightweight settings by default for migrations
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "admin.settings_migration")
 
-    try:
-        from django.core.management import execute_from_command_line
-    except ImportError as exc:
-        raise ImportError(
-            "Couldn't import Django. Are you sure it's installed and "
-            "available on your PYTHONPATH environment variable? Did you "
-            "forget to activate a virtual environment?"
-        ) from exc
+    from django.core.management import execute_from_command_line
+
     execute_from_command_line(sys.argv)
-
-    DjangoInstrumentor().instrument()
-    RequestsInstrumentor().instrument()
 
 
 if __name__ == "__main__":

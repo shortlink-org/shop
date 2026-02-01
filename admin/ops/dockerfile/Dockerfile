@@ -56,7 +56,8 @@ RUN uv sync --frozen --no-install-project
 COPY --chown=shop:shop . .
 
 # Collect static files for WhiteNoise
-RUN python src/manage.py collectstatic --noinput
+# Use uv run to ensure correct virtual environment
+RUN uv run python src/manage.py collectstatic --noinput
 
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=20s \
   CMD curl -f http://localhost:8000/healthz || exit 1

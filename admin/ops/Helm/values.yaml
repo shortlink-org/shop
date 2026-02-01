@@ -162,7 +162,9 @@ initContainers:
     image:
       repository: registry.gitlab.com/shortlink-org/shop/admin
       tag: latest
-    command: ["python", "src/migration.py", "migrate"]
+    # Uses settings_migration.py by default for faster startup (no Redis, minimal apps)
+    # --skip-checks skips system checks for additional speed
+    command: ["python", "src/migration.py", "migrate", "--skip-checks"]
 
     envSecret:
       - name: POSTGRES_DB
@@ -184,11 +186,14 @@ initContainers:
 
 # ==============================================================================
 jobs:
-  - name: migration
+  - name: loaddata
     image:
       repository: registry.gitlab.com/shortlink-org/shop/admin
       tag: latest
+    # loaddata needs full settings for model serialization
     command: ["python", "src/migration.py", "loaddata", "fixtures/good.json"]
+    env:
+      DJANGO_SETTINGS_MODULE: admin.settings
 
     envSecret:
       - name: POSTGRES_DB
