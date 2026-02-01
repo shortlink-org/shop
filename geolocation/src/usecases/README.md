@@ -9,24 +9,24 @@ Geolocation Service предоставляет функциональность 
 ### UC-1: Save Location
 **Описание:** Сохранение текущей геолокации курьера. Обновляет текущую позицию и добавляет запись в историю.
 
-**См.:** [save_location/README.md](./save_location/README.md)
+**См.:** [command/save_location/README.md](./command/save_location/README.md)
 
 ### UC-2: Get Courier Locations
 **Описание:** Получение текущих геолокаций одного или нескольких курьеров одновременно. Поддерживает запрос как одного курьера (для простых случаев), так и множества курьеров (для диспетчеризации и массовых операций).
 
-**См.:** [get_courier_locations/README.md](./get_courier_locations/README.md)
+**См.:** [query/get_courier_locations/README.md](./query/get_courier_locations/README.md)
 
 **Примечание:** UC-2 заменил отдельный use case для одного курьера, так как это подмножество общего случая. Для получения локации одного курьера просто передайте массив с одним элементом.
 
 ### UC-3: Get Location History
 **Описание:** Получение истории геолокаций курьера за указанный период времени.
 
-**См.:** [get_location_history/README.md](./get_location_history/README.md)
+**См.:** [query/get_location_history/README.md](./query/get_location_history/README.md)
 
 ### UC-4: Create Geofence
 **Описание:** Создание геозоны (geofence) — виртуальной географической границы для отслеживания входа/выхода курьеров. Геозона может быть кругом, многоугольником или прямоугольником. При пересечении границы могут выполняться автоматические действия (уведомления, события, изменение статуса).
 
-**См.:** [create_geofence/README.md](./create_geofence/README.md)
+**См.:** [command/create_geofence/README.md](./command/create_geofence/README.md)
 
 **Что такое Geofence?** Геозона — это виртуальная граница на карте, которая отслеживает, когда курьер входит или выходит из определенной области. Используется для:
 - Определения рабочих зон курьеров
@@ -110,6 +110,6 @@ message LocationHistoryEntry {
 
 ## Связанные документы
 
-- [Geolocation Service README](../README.md)
-- [Delivery Service Use Cases](../../delivery/usecases/README.md)
+- [Geolocation Service README](../../README.md)
+- [Delivery Service Use Cases](../../../delivery/src/usecases/README.md)
 
