@@ -68,16 +68,14 @@ deploy:
 
 # ==============================================================================
 # Service configuration
+# NOTE: Tailcall exposes both GraphQL and Prometheus metrics on the same port 8101
+# - GraphQL: /graphql
+# - Metrics: /metrics
 service:
   type: ClusterIP
   ports:
     - name: http
       port: 8101
-      protocol: TCP
-      public: false
-    - name: metrics
-      port: 8101
-      targetPort: 8101
       protocol: TCP
       public: false
 

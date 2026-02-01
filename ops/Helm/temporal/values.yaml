@@ -66,6 +66,10 @@ temporal:
   server:
     replicaCount: 1
 
+    # Disable Istio sidecar injection - Temporal uses plain gRPC without mTLS
+    podAnnotations:
+      sidecar.istio.io/inject: "false"
+
     # Resource configuration for Temporal server components
     # Requests are minimal for development, limits prevent runaway usage
     resources:
@@ -107,6 +111,10 @@ temporal:
           enabled: true
 
   web:
+    # Disable Istio sidecar injection
+    podAnnotations:
+      sidecar.istio.io/inject: "false"
+
     # Resource configuration for Temporal Web UI
     resources:
       requests:
@@ -124,6 +132,10 @@ temporal:
     enabled: true
     replicas: 1
 
+    # Disable Istio sidecar injection
+    podAnnotations:
+      sidecar.istio.io/inject: "false"
+
     # Resource configuration for Elasticsearch (visibility store)
     resources:
       requests:
@@ -135,6 +147,10 @@ temporal:
 
   cassandra:
     enabled: true
+
+    # Disable Istio sidecar injection
+    podAnnotations:
+      sidecar.istio.io/inject: "false"
 
     persistence:
       storageClass: local-path
