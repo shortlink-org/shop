@@ -7,9 +7,9 @@ import (
 
 	"github.com/shortlink-org/go-sdk/logger"
 
-	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	cartItemsv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/items/v1"
 	orderDomain "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
+	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 )
 
 // Result represents the result of creating an order from a cart.

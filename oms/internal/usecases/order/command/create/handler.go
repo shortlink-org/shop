@@ -7,8 +7,8 @@ import (
 
 	"github.com/shortlink-org/go-sdk/logger"
 
-	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	orderv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
+	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 )
 
 // Handler handles CreateOrder commands.
