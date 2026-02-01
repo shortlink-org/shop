@@ -28,12 +28,10 @@ EXPOSE 8000
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-      curl tini sqlite3 git \
+      curl sqlite3 git \
       # GeoDjango dependencies (GDAL, GEOS, PROJ)
       gdal-bin libgdal-dev libgeos-dev libproj-dev && \
-    rm -rf /var/lib/apt/lists/* && \
-    # Verify GDAL libraries are installed correctly
-    ls -la /usr/lib/x86_64-linux-gnu/libgdal* /usr/lib/x86_64-linux-gnu/libgeos_c* || true
+    rm -rf /var/lib/apt/lists/*
 
 # GDAL/GEOS library paths for Django GeoDjango (Debian x86_64)
 # These must match the symlinks created by libgdal-dev
@@ -56,9 +54,7 @@ RUN uv sync --frozen --no-install-project
 
 COPY --chown=shop:shop . .
 
-ENTRYPOINT ["/usr/bin/tini", "--"]
-
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=20s \
   CMD curl -f http://localhost:8000/healthz || exit 1
 
-CMD ["gunicorn", "src.wsgi:application", "-b", "0.0.0.0:8000", "--workers", "2", "--threads", "4", "--timeout", "60", "--graceful-timeout", "30"]
+CMD ["/app/.venv/bin/gunicorn", "src.wsgi:application", "-b", "0.0.0.0:8000", "--workers", "2", "--threads", "4", "--timeout", "60", "--graceful-timeout", "30"]
