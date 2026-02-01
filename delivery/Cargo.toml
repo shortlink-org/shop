@@ -32,6 +32,9 @@ sea-orm = { version = "1.1", features = [
 # Redis
 redis = { version = "0.27", features = ["tokio-comp", "connection-manager"] }
 
+# Kafka
+rdkafka = { version = "0.36", features = ["tokio"] }
+
 # Common utilities
 uuid = { version = "1", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }

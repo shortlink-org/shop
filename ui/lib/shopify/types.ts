@@ -131,64 +131,86 @@ export type ShopifyProduct = {
   name: string;
   price: number;
   description: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
+  created_at?: string;
+  updated_at?: string;
 };
 
 export type ShopifyCartOperation = {
   data: {
-    cart: ShopifyCart;
+    getCart: {
+      state: {
+        cartId?: string | null;
+        customerId?: string | null;
+        items?: Array<{
+          goodId?: string | null;
+          quantity?: number | null;
+        }> | null;
+      };
+    };
   };
   variables: {
-    cartId: string;
-    customerId: string;
+    customerId?: string;
   };
 };
 
 export type ShopifyCreateCartOperation = {
-  data: { cartCreate: { cart: ShopifyCart } };
+  data: {
+    addItem: {
+      _?: boolean | null;
+    } | null;
+  };
 };
 
 export type ShopifyAddToCartOperation = {
   data: {
-    cartLinesAdd: {
-      cart: ShopifyCart;
-    };
+    addItem: {
+      _?: boolean | null;
+    } | null;
   };
   variables: {
-    cartId: string;
-    lines: {
-      merchandiseId: string;
-      quantity: number;
-    }[];
+    addRequest: {
+      customerId: string;
+      items: {
+        goodId: string;
+        quantity: number;
+      }[];
+    };
   };
 };
 
 export type ShopifyRemoveFromCartOperation = {
   data: {
-    cartLinesRemove: {
-      cart: ShopifyCart;
-    };
+    removeItem: {
+      _?: boolean | null;
+    } | null;
   };
   variables: {
-    cartId: string;
-    lineIds: string[];
+    removeRequest: {
+      customerId: string;
+      items: {
+        goodId: string;
+        quantity: number;
+      }[];
+    };
   };
 };
 
 export type ShopifyUpdateCartOperation = {
   data: {
-    cartLinesUpdate: {
-      cart: ShopifyCart;
-    };
+    addItem: {
+      _?: boolean | null;
+    } | null;
   };
   variables: {
-    cartId: string;
-    lines: {
-      id: string;
-      merchandiseId: string;
-      quantity: number;
-    }[];
+    addRequest: {
+      customerId: string;
+      items: {
+        goodId: string;
+        quantity: number;
+      }[];
+    };
   };
 };
 
@@ -254,21 +276,31 @@ export type ShopifyProductOperation = {
 
 export type ShopifyProductRecommendationsOperation = {
   data: {
-    productRecommendations: ShopifyProduct[];
+    goods: {
+      count: number;
+      next: string | null;
+      previous: string | null;
+      results: ShopifyProduct[];
+    };
   };
   variables: {
-    id: number;
+    page?: number;
   };
 };
 
 export type ShopifyProductsOperation = {
   data: {
-    products: Connection<ShopifyProduct>;
-    results: ShopifyProduct[];
+    goods: {
+      count: number;
+      next: string | null;
+      previous: string | null;
+      results: ShopifyProduct[];
+    };
   };
   variables: {
     query?: string;
     reverse?: boolean;
     sortKey?: string;
+    page?: number;
   };
 };

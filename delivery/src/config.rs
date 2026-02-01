@@ -42,6 +42,14 @@ impl Config {
     /// Optional env vars:
     /// - GRPC_PORT: gRPC server port (default: 50051)
     /// - RUST_LOG: Log level (default: "info")
+    ///
+    /// Kafka env vars (read by KafkaPublisherConfig/LocationConsumerConfig):
+    /// - KAFKA_BROKERS: Kafka bootstrap servers (default: localhost:9092)
+    /// - KAFKA_CLIENT_ID: Kafka client ID (default: delivery-service)
+    /// - KAFKA_CONSUMER_GROUP: Consumer group for location updates (default: delivery-service)
+    /// - KAFKA_MESSAGE_TIMEOUT_MS: Message timeout (default: 5000)
+    /// - KAFKA_REQUEST_TIMEOUT_MS: Request timeout (default: 5000)
+    /// - KAFKA_LOCATION_TOPIC: Topic for location updates (default: courier.location.updates)
     pub fn from_env() -> Result<Self, ConfigError> {
         // Load .env file if present (ignore errors)
         let _ = dotenvy::dotenv();

@@ -177,10 +177,10 @@ func TestStatusPublisher_Close(t *testing.T) {
 
 // Ensure topic constants are correct
 func TestTopicConstants(t *testing.T) {
-	assert.Equal(t, "delivery.command.pick_up_order", TopicPickUpOrder)
-	assert.Equal(t, "delivery.command.deliver_order", TopicDeliverOrder)
-	assert.Equal(t, "courier.location.updates", TopicCourierLocation)
-	assert.Equal(t, "delivery.order.assigned", TopicOrderAssigned)
+	assert.Equal(t, "delivery.command.pick_up_order.v1", TopicPickUpOrder)
+	assert.Equal(t, "delivery.command.deliver_order.v1", TopicDeliverOrder)
+	assert.Equal(t, "delivery.courier.location_received.v1", TopicCourierLocation)
+	assert.Equal(t, "delivery.order.assigned.v1", TopicOrderAssigned)
 }
 
 // Ensure status constants are correct

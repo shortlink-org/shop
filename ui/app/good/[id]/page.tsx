@@ -17,7 +17,11 @@ export async function generateMetadata(props: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const params = await props.params;
-  const good = await getGood(Number(params.id));
+  const id = Number(params.id);
+
+  if (!Number.isFinite(id)) return notFound();
+
+  const good = await getGood(id);
 
   if (!good) return notFound();
 
@@ -29,7 +33,11 @@ export async function generateMetadata(props: {
 
 export default async function GoodPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
-  const good = await getGood(Number(params.id));
+  const id = Number(params.id);
+
+  if (!Number.isFinite(id)) return notFound();
+
+  const good = await getGood(id);
 
   if (!good) return notFound();
 
@@ -39,10 +47,9 @@ export default async function GoodPage(props: { params: Promise<{ id: string }> 
     name: good.name,
     description: good.description,
     offers: {
-      '@type': 'AggregateOffer',
-      priceCurrency: good.price,
-      highPrice: good.price,
-      lowPrice: good.price,
+      '@type': 'Offer',
+      priceCurrency: 'USD',
+      price: good.price,
     }
   };
 
@@ -104,12 +111,12 @@ async function RelatedGoods({ id }: { id: number }) {
       <ul className="flex w-full gap-4 overflow-x-auto pt-1">
         {relatedGoods.map((good) => (
           <li
-            key={good.name}
+            key={good.id}
             className="aspect-square w-full flex-none min-[475px]:w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5"
           >
             <Link
               className="relative h-full w-full"
-              href={`/good/${good.name}`}
+              href={`/good/${good.id}`}
               prefetch={true}
             >
               <GridTileImage

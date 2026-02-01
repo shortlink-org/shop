@@ -1,0 +1,24 @@
+{{- if .Values.kafka.topics.enabled }}
+{{- range $name, $topic := .Values.kafka.topics.list }}
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Values.kafka.namespace | default "kafka" }}
+  labels:
+    strimzi.io/cluster: {{ $.Values.kafka.clusterName | default "shortlink" }}
+    app.kubernetes.io/name: {{ $.Chart.Name }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+spec:
+  partitions: {{ $topic.partitions | default 3 }}
+  replicas: {{ $topic.replicas | default 2 }}
+  {{- if $topic.config }}
+  config:
+    {{- range $key, $value := $topic.config }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- end }}

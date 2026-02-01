@@ -11,7 +11,8 @@ import (
 
 const (
 	// TopicCourierLocation is the Kafka topic for courier location events.
-	TopicCourierLocation = "courier.location.updates"
+	// Format: {domain}.{entity}.{event}.v1
+	TopicCourierLocation = "delivery.courier.location_received.v1"
 )
 
 // LocationPublisher publishes courier location events to Kafka.

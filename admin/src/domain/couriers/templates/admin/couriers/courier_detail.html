@@ -307,7 +307,7 @@
 {% if courier.current_location %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
+<script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
     var map = L.map('courier-map').setView([{{ courier.current_location.latitude }}, {{ courier.current_location.longitude }}], 15);
 
@@ -317,7 +317,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     L.marker([{{ courier.current_location.latitude }}, {{ courier.current_location.longitude }}])
         .addTo(map)
-        .bindPopup('<strong>{{ courier.name }}</strong><br>{{ courier.status }}')
+        .bindPopup('<strong>{{ courier.name|escapejs }}</strong><br>{{ courier.status|escapejs }}')
         .openPopup();
 });
 </script>

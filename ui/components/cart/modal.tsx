@@ -147,8 +147,8 @@ export default function CartModal() {
                               <div className="flex h-16 flex-col justify-between">
                                 <Price
                                   className="flex justify-end space-y-2 text-right text-sm"
-                                  amount={100}
-                                  currencyCode={"USD"}
+                                  amount={item.cost.totalAmount.amount}
+                                  currencyCode={item.cost.totalAmount.currencyCode}
                                 />
                                 <div className="ml-auto flex h-9 flex-row items-center rounded-full border border-neutral-200 dark:border-neutral-700">
                                   <EditItemQuantityButton
@@ -176,8 +176,8 @@ export default function CartModal() {
                       <p>Taxes</p>
                       <Price
                         className="text-right text-base text-black dark:text-white"
-                        amount={100}
-                        currencyCode={"USD"}
+                        amount={cart?.cost?.totalTaxAmount?.amount ?? 0}
+                        currencyCode={cart?.cost?.totalTaxAmount?.currencyCode ?? 'USD'}
                       />
                     </div>
                     <div className="mb-3 flex items-center justify-between border-b border-neutral-200 pb-1 pt-1 dark:border-neutral-700">
@@ -188,8 +188,8 @@ export default function CartModal() {
                       <p>Total</p>
                       <Price
                         className="text-right text-base text-black dark:text-white"
-                        amount={100}
-                        currencyCode={"USD"}
+                        amount={cart?.cost?.totalAmount?.amount ?? 0}
+                        currencyCode={cart?.cost?.totalAmount?.currencyCode ?? 'USD'}
                       />
                     </div>
                   </div>

@@ -99,7 +99,7 @@ class TestCourierListView:
 
     def test_list_requires_staff(self, client):
         """Anonymous users should be redirected."""
-        response = client.get("/admin/couriers/")
+        response = client.get(reverse("couriers:list"))
         assert response.status_code == 302
         assert "login" in response.url or "admin" in response.url
 
@@ -112,7 +112,7 @@ class TestCourierListView:
             mock_client.get_courier_pool.return_value = sample_pool_result
             mock_get_client.return_value = mock_client
 
-            response = authenticated_client.get("/admin/couriers/")
+            response = authenticated_client.get(reverse("couriers:list"))
 
         assert response.status_code == 200
         assert "couriers" in response.context
@@ -127,7 +127,8 @@ class TestCourierListView:
             mock_get_client.return_value = mock_client
 
             response = authenticated_client.get(
-                "/admin/couriers/?status=FREE&transport_type=BICYCLE"
+                reverse("couriers:list"),
+                {"status": "FREE", "transport_type": "BICYCLE"},
             )
 
         assert response.status_code == 200
@@ -147,7 +148,8 @@ class TestCourierListView:
             mock_get_client.return_value = mock_client
 
             response = authenticated_client.get(
-                "/admin/couriers/?page=2&page_size=50"
+                reverse("couriers:list"),
+                {"page": "2", "page_size": "50"},
             )
 
         assert response.status_code == 200
@@ -166,7 +168,7 @@ class TestCourierListView:
             )
             mock_get_client.return_value = mock_client
 
-            response = authenticated_client.get("/admin/couriers/")
+            response = authenticated_client.get(reverse("couriers:list"))
 
         assert response.status_code == 200
         assert response.context["couriers"] == []
@@ -183,7 +185,7 @@ class TestCourierListView:
             mock_client.get_courier_pool.return_value = empty_pool_result
             mock_get_client.return_value = mock_client
 
-            response = authenticated_client.get("/admin/couriers/")
+            response = authenticated_client.get(reverse("couriers:list"))
 
         assert response.status_code == 200
         assert response.context["total_count"] == 0
@@ -195,7 +197,9 @@ class TestCourierDetailView:
 
     def test_detail_requires_staff(self, client):
         """Anonymous users should be redirected."""
-        response = client.get("/admin/couriers/test-id/")
+        response = client.get(
+            reverse("couriers:detail", kwargs={"courier_id": "test-id"})
+        )
         assert response.status_code == 302
 
     def test_detail_renders_courier(self, authenticated_client, sample_courier):
@@ -208,7 +212,10 @@ class TestCourierDetailView:
             mock_get_client.return_value = mock_client
 
             response = authenticated_client.get(
-                "/admin/couriers/test-courier-id-123/"
+                reverse(
+                    "couriers:detail",
+                    kwargs={"courier_id": "test-courier-id-123"},
+                )
             )
 
         assert response.status_code == 200
@@ -223,7 +230,9 @@ class TestCourierDetailView:
             mock_client.get_courier.return_value = None
             mock_get_client.return_value = mock_client
 
-            response = authenticated_client.get("/admin/couriers/nonexistent/")
+            response = authenticated_client.get(
+                reverse("couriers:detail", kwargs={"courier_id": "nonexistent"})
+            )
 
         assert response.status_code == 302
 
@@ -238,7 +247,9 @@ class TestCourierDetailView:
             )
             mock_get_client.return_value = mock_client
 
-            response = authenticated_client.get("/admin/couriers/test-id/")
+            response = authenticated_client.get(
+                reverse("couriers:detail", kwargs={"courier_id": "test-id"})
+            )
 
         assert response.status_code == 302
 
@@ -249,7 +260,7 @@ class TestCourierRegisterView:
 
     def test_register_get_renders_form(self, authenticated_client):
         """GET should render registration form."""
-        response = authenticated_client.get("/admin/couriers/register/")
+        response = authenticated_client.get(reverse("couriers:register"))
 
         assert response.status_code == 200
         assert "form" in response.context
@@ -264,7 +275,7 @@ class TestCourierRegisterView:
             mock_get_client.return_value = mock_client
 
             response = authenticated_client.post(
-                "/admin/couriers/register/",
+                reverse("couriers:register"),
                 {
                     "name": "New Courier",
                     "phone": "+49123456789",
@@ -284,7 +295,7 @@ class TestCourierRegisterView:
     def test_register_post_invalid_form(self, authenticated_client):
         """Invalid POST should re-render form with errors."""
         response = authenticated_client.post(
-            "/admin/couriers/register/",
+            reverse("couriers:register"),
             {
                 "name": "",  # Required field missing
                 "phone": "+49123456789",
@@ -314,7 +325,7 @@ class TestCourierRegisterView:
             mock_get_client.return_value = mock_client
 
             response = authenticated_client.post(
-                "/admin/couriers/register/",
+                reverse("couriers:register"),
                 {
                     "name": "New Courier",
                     "phone": "+49123456789",
@@ -347,7 +358,7 @@ class TestCourierActivateView:
             mock_get_client.return_value = mock_client
 
             response = authenticated_client.post(
-                "/admin/couriers/test-id/activate/"
+                reverse("couriers:activate", kwargs={"courier_id": "test-id"})
             )
 
         assert response.status_code == 302
@@ -365,7 +376,7 @@ class TestCourierActivateView:
             mock_get_client.return_value = mock_client
 
             response = authenticated_client.post(
-                "/admin/couriers/test-id/activate/"
+                reverse("couriers:activate", kwargs={"courier_id": "test-id"})
             )
 
         assert response.status_code == 302
@@ -387,7 +398,7 @@ class TestCourierDeactivateView:
             mock_get_client.return_value = mock_client
 
             response = authenticated_client.post(
-                "/admin/couriers/test-id/deactivate/",
+                reverse("couriers:deactivate", kwargs={"courier_id": "test-id"}),
                 {"reason": "End of shift"},
             )
 
@@ -408,7 +419,7 @@ class TestCourierArchiveView:
             mock_get_client.return_value = mock_client
 
             response = authenticated_client.post(
-                "/admin/couriers/test-id/archive/",
+                reverse("couriers:archive", kwargs={"courier_id": "test-id"}),
                 {"confirm": "on", "reason": "Resigned"},
             )
 
@@ -417,7 +428,7 @@ class TestCourierArchiveView:
     def test_archive_without_confirm(self, authenticated_client):
         """Archive without confirm should show error."""
         response = authenticated_client.post(
-            "/admin/couriers/test-id/archive/",
+            reverse("couriers:archive", kwargs={"courier_id": "test-id"}),
             {"reason": "Resigned"},
         )
 
@@ -440,7 +451,7 @@ class TestCourierUpdateContactView:
             mock_get_client.return_value = mock_client
 
             response = authenticated_client.post(
-                "/admin/couriers/test-id/update-contact/",
+                reverse("couriers:update_contact", kwargs={"courier_id": "test-id"}),
                 {"phone": "+49999999999"},
             )
 
@@ -449,7 +460,7 @@ class TestCourierUpdateContactView:
     def test_update_contact_empty_form(self, authenticated_client):
         """Empty form should show error."""
         response = authenticated_client.post(
-            "/admin/couriers/test-id/update-contact/",
+            reverse("couriers:update_contact", kwargs={"courier_id": "test-id"}),
             {},
         )
 
@@ -472,7 +483,7 @@ class TestCourierUpdateScheduleView:
             mock_get_client.return_value = mock_client
 
             response = authenticated_client.post(
-                "/admin/couriers/test-id/update-schedule/",
+                reverse("couriers:update_schedule", kwargs={"courier_id": "test-id"}),
                 {"work_zone": "Berlin-Kreuzberg"},
             )
 
@@ -493,7 +504,7 @@ class TestCourierChangeTransportView:
             mock_get_client.return_value = mock_client
 
             response = authenticated_client.post(
-                "/admin/couriers/test-id/change-transport/",
+                reverse("couriers:change_transport", kwargs={"courier_id": "test-id"}),
                 {"transport_type": "CAR"},
             )
 
@@ -515,7 +526,7 @@ class TestCourierMapView:
             mock_client.get_courier_pool.return_value = sample_pool_result
             mock_get_client.return_value = mock_client
 
-            response = authenticated_client.get("/admin/couriers/map/")
+            response = authenticated_client.get(reverse("couriers:map"))
 
         assert response.status_code == 200
         assert "couriers" in response.context
@@ -531,7 +542,7 @@ class TestCourierMapView:
             )
             mock_get_client.return_value = mock_client
 
-            response = authenticated_client.get("/admin/couriers/map/")
+            response = authenticated_client.get(reverse("couriers:map"))
 
         assert response.status_code == 200
         assert response.context["couriers"] == []

@@ -110,7 +110,7 @@ function cartReducer(state: Cart | undefined, action: CartAction): Cart {
       const { merchandiseId, updateType } = action.payload;
       const updatedLines = currentCart.lines
         .map((item) =>
-          item.id === merchandiseId ? updateCartItem(item, updateType) : item
+          item.merchandise.id === merchandiseId ? updateCartItem(item, updateType) : item
         )
         .filter(Boolean) as CartItem[];
 
@@ -120,8 +120,9 @@ function cartReducer(state: Cart | undefined, action: CartAction): Cart {
           lines: [],
           totalQuantity: 0,
           cost: {
-            ...currentCart.cost,
-            totalAmount: { amount: 0, currencyCode: 'USD' }
+            subtotalAmount: { amount: 0, currencyCode: 'USD' },
+            totalAmount: { amount: 0, currencyCode: 'USD' },
+            totalTaxAmount: { amount: 0, currencyCode: 'USD' }
           }
         };
       }

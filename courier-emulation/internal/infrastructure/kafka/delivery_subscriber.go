@@ -15,7 +15,8 @@ import (
 
 const (
 	// TopicOrderAssigned is the Kafka topic for order assignment events from Delivery Service.
-	TopicOrderAssigned = "delivery.order.assigned"
+	// Format: {domain}.{entity}.{event}.v1
+	TopicOrderAssigned = "delivery.order.assigned.v1"
 	// ConsumerGroupCourierEmulation is the consumer group for this service.
 	ConsumerGroupCourierEmulation = "courier-emulation"
 )

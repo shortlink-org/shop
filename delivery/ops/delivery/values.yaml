@@ -105,6 +105,14 @@ deploy:
     # Geolocation Service (for courier locations)
     GEOLOCATION_SERVICE_HOST: shortlink-shop-geolocation.shortlink-shop.svc.cluster.local:50051
 
+    # Kafka configuration (for event publishing and location consuming)
+    KAFKA_BROKERS: shortlink-kafka-bootstrap.kafka.svc.cluster.local:9092
+    KAFKA_CLIENT_ID: delivery-service
+    KAFKA_CONSUMER_GROUP: delivery-service
+    KAFKA_MESSAGE_TIMEOUT_MS: "5000"
+    KAFKA_REQUEST_TIMEOUT_MS: "5000"
+    KAFKA_LOCATION_TOPIC: delivery.courier.location_received.v1
+
     # Store configuration
     STORE_TYPE: postgres
     STORE_REDIS_URI: redis-master.shortlink-shop:6379
@@ -223,5 +231,113 @@ networkPolicy:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: temporal
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kafka
+
+  egress:
+    - to:
+        # Allow egress to Kafka
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kafka
+        # Allow egress to Redis
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: shortlink-shop
+        # Allow egress to PostgreSQL (Crunchy)
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: shortlink-shop
+
   policyTypes:
     - Ingress
+    - Egress
+
+# ==============================================================================
+# Strimzi Kafka Topics
+# ref: https://strimzi.io/docs/operators/latest/configuring.html#type-KafkaTopic-reference
+kafka:
+  # Strimzi Kafka cluster name
+  clusterName: shortlink
+  # Namespace where Kafka is deployed
+  namespace: kafka
+
+  topics:
+    enabled: true
+    list:
+      # =============================================================
+      # CONSOLIDATED EVENT TOPICS (9 -> 4 topics)
+      # =============================================================
+
+      # Package status changes (consolidated)
+      # Events: PackageAccepted, PackageInTransit, PackageDelivered,
+      #         PackageNotDelivered, PackageRequiresHandling
+      # Key: package_id (ensures ordering per package)
+      delivery.package.status.v1:
+        partitions: 3
+        replicas: 1
+        config:
+          retention.ms: "604800000"        # 7 days
+          cleanup.policy: "delete"
+
+      # Package assignment to courier (separate - business-critical)
+      # Consumed by: courier-emulation, OMS
+      delivery.order.assigned.v1:
+        partitions: 3
+        replicas: 1
+        config:
+          retention.ms: "604800000"        # 7 days
+          cleanup.policy: "delete"
+
+      # Courier lifecycle events (consolidated)
+      # Events: CourierRegistered, CourierStatusChanged
+      # Key: courier_id
+      delivery.courier.events.v1:
+        partitions: 3
+        replicas: 1
+        config:
+          retention.ms: "604800000"        # 7 days
+          cleanup.policy: "delete"
+
+      # Courier location updates (separate - high frequency)
+      # Key: courier_id
+      delivery.courier.location.v1:
+        partitions: 3
+        replicas: 1
+        config:
+          retention.ms: "86400000"         # 1 day (high volume)
+          cleanup.policy: "delete"
+
+      # =============================================================
+      # INCOMING TOPICS (from other services)
+      # =============================================================
+
+      # Courier location updates FROM courier-emulation service
+      # (consumed by delivery service)
+      delivery.courier.location_received.v1:
+        partitions: 3
+        replicas: 1
+        config:
+          retention.ms: "86400000"         # 1 day
+          cleanup.policy: "delete"
+
+      # =============================================================
+      # COMMAND TOPICS
+      # =============================================================
+
+      # Topic for pickup order commands (from courier-emulation)
+      delivery.command.pick_up_order.v1:
+        partitions: 3
+        replicas: 1
+        config:
+          retention.ms: "604800000"
+          cleanup.policy: "delete"
+
+      # Topic for deliver order commands (from courier-emulation)
+      delivery.command.deliver_order.v1:
+        partitions: 3
+        replicas: 1
+        config:
+          retention.ms: "604800000"
+          cleanup.policy: "delete"

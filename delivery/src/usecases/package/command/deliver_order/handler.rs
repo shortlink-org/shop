@@ -8,17 +8,24 @@
 //! 3. Update package status (DELIVERED or NOT_DELIVERED)
 //! 4. Update courier stats and load
 //! 5. Save package
-//! 6. Return response
+//! 6. Publish delivery event (PackageDelivered or PackageNotDelivered)
+//! 7. Return response
 
 use std::sync::Arc;
 
 use chrono::{DateTime, Utc};
 use thiserror::Error;
+use tracing::{info, warn};
 use uuid::Uuid;
 
+use crate::domain::model::domain::delivery::common::v1 as proto_common;
+use crate::domain::model::domain::delivery::events::v1::{
+    PackageDeliveredEvent, PackageNotDeliveredEvent,
+};
 use crate::domain::model::package::{PackageId, PackageStatus};
 use crate::domain::ports::{
-    CommandHandlerWithResult, CourierCache, CourierRepository, PackageRepository, RepositoryError,
+    CommandHandlerWithResult, CourierCache, CourierRepository, EventPublisher, PackageRepository,
+    RepositoryError,
 };
 
 use super::command::{DeliveryResult, NotDeliveredReason};
@@ -68,29 +75,38 @@ pub struct Response {
 }
 
 /// Deliver Order Handler
-pub struct Handler<R, C, P>
+pub struct Handler<R, C, P, E>
 where
     R: CourierRepository,
     C: CourierCache,
     P: PackageRepository,
+    E: EventPublisher,
 {
     courier_repo: Arc<R>,
     courier_cache: Arc<C>,
     package_repo: Arc<P>,
+    event_publisher: Arc<E>,
 }
 
-impl<R, C, P> Handler<R, C, P>
+impl<R, C, P, E> Handler<R, C, P, E>
 where
     R: CourierRepository,
     C: CourierCache,
     P: PackageRepository,
+    E: EventPublisher,
 {
     /// Create a new handler instance
-    pub fn new(courier_repo: Arc<R>, courier_cache: Arc<C>, package_repo: Arc<P>) -> Self {
+    pub fn new(
+        courier_repo: Arc<R>,
+        courier_cache: Arc<C>,
+        package_repo: Arc<P>,
+        event_publisher: Arc<E>,
+    ) -> Self {
         Self {
             courier_repo,
             courier_cache,
             package_repo,
+            event_publisher,
         }
     }
 
@@ -104,13 +120,35 @@ where
             NotDeliveredReason::Other(desc) => format!("OTHER: {}", desc),
         }
     }
+
+    /// Convert NotDeliveredReason to proto enum
+    fn reason_to_proto(reason: &NotDeliveredReason) -> proto_common::NotDeliveredReason {
+        match reason {
+            NotDeliveredReason::CustomerUnavailable => {
+                proto_common::NotDeliveredReason::CustomerNotAvailable
+            }
+            NotDeliveredReason::WrongAddress => proto_common::NotDeliveredReason::WrongAddress,
+            NotDeliveredReason::Refused => proto_common::NotDeliveredReason::CustomerRefused,
+            NotDeliveredReason::AccessDenied => proto_common::NotDeliveredReason::AccessDenied,
+            NotDeliveredReason::Other(_) => proto_common::NotDeliveredReason::Other,
+        }
+    }
+
+    /// Get reason description for OTHER reason type
+    fn get_reason_description(reason: &NotDeliveredReason) -> String {
+        match reason {
+            NotDeliveredReason::Other(desc) => desc.clone(),
+            _ => String::new(),
+        }
+    }
 }
 
-impl<R, C, P> CommandHandlerWithResult<Command, Response> for Handler<R, C, P>
+impl<R, C, P, E> CommandHandlerWithResult<Command, Response> for Handler<R, C, P, E>
 where
     R: CourierRepository + Send + Sync,
     C: CourierCache + Send + Sync,
     P: PackageRepository + Send + Sync,
+    E: EventPublisher + Send + Sync,
 {
     type Error = DeliverOrderError;
 
@@ -221,7 +259,111 @@ where
         // 8. Save package to repository
         self.package_repo.save(&package).await?;
 
-        // 9. TODO: Generate and publish event (PackageDelivered or PackageNotDelivered)
+        // 9. Publish delivery event
+        let now = Utc::now();
+        match cmd.result {
+            DeliveryResult::Delivered => {
+                let event = PackageDeliveredEvent {
+                    package_id: package.id().0.to_string(),
+                    order_id: package.order_id().to_string(),
+                    courier_id: cmd.courier_id.to_string(),
+                    status: proto_common::PackageStatus::Delivered as i32,
+                    delivered_at: Some(pbjson_types::Timestamp {
+                        seconds: now.timestamp(),
+                        nanos: now.timestamp_subsec_nanos() as i32,
+                    }),
+                    delivery_location: Some(proto_common::Location {
+                        latitude: cmd.confirmation_location.latitude(),
+                        longitude: cmd.confirmation_location.longitude(),
+                        accuracy: cmd.confirmation_location.accuracy(),
+                        timestamp: None,
+                        speed: None,
+                        heading: None,
+                    }),
+                    photo: cmd.photo_proof.unwrap_or_default(),
+                    customer_signature: cmd.signature.unwrap_or_default(),
+                    occurred_at: Some(pbjson_types::Timestamp {
+                        seconds: now.timestamp(),
+                        nanos: now.timestamp_subsec_nanos() as i32,
+                    }),
+                };
+
+                if let Err(e) = self.event_publisher.publish_package_delivered(event).await {
+                    warn!(
+                        package_id = %cmd.package_id,
+                        courier_id = %cmd.courier_id,
+                        error = %e,
+                        "Failed to publish PackageDelivered event (non-fatal)"
+                    );
+                } else {
+                    info!(
+                        package_id = %cmd.package_id,
+                        courier_id = %cmd.courier_id,
+                        "PackageDelivered event published"
+                    );
+                }
+            }
+            DeliveryResult::NotDelivered => {
+                let reason = cmd
+                    .not_delivered_reason
+                    .as_ref()
+                    .map(Self::reason_to_proto)
+                    .unwrap_or(proto_common::NotDeliveredReason::Unspecified);
+
+                let reason_description = cmd
+                    .not_delivered_reason
+                    .as_ref()
+                    .map(Self::get_reason_description)
+                    .unwrap_or_default();
+
+                let event = PackageNotDeliveredEvent {
+                    package_id: package.id().0.to_string(),
+                    order_id: package.order_id().to_string(),
+                    courier_id: cmd.courier_id.to_string(),
+                    status: proto_common::PackageStatus::NotDelivered as i32,
+                    reason: reason as i32,
+                    reason_description,
+                    not_delivered_at: Some(pbjson_types::Timestamp {
+                        seconds: now.timestamp(),
+                        nanos: now.timestamp_subsec_nanos() as i32,
+                    }),
+                    courier_location: Some(proto_common::Location {
+                        latitude: cmd.confirmation_location.latitude(),
+                        longitude: cmd.confirmation_location.longitude(),
+                        accuracy: cmd.confirmation_location.accuracy(),
+                        timestamp: None,
+                        speed: None,
+                        heading: None,
+                    }),
+                    occurred_at: Some(pbjson_types::Timestamp {
+                        seconds: now.timestamp(),
+                        nanos: now.timestamp_subsec_nanos() as i32,
+                    }),
+                };
+
+                if let Err(e) = self
+                    .event_publisher
+                    .publish_package_not_delivered(event)
+                    .await
+                {
+                    warn!(
+                        package_id = %cmd.package_id,
+                        courier_id = %cmd.courier_id,
+                        reason = ?cmd.not_delivered_reason,
+                        error = %e,
+                        "Failed to publish PackageNotDelivered event (non-fatal)"
+                    );
+                } else {
+                    info!(
+                        package_id = %cmd.package_id,
+                        courier_id = %cmd.courier_id,
+                        reason = ?cmd.not_delivered_reason,
+                        "PackageNotDelivered event published"
+                    );
+                }
+            }
+        }
+
         // 10. TODO: Notify OMS about delivery result
         // 11. TODO: Update courier location via Geolocation service
 
@@ -237,10 +379,15 @@ where
 mod tests {
     use super::*;
     use crate::domain::model::courier::{Courier, CourierId, WorkHours};
+    use crate::domain::model::domain::delivery::events::v1::{
+        CourierLocationUpdatedEvent, CourierRegisteredEvent, CourierStatusChangedEvent,
+        PackageAcceptedEvent, PackageAssignedEvent, PackageInTransitEvent,
+        PackageRequiresHandlingEvent,
+    };
     use crate::domain::model::package::{Address, DeliveryPeriod, Package, Priority};
     use crate::domain::model::vo::location::Location;
     use crate::domain::model::vo::TransportType;
-    use crate::domain::ports::{CacheError, CachedCourierState, PackageFilter};
+    use crate::domain::ports::{CacheError, CachedCourierState, EventPublisherError, PackageFilter};
     use async_trait::async_trait;
     use chrono::{NaiveTime, Utc};
     use std::collections::HashMap;
@@ -461,6 +608,68 @@ mod tests {
         }
     }
 
+    // ==================== Mock Event Publisher ====================
+
+    struct MockEventPublisher;
+
+    #[async_trait]
+    impl EventPublisher for MockEventPublisher {
+        async fn publish_package_accepted(
+            &self,
+            _event: PackageAcceptedEvent,
+        ) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_package_assigned(
+            &self,
+            _event: PackageAssignedEvent,
+        ) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_package_in_transit(
+            &self,
+            _event: PackageInTransitEvent,
+        ) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_package_delivered(
+            &self,
+            _event: PackageDeliveredEvent,
+        ) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_package_not_delivered(
+            &self,
+            _event: PackageNotDeliveredEvent,
+        ) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_package_requires_handling(
+            &self,
+            _event: PackageRequiresHandlingEvent,
+        ) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_courier_registered(
+            &self,
+            _event: CourierRegisteredEvent,
+        ) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_courier_location_updated(
+            &self,
+            _event: CourierLocationUpdatedEvent,
+        ) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_courier_status_changed(
+            &self,
+            _event: CourierStatusChangedEvent,
+        ) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+    }
+
     // ==================== Test Helpers ====================
 
     fn create_test_address() -> Address {
@@ -547,7 +756,8 @@ mod tests {
         let package_id = package.id().0;
         package_repo.add_package(package);
 
-        let handler = Handler::new(courier_repo, courier_cache, package_repo.clone());
+        let event_publisher = Arc::new(MockEventPublisher);
+        let handler = Handler::new(courier_repo, courier_cache, package_repo.clone(), event_publisher);
 
         let cmd = Command::delivered(
             package_id,
@@ -586,7 +796,8 @@ mod tests {
         let package_id = package.id().0;
         package_repo.add_package(package);
 
-        let handler = Handler::new(courier_repo, courier_cache, package_repo.clone());
+        let event_publisher = Arc::new(MockEventPublisher);
+        let handler = Handler::new(courier_repo, courier_cache, package_repo.clone(), event_publisher);
 
         let cmd = Command::not_delivered(
             package_id,
@@ -608,8 +819,9 @@ mod tests {
         let courier_repo = Arc::new(MockCourierRepository::new());
         let courier_cache = Arc::new(MockCourierCache);
         let package_repo = Arc::new(MockPackageRepository::new());
+        let event_publisher = Arc::new(MockEventPublisher);
 
-        let handler = Handler::new(courier_repo, courier_cache, package_repo);
+        let handler = Handler::new(courier_repo, courier_cache, package_repo, event_publisher);
 
         let cmd = Command::delivered(
             Uuid::new_v4(),
@@ -643,7 +855,8 @@ mod tests {
         let package_id = package.id().0;
         package_repo.add_package(package);
 
-        let handler = Handler::new(courier_repo, courier_cache, package_repo);
+        let event_publisher = Arc::new(MockEventPublisher);
+        let handler = Handler::new(courier_repo, courier_cache, package_repo, event_publisher);
 
         // Try to deliver with wrong courier
         let cmd = Command::delivered(
@@ -666,8 +879,9 @@ mod tests {
         let courier_repo = Arc::new(MockCourierRepository::new());
         let courier_cache = Arc::new(MockCourierCache);
         let package_repo = Arc::new(MockPackageRepository::new());
+        let event_publisher = Arc::new(MockEventPublisher);
 
-        let handler = Handler::new(courier_repo, courier_cache, package_repo);
+        let handler = Handler::new(courier_repo, courier_cache, package_repo, event_publisher);
 
         // Create command with NotDelivered but no reason
         let cmd = Command {
@@ -721,7 +935,8 @@ mod tests {
         let package_id = package.id().0;
         package_repo.add_package(package);
 
-        let handler = Handler::new(courier_repo, courier_cache, package_repo);
+        let event_publisher = Arc::new(MockEventPublisher);
+        let handler = Handler::new(courier_repo, courier_cache, package_repo, event_publisher);
 
         let cmd = Command::delivered(
             package_id,

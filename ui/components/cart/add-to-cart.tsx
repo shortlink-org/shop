@@ -3,7 +3,6 @@
 import { PlusIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import { addItem } from 'components/cart/actions';
-import { useGood } from 'components/good/good-context';
 import { Good, GoodVariant } from 'lib/shopify/types';
 import { useFormState } from 'react-dom';
 import { useCart } from './cart-context';
@@ -27,7 +26,6 @@ function SubmitButton({
     );
   }
 
-  console.log(selectedVariantId);
   if (!selectedVariantId) {
     return (
       <button
@@ -60,14 +58,22 @@ function SubmitButton({
 
 export function AddToCart({ good }: { good: Good }) {
   const { addCartItem } = useCart();
-  const { state } = useGood();
   const [message, formAction] = useFormState(addItem, null);
+  const actionWithVariant = formAction.bind(null, String(good.id));
+  const optimisticVariant: GoodVariant = {
+    id: String(good.id),
+    title: good.name,
+    availableForSale: true,
+    selectedOptions: [],
+    price: { amount: good.price, currencyCode: 'USD' }
+  };
 
   return (
     <form
-      // action={() => {
-      //   addCartItem(good.id, good);
-      // }}
+      action={async () => {
+        addCartItem(optimisticVariant, good);
+        await actionWithVariant();
+      }}
     >
       <SubmitButton availableForSale={true} selectedVariantId={good.id} />
       <p aria-live="polite" className="sr-only" role="status">

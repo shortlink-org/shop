@@ -9,9 +9,9 @@ app_name = "couriers"
 urlpatterns = [
     # List and detail views
     path("", views.courier_list, name="list"),
-    path("<str:courier_id>/", views.courier_detail, name="detail"),
     path("register/", views.courier_register, name="register"),
     path("map/", views.courier_map, name="map"),
+    path("<str:courier_id>/", views.courier_detail, name="detail"),
 
     # Lifecycle actions
     path("<str:courier_id>/activate/", views.courier_activate, name="activate"),

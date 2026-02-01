@@ -5,7 +5,6 @@ import logging
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import redirect, render
-from django.urls import reverse
 from django.views.decorators.http import require_GET, require_http_methods
 
 from infrastructure.grpc import DeliveryServiceError, WorkHours, get_delivery_client
@@ -22,13 +21,27 @@ from .forms import (
 logger = logging.getLogger(__name__)
 
 
+def _parse_positive_int(value, default, min_value=1, max_value=None):
+    """Parse a positive integer from a string with optional bounds."""
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return default
+
+    if parsed < min_value:
+        return min_value
+    if max_value is not None and parsed > max_value:
+        return max_value
+    return parsed
+
+
 @staff_member_required
 @require_GET
 def courier_list(request):
     """Display list of couriers with filtering and pagination."""
     form = CourierFilterForm(request.GET)
-    page = int(request.GET.get("page", 1))
-    page_size = int(request.GET.get("page_size", 20))
+    page = _parse_positive_int(request.GET.get("page"), default=1, min_value=1)
+    page_size = _parse_positive_int(request.GET.get("page_size"), default=20, min_value=1, max_value=100)
 
     # Build filters from form
     status_filter = None
@@ -96,12 +109,12 @@ def courier_detail(request, courier_id):
 
         if not courier:
             messages.error(request, f"Courier not found: {courier_id}")
-            return redirect("admin:couriers_list")
+            return redirect("couriers:list")
 
     except DeliveryServiceError as e:
         logger.error(f"Error fetching courier: {e}")
         messages.error(request, f"Error connecting to Delivery Service: {e}")
-        return redirect("admin:couriers_list")
+        return redirect("couriers:list")
 
     context = {
         "title": f"Courier: {courier.name}",
@@ -153,7 +166,7 @@ def courier_register(request):
                 )
 
                 messages.success(request, f"Courier registered successfully: {courier_id}")
-                return redirect("admin:couriers_detail", courier_id=courier_id)
+                return redirect("couriers:detail", courier_id=courier_id)
 
             except DeliveryServiceError as e:
                 logger.error(f"Error registering courier: {e}")
@@ -181,7 +194,7 @@ def courier_activate(request, courier_id):
         logger.error(f"Error activating courier: {e}")
         messages.error(request, f"Error activating courier: {e}")
 
-    return redirect("admin:couriers_detail", courier_id=courier_id)
+    return redirect("couriers:detail", courier_id=courier_id)
 
 
 @staff_member_required
@@ -198,7 +211,7 @@ def courier_deactivate(request, courier_id):
         logger.error(f"Error deactivating courier: {e}")
         messages.error(request, f"Error deactivating courier: {e}")
 
-    return redirect("admin:couriers_detail", courier_id=courier_id)
+    return redirect("couriers:detail", courier_id=courier_id)
 
 
 @staff_member_required
@@ -212,14 +225,14 @@ def courier_archive(request, courier_id):
             client = get_delivery_client()
             client.archive_courier(courier_id, reason=form.cleaned_data.get("reason"))
             messages.success(request, "Courier archived successfully.")
-            return redirect("admin:couriers_list")
+            return redirect("couriers:list")
         except DeliveryServiceError as e:
             logger.error(f"Error archiving courier: {e}")
             messages.error(request, f"Error archiving courier: {e}")
     else:
         messages.error(request, "Please confirm the archival.")
 
-    return redirect("admin:couriers_detail", courier_id=courier_id)
+    return redirect("couriers:detail", courier_id=courier_id)
 
 
 @staff_member_required
@@ -244,7 +257,7 @@ def courier_update_contact(request, courier_id):
         for error in form.non_field_errors():
             messages.error(request, error)
 
-    return redirect("admin:couriers_detail", courier_id=courier_id)
+    return redirect("couriers:detail", courier_id=courier_id)
 
 
 @staff_member_required
@@ -276,7 +289,7 @@ def courier_update_schedule(request, courier_id):
             logger.error(f"Error updating work schedule: {e}")
             messages.error(request, f"Error updating work schedule: {e}")
 
-    return redirect("admin:couriers_detail", courier_id=courier_id)
+    return redirect("couriers:detail", courier_id=courier_id)
 
 
 @staff_member_required
@@ -300,7 +313,7 @@ def courier_change_transport(request, courier_id):
             logger.error(f"Error changing transport type: {e}")
             messages.error(request, f"Error changing transport type: {e}")
 
-    return redirect("admin:couriers_detail", courier_id=courier_id)
+    return redirect("couriers:detail", courier_id=courier_id)
 
 
 @staff_member_required

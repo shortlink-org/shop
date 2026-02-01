@@ -5,8 +5,6 @@ import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   addToCartMutation,
-  createCartMutation,
-  editCartItemsMutation,
   removeFromCartMutation
 } from './mutations/cart';
 import { getCartQuery } from './queries/cart';
@@ -31,13 +29,11 @@ import {
   Menu,
   Page,
   ShopifyAddToCartOperation,
-  ShopifyCart,
   ShopifyCartOperation,
   ShopifyCollection,
   ShopifyCollectionOperation,
   ShopifyCollectionProductsOperation,
   ShopifyCollectionsOperation,
-  ShopifyCreateCartOperation,
   ShopifyMenuOperation,
   ShopifyPageOperation,
   ShopifyPagesOperation,
@@ -45,8 +41,7 @@ import {
   ShopifyProductOperation,
   ShopifyProductRecommendationsOperation,
   ShopifyProductsOperation,
-  ShopifyRemoveFromCartOperation,
-  ShopifyUpdateCartOperation
+  ShopifyRemoveFromCartOperation
 } from './types';
 
 const domain = process.env.API_URI ?? '';
@@ -108,23 +103,30 @@ export async function shopifyFetch<T>({
   }
 }
 
-const removeEdgesAndNodes = <T>(data: { results: T[] }): T[] => {
-  return data.results;
-};
-
-const reshapeCart = (cart: ShopifyCart): Cart => {
-  if (!cart.cost?.totalTaxAmount) {
-    cart.cost.totalTaxAmount = {
-      amount: 0,
-      currencyCode: 'USD',
-    };
-  }
+const normalizeGood = (good: ShopifyProduct): Good => {
+  const createdAt = good.createdAt ?? good.created_at ?? new Date().toISOString();
+  const updatedAt = good.updatedAt ?? good.updated_at ?? new Date().toISOString();
 
   return {
-    ...cart,
-    lines: cart.lines.edges.map((edge) => edge.node),
+    ...good,
+    createdAt,
+    updatedAt
   };
 };
+
+const DEFAULT_CURRENCY = 'USD';
+
+const createEmptyCart = (cartId?: string): Cart => ({
+  id: cartId,
+  checkoutUrl: '',
+  totalQuantity: 0,
+  lines: [],
+  cost: {
+    subtotalAmount: { amount: 0, currencyCode: DEFAULT_CURRENCY },
+    totalAmount: { amount: 0, currencyCode: DEFAULT_CURRENCY },
+    totalTaxAmount: { amount: 0, currencyCode: DEFAULT_CURRENCY }
+  }
+});
 
 const reshapeCollection = (collection: ShopifyCollection): Collection | undefined => {
   if (!collection) {
@@ -153,57 +155,148 @@ const reshapeCollections = (collections: ShopifyCollection[]) => {
   return reshapedCollections;
 };
 
-export async function createCart(): Promise<Cart> {
-  const res = await shopifyFetch<ShopifyCreateCartOperation>({
-    query: createCartMutation,
-    cache: 'no-store'
-  });
+const buildCartFromState = async (
+  state: ShopifyCartOperation['data']['getCart']['state'] | undefined | null,
+  fallbackId?: string
+): Promise<Cart> => {
+  const items = state?.items ?? [];
 
-  return reshapeCart(res.body.data.cartCreate.cart);
+  if (!items.length) {
+    return createEmptyCart(state?.cartId ?? fallbackId);
+  }
+
+  const lineItems = await Promise.all(
+    items.map(async (item) => {
+      const goodId = item?.goodId ?? '';
+      const quantity = item?.quantity ?? 0;
+
+      if (!goodId || quantity <= 0) {
+        return null;
+      }
+
+      const numericGoodId = Number(goodId);
+      const good = Number.isFinite(numericGoodId) ? await getGood(numericGoodId) : undefined;
+      const price = good?.price ?? 0;
+      const title = good?.name ?? 'Unknown item';
+
+      return {
+        id: goodId,
+        quantity,
+        cost: {
+          totalAmount: {
+            amount: price * quantity,
+            currencyCode: DEFAULT_CURRENCY
+          }
+        },
+        merchandise: {
+          id: goodId,
+          title,
+          selectedOptions: [],
+          product: {
+            id: good?.id ?? 0,
+            handle: good?.name ?? goodId,
+            title
+          }
+        }
+      };
+    })
+  );
+
+  const lines = lineItems.filter(Boolean) as Cart['lines'];
+  const totalQuantity = lines.reduce((sum, item) => sum + item.quantity, 0);
+  const totalAmount = lines.reduce((sum, item) => sum + Number(item.cost.totalAmount.amount), 0);
+  const currencyCode = lines[0]?.cost.totalAmount.currencyCode ?? DEFAULT_CURRENCY;
+
+  return {
+    id: state?.cartId ?? fallbackId,
+    checkoutUrl: '',
+    totalQuantity,
+    lines,
+    cost: {
+      subtotalAmount: { amount: totalAmount, currencyCode },
+      totalAmount: { amount: totalAmount, currencyCode },
+      totalTaxAmount: { amount: 0, currencyCode }
+    }
+  };
+};
+
+export async function createCart(): Promise<Cart> {
+  const cartId = crypto.randomUUID();
+  return createEmptyCart(cartId);
 }
 
 export async function addToCart(
-  cartId: string,
-  lines: { merchandiseId: string; quantity: number }[]
-): Promise<Cart> {
-  const res = await shopifyFetch<ShopifyAddToCartOperation>({
+  customerId: string,
+  items: { goodId: string; quantity: number }[]
+): Promise<void> {
+  await shopifyFetch<ShopifyAddToCartOperation>({
     query: addToCartMutation,
     variables: {
-      cartId,
-      lines
+      addRequest: {
+        customerId,
+        items
+      }
     },
     cache: 'no-store'
   });
-  return reshapeCart(res.body.data.cartLinesAdd.cart);
 }
 
-export async function removeFromCart(cartId: string, lineIds: string[]): Promise<Cart> {
-  const res = await shopifyFetch<ShopifyRemoveFromCartOperation>({
+export async function removeFromCart(
+  customerId: string,
+  items: { goodId: string; quantity: number }[]
+): Promise<void> {
+  await shopifyFetch<ShopifyRemoveFromCartOperation>({
     query: removeFromCartMutation,
     variables: {
-      cartId,
-      lineIds
+      removeRequest: {
+        customerId,
+        items
+      }
     },
     cache: 'no-store'
   });
-
-  return reshapeCart(res.body.data.cartLinesRemove.cart);
 }
 
 export async function updateCart(
-  cartId: string,
+  customerId: string,
   lines: { id: string; merchandiseId: string; quantity: number }[]
-): Promise<Cart> {
-  const res = await shopifyFetch<ShopifyUpdateCartOperation>({
-    query: editCartItemsMutation,
+): Promise<void> {
+  const res = await shopifyFetch<ShopifyCartOperation>({
+    query: getCartQuery,
     variables: {
-      cartId,
-      lines
+      customerId
     },
     cache: 'no-store'
   });
 
-  return reshapeCart(res.body.data.cartLinesUpdate.cart);
+  const currentQuantities = new Map(
+    (res.body.data.getCart?.state?.items ?? []).map((item) => [
+      item?.goodId ?? '',
+      item?.quantity ?? 0
+    ])
+  );
+
+  const itemsToAdd: { goodId: string; quantity: number }[] = [];
+  const itemsToRemove: { goodId: string; quantity: number }[] = [];
+
+  for (const line of lines) {
+    const currentQuantity = currentQuantities.get(line.merchandiseId) ?? 0;
+    const delta = line.quantity - currentQuantity;
+
+    if (delta > 0) {
+      itemsToAdd.push({ goodId: line.merchandiseId, quantity: delta });
+    } else if (delta < 0) {
+      itemsToRemove.push({ goodId: line.merchandiseId, quantity: Math.abs(delta) });
+    }
+  }
+
+  if (itemsToAdd.length > 0) {
+    await addToCart(customerId, itemsToAdd);
+  }
+
+  if (itemsToRemove.length > 0) {
+    await removeFromCart(customerId, itemsToRemove);
+  }
 }
 
 export async function getCart(cartId: string | undefined): Promise<Cart | undefined> {
@@ -211,9 +304,15 @@ export async function getCart(cartId: string | undefined): Promise<Cart | undefi
     return undefined;
   }
 
-  // TODO: Implement cart fetching from backend
-  // For now return undefined to allow app to function
-  return undefined;
+  const res = await shopifyFetch<ShopifyCartOperation>({
+    query: getCartQuery,
+    variables: {
+      customerId: cartId
+    },
+    cache: 'no-store'
+  });
+
+  return buildCartFromState(res.body.data.getCart?.state, cartId);
 }
 
 export async function getCollection(id: number): Promise<Collection | undefined> {
@@ -240,7 +339,7 @@ export async function getCollectionProducts({ page }: {
     return [];
   }
 
-  return res.body.data.goods_goods_list.results;
+  return res.body.data.goods_goods_list.results.map(normalizeGood);
 }
 
 export async function getCollections(): Promise<Collection[]> {
@@ -323,18 +422,19 @@ export async function getGood(id: number): Promise<Good | undefined> {
     },
   });
 
-  return res.body.data.good;
+  return res.body.data.good ? normalizeGood(res.body.data.good) : undefined;
 }
 
 export async function getGoodRecommendations(id: number): Promise<Good[]> {
   const res = await shopifyFetch<ShopifyProductRecommendationsOperation>({
     query: getGoodRecommendationsQuery,
     variables: {
-      id,
+      page: 1,
     }
   });
 
-  return res.body.data.productRecommendations;
+  const recommendations = res.body.data.goods?.results ?? [];
+  return recommendations.filter((good) => good.id !== id).map(normalizeGood);
 }
 
 export async function getGoods({
@@ -356,9 +456,8 @@ export async function getGoods({
     }
   });
 
-  console.warn("res.body.data", res.body.data);
-
-  return removeEdgesAndNodes(res.body.data);
+  const goods = res.body.data.goods?.results ?? [];
+  return goods.map(normalizeGood);
 }
 
 // This is called from `app/api/revalidate.ts` so providers can control revalidation logic.

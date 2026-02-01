@@ -13,9 +13,11 @@ import (
 
 const (
 	// TopicPickUpOrder is the Kafka topic for pickup order commands.
-	TopicPickUpOrder = "delivery.command.pick_up_order"
+	// Format: {domain}.{entity}.{event}.v1
+	TopicPickUpOrder = "delivery.command.pick_up_order.v1"
 	// TopicDeliverOrder is the Kafka topic for deliver order commands.
-	TopicDeliverOrder = "delivery.command.deliver_order"
+	// Format: {domain}.{entity}.{event}.v1
+	TopicDeliverOrder = "delivery.command.deliver_order.v1"
 )
 
 // PickUpOrderEvent represents a pickup order command event.

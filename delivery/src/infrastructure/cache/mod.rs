@@ -3,5 +3,7 @@
 //! Contains concrete implementations of cache ports.
 
 pub mod courier_redis;
+pub mod location_redis;
 
 pub use courier_redis::CourierRedisCache;
+pub use location_redis::RedisLocationCache;

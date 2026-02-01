@@ -36,7 +36,12 @@ class GoodAdmin(admin.ModelAdmin):
     def generate_goods_view(self, request):
         """View for generating fake goods."""
         if request.method == "POST":
-            count = int(request.POST.get("count", 10))
+            raw_count = request.POST.get("count", 10)
+            try:
+                count = int(raw_count)
+            except (TypeError, ValueError):
+                count = 10
+            count = max(1, min(count, 1000))
             locale_str = request.POST.get("locale", "en")
 
             # Map locale string to Mimesis Locale

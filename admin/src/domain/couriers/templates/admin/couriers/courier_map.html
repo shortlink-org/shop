@@ -93,7 +93,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
-<script>
+<script nonce="{{ csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize map centered on Berlin
     var map = L.map('courier-map').setView([52.520008, 13.404954], 12);
@@ -124,13 +124,13 @@ document.addEventListener('DOMContentLoaded', function() {
     var couriers = [
         {% for courier in couriers %}
         {
-            id: "{{ courier.courier_id }}",
-            name: "{{ courier.name }}",
-            status: "{{ courier.status }}",
-            transport: "{{ courier.transport_type }}",
+            id: "{{ courier.courier_id|escapejs }}",
+            name: "{{ courier.name|escapejs }}",
+            status: "{{ courier.status|escapejs }}",
+            transport: "{{ courier.transport_type|escapejs }}",
             load: "{{ courier.current_load }}/{{ courier.max_load }}",
-            zone: "{{ courier.work_zone }}",
-            phone: "{{ courier.phone }}",
+            zone: "{{ courier.work_zone|escapejs }}",
+            phone: "{{ courier.phone|escapejs }}",
             lat: {{ courier.current_location.latitude }},
             lng: {{ courier.current_location.longitude }}
         }{% if not forloop.last %},{% endif %}
