@@ -1,0 +1,27 @@
+{{- if .Values.authorizationPolicy.enabled }}
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: {{ include "helpers.fullname" . }}-require-oathkeeper
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "helpers.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "shortlink-common.matchLabels" . | nindent 6 }}
+  action: ALLOW
+  rules:
+    # Allow health checks (kubelet) and metrics (Prometheus) without authorization
+    - to:
+        - operation:
+            paths: ["/healthz/", "/metrics"]
+    # Only allow requests from auth namespace (Oathkeeper)
+    # This prevents header spoofing by blocking direct access to Django
+    - from:
+        - source:
+            namespaces:
+              {{- range .Values.authorizationPolicy.allowedNamespaces }}
+              - {{ . | quote }}
+              {{- end }}
+{{- end }}

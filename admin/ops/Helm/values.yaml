@@ -206,6 +206,19 @@ istio:
     enabled: false
 
 # ==============================================================================
+# Authorization Policy (Istio)
+# Protects against X-User-ID header spoofing by restricting access to Oathkeeper
+authorizationPolicy:
+  enabled: true
+  allowedNamespaces:
+    - auth  # Oathkeeper namespace
+
+# ==============================================================================
 # NetworkPolicy
 networkPolicy:
-  enabled: false
+  enabled: true
+  ingressNamespaces:
+    - auth
+    - istio-system
+    - istio-ingress
+    - prometheus-operator

@@ -59,7 +59,8 @@ INSTALLED_APPS = [
     "django.contrib.gis",  # GeoDjango
     "django_prometheus",
     "debug_toolbar",
-    "django_ory_auth",
+    # django_ory_auth removed - using Oathkeeper header-based auth instead
+    # See ADR: docs/ADR/decisions/0005-oathkeeper-auth.md
     "health_check",
     "health_check.db",
     "health_check.cache",
@@ -80,10 +81,10 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.auth.middleware.RemoteUserMiddleware",  # Oathkeeper header auth
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
-    "django_ory_auth.middleware.AuthenticationMiddleware",
     "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
@@ -117,6 +118,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://localhost:8000",
     "https://shortlink.best",
+    "https://shop.shortlink.best",  # Django admin hostname
 ]
 
 # Content Security Policy (CSP)
@@ -203,8 +205,13 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",  # Django default (for local admin)
-    "django_ory_auth.backend.OryBackend",  # Ory Kratos
+    "admin.auth_backends.OryRemoteUserBackend",  # Oathkeeper header-based auth
 ]
+
+# Remote user header for Oathkeeper authentication
+# Oathkeeper injects X-User-ID header with identity.id from Kratos session
+# Django converts X-User-ID to HTTP_X_USER_ID
+REMOTE_USER_HEADER = "HTTP_X_USER_ID"
 
 
 # Internationalization
