@@ -135,7 +135,7 @@ class DeliveryClient:
             self._channel = grpc.insecure_channel(self.host)
             # Import generated stubs
             try:
-                from .generated import delivery_pb2_grpc
+                import delivery_pb2_grpc
 
                 self._stub = delivery_pb2_grpc.DeliveryServiceStub(self._channel)
             except ImportError:
@@ -207,7 +207,7 @@ class DeliveryClient:
         """
         self._ensure_connected()
 
-        from .generated import delivery_pb2
+        import delivery_pb2
 
         request = delivery_pb2.GetCourierRequest(
             courier_id=courier_id,
@@ -249,7 +249,7 @@ class DeliveryClient:
         """
         self._ensure_connected()
 
-        from .generated import delivery_pb2
+        import delivery_pb2
 
         # Convert status strings to enum values
         status_values = []
@@ -317,7 +317,7 @@ class DeliveryClient:
         """
         self._ensure_connected()
 
-        from .generated import delivery_pb2
+        import delivery_pb2
 
         transport_value = self.TRANSPORT_TYPE_VALUES.get(transport_type, 0)
 
@@ -356,7 +356,7 @@ class DeliveryClient:
         """
         self._ensure_connected()
 
-        from .generated import delivery_pb2
+        import delivery_pb2
 
         request = delivery_pb2.ActivateCourierRequest(courier_id=courier_id)
 
@@ -381,7 +381,7 @@ class DeliveryClient:
         """
         self._ensure_connected()
 
-        from .generated import delivery_pb2
+        import delivery_pb2
 
         request = delivery_pb2.DeactivateCourierRequest(courier_id=courier_id)
         if reason:
@@ -406,7 +406,7 @@ class DeliveryClient:
         """
         self._ensure_connected()
 
-        from .generated import delivery_pb2
+        import delivery_pb2
 
         request = delivery_pb2.ArchiveCourierRequest(courier_id=courier_id)
         if reason:
@@ -439,7 +439,7 @@ class DeliveryClient:
         """
         self._ensure_connected()
 
-        from .generated import delivery_pb2
+        import delivery_pb2
 
         request = delivery_pb2.UpdateContactInfoRequest(courier_id=courier_id)
         if phone:
@@ -476,7 +476,7 @@ class DeliveryClient:
         """
         self._ensure_connected()
 
-        from .generated import delivery_pb2
+        import delivery_pb2
 
         request = delivery_pb2.UpdateWorkScheduleRequest(courier_id=courier_id)
 
@@ -512,7 +512,7 @@ class DeliveryClient:
         """
         self._ensure_connected()
 
-        from .generated import delivery_pb2
+        import delivery_pb2
 
         transport_value = self.TRANSPORT_TYPE_VALUES.get(transport_type, 0)
 

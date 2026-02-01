@@ -75,6 +75,7 @@ dependencies = [
   "whitenoise>=6.8.0",
   "grpcio-tools>=1.76.0",
   "shortlink-org-shop-oms-grpc-python==1.76.0.2.20260201221610+71e3c8b3c462",
+  "shortlink-org-shop-delivery-rpc-grpc-python>=1.76.0.2.20260201222625",
 ]
 
 [project.optional-dependencies]

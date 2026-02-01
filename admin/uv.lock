@@ -1104,6 +1104,7 @@ dependencies = [
     { name = "requests" },
     { name = "rpds-py" },
     { name = "setuptools" },
+    { name = "shortlink-org-shop-delivery-rpc-grpc-python" },
     { name = "shortlink-org-shop-oms-grpc-python" },
     { name = "sqlparse" },
     { name = "typing-extensions" },
@@ -1189,6 +1190,7 @@ requires-dist = [
     { name = "requests", specifier = "==2.32.5" },
     { name = "rpds-py", specifier = "==0.27.1" },
     { name = "setuptools", specifier = "==80.10.2" },
+    { name = "shortlink-org-shop-delivery-rpc-grpc-python", specifier = ">=1.76.0.2.20260201222625" },
     { name = "shortlink-org-shop-oms-grpc-python", specifier = "==1.76.0.2.20260201221610+71e3c8b3c462" },
     { name = "sqlparse", specifier = "==0.5.5" },
     { name = "typing-extensions", specifier = "==4.15.0" },
@@ -1198,6 +1200,42 @@ requires-dist = [
     { name = "whitenoise", specifier = ">=6.8.0" },
     { name = "wrapt", specifier = ">=1.10,<2" },
     { name = "zipp", specifier = "==3.23.0" },
+]
+
+[[package]]
+name = "shortlink-org-shop-delivery-rpc-grpc-python"
+version = "1.76.0.2.20260201222625+791bc0e04fee"
+source = { registry = "https://buf.build/gen/python" }
+dependencies = [
+    { name = "grpcio" },
+    { name = "shortlink-org-shop-delivery-rpc-protocolbuffers-python" },
+]
+wheels = [
+    { url = "https://buf.build/gen/python/shortlink-org-shop-delivery-rpc-grpc-python/shortlink_org_shop_delivery_rpc_grpc_python-1.76.0.2.20260201222625+791bc0e04fee-py3-none-any.whl" },
+]
+
+[[package]]
+name = "shortlink-org-shop-delivery-rpc-protocolbuffers-pyi"
+version = "33.5.0.1.20260201222625+791bc0e04fee"
+source = { registry = "https://buf.build/gen/python" }
+dependencies = [
+    { name = "protobuf" },
+    { name = "types-protobuf" },
+]
+wheels = [
+    { url = "https://buf.build/gen/python/shortlink-org-shop-delivery-rpc-protocolbuffers-pyi/shortlink_org_shop_delivery_rpc_protocolbuffers_pyi-33.5.0.1.20260201222625+791bc0e04fee-py3-none-any.whl" },
+]
+
+[[package]]
+name = "shortlink-org-shop-delivery-rpc-protocolbuffers-python"
+version = "33.5.0.1.20260201222625+791bc0e04fee"
+source = { registry = "https://buf.build/gen/python" }
+dependencies = [
+    { name = "protobuf" },
+    { name = "shortlink-org-shop-delivery-rpc-protocolbuffers-pyi" },
+]
+wheels = [
+    { url = "https://buf.build/gen/python/shortlink-org-shop-delivery-rpc-protocolbuffers-python/shortlink_org_shop_delivery_rpc_protocolbuffers_python-33.5.0.1.20260201222625+791bc0e04fee-py3-none-any.whl" },
 ]
 
 [[package]]

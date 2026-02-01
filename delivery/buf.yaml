@@ -2,6 +2,8 @@ version: v2
 modules:
   - path: src/domain/model
     name: buf.build/shortlink-org/shop-delivery
+  - path: src/infrastructure/rpc
+    name: buf.build/shortlink-org/shop-delivery-rpc
 deps:
   - buf.build/googleapis/googleapis
   - buf.build/shortlink-org/shop-oms
