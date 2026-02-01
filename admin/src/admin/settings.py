@@ -13,7 +13,9 @@ import os
 from pathlib import Path
 
 import environ
+from django.urls import reverse_lazy
 from django.utils.csp import CSP
+from django.utils.translation import gettext_lazy as _
 
 env = environ.Env()
 
@@ -77,6 +79,117 @@ INSTALLED_APPS = [
     "domain.couriers",
     "drf_spectacular",
 ]
+
+# Unfold Admin Configuration
+# https://unfoldadmin.com/docs/configuration/settings/
+UNFOLD = {
+    "SITE_TITLE": "Shop Admin",
+    "SITE_HEADER": _("Shop Admin"),
+    "SITE_URL": "/",
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": True,
+    "SHOW_BACK_BUTTON": True,
+    "COMMAND": {
+        "search_models": True,  # Enable searching through model data (cmd+K / ctrl+K)
+        "show_history": True,  # Show search history in localStorage
+    },
+    "SITE_DROPDOWN": [
+        {
+            "icon": "home",
+            "title": _("Shortlink"),
+            "link": "https://shortlink.best",
+            "attrs": {"target": "_blank"},
+        },
+        {
+            "icon": "web",
+            "title": _("Main Site"),
+            "link": "https://shortlink.best/next",
+            "attrs": {"target": "_blank"},
+        },
+        {
+            "icon": "storefront",
+            "title": _("Shop"),
+            "link": "https://shop.shortlink.best",
+            "attrs": {"target": "_blank"},
+        },
+        {
+            "icon": "schedule",
+            "title": _("Temporal"),
+            "link": "https://temporal.shortlink.best",
+            "attrs": {"target": "_blank"},
+        },
+        {
+            "icon": "monitoring",
+            "title": _("Grafana"),
+            "link": "https://grafana.shortlink.best",
+            "attrs": {"target": "_blank"},
+        },
+    ],
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": True,
+        "navigation": [
+            {
+                "title": _("Navigation"),
+                "separator": True,
+                "collapsible": False,
+                "items": [
+                    {
+                        "title": _("Dashboard"),
+                        "icon": "dashboard",
+                        "link": reverse_lazy("admin:index"),
+                    },
+                ],
+            },
+            {
+                "title": _("Catalog"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Goods"),
+                        "icon": "inventory_2",
+                        "link": reverse_lazy("admin:goods_good_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Delivery"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Offices"),
+                        "icon": "location_on",
+                        "link": reverse_lazy("admin:offices_office_changelist"),
+                    },
+                    {
+                        "title": _("Couriers"),
+                        "icon": "local_shipping",
+                        "link": reverse_lazy("couriers:courier_list"),
+                    },
+                ],
+            },
+            {
+                "title": _("Users & Groups"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Users"),
+                        "icon": "person",
+                        "link": reverse_lazy("admin:auth_user_changelist"),
+                    },
+                    {
+                        "title": _("Groups"),
+                        "icon": "group",
+                        "link": reverse_lazy("admin:auth_group_changelist"),
+                    },
+                ],
+            },
+        ],
+    },
+}
 
 MIDDLEWARE = [
     "admin.json_log_middleware.JsonLogMiddleware",

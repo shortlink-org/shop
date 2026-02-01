@@ -3,6 +3,7 @@
 from django.contrib import admin
 from mapwidgets import LeafletPointFieldWidget
 from unfold.admin import ModelAdmin
+from unfold.paginator import InfinitePaginator
 
 from .models import Office
 
@@ -22,6 +23,17 @@ class OfficeAdmin(ModelAdmin):
     list_filter = ("is_active", "working_days", "created_at")
     search_fields = ("name", "address", "phone", "email")
     ordering = ("name",)
+    paginator = InfinitePaginator
+    show_full_result_count = False
+
+    # Show working hours and contact info only when office is active
+    conditional_fields = {
+        "opening_time": "is_active == true",
+        "closing_time": "is_active == true",
+        "working_days": "is_active == true",
+        "phone": "is_active == true",
+        "email": "is_active == true",
+    }
     readonly_fields = ("created_at", "updated_at", "latitude_display", "longitude_display")
 
     fieldsets = (

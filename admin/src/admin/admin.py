@@ -14,6 +14,7 @@ from django.contrib.auth.models import Group, User
 
 from unfold.admin import ModelAdmin
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
+from unfold.paginator import InfinitePaginator
 
 admin.site.unregister(User)
 admin.site.unregister(Group)
@@ -27,10 +28,13 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
     form = UserChangeForm
     add_form = UserCreationForm
     change_password_form = AdminPasswordChangeForm
+    paginator = InfinitePaginator
+    show_full_result_count = False
 
 
 @admin.register(Group)
 class GroupAdmin(BaseGroupAdmin, ModelAdmin):
     """Group admin with Unfold styling."""
 
-    pass
+    paginator = InfinitePaginator
+    show_full_result_count = False
