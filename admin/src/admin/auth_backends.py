@@ -30,8 +30,9 @@ class OryRemoteUserBackend(RemoteUserBackend):
     def configure_user(self, request, user, created=True):
         """Configure a newly created or existing user.
 
-        Updates the user's email from the X-Email header if available.
-        This is called after the user is authenticated.
+        For new users:
+        - Sets is_staff=True to allow Django admin access
+        - Updates email from X-Email header if available
 
         Args:
             request: The HTTP request object.
@@ -41,8 +42,20 @@ class OryRemoteUserBackend(RemoteUserBackend):
         Returns:
             The configured User instance.
         """
+        update_fields = []
+        
+        # New users get staff access for Django admin
+        if created and not user.is_staff:
+            user.is_staff = True
+            update_fields.append("is_staff")
+        
+        # Update email from Oathkeeper header
         email = request.META.get("HTTP_X_EMAIL")
         if email and user.email != email:
             user.email = email
-            user.save(update_fields=["email"])
+            update_fields.append("email")
+        
+        if update_fields:
+            user.save(update_fields=update_fields)
+        
         return user
