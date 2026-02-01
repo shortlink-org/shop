@@ -10,6 +10,7 @@
 - **NEVER run `git push` without explicit user permission** - always ask first
 - **NEVER run `git reset --hard` on remote branches** - data loss risk
 - **NEVER run destructive git commands** (rebase, force push, hard reset) without asking
+- After commit: just confirm with hash and message, NO extra `git status`, `git log` or other commands
 
 ## Code Style
 - Follow existing code style and patterns in the repository
