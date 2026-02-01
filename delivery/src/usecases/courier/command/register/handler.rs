@@ -14,7 +14,7 @@ use std::sync::Arc;
 
 use thiserror::Error;
 
-use crate::boundary::ports::{
+use crate::domain::ports::{
     CacheError, CachedCourierState, CommandHandlerWithResult, CourierCache, CourierRepository,
     RepositoryError,
 };

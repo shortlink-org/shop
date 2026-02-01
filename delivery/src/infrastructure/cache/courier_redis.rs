@@ -12,7 +12,7 @@ use redis::aio::ConnectionManager;
 use redis::AsyncCommands;
 use uuid::Uuid;
 
-use crate::boundary::ports::{CacheError, CachedCourierState, CourierCache};
+use crate::domain::ports::{CacheError, CachedCourierState, CourierCache};
 use crate::domain::model::courier::CourierStatus;
 
 /// Redis key prefix for courier state

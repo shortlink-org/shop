@@ -11,7 +11,7 @@ use std::sync::Arc;
 use thiserror::Error;
 use uuid::Uuid;
 
-use crate::boundary::ports::{CourierCache, CourierRepository, QueryHandler, CommandHandlerWithResult};
+use crate::domain::ports::{CourierCache, CourierRepository, QueryHandler, CommandHandlerWithResult};
 use crate::domain::model::courier::{Courier, CourierStatus, WorkHours};
 use crate::domain::model::vo::TransportType;
 use crate::usecases::courier::command::register::{Command as RegisterCommand, Handler as RegisterHandler};

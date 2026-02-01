@@ -14,7 +14,7 @@ use std::sync::Arc;
 use thiserror::Error;
 use uuid::Uuid;
 
-use crate::boundary::ports::{
+use crate::domain::ports::{
     CacheError, CachedCourierState, CourierCache, CourierRepository, QueryHandler, RepositoryError,
 };
 use crate::domain::model::courier::{Courier, CourierStatus};

@@ -16,7 +16,7 @@ use std::sync::Arc;
 use thiserror::Error;
 use uuid::Uuid;
 
-use crate::boundary::ports::{
+use crate::domain::ports::{
     CommandHandlerWithResult, CourierCache, CourierRepository, RepositoryError,
 };
 // Note: DispatchService will be used when PackageRepository is implemented

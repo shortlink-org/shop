@@ -9,7 +9,7 @@ use sea_orm::{
 };
 use uuid::Uuid;
 
-use crate::boundary::ports::{CourierRepository, RepositoryError};
+use crate::domain::ports::{CourierRepository, RepositoryError};
 use crate::domain::model::courier::Courier;
 use crate::infrastructure::repository::entities::courier::{
     self, ActiveModel, Entity as CourierEntity,

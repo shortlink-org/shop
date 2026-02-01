@@ -7,7 +7,7 @@ use std::sync::Arc;
 use tonic::{Response, Status};
 use tracing::{error, info};
 
-use crate::boundary::ports::CommandHandlerWithResult;
+use crate::domain::ports::CommandHandlerWithResult;
 use crate::di::AppState;
 use crate::usecases::package::command::assign_order::{
     AssignmentMode, Command as AssignCommand, Handler as AssignHandler,

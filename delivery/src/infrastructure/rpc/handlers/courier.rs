@@ -7,7 +7,7 @@ use std::sync::Arc;
 use tonic::{Response, Status};
 use tracing::{error, info};
 
-use crate::boundary::ports::{
+use crate::domain::ports::{
     CommandHandlerWithResult, CourierCache, CourierRepository, QueryHandler,
 };
 use crate::di::AppState;

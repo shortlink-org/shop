@@ -11,7 +11,7 @@ use std::sync::Arc;
 
 use thiserror::Error;
 
-use crate::boundary::ports::{CommandHandler, CourierCache, CourierRepository, RepositoryError};
+use crate::domain::ports::{CommandHandler, CourierCache, CourierRepository, RepositoryError};
 
 use super::Command;
 

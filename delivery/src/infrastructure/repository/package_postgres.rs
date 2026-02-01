@@ -9,7 +9,7 @@ use sea_orm::{
 };
 use uuid::Uuid;
 
-use crate::boundary::ports::{PackageFilter, PackageRepository, RepositoryError};
+use crate::domain::ports::{PackageFilter, PackageRepository, RepositoryError};
 use crate::domain::model::package::{Package, PackageId, PackageStatus};
 use crate::infrastructure::repository::entities::package::{
     self, ActiveModel, Entity as PackageEntity,

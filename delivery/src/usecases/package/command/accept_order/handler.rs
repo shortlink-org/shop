@@ -14,7 +14,7 @@ use std::sync::Arc;
 use thiserror::Error;
 use uuid::Uuid;
 
-use crate::boundary::ports::{CommandHandlerWithResult, CourierRepository, RepositoryError};
+use crate::domain::ports::{CommandHandlerWithResult, CourierRepository, RepositoryError};
 
 use super::Command;
 

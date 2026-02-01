@@ -5,7 +5,7 @@
 use chrono::NaiveTime;
 use tonic::Status;
 
-use crate::boundary::ports::CachedCourierState;
+use crate::domain::ports::CachedCourierState;
 use crate::domain::model::courier::{Courier, CourierStatus as DomainCourierStatus, WorkHours as DomainWorkHours};
 use crate::domain::model::vo::TransportType as DomainTransportType;
 

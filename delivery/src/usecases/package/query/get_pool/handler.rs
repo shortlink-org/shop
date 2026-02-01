@@ -12,7 +12,7 @@ use std::sync::Arc;
 use thiserror::Error;
 use uuid::Uuid;
 
-use crate::boundary::ports::{CourierRepository, QueryHandler, RepositoryError};
+use crate::domain::ports::{CourierRepository, QueryHandler, RepositoryError};
 use crate::domain::model::package::PackageStatus;
 
 use super::Query;
