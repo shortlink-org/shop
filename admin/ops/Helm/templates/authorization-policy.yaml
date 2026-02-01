@@ -20,5 +20,5 @@ spec:
     # This ensures requests passed through Oathkeeper authentication
     - when:
         - key: request.headers[x-user-id]
-          notValues: [""]
+          values: ["*"]
 {{- end }}
