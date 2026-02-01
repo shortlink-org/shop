@@ -176,3 +176,39 @@ temporal:
 
   grafana:
     enabled: false
+
+# ==============================================================================
+# Temporal Namespace Setup Job
+# Creates application namespaces in Temporal after deployment
+namespaceSetup:
+  enabled: true
+
+  # Temporal CLI image
+  image:
+    repository: temporalio/admin-tools
+    tag: "1.25.2"
+    pullPolicy: IfNotPresent
+
+  # Temporal frontend address
+  temporalAddress: "temporal-frontend:7233"
+
+  # Service account (uses default if not specified)
+  serviceAccountName: ""
+
+  # Namespaces to create
+  namespaces:
+    - name: oms
+      description: "Order Management System workflows"
+      retentionDays: 7
+    - name: delivery
+      description: "Delivery Service workflows"
+      retentionDays: 7
+
+  # Resource limits for the job
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "100m"
+      memory: "128Mi"

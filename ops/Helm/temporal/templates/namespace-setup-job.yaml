@@ -1,0 +1,68 @@
+{{- if .Values.namespaceSetup.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-namespace-setup
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  annotations:
+    # Run after install/upgrade
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 5
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Chart.Name }}-namespace-setup
+        app.kubernetes.io/instance: {{ .Release.Name }}
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ .Values.namespaceSetup.serviceAccountName | default "default" }}
+      containers:
+        - name: namespace-setup
+          image: {{ .Values.namespaceSetup.image.repository }}:{{ .Values.namespaceSetup.image.tag }}
+          imagePullPolicy: {{ .Values.namespaceSetup.image.pullPolicy | default "IfNotPresent" }}
+          env:
+            - name: TEMPORAL_ADDRESS
+              value: {{ .Values.namespaceSetup.temporalAddress | default "temporal-frontend:7233" }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              echo "Waiting for Temporal frontend to be ready..."
+
+              # Wait for Temporal frontend to be available
+              until temporal operator cluster health --address $TEMPORAL_ADDRESS 2>/dev/null; do
+                echo "Temporal not ready yet, waiting..."
+                sleep 5
+              done
+
+              echo "Temporal is ready. Creating namespaces..."
+
+              {{- range .Values.namespaceSetup.namespaces }}
+              echo "Creating namespace: {{ .name }}"
+              temporal operator namespace create \
+                --address $TEMPORAL_ADDRESS \
+                --namespace {{ .name }} \
+                {{- if .description }}
+                --description "{{ .description }}" \
+                {{- end }}
+                {{- if .retentionDays }}
+                --retention {{ .retentionDays }}d \
+                {{- end }}
+                || echo "Namespace {{ .name }} may already exist, continuing..."
+              {{- end }}
+
+              echo "Namespace setup completed successfully!"
+          resources:
+            {{- toYaml .Values.namespaceSetup.resources | nindent 12 }}
+{{- end }}

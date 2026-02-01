@@ -97,7 +97,7 @@ deploy:
 
     # Temporal configuration
     TEMPORAL_HOST: temporal-frontend.temporal.svc.cluster.local:7233
-    TEMPORAL_NAMESPACE: default
+    TEMPORAL_NAMESPACE: delivery
     TEMPORAL_TLS_ENABLED: "false"
     TEMPORAL_TASK_QUEUE_COURIER: COURIER_TASK_QUEUE
     TEMPORAL_TASK_QUEUE_DELIVERY: DELIVERY_TASK_QUEUE
