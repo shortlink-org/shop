@@ -1,0 +1,57 @@
+[package]
+name = "geolocation"
+version = "0.1.0"
+edition = "2021"
+description = "Geolocation service for courier tracking in the Delivery Boundary"
+
+[dependencies]
+# gRPC / Protobuf
+prost = "0.14.3"
+prost-types = "0.14.3"
+pbjson-types = "0.9.0"
+tonic = "0.14.3"
+tonic-prost = "0.14"
+tonic-health = "0.14"
+
+# Async runtime
+tokio = { version = "1.49.0", features = ["full"] }
+
+# Serialization
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+
+# PostgreSQL with Sea-ORM
+sea-orm = { version = "1.1", features = [
+    "sqlx-postgres",
+    "runtime-tokio-rustls",
+    "macros",
+    "with-uuid",
+    "with-chrono",
+    "with-json"
+] }
+
+# Redis
+redis = { version = "0.27", features = ["tokio-comp", "connection-manager"] }
+
+# Common utilities
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+async-trait = "0.1"
+thiserror = "2"
+
+# Configuration
+dotenvy = "0.15"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[build-dependencies]
+prost-build = "0.14.3"
+tonic-prost-build = "0.14"
+
+[dev-dependencies]
+testcontainers = "0.23"
+testcontainers-modules = { version = "0.11", features = ["postgres", "redis"] }
+migration = { path = "migration" }
+mockall = "0.13"
