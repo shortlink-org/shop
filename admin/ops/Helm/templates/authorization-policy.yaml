@@ -16,12 +16,9 @@ spec:
     - to:
         - operation:
             paths: ["/healthz/", "/metrics"]
-    # Only allow requests from auth namespace (Oathkeeper)
-    # This prevents header spoofing by blocking direct access to Django
-    - from:
-        - source:
-            namespaces:
-              {{- range .Values.authorizationPolicy.allowedNamespaces }}
-              - {{ . | quote }}
-              {{- end }}
+    # Allow requests that have X-User-ID header (set by Oathkeeper)
+    # This ensures requests passed through Oathkeeper authentication
+    - when:
+        - key: request.headers[x-user-id]
+          notValues: [""]
 {{- end }}

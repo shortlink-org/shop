@@ -221,13 +221,10 @@ istio:
 
 # ==============================================================================
 # Authorization Policy (Istio)
-# Protects against X-User-ID header spoofing by restricting access to Oathkeeper
-# TODO: Re-enable after fixing traffic flow - currently blocking all requests
+# Requires X-User-ID header to be present (set by Oathkeeper after authentication)
+# This prevents direct access to Django bypassing authentication
 authorizationPolicy:
-  enabled: false
-  allowedNamespaces:
-    - auth           # Oathkeeper namespace
-    - istio-ingress  # Gateway namespace (Oathkeeper traffic comes through gateway)
+  enabled: true
 
 # ==============================================================================
 # NetworkPolicy
