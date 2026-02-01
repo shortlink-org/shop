@@ -7,8 +7,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 
-	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	order "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
+	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order/schema/crud"
 	"github.com/shortlink-org/shop/oms/pkg/uow"
 )

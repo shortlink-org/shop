@@ -12,8 +12,8 @@ import (
 
 const (
 	// Cache configuration for L1 in-memory cache
-	cacheNumCounters = 50_000       // track 50k orders
-	cacheMaxCost     = 200_000_000  // ~200MB
+	cacheNumCounters = 50_000      // track 50k orders
+	cacheMaxCost     = 200_000_000 // ~200MB
 	cacheBufferItems = 64
 	cacheTTL         = 5 * time.Minute // orders are mostly immutable
 )
