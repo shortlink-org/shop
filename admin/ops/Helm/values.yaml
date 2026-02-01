@@ -225,7 +225,8 @@ istio:
 authorizationPolicy:
   enabled: true
   allowedNamespaces:
-    - auth  # Oathkeeper namespace
+    - auth           # Oathkeeper namespace
+    - istio-ingress  # Gateway namespace (Oathkeeper traffic comes through gateway)
 
 # ==============================================================================
 # NetworkPolicy
