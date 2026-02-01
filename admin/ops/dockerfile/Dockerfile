@@ -37,7 +37,7 @@ RUN apt-get update && \
       gdal-bin libgdal-dev libgeos-dev libproj-dev && \
     rm -rf /var/lib/apt/lists/*
 
-RUN addgroup --system shop && adduser --system --group shop
+RUN addgroup --system --gid 1000 shop && adduser --system --uid 1000 --gid 1000 shop
 
 WORKDIR /app
 
@@ -49,8 +49,7 @@ COPY --chown=shop:shop pyproject.toml uv.lock ./
 
 USER shop
 
-RUN --mount=type=cache,target=/home/shop/.cache/uv \
-    uv sync --frozen
+RUN uv sync --frozen --no-install-project
 
 COPY --chown=shop:shop . .
 
