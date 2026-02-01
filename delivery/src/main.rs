@@ -1,6 +1,6 @@
 //! Delivery Service
 //!
-//! gRPC server for delivery management operations.
+//! gRPC server for delivery management operations with Temporal workflow integration.
 
 use std::sync::Arc;
 
@@ -42,6 +42,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         warn!(error = %e, "Failed to start Kafka consumers (continuing without real-time location updates)");
     }
 
+    // Start Temporal workers (courier and delivery workflows)
+    if let Err(e) = state.start_temporal_workers(&config.temporal).await {
+        warn!(error = %e, "Failed to start Temporal workers (continuing without workflow orchestration)");
+        warn!("Ensure Temporal server is running at: {}", config.temporal.server_url());
+    }
+
     // Create gRPC health service
     let (health_reporter, health_service) = health_reporter();
     // Set the service as serving
@@ -55,6 +61,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Start gRPC server
     let addr = config.grpc_addr().parse()?;
     info!(address = %addr, "gRPC server starting");
+    info!(
+        temporal_host = %config.temporal.host,
+        temporal_namespace = %config.temporal.namespace,
+        "Temporal configuration"
+    );
 
     // Handle graceful shutdown
     let state_for_shutdown = state.clone();

@@ -2,8 +2,8 @@
 //!
 //! Temporal activities for delivery operations.
 //!
-//! NOTE: This is a placeholder implementation. The actual Temporal Rust SDK
-//! is still in development.
+//! These activities are registered with the Temporal worker in `runner.rs`
+//! and called from delivery workflows (assign_order, deliver_order).
 
 use std::sync::Arc;
 
@@ -11,7 +11,9 @@ use thiserror::Error;
 use uuid::Uuid;
 
 use crate::domain::ports::{CourierCache, CourierRepository, QueryHandler};
-use crate::domain::services::dispatch::{CourierForDispatch, DispatchResult, DispatchService, PackageForDispatch};
+use crate::domain::services::dispatch::{
+    CourierForDispatch, DispatchResult, DispatchService, PackageForDispatch,
+};
 use crate::usecases::courier::query::get_pool::{Handler as GetPoolHandler, Query as GetPoolQuery};
 
 /// Errors from delivery activities
@@ -188,3 +190,9 @@ where
         Ok(())
     }
 }
+
+// Note: Activity registration is done in `runner.rs` using the Temporal SDK.
+// Each activity method above is wrapped and registered with the worker there.
+//
+// Activity input/output types use simple strings for serialization compatibility
+// with the pre-alpha Temporal SDK.

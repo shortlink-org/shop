@@ -118,9 +118,12 @@ pub async fn accept_order(
         .ok_or_else(|| Status::invalid_argument("package_info is required"))?;
 
     // Build command
+    // customer_phone could come from req if available in proto, for now pass None
+    let customer_phone: Option<String> = None;
     let cmd = AcceptCommand::new(
         order_id,
         customer_id,
+        customer_phone,
         pickup_address,
         delivery_address,
         delivery_period,
@@ -197,6 +200,9 @@ pub async fn assign_order(
         state.courier_repo.clone(),
         state.courier_cache.clone(),
         state.package_repo.clone(),
+        state.event_publisher.clone(),
+        state.notification_service.clone(),
+        state.location_cache.clone(),
     );
 
     let result = handler.handle(cmd).await.map_err(|e| {

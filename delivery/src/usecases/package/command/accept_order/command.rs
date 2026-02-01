@@ -15,6 +15,8 @@ pub struct Command {
     pub order_id: Uuid,
     /// Customer ID
     pub customer_id: Uuid,
+    /// Customer phone number for delivery
+    pub customer_phone: Option<String>,
     /// Pickup address
     pub pickup_address: AddressInput,
     /// Delivery address
@@ -137,6 +139,7 @@ impl Command {
     pub fn new(
         order_id: Uuid,
         customer_id: Uuid,
+        customer_phone: Option<String>,
         pickup_address: AddressInput,
         delivery_address: AddressInput,
         delivery_period: DeliveryPeriodInput,
@@ -147,6 +150,7 @@ impl Command {
         Self {
             order_id,
             customer_id,
+            customer_phone,
             pickup_address,
             delivery_address,
             delivery_period,
@@ -256,6 +260,7 @@ mod tests {
         let cmd = Command::new(
             Uuid::new_v4(),
             Uuid::new_v4(),
+            Some("+49123456789".to_string()),
             create_valid_address(),
             create_valid_address(),
             create_valid_period(),
@@ -271,6 +276,7 @@ mod tests {
         let cmd = Command::new(
             Uuid::new_v4(),
             Uuid::new_v4(),
+            None, // No phone
             create_valid_address(),
             create_valid_address(),
             create_valid_period(),

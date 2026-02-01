@@ -8,7 +8,7 @@ use rdkafka::{ClientConfig, TopicPartitionList};
 use serde::Deserialize;
 use std::sync::Arc;
 use tokio::sync::broadcast;
-use tracing::{error, info, warn};
+use tracing::{error, info};
 use uuid::Uuid;
 
 use crate::domain::model::courier_location::{LocationHistoryEntry};

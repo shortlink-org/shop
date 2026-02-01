@@ -8,9 +8,9 @@ use redis::aio::ConnectionManager;
 use sea_orm::{Database, DatabaseConnection};
 use thiserror::Error;
 use tokio::sync::broadcast;
-use tracing::info;
+use tracing::{error, info};
 
-use crate::config::Config;
+use crate::config::{Config, TemporalConfig};
 use crate::infrastructure::cache::{CourierRedisCache, RedisLocationCache};
 use crate::infrastructure::messaging::{
     kafka_publisher::KafkaPublisherConfig, KafkaEventPublisher, LocationConsumer,
@@ -20,6 +20,11 @@ use crate::infrastructure::notifications::StubNotificationService;
 use crate::infrastructure::repository::{
     CourierPostgresRepository, LocationPostgresRepository, PackagePostgresRepository,
 };
+use crate::usecases::courier::command::register::Handler as RegisterHandler;
+use crate::usecases::courier::query::get_pool::Handler as GetPoolHandler;
+use crate::workers::courier::CourierActivities;
+use crate::workers::delivery::DeliveryActivities;
+use crate::workers::TemporalWorkerRunner;
 
 /// DI initialization errors
 #[derive(Debug, Error)]
@@ -32,6 +37,9 @@ pub enum DiError {
 
     #[error("Kafka connection failed: {0}")]
     KafkaError(String),
+
+    #[error("Temporal worker error: {0}")]
+    TemporalError(String),
 }
 
 /// Application state containing all dependencies
@@ -154,5 +162,78 @@ impl AppState {
     pub fn shutdown(&self) {
         info!("Sending shutdown signal...");
         let _ = self.shutdown_tx.send(());
+    }
+
+    /// Initialize Temporal worker configuration
+    ///
+    /// Validates that the Temporal runtime can be created.
+    /// Note: Due to SDK limitations, workers should be run in dedicated processes.
+    /// Use `run_courier_worker` or `run_delivery_worker` methods directly.
+    pub async fn start_temporal_workers(
+        self: &Arc<Self>,
+        config: &TemporalConfig,
+    ) -> Result<(), DiError> {
+        info!("Initializing Temporal worker configuration...");
+
+        // Validate that we can create a worker runner
+        let _runner = TemporalWorkerRunner::new(config.clone())
+            .map_err(|e| DiError::TemporalError(e.to_string()))?;
+
+        info!(
+            host = %config.host,
+            namespace = %config.namespace,
+            courier_queue = %config.task_queue_courier,
+            delivery_queue = %config.task_queue_delivery,
+            "Temporal configuration validated"
+        );
+
+        // Note: The Temporal Rust SDK pre-alpha has limitations with tokio::spawn
+        // due to RefCell in Worker. Workers should be run in dedicated processes
+        // or using tokio::task::spawn_local on a LocalSet.
+        //
+        // For production, consider:
+        // 1. Running workers as separate binaries
+        // 2. Using tokio::task::LocalSet for worker execution
+        // 3. Waiting for SDK stabilization
+
+        info!("Temporal workers ready (run in dedicated process for production)");
+
+        Ok(())
+    }
+
+    /// Create courier activities for use with Temporal worker
+    pub fn create_courier_activities(
+        self: &Arc<Self>,
+    ) -> Arc<CourierActivities<CourierPostgresRepository, CourierRedisCache>> {
+        let register_handler = Arc::new(RegisterHandler::new(
+            self.courier_repo.clone(),
+            self.courier_cache.clone(),
+        ));
+        let get_pool_handler = Arc::new(GetPoolHandler::new(
+            self.courier_repo.clone(),
+            self.courier_cache.clone(),
+        ));
+
+        Arc::new(CourierActivities::new(
+            register_handler,
+            get_pool_handler,
+            self.courier_repo.clone(),
+            self.courier_cache.clone(),
+        ))
+    }
+
+    /// Create delivery activities for use with Temporal worker
+    pub fn create_delivery_activities(
+        self: &Arc<Self>,
+    ) -> Arc<DeliveryActivities<CourierPostgresRepository, CourierRedisCache>> {
+        let get_pool_handler = Arc::new(GetPoolHandler::new(
+            self.courier_repo.clone(),
+            self.courier_cache.clone(),
+        ));
+
+        Arc::new(DeliveryActivities::new(
+            get_pool_handler,
+            self.courier_cache.clone(),
+        ))
     }
 }

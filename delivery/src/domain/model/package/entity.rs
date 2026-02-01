@@ -105,6 +105,16 @@ impl DeliveryPeriod {
     pub fn is_within(&self, time: DateTime<Utc>) -> bool {
         time >= self.start && time <= self.end
     }
+
+    /// Get the start of the delivery window
+    pub fn start(&self) -> &DateTime<Utc> {
+        &self.start
+    }
+
+    /// Get the end of the delivery window
+    pub fn end(&self) -> &DateTime<Utc> {
+        &self.end
+    }
 }
 
 /// Package errors
@@ -150,6 +160,8 @@ pub struct Package {
     order_id: Uuid,
     /// Customer ID
     customer_id: Uuid,
+    /// Customer phone number for delivery
+    customer_phone: Option<String>,
     /// Pickup address
     pickup_address: Address,
     /// Delivery address
@@ -186,6 +198,7 @@ impl Package {
     pub fn new(
         order_id: Uuid,
         customer_id: Uuid,
+        customer_phone: Option<String>,
         pickup_address: Address,
         delivery_address: Address,
         delivery_period: DeliveryPeriod,
@@ -198,6 +211,7 @@ impl Package {
             id: PackageId::new(),
             order_id,
             customer_id,
+            customer_phone,
             pickup_address,
             delivery_address,
             delivery_period,
@@ -221,6 +235,7 @@ impl Package {
         id: PackageId,
         order_id: Uuid,
         customer_id: Uuid,
+        customer_phone: Option<String>,
         pickup_address: Address,
         delivery_address: Address,
         delivery_period: DeliveryPeriod,
@@ -240,6 +255,7 @@ impl Package {
             id,
             order_id,
             customer_id,
+            customer_phone,
             pickup_address,
             delivery_address,
             delivery_period,
@@ -269,6 +285,10 @@ impl Package {
 
     pub fn customer_id(&self) -> Uuid {
         self.customer_id
+    }
+
+    pub fn customer_phone(&self) -> Option<&str> {
+        self.customer_phone.as_deref()
     }
 
     pub fn pickup_address(&self) -> &Address {
@@ -421,6 +441,7 @@ mod tests {
         Package::new(
             Uuid::new_v4(),
             Uuid::new_v4(),
+            None, // customer_phone
             create_test_address(),
             create_test_address(),
             period,

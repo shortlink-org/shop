@@ -203,7 +203,7 @@ where
         match cmd.result {
             DeliveryResult::Delivered => {
                 // Mark package as delivered
-                package.mark_delivered().map_err(|e| {
+                package.mark_delivered().map_err(|_| {
                     DeliverOrderError::InvalidPackageStatus(package.status())
                 })?;
 
@@ -228,7 +228,7 @@ where
                     .map(Self::reason_to_string)
                     .unwrap_or_default();
 
-                package.mark_not_delivered(reason).map_err(|e| {
+                package.mark_not_delivered(reason).map_err(|_| {
                     DeliverOrderError::InvalidPackageStatus(package.status())
                 })?;
 
@@ -280,8 +280,8 @@ where
                         speed: None,
                         heading: None,
                     }),
-                    photo: cmd.photo_proof.unwrap_or_default(),
-                    customer_signature: cmd.signature.unwrap_or_default(),
+                    photo: cmd.photo_proof.map(|s| s.into_bytes()).unwrap_or_default(),
+                    customer_signature: cmd.signature.map(|s| s.into_bytes()).unwrap_or_default(),
                     occurred_at: Some(pbjson_types::Timestamp {
                         seconds: now.timestamp(),
                         nanos: now.timestamp_subsec_nanos() as i32,
@@ -696,6 +696,7 @@ mod tests {
         let mut package = Package::new(
             Uuid::new_v4(),
             Uuid::new_v4(),
+            None, // customer_phone
             create_test_address(),
             create_test_address(),
             period,
@@ -923,6 +924,7 @@ mod tests {
         let mut package = Package::new(
             Uuid::new_v4(),
             Uuid::new_v4(),
+            None, // customer_phone
             create_test_address(),
             create_test_address(),
             period,

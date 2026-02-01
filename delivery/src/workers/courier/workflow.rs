@@ -2,14 +2,12 @@
 //!
 //! Temporal workflows for courier lifecycle management.
 //!
-//! NOTE: This is a placeholder implementation. The actual Temporal Rust SDK
-//! is still in development. This code demonstrates the intended patterns
-//! and will need to be updated when the SDK is stable.
-//!
 //! Workflows are deterministic and should only:
 //! - Call activities for side effects
 //! - Use Temporal primitives (signals, queries, timers)
 //! - Manage workflow state
+//!
+//! The actual workflow implementation is registered in `runner.rs`.
 
 use uuid::Uuid;
 
@@ -38,94 +36,42 @@ impl CourierWorkflowState {
 }
 
 /// Signal types for courier workflow
+///
+/// These signals can be sent to a running courier lifecycle workflow
+/// to trigger state transitions and activity executions.
 #[derive(Debug, Clone)]
 pub enum CourierSignal {
-    /// Courier goes online
+    /// Courier goes online - triggers status update to Free
     GoOnline,
-    /// Courier goes offline
+    /// Courier goes offline - triggers status update to Unavailable
     GoOffline,
-    /// Package assigned to courier
+    /// Package assigned to courier - triggers accept_package activity
     PackageAssigned { package_id: Uuid },
-    /// Delivery completed
+    /// Delivery completed - triggers complete_delivery activity
     DeliveryCompleted { package_id: Uuid, success: bool },
-    /// Stop the workflow
+    /// Stop the workflow gracefully
     Stop,
 }
 
 /// Query types for courier workflow
+///
+/// These queries can be used to inspect the current state of
+/// a running courier workflow without affecting its execution.
 #[derive(Debug, Clone)]
 pub enum CourierQuery {
-    /// Get current status
+    /// Get current courier status
     GetStatus,
-    /// Get current load
+    /// Get current package load
     GetLoad,
-    /// Check if available for assignment
+    /// Check if courier is available for new assignments
     IsAvailable,
 }
 
-// =============================================================================
-// Placeholder for Temporal SDK integration
-//
-// When Temporal Rust SDK is stable, implement like this:
-//
-// ```rust
-// use temporal_sdk::{workflow, WfContext, ActivityOptions};
-//
-// #[workflow]
-// pub async fn courier_lifecycle_workflow(
-//     ctx: WfContext,
-//     courier_id: Uuid,
-// ) -> Result<(), WorkflowError> {
-//     let mut state = CourierWorkflowState::new(courier_id);
-//     
-//     // Set up signal handler
-//     let signal_channel = ctx.signal_channel::<CourierSignal>("courier_signal");
-//     
-//     // Main workflow loop
-//     while state.is_running {
-//         // Wait for signals
-//         let signal = signal_channel.recv().await;
-//         
-//         match signal {
-//             CourierSignal::GoOnline => {
-//                 // Call activity to update status
-//                 ctx.activity(ActivityOptions::default())
-//                     .run(|| update_status_activity(courier_id, CourierStatus::Free))
-//                     .await?;
-//                 state.status = CourierStatus::Free;
-//             }
-//             CourierSignal::GoOffline => {
-//                 ctx.activity(ActivityOptions::default())
-//                     .run(|| update_status_activity(courier_id, CourierStatus::Unavailable))
-//                     .await?;
-//                 state.status = CourierStatus::Unavailable;
-//             }
-//             CourierSignal::PackageAssigned { package_id } => {
-//                 ctx.activity(ActivityOptions::default())
-//                     .run(|| accept_package_activity(courier_id, package_id))
-//                     .await?;
-//             }
-//             CourierSignal::DeliveryCompleted { package_id, success } => {
-//                 ctx.activity(ActivityOptions::default())
-//                     .run(|| complete_delivery_activity(courier_id, package_id, success))
-//                     .await?;
-//             }
-//             CourierSignal::Stop => {
-//                 state.is_running = false;
-//             }
-//         }
-//     }
-//     
-//     Ok(())
-// }
-// ```
-// =============================================================================
+/// Workflow type name for registration
+pub const COURIER_LIFECYCLE_WORKFLOW: &str = "courier_lifecycle";
 
-/// Placeholder function that will be replaced with actual workflow
-pub fn courier_lifecycle_workflow_placeholder() {
-    // This is a placeholder. Actual implementation depends on Temporal Rust SDK.
-    // See the comment block above for the intended implementation pattern.
-}
+/// Signal channel name for courier events
+pub const COURIER_SIGNAL_CHANNEL: &str = "courier_signal";
 
 #[cfg(test)]
 mod tests {

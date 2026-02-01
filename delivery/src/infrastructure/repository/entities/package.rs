@@ -20,6 +20,7 @@ pub struct Model {
     pub id: Uuid,
     pub order_id: Uuid,
     pub customer_id: Uuid,
+    pub customer_phone: Option<String>,
     // Pickup address
     pub pickup_street: String,
     pub pickup_city: String,
@@ -67,6 +68,7 @@ impl From<&Package> for ActiveModel {
             id: Set(package.id().0),
             order_id: Set(package.order_id()),
             customer_id: Set(package.customer_id()),
+            customer_phone: Set(package.customer_phone().map(|s| s.to_string())),
             pickup_street: Set(pickup.street.clone()),
             pickup_city: Set(pickup.city.clone()),
             pickup_postal_code: Set(pickup.postal_code.clone()),
@@ -129,6 +131,7 @@ impl TryFrom<Model> for Package {
             PackageId::from_uuid(model.id),
             model.order_id,
             model.customer_id,
+            model.customer_phone,
             pickup_address,
             delivery_address,
             delivery_period,

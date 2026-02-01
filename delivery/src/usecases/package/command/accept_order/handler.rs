@@ -131,6 +131,7 @@ where
         let mut package = Package::new(
             cmd.order_id,
             cmd.customer_id,
+            cmd.customer_phone.clone(),
             pickup_address,
             delivery_address,
             delivery_period,

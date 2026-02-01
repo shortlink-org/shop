@@ -3,17 +3,17 @@
 //! Temporal activities for courier operations.
 //! Activities are thin wrappers that delegate to use cases.
 //!
-//! NOTE: This is a placeholder implementation. The actual Temporal Rust SDK
-//! is still in development. This code demonstrates the intended patterns.
+//! These activities are registered with the Temporal worker in `runner.rs`
+//! and called from courier workflows.
 
 use std::sync::Arc;
 
 use thiserror::Error;
 use uuid::Uuid;
 
-use crate::domain::ports::{CourierCache, CourierRepository, QueryHandler, CommandHandlerWithResult};
 use crate::domain::model::courier::{Courier, CourierStatus, WorkHours};
 use crate::domain::model::vo::TransportType;
+use crate::domain::ports::{CommandHandlerWithResult, CourierCache, CourierRepository, QueryHandler};
 use crate::usecases::courier::command::register::{Command as RegisterCommand, Handler as RegisterHandler};
 use crate::usecases::courier::query::get_pool::{Handler as GetPoolHandler, Query as GetPoolQuery};
 
@@ -266,49 +266,8 @@ where
     }
 }
 
-// =============================================================================
-// Temporal Activity Registration (Placeholder)
+// Note: Activity registration is done in `runner.rs` using the Temporal SDK.
+// Each activity method above is wrapped and registered with the worker there.
 //
-// When Temporal Rust SDK is stable, register activities like this:
-//
-// ```rust
-// use temporal_sdk::Worker;
-//
-// pub fn register_courier_activities<R, C>(
-//     worker: &mut Worker,
-//     activities: Arc<CourierActivities<R, C>>,
-// ) where
-//     R: CourierRepository + 'static,
-//     C: CourierCache + 'static,
-// {
-//     worker.register_activity("register_courier", {
-//         let acts = activities.clone();
-//         move |input: RegisterCourierInput| {
-//             let acts = acts.clone();
-//             async move {
-//                 acts.register_courier(
-//                     input.name,
-//                     input.phone,
-//                     input.email,
-//                     input.transport_type,
-//                     input.max_distance_km,
-//                     input.work_zone,
-//                     input.work_hours,
-//                     input.push_token,
-//                 ).await
-//             }
-//         }
-//     });
-//
-//     worker.register_activity("get_free_couriers", {
-//         let acts = activities.clone();
-//         move |zone: String| {
-//             let acts = acts.clone();
-//             async move { acts.get_free_couriers_in_zone(&zone).await }
-//         }
-//     });
-//
-//     // ... register other activities
-// }
-// ```
-// =============================================================================
+// Activity input/output types use simple strings for serialization compatibility
+// with the pre-alpha Temporal SDK.

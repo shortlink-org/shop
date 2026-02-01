@@ -10,7 +10,11 @@
 
 pub mod courier;
 pub mod delivery;
+pub mod runner;
 
 // Re-export task queues
 pub use courier::COURIER_TASK_QUEUE;
 pub use delivery::DELIVERY_TASK_QUEUE;
+
+// Re-export runner
+pub use runner::{TemporalWorkerRunner, WorkerError};

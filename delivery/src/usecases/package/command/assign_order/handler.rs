@@ -764,6 +764,7 @@ mod tests {
         let mut package = Package::new(
             Uuid::new_v4(),
             Uuid::new_v4(),
+            Some("+49123456789".to_string()), // customer_phone
             create_test_address(),
             create_test_address(),
             period,
@@ -903,6 +904,7 @@ mod tests {
         let package = Package::new(
             Uuid::new_v4(),
             Uuid::new_v4(),
+            None, // customer_phone
             create_test_address(),
             create_test_address(),
             period,

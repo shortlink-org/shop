@@ -30,6 +30,31 @@ pub struct Config {
 
     /// Log level (e.g., "info", "debug", "trace")
     pub log_level: String,
+
+    /// Temporal configuration
+    pub temporal: TemporalConfig,
+}
+
+/// Temporal workflow engine configuration
+#[derive(Debug, Clone)]
+pub struct TemporalConfig {
+    /// Temporal server host (e.g., "localhost:7233")
+    pub host: String,
+
+    /// Temporal namespace
+    pub namespace: String,
+
+    /// Whether TLS is enabled for Temporal connection
+    pub tls_enabled: bool,
+
+    /// Task queue for courier workflows
+    pub task_queue_courier: String,
+
+    /// Task queue for delivery workflows
+    pub task_queue_delivery: String,
+
+    /// Worker build ID for versioning
+    pub worker_build_id: String,
 }
 
 impl Config {
@@ -42,6 +67,14 @@ impl Config {
     /// Optional env vars:
     /// - GRPC_PORT: gRPC server port (default: 50051)
     /// - RUST_LOG: Log level (default: "info")
+    ///
+    /// Temporal env vars:
+    /// - TEMPORAL_HOST: Temporal server address (default: localhost:7233)
+    /// - TEMPORAL_NAMESPACE: Temporal namespace (default: delivery)
+    /// - TEMPORAL_TLS_ENABLED: Whether TLS is enabled (default: false)
+    /// - TEMPORAL_TASK_QUEUE_COURIER: Courier task queue (default: COURIER_TASK_QUEUE)
+    /// - TEMPORAL_TASK_QUEUE_DELIVERY: Delivery task queue (default: DELIVERY_TASK_QUEUE)
+    /// - TEMPORAL_WORKER_BUILD_ID: Worker build ID for versioning (default: delivery-rust-v1)
     ///
     /// Kafka env vars (read by KafkaPublisherConfig/LocationConsumerConfig):
     /// - KAFKA_BROKERS: Kafka bootstrap servers (default: localhost:9092)
@@ -67,17 +100,61 @@ impl Config {
 
         let log_level = env::var("RUST_LOG").unwrap_or_else(|_| "info".to_string());
 
+        // Temporal configuration
+        let temporal = TemporalConfig::from_env()?;
+
         Ok(Self {
             database_url,
             redis_url,
             grpc_port,
             log_level,
+            temporal,
         })
     }
 
     /// Get the gRPC server address
     pub fn grpc_addr(&self) -> String {
         format!("0.0.0.0:{}", self.grpc_port)
+    }
+}
+
+impl TemporalConfig {
+    /// Load Temporal configuration from environment variables
+    pub fn from_env() -> Result<Self, ConfigError> {
+        let host = env::var("TEMPORAL_HOST")
+            .unwrap_or_else(|_| "localhost:7233".to_string());
+
+        let namespace = env::var("TEMPORAL_NAMESPACE")
+            .unwrap_or_else(|_| "delivery".to_string());
+
+        let tls_enabled = env::var("TEMPORAL_TLS_ENABLED")
+            .unwrap_or_else(|_| "false".to_string())
+            .parse::<bool>()
+            .map_err(|e| ConfigError::InvalidValue("TEMPORAL_TLS_ENABLED".to_string(), e.to_string()))?;
+
+        let task_queue_courier = env::var("TEMPORAL_TASK_QUEUE_COURIER")
+            .unwrap_or_else(|_| "COURIER_TASK_QUEUE".to_string());
+
+        let task_queue_delivery = env::var("TEMPORAL_TASK_QUEUE_DELIVERY")
+            .unwrap_or_else(|_| "DELIVERY_TASK_QUEUE".to_string());
+
+        let worker_build_id = env::var("TEMPORAL_WORKER_BUILD_ID")
+            .unwrap_or_else(|_| "delivery-rust-v1".to_string());
+
+        Ok(Self {
+            host,
+            namespace,
+            tls_enabled,
+            task_queue_courier,
+            task_queue_delivery,
+            worker_build_id,
+        })
+    }
+
+    /// Get the Temporal server URL
+    pub fn server_url(&self) -> String {
+        let scheme = if self.tls_enabled { "https" } else { "http" };
+        format!("{}://{}", scheme, self.host)
     }
 }
 
