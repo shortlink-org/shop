@@ -5,5 +5,5 @@
 mod command;
 mod handler;
 
-pub use command::Command;
+pub use command::{AddressInput, Command, DeliveryPeriodInput};
 pub use handler::{AcceptOrderError, Handler, Response};

@@ -12,12 +12,13 @@ use crate::di::AppState;
 
 use super::handlers::{courier, order};
 use super::{
-    ActivateCourierRequest, ActivateCourierResponse, ArchiveCourierRequest,
-    ArchiveCourierResponse, AssignOrderRequest, AssignOrderResponse, ChangeTransportTypeRequest,
-    ChangeTransportTypeResponse, DeactivateCourierRequest, DeactivateCourierResponse,
-    DeliveryService, GetCourierPoolRequest, GetCourierPoolResponse, GetCourierRequest,
-    GetCourierResponse, RegisterCourierRequest, RegisterCourierResponse, UpdateContactInfoRequest,
-    UpdateContactInfoResponse, UpdateWorkScheduleRequest, UpdateWorkScheduleResponse,
+    AcceptOrderRequest, AcceptOrderResponse, ActivateCourierRequest, ActivateCourierResponse,
+    ArchiveCourierRequest, ArchiveCourierResponse, AssignOrderRequest, AssignOrderResponse,
+    ChangeTransportTypeRequest, ChangeTransportTypeResponse, DeactivateCourierRequest,
+    DeactivateCourierResponse, DeliveryService, GetCourierPoolRequest, GetCourierPoolResponse,
+    GetCourierRequest, GetCourierResponse, RegisterCourierRequest, RegisterCourierResponse,
+    UpdateContactInfoRequest, UpdateContactInfoResponse, UpdateWorkScheduleRequest,
+    UpdateWorkScheduleResponse,
 };
 
 /// gRPC service implementation
@@ -112,7 +113,15 @@ impl DeliveryService for DeliveryServiceImpl {
         courier::change_transport_type(&self.state, request.into_inner()).await
     }
 
-    // ==================== Order Assignment ====================
+    // ==================== Order Operations ====================
+
+    #[instrument(skip(self, request), fields(order_id = %request.get_ref().order_id))]
+    async fn accept_order(
+        &self,
+        request: Request<AcceptOrderRequest>,
+    ) -> Result<Response<AcceptOrderResponse>, Status> {
+        order::accept_order(&self.state, request.into_inner()).await
+    }
 
     #[instrument(skip(self, request), fields(package_id = %request.get_ref().package_id))]
     async fn assign_order(
