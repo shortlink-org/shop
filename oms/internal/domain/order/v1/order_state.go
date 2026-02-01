@@ -163,10 +163,16 @@ func (o *OrderState) GetDeliveryInfo() *DeliveryInfo {
 }
 
 // SetDeliveryInfo sets the delivery information for the order.
-// Returns an error if the order is in a terminal state or if delivery is already in progress.
+// Returns an error if the order is in a terminal state, delivery is already in progress,
+// or if the delivery info is invalid.
 func (o *OrderState) SetDeliveryInfo(info DeliveryInfo) error {
 	o.mu.Lock()
 	defer o.mu.Unlock()
+
+	// Validate delivery info (invariant: delivery info must be valid)
+	if !info.IsValid() {
+		return fmt.Errorf("invalid delivery info: address, delivery period and package info are required")
+	}
 
 	// Check OrderStatus - cannot update delivery info in terminal states
 	currentStatus := o.getStatusUnlocked()
