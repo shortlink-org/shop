@@ -193,7 +193,11 @@ pub async fn assign_order(
         courier_id,
     };
 
-    let handler = AssignHandler::new(state.courier_repo.clone(), state.courier_cache.clone());
+    let handler = AssignHandler::new(
+        state.courier_repo.clone(),
+        state.courier_cache.clone(),
+        state.package_repo.clone(),
+    );
 
     let result = handler.handle(cmd).await.map_err(|e| {
         error!(error = %e, "Failed to assign order");

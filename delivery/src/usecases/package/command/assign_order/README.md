@@ -1,7 +1,8 @@
 ## Use Case: UC-2 Assign Order to Courier
 
-### Описание
-Назначение посылки на курьера. Может быть автоматическим (диспетчеризация) или ручным. При назначении курьер получает push-уведомление.
+### Description
+
+Assigns a package to a courier. Can be automatic (dispatching) or manual. Upon assignment, the courier receives a push notification.
 
 ### Sequence Diagram
 
@@ -21,7 +22,7 @@ sequenceDiagram
     end
   
     rect rgb(224, 255, 239)
-        alt Auto-assign (диспетчеризация)
+        alt Auto-assign (dispatching)
             Delivery->>+Dispatch: FindNearestCourier(package)
             Dispatch->>+CourierPool: GetAvailableCouriers(zone, status)
             CourierPool-->>-Dispatch: List of available couriers
@@ -77,62 +78,62 @@ message AssignOrderResponse {
 }
 ```
 
-### Диспетчеризация (Auto-assign)
+### Dispatching (Auto-assign)
 
-Алгоритм выбора ближайшего курьера:
+Algorithm for selecting the nearest courier:
 
-1. **Фильтрация по зоне работы:**
-   - Получить все свободные курьеры в зоне доставки
-   - Статус: `FREE`
-   - Зона работы пересекается с зоной доставки
+1. **Filter by work zone:**
+   - Get all free couriers in the delivery zone
+   - Status: `FREE`
+   - Work zone overlaps with delivery zone
 
-2. **Расчет расстояния:**
-   - Получить текущую геолокацию курьера через **Geolocation Service**: `GetCourierLocations(courier_ids)`
-   - Рассчитать расстояние от курьера до точки забора
-   - Использовать формулу Haversine для расчета расстояния
-   - Если локация курьера недоступна, пропустить курьера из рассмотрения
+2. **Calculate distance:**
+   - Get current courier geolocation via **Geolocation Service**: `GetCourierLocations(courier_ids)`
+   - Calculate distance from courier to pickup point
+   - Use Haversine formula for distance calculation
+   - If courier location is unavailable, skip courier from consideration
 
-3. **Фильтрация по возможностям:**
-   - Тип транспорта курьера соответствует требованиям
-   - Расстояние до точки забора ≤ максимальная дальность курьера
-   - Текущая загрузка < максимальная загрузка
+3. **Filter by capabilities:**
+   - Courier transport type matches requirements
+   - Distance to pickup point <= courier's maximum range
+   - Current load < maximum load
 
-4. **Сортировка и выбор:**
-   - Сортировать по расстоянию (ближайший первый)
-   - Учитывать рейтинг курьера
-   - Учитывать текущую загрузку (балансировка)
-   - Выбрать оптимального курьера
+4. **Sort and select:**
+   - Sort by distance (nearest first)
+   - Consider courier rating
+   - Consider current load (load balancing)
+   - Select optimal courier
 
 ### Business Rules
 
-1. Курьер должен быть в статусе `FREE`
-2. Курьер должен быть в рабочее время
-3. Расстояние до точки забора не должно превышать максимальную дальность курьера
-4. Текущая загрузка курьера должна быть меньше максимальной
-5. При назначении статус посылки меняется на `ASSIGNED`
-6. Статус курьера меняется на `BUSY`
-7. Генерируется событие `PackageAssigned`
-8. Отправляется push-уведомление курьеру
+1. Courier must be in `FREE` status
+2. Courier must be within working hours
+3. Distance to pickup point must not exceed courier's maximum range
+4. Courier's current load must be less than maximum
+5. Upon assignment, package status changes to `ASSIGNED`
+6. Courier status changes to `BUSY`
+7. `PackageAssigned` event is generated
+8. Push notification is sent to courier
 
 ### Push Notification Content
 
 ```json
 {
-  "title": "Новый заказ назначен",
-  "body": "Заказ #{{package_id}} готов к забору",
+  "title": "New order assigned",
+  "body": "Order #{{package_id}} is ready for pickup",
   "data": {
     "package_id": "uuid",
-    "pickup_address": "ул. Примерная, 1",
+    "pickup_address": "123 Example St",
     "pickup_coordinates": {
       "latitude": 55.7558,
       "longitude": 37.6173
     },
-    "delivery_address": "ул. Доставки, 2",
+    "delivery_address": "456 Delivery Ave",
     "delivery_coordinates": {
       "latitude": 55.7600,
       "longitude": 37.6200
     },
-    "customer_phone": "+79001234567",
+    "customer_phone": "+1234567890",
     "delivery_period": {
       "start": "2024-01-15T10:00:00Z",
       "end": "2024-01-15T12:00:00Z"
@@ -143,9 +144,8 @@ message AssignOrderResponse {
 
 ### Error Cases
 
-- `PACKAGE_NOT_FOUND`: Посылка не найдена
-- `COURIER_NOT_FOUND`: Курьер не найден
-- `COURIER_NOT_AVAILABLE`: Курьер недоступен (занят/недоступен)
-- `NO_AVAILABLE_COURIERS`: Нет доступных курьеров в зоне
-- `INVALID_ASSIGNMENT`: Невозможно назначить (превышена загрузка, расстояние и т.д.)
-
+- `PACKAGE_NOT_FOUND`: Package not found
+- `COURIER_NOT_FOUND`: Courier not found
+- `COURIER_NOT_AVAILABLE`: Courier unavailable (busy/offline)
+- `NO_AVAILABLE_COURIERS`: No available couriers in zone
+- `INVALID_ASSIGNMENT`: Cannot assign (load exceeded, distance exceeded, etc.)
