@@ -134,6 +134,9 @@ deploy:
       port: 9090
 
   volumes:
+    - name: tmp
+      type: emptyDir
+      mountPath: /tmp
     - name: grpc-ca
       type: configMap
       configMapName: root-ca-bundle
