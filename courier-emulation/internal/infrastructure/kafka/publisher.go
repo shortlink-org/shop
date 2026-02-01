@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/ThreeDotsLabs/watermill"
-	"github.com/ThreeDotsLabs/watermill-kafka/v3/pkg/kafka"
 	"github.com/ThreeDotsLabs/watermill/message"
 
 	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/domain/vo"
@@ -15,45 +14,16 @@ const (
 	TopicCourierLocation = "courier.location.updates"
 )
 
-// PublisherConfig holds configuration for the Kafka publisher.
-type PublisherConfig struct {
-	Brokers []string
-}
-
-// DefaultPublisherConfig returns default configuration.
-func DefaultPublisherConfig() PublisherConfig {
-	return PublisherConfig{
-		Brokers: []string{"localhost:9092"},
-	}
-}
-
 // LocationPublisher publishes courier location events to Kafka.
 type LocationPublisher struct {
 	publisher message.Publisher
-	logger    watermill.LoggerAdapter
 }
 
-// NewLocationPublisher creates a new Kafka location publisher.
-func NewLocationPublisher(config PublisherConfig, logger watermill.LoggerAdapter) (*LocationPublisher, error) {
-	if logger == nil {
-		logger = watermill.NewStdLogger(false, false)
-	}
-
-	publisher, err := kafka.NewPublisher(
-		kafka.PublisherConfig{
-			Brokers:   config.Brokers,
-			Marshaler: kafka.DefaultMarshaler{},
-		},
-		logger,
-	)
-	if err != nil {
-		return nil, err
-	}
-
+// NewLocationPublisher creates a new Kafka location publisher using go-sdk/watermill publisher.
+func NewLocationPublisher(publisher message.Publisher) *LocationPublisher {
 	return &LocationPublisher{
 		publisher: publisher,
-		logger:    logger,
-	}, nil
+	}
 }
 
 // PublishLocation publishes a courier location event to Kafka.
