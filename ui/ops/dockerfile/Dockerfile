@@ -9,7 +9,7 @@ ARG BUILDKIT_SBOM_SCAN_CONTEXT=true
 # =============================================================================
 # Stage 1: Dependencies
 # =============================================================================
-FROM node:24-alpine AS deps
+FROM node:24.13.0-alpine AS deps
 
 WORKDIR /app
 
@@ -25,7 +25,7 @@ RUN pnpm install --frozen-lockfile
 # =============================================================================
 # Stage 2: Builder
 # =============================================================================
-FROM node:24-alpine AS builder
+FROM node:24.13.0-alpine AS builder
 
 WORKDIR /app
 
@@ -50,7 +50,7 @@ RUN mkdir -p public
 # =============================================================================
 # Stage 3: Runner
 # =============================================================================
-FROM node:24-alpine AS runner
+FROM node:24.13.0-alpine AS runner
 
 LABEL maintainer=batazor111@gmail.com
 LABEL org.opencontainers.image.title="shortlink-shop-ui"
