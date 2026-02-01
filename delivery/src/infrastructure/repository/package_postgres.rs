@@ -51,9 +51,9 @@ impl PackageRepository for PackagePostgresRepository {
             .await
             .map_err(|e| RepositoryError::QueryError(e.to_string()))?;
 
-        if existing.is_some() {
+        if let Some(ref existing_model) = existing {
             // Update with optimistic locking
-            let existing_version = existing.as_ref().unwrap().version;
+            let existing_version = existing_model.version;
             if existing_version != package.version() as i32 - 1 {
                 return Err(RepositoryError::VersionConflict {
                     expected: package.version() - 1,
@@ -84,7 +84,7 @@ impl PackageRepository for PackagePostgresRepository {
         match result {
             Some(model) => {
                 let package = Package::try_from(model)
-                    .map_err(|e| RepositoryError::SerializationError(e))?;
+                    .map_err(RepositoryError::SerializationError)?;
                 Ok(Some(package))
             }
             None => Ok(None),
@@ -101,7 +101,7 @@ impl PackageRepository for PackagePostgresRepository {
         match result {
             Some(model) => {
                 let package = Package::try_from(model)
-                    .map_err(|e| RepositoryError::SerializationError(e))?;
+                    .map_err(RepositoryError::SerializationError)?;
                 Ok(Some(package))
             }
             None => Ok(None),
@@ -151,7 +151,7 @@ impl PackageRepository for PackagePostgresRepository {
         let mut packages = Vec::with_capacity(results.len());
         for model in results {
             let package = Package::try_from(model)
-                .map_err(|e| RepositoryError::SerializationError(e))?;
+                .map_err(RepositoryError::SerializationError)?;
             packages.push(package);
         }
 
@@ -196,7 +196,7 @@ impl PackageRepository for PackagePostgresRepository {
         let mut packages = Vec::with_capacity(results.len());
         for model in results {
             let package = Package::try_from(model)
-                .map_err(|e| RepositoryError::SerializationError(e))?;
+                .map_err(RepositoryError::SerializationError)?;
             packages.push(package);
         }
 

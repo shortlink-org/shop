@@ -68,6 +68,7 @@ enum CourierStatus {
   COURIER_STATUS_UNAVAILABLE = 1;
   COURIER_STATUS_FREE = 2;
   COURIER_STATUS_BUSY = 3;
+  COURIER_STATUS_ARCHIVED = 4;
 }
 
 // Transport type

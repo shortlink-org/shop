@@ -74,6 +74,7 @@ where
     /// Register a new courier in the system
     ///
     /// This activity delegates to RegisterHandler.
+    #[allow(clippy::too_many_arguments)]
     pub async fn register_courier(
         &self,
         name: String,

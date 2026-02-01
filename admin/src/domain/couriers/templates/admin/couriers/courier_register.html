@@ -1,0 +1,166 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ site_title }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; <a href="{% url 'couriers:list' %}">Courier Management</a>
+    &rsaquo; Register New Courier
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <h1>{{ title }}</h1>
+
+    <form method="post" id="courier-form">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="errornote">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        <div class="module">
+            <h2>Personal Information</h2>
+            <table>
+                <tr>
+                    <th>{{ form.name.label }}:</th>
+                    <td>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.name.errors %}<li>{{ error }}</li>{% endfor %}
+                            </ul>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>{{ form.phone.label }}:</th>
+                    <td>
+                        {{ form.phone }}
+                        {% if form.phone.help_text %}<p class="help">{{ form.phone.help_text }}</p>{% endif %}
+                        {% if form.phone.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.phone.errors %}<li>{{ error }}</li>{% endfor %}
+                            </ul>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>{{ form.email.label }}:</th>
+                    <td>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.email.errors %}<li>{{ error }}</li>{% endfor %}
+                            </ul>
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="module">
+            <h2>Transport & Zone</h2>
+            <table>
+                <tr>
+                    <th>{{ form.transport_type.label }}:</th>
+                    <td>
+                        {{ form.transport_type }}
+                        <p class="help">
+                            Capacity: Walking (1), Bicycle (2), Motorcycle (3), Car (5) packages
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>{{ form.max_distance_km.label }}:</th>
+                    <td>
+                        {{ form.max_distance_km }} km
+                        {% if form.max_distance_km.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.max_distance_km.errors %}<li>{{ error }}</li>{% endfor %}
+                            </ul>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>{{ form.work_zone.label }}:</th>
+                    <td>
+                        {{ form.work_zone }}
+                        {% if form.work_zone.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.work_zone.errors %}<li>{{ error }}</li>{% endfor %}
+                            </ul>
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="module">
+            <h2>Work Schedule</h2>
+            <table>
+                <tr>
+                    <th>Work Hours:</th>
+                    <td>
+                        {{ form.work_start }} to {{ form.work_end }}
+                        {% if form.work_start.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.work_start.errors %}<li>{{ error }}</li>{% endfor %}
+                            </ul>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>{{ form.work_days.label }}:</th>
+                    <td>
+                        {{ form.work_days }}
+                        {% if form.work_days.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.work_days.errors %}<li>{{ error }}</li>{% endfor %}
+                            </ul>
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="submit-row">
+            <input type="submit" value="Register Courier" class="default">
+            <a href="{% url 'couriers:list' %}" class="closelink">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.module h2 {
+    background: var(--primary);
+    color: var(--header-link-color);
+    padding: 8px 15px;
+    margin: 0;
+}
+.module table {
+    width: 100%;
+    padding: 15px;
+}
+.module table th {
+    text-align: right;
+    padding: 8px;
+    width: 150px;
+    vertical-align: top;
+}
+.module table td {
+    padding: 8px;
+}
+.submit-row {
+    padding: 12px 14px;
+    margin: 20px 0;
+    background: var(--darkened-bg);
+    border-radius: 4px;
+}
+</style>
+{% endblock %}

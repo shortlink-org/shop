@@ -10,6 +10,8 @@
 //! - Sets of free couriers for quick lookup
 
 use async_trait::async_trait;
+#[cfg(test)]
+use mockall::automock;
 use thiserror::Error;
 use uuid::Uuid;
 
@@ -56,6 +58,7 @@ pub enum CacheError {
 ///
 /// Defines the contract for caching courier state.
 /// Implementations handle the actual caching mechanism (Redis, etc.).
+#[cfg_attr(test, automock)]
 #[async_trait]
 pub trait CourierCache: Send + Sync {
     /// Initialize courier state in cache
@@ -116,4 +119,32 @@ pub trait CourierCache: Send + Sync {
 
     /// Check if courier exists in cache
     async fn exists(&self, courier_id: Uuid) -> Result<bool, CacheError>;
+
+    /// Update courier status only
+    ///
+    /// Updates only the status field in the cached state.
+    async fn update_status(
+        &self,
+        courier_id: Uuid,
+        status: CourierStatus,
+    ) -> Result<(), CacheError>;
+
+    /// Update courier max_load only
+    ///
+    /// Updates only the max_load field in the cached state.
+    async fn update_max_load(&self, courier_id: Uuid, max_load: u32) -> Result<(), CacheError>;
+
+    /// Add courier to free pool for a zone
+    ///
+    /// Called when courier becomes available (status = Free).
+    async fn add_to_free_pool(&self, courier_id: Uuid, work_zone: &str) -> Result<(), CacheError>;
+
+    /// Remove courier from free pool for a zone
+    ///
+    /// Called when courier becomes unavailable or archived.
+    async fn remove_from_free_pool(
+        &self,
+        courier_id: Uuid,
+        work_zone: &str,
+    ) -> Result<(), CacheError>;
 }

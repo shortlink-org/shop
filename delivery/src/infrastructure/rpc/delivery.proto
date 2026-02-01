@@ -8,11 +8,44 @@ import "google/protobuf/timestamp.proto";
 
 // DeliveryService provides gRPC API for delivery operations
 service DeliveryService {
-  // RegisterCourier registers a new courier in the system
-  rpc RegisterCourier(RegisterCourierRequest) returns (RegisterCourierResponse);
+  // ==================== Courier Queries ====================
+  // Получение данных о курьерах
+  
+  // GetCourier retrieves a single courier by ID
+  rpc GetCourier(GetCourierRequest) returns (GetCourierResponse);
   
   // GetCourierPool retrieves couriers with filtering and pagination
   rpc GetCourierPool(GetCourierPoolRequest) returns (GetCourierPoolResponse);
+  
+  // ==================== Courier Lifecycle ====================
+  // Жизненный цикл курьера: регистрация, активация, архивация
+  
+  // RegisterCourier registers a new courier in the system
+  rpc RegisterCourier(RegisterCourierRequest) returns (RegisterCourierResponse);
+  
+  // ActivateCourier sets courier status to FREE (available for orders)
+  rpc ActivateCourier(ActivateCourierRequest) returns (ActivateCourierResponse);
+  
+  // DeactivateCourier sets courier status to UNAVAILABLE
+  rpc DeactivateCourier(DeactivateCourierRequest) returns (DeactivateCourierResponse);
+  
+  // ArchiveCourier performs soft delete (sets status to ARCHIVED)
+  rpc ArchiveCourier(ArchiveCourierRequest) returns (ArchiveCourierResponse);
+  
+  // ==================== Courier Profile ====================
+  // Управление профилем курьера
+  
+  // UpdateContactInfo updates courier phone and email
+  rpc UpdateContactInfo(UpdateContactInfoRequest) returns (UpdateContactInfoResponse);
+  
+  // UpdateWorkSchedule updates courier work hours and zone
+  rpc UpdateWorkSchedule(UpdateWorkScheduleRequest) returns (UpdateWorkScheduleResponse);
+  
+  // ChangeTransportType changes courier transport and recalculates max_load
+  rpc ChangeTransportType(ChangeTransportTypeRequest) returns (ChangeTransportTypeResponse);
+  
+  // ==================== Order Assignment ====================
+  // Назначение заказов курьерам
   
   // AssignOrder assigns a package to a courier
   rpc AssignOrder(AssignOrderRequest) returns (AssignOrderResponse);
@@ -41,6 +74,7 @@ enum CourierStatus {
   COURIER_STATUS_UNAVAILABLE = 1;
   COURIER_STATUS_FREE = 2;
   COURIER_STATUS_BUSY = 3;
+  COURIER_STATUS_ARCHIVED = 4;
 }
 
 // WorkHours defines courier working schedule
@@ -142,4 +176,114 @@ message AssignOrderResponse {
   string courier_id = 2;
   google.protobuf.Timestamp assigned_at = 3;
   int32 estimated_delivery_minutes = 4;
+}
+
+// ==================== GetCourier ====================
+
+// GetCourierRequest contains courier ID to retrieve
+message GetCourierRequest {
+  string courier_id = 1;
+  bool include_location = 2;
+}
+
+// GetCourierResponse returns courier data
+message GetCourierResponse {
+  Courier courier = 1;
+}
+
+// ==================== ActivateCourier ====================
+
+// ActivateCourierRequest contains courier ID to activate
+message ActivateCourierRequest {
+  string courier_id = 1;
+}
+
+// ActivateCourierResponse returns activation result
+message ActivateCourierResponse {
+  string courier_id = 1;
+  CourierStatus status = 2;
+  google.protobuf.Timestamp activated_at = 3;
+}
+
+// ==================== DeactivateCourier ====================
+
+// DeactivateCourierRequest contains courier ID to deactivate
+message DeactivateCourierRequest {
+  string courier_id = 1;
+  optional string reason = 2;
+}
+
+// DeactivateCourierResponse returns deactivation result
+message DeactivateCourierResponse {
+  string courier_id = 1;
+  CourierStatus status = 2;
+  google.protobuf.Timestamp deactivated_at = 3;
+}
+
+// ==================== ArchiveCourier ====================
+
+// ArchiveCourierRequest contains courier ID to archive
+message ArchiveCourierRequest {
+  string courier_id = 1;
+  optional string reason = 2;
+}
+
+// ArchiveCourierResponse returns archival result
+message ArchiveCourierResponse {
+  string courier_id = 1;
+  CourierStatus status = 2;
+  google.protobuf.Timestamp archived_at = 3;
+}
+
+// ==================== UpdateContactInfo ====================
+
+// UpdateContactInfoRequest contains new contact information
+message UpdateContactInfoRequest {
+  string courier_id = 1;
+  optional string phone = 2;
+  optional string email = 3;
+  optional string push_token = 4;
+}
+
+// UpdateContactInfoResponse returns update result
+message UpdateContactInfoResponse {
+  string courier_id = 1;
+  string phone = 2;
+  string email = 3;
+  google.protobuf.Timestamp updated_at = 4;
+}
+
+// ==================== UpdateWorkSchedule ====================
+
+// UpdateWorkScheduleRequest contains new work schedule
+message UpdateWorkScheduleRequest {
+  string courier_id = 1;
+  optional WorkHours work_hours = 2;
+  optional string work_zone = 3;
+  optional double max_distance_km = 4;
+}
+
+// UpdateWorkScheduleResponse returns update result
+message UpdateWorkScheduleResponse {
+  string courier_id = 1;
+  WorkHours work_hours = 2;
+  string work_zone = 3;
+  double max_distance_km = 4;
+  google.protobuf.Timestamp updated_at = 5;
+}
+
+// ==================== ChangeTransportType ====================
+
+// ChangeTransportTypeRequest contains new transport type
+message ChangeTransportTypeRequest {
+  string courier_id = 1;
+  TransportType transport_type = 2;
+}
+
+// ChangeTransportTypeResponse returns update result with recalculated max_load
+message ChangeTransportTypeResponse {
+  string courier_id = 1;
+  TransportType transport_type = 2;
+  int32 max_load = 3;
+  google.protobuf.Timestamp updated_at = 4;
 }

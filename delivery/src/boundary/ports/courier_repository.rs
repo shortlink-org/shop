@@ -4,6 +4,8 @@
 //! This port is implemented by infrastructure adapters (e.g., PostgreSQL).
 
 use async_trait::async_trait;
+#[cfg(test)]
+use mockall::automock;
 use thiserror::Error;
 use uuid::Uuid;
 
@@ -41,6 +43,7 @@ pub enum RepositoryError {
 ///
 /// Defines the contract for storing and retrieving Courier aggregates.
 /// Implementations handle the actual persistence mechanism (PostgreSQL, etc.).
+#[cfg_attr(test, automock)]
 #[async_trait]
 pub trait CourierRepository: Send + Sync {
     /// Save a courier (insert or update)
@@ -69,6 +72,12 @@ pub trait CourierRepository: Send + Sync {
 
     /// Delete a courier by ID
     async fn delete(&self, id: Uuid) -> Result<(), RepositoryError>;
+
+    /// Archive a courier (soft delete)
+    ///
+    /// Sets the courier as archived in the database.
+    /// The courier data is retained but marked as inactive.
+    async fn archive(&self, id: Uuid) -> Result<(), RepositoryError>;
 
     /// List all couriers with pagination
     ///

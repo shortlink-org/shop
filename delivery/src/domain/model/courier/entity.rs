@@ -462,6 +462,10 @@ impl Courier {
                 to: CourierStatus::Unavailable,
             }),
             CourierStatus::Unavailable => Ok(()), // Already offline
+            CourierStatus::Archived => Err(CourierError::InvalidStatusTransition {
+                from: self.status,
+                to: CourierStatus::Unavailable,
+            }),
         }
     }
 
@@ -517,6 +521,46 @@ impl Courier {
     /// Update work hours
     pub fn update_work_hours(&mut self, work_hours: WorkHours) {
         self.work_hours = work_hours;
+        self.touch();
+    }
+
+    /// Update phone number
+    pub fn update_phone(&mut self, phone: String) {
+        self.phone = phone;
+        self.touch();
+    }
+
+    /// Update email address
+    pub fn update_email(&mut self, email: String) {
+        self.email = email;
+        self.touch();
+    }
+
+    /// Update work zone
+    pub fn update_work_zone(&mut self, work_zone: String) {
+        self.work_zone = work_zone;
+        self.touch();
+    }
+
+    /// Update max distance
+    pub fn update_max_distance(&mut self, max_distance_km: f64) {
+        self.max_distance_km = max_distance_km;
+        self.touch();
+    }
+
+    /// Change transport type and recalculate max load
+    pub fn change_transport_type(&mut self, transport_type: TransportType) {
+        self.transport_type = transport_type;
+
+        // Recalculate max load based on new transport type
+        let new_max_load = match transport_type {
+            TransportType::Walking => 1,
+            TransportType::Bicycle => 2,
+            TransportType::Motorcycle => 3,
+            TransportType::Car => 5,
+        };
+
+        self.capacity = CourierCapacity::new(new_max_load);
         self.touch();
     }
 

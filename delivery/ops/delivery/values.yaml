@@ -145,16 +145,29 @@ deploy:
   # -- define a liveness probe that checks every 5 seconds, starting after 5 seconds
   livenessProbe:
     enabled: true
+    failureThreshold: 5
     httpGet:
-      path: /health
-      port: 9090
+      path: /app-health/application/livez
+      port: 15020
+      scheme: HTTP
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    successThreshold: 1
+    terminationGracePeriodSeconds: 5
+    timeoutSeconds: 5
 
   # -- define a readiness probe that checks every 5 seconds, starting after 5 seconds
   readinessProbe:
     enabled: true
+    failureThreshold: 30
     httpGet:
-      path: /ready
-      port: 9090
+      path: /app-health/application/readyz
+      port: 15020
+      scheme: HTTP
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    successThreshold: 1
+    timeoutSeconds: 5
 
   volumes:
     - name: grpc-ca

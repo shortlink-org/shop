@@ -9,6 +9,8 @@ pub enum CourierStatus {
     Free,
     /// Courier is busy with deliveries
     Busy,
+    /// Courier is archived (soft deleted, no longer active)
+    Archived,
 }
 
 impl fmt::Display for CourierStatus {
@@ -17,6 +19,7 @@ impl fmt::Display for CourierStatus {
             CourierStatus::Unavailable => write!(f, "Unavailable"),
             CourierStatus::Free => write!(f, "Free"),
             CourierStatus::Busy => write!(f, "Busy"),
+            CourierStatus::Archived => write!(f, "Archived"),
         }
     }
 }
@@ -118,6 +121,7 @@ mod tests {
         assert!(CourierStatus::Free.can_accept_assignment());
         assert!(!CourierStatus::Unavailable.can_accept_assignment());
         assert!(!CourierStatus::Busy.can_accept_assignment());
+        assert!(!CourierStatus::Archived.can_accept_assignment());
     }
 
     #[test]

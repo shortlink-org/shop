@@ -38,9 +38,9 @@ impl CourierRepository for CourierPostgresRepository {
             .await
             .map_err(|e| RepositoryError::QueryError(e.to_string()))?;
 
-        if existing.is_some() {
+        if let Some(ref existing_model) = existing {
             // Update with optimistic locking
-            let existing_version = existing.as_ref().unwrap().version;
+            let existing_version = existing_model.version;
             if existing_version != courier.version() as i32 - 1 {
                 return Err(RepositoryError::VersionConflict {
                     expected: courier.version() - 1,
@@ -86,7 +86,7 @@ impl CourierRepository for CourierPostgresRepository {
         match result {
             Some(model) => {
                 let courier = Courier::try_from(model)
-                    .map_err(|e| RepositoryError::SerializationError(e))?;
+                    .map_err(RepositoryError::SerializationError)?;
                 Ok(Some(courier))
             }
             None => Ok(None),
@@ -103,7 +103,7 @@ impl CourierRepository for CourierPostgresRepository {
         match result {
             Some(model) => {
                 let courier = Courier::try_from(model)
-                    .map_err(|e| RepositoryError::SerializationError(e))?;
+                    .map_err(RepositoryError::SerializationError)?;
                 Ok(Some(courier))
             }
             None => Ok(None),
@@ -120,7 +120,7 @@ impl CourierRepository for CourierPostgresRepository {
         match result {
             Some(model) => {
                 let courier = Courier::try_from(model)
-                    .map_err(|e| RepositoryError::SerializationError(e))?;
+                    .map_err(RepositoryError::SerializationError)?;
                 Ok(Some(courier))
             }
             None => Ok(None),
@@ -137,7 +137,7 @@ impl CourierRepository for CourierPostgresRepository {
         let mut couriers = Vec::with_capacity(results.len());
         for model in results {
             let courier = Courier::try_from(model)
-                .map_err(|e| RepositoryError::SerializationError(e))?;
+                .map_err(RepositoryError::SerializationError)?;
             couriers.push(courier);
         }
 
@@ -177,6 +177,30 @@ impl CourierRepository for CourierPostgresRepository {
         Ok(())
     }
 
+    async fn archive(&self, id: Uuid) -> Result<(), RepositoryError> {
+        use sea_orm::Set;
+
+        // Find the courier first
+        let existing = CourierEntity::find_by_id(id)
+            .one(&self.db)
+            .await
+            .map_err(|e| RepositoryError::QueryError(e.to_string()))?
+            .ok_or(RepositoryError::NotFound(id))?;
+
+        // Update timestamp to mark as archived
+        // The actual ARCHIVED status is stored in Redis cache
+        // TODO: Add is_archived column in future migration
+        let mut model: ActiveModel = existing.into();
+        model.updated_at = Set(chrono::Utc::now());
+
+        model
+            .update(&self.db)
+            .await
+            .map_err(|e| RepositoryError::QueryError(e.to_string()))?;
+
+        Ok(())
+    }
+
     async fn list(&self, limit: u64, offset: u64) -> Result<Vec<Courier>, RepositoryError> {
         let results = CourierEntity::find()
             .order_by_desc(courier::Column::CreatedAt)
@@ -189,7 +213,7 @@ impl CourierRepository for CourierPostgresRepository {
         let mut couriers = Vec::with_capacity(results.len());
         for model in results {
             let courier =
-                Courier::try_from(model).map_err(|e| RepositoryError::SerializationError(e))?;
+                Courier::try_from(model).map_err(RepositoryError::SerializationError)?;
             couriers.push(courier);
         }
 

@@ -73,6 +73,14 @@ dependencies = [
   "gunicorn>=23.0.0",
 ]
 
+[project.optional-dependencies]
+test = [
+  "pytest>=8.0",
+  "pytest-django>=4.5",
+  "pytest-cov>=4.0",
+  "pytest-mock>=3.12",
+]
+
 [build-system]
 requires = ["setuptools~=80.9"]
 build-backend = "setuptools.build_meta"
@@ -84,7 +92,11 @@ where = ["src"]
 "*" = ["py.typed"]
 
 [tool.pytest.ini_options]
-addopts = "-ra -q --cov-report term-missing --cov libname --fixtures tests"
+DJANGO_SETTINGS_MODULE = "admin.settings"
+python_files = ["test_*.py"]
+pythonpath = ["src"]
+addopts = "-ra -q --cov=src --cov-report=term-missing"
+testpaths = ["tests"]
 
 [tool.ruff]
 unsafe-fixes = true

@@ -149,6 +149,7 @@ pub enum CourierStatus {
     Unavailable = 1,
     Free = 2,
     Busy = 3,
+    Archived = 4,
 }
 impl CourierStatus {
     /// String value of the enum field names used in the ProtoBuf definition.
@@ -161,6 +162,7 @@ impl CourierStatus {
             Self::Unavailable => "COURIER_STATUS_UNAVAILABLE",
             Self::Free => "COURIER_STATUS_FREE",
             Self::Busy => "COURIER_STATUS_BUSY",
+            Self::Archived => "COURIER_STATUS_ARCHIVED",
         }
     }
     /// Creates an enum from field names used in the ProtoBuf definition.
@@ -170,6 +172,7 @@ impl CourierStatus {
             "COURIER_STATUS_UNAVAILABLE" => Some(Self::Unavailable),
             "COURIER_STATUS_FREE" => Some(Self::Free),
             "COURIER_STATUS_BUSY" => Some(Self::Busy),
+            "COURIER_STATUS_ARCHIVED" => Some(Self::Archived),
             _ => None,
         }
     }
