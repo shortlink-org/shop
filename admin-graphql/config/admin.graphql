@@ -1,5 +1,5 @@
 schema
-@server(port: 8101, enableFederation: true)
+@server(port: 8101, enableFederation: true, introspection: true)
 @upstream(
   baseURL: "{{.env.ADMIN_API_URL}}"
   allowedHeaders: ["Authorization", "Cookie"]
@@ -8,8 +8,13 @@ schema
   export: {
     prometheus: {
       path: "/metrics"
+      format: "text"
+    }
+    otlp: {
+      url: "{{.env.OTLP_URL}}"
     }
   }
+  requestHeaders: ["Authorization", "Cookie"]
 ) {
   query: Query
 }

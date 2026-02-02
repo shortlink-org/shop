@@ -1,5 +1,5 @@
 schema
-@server(port: 8100, enableFederation: true)
+@server(port: 8100, enableFederation: true, introspection: true)
 @upstream(
   allowedHeaders: ["Authorization", "user-id"]
 )
@@ -7,11 +7,13 @@ schema
   export: {
     prometheus: {
       path: "/metrics"
+      format: "text"
     }
-#    otlp: {
-#      url: "http://127.0.0.1"
-#    }
+    otlp: {
+      url: "{{.env.OTLP_URL}}"
+    }
   }
+  requestHeaders: ["user-id", "Authorization"]
 )
 @link(type: Script, src: "scripts/auth.js")
 @link(src: "{{.env.OMS_GRPC_URL}}", type: Grpc) {
