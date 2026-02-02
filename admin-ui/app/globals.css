@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+/* Custom styles for admin UI */
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* Ant Design overrides */
+.ant-layout {
+  min-height: 100vh;
+}

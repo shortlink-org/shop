@@ -1,21 +1,11 @@
 """gRPC client infrastructure.
 
 This package contains gRPC clients for external services.
+
+Note: Delivery/Courier management has been moved to admin-ui.
+DeliveryClient was removed. See: admin-ui/ROADMAP.md
 """
 
-from .delivery_client import (
-    Address,
-    Courier,
-    CourierDeliveriesResult,
-    CourierPoolResult,
-    DeliveryClient,
-    DeliveryRecord,
-    DeliveryServiceError,
-    Location,
-    WorkHours,
-    get_auth_token_from_request,
-    get_delivery_client,
-)
 from .oms_client import (
     DeliveryAddress,
     DeliveryInfo,
@@ -31,18 +21,6 @@ from .oms_client import (
 )
 
 __all__ = [
-    # Delivery
-    "Address",
-    "Courier",
-    "CourierDeliveriesResult",
-    "CourierPoolResult",
-    "DeliveryClient",
-    "DeliveryRecord",
-    "DeliveryServiceError",
-    "Location",
-    "WorkHours",
-    "get_auth_token_from_request",
-    "get_delivery_client",
     # OMS
     "DeliveryAddress",
     "DeliveryInfo",

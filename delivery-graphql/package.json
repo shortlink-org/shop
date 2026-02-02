@@ -1,0 +1,17 @@
+{
+  "name": "delivery-graphql",
+  "version": "1.0.0",
+  "description": "GraphQL subgraph for Delivery service (gRPC -> GraphQL via Tailcall)",
+  "main": "index.js",
+  "scripts": {
+    "start": "tailcall start config/delivery.graphql",
+    "dev": "tailcall start config/delivery.graphql --watch",
+    "check": "tailcall check config/delivery.graphql"
+  },
+  "keywords": ["graphql", "grpc", "delivery", "tailcall"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@tailcallhq/tailcall": "^1.6.14"
+  }
+}

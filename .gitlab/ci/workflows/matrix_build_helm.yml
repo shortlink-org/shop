@@ -44,3 +44,15 @@
       # UI - Shop Frontend
       - HELM_CHART_NAME: ui
         HELM_CHART_PATH: ui/ops/Helm
+
+      # Admin UI - Delivery Admin Panel
+      - HELM_CHART_NAME: admin-ui
+        HELM_CHART_PATH: admin-ui/ops/Helm/$HELM_CHART_NAME
+
+      # Delivery GraphQL Subgraph
+      - HELM_CHART_NAME: delivery-graphql
+        HELM_CHART_PATH: delivery-graphql/ops/Helm/$HELM_CHART_NAME
+
+      # Delivery Service
+      - HELM_CHART_NAME: delivery
+        HELM_CHART_PATH: delivery/ops/$HELM_CHART_NAME

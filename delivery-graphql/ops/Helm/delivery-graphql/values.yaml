@@ -1,4 +1,4 @@
-# Common default values for shortlink.
+# Common default values for delivery-graphql.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -12,28 +12,8 @@ ingress:
   enabled: false
 
 # ==============================================================================
-# HTTPRoute configuration for Gateway API
-# URL rewrite: /api/* → /* (e.g., /api/graphql → /graphql)
 httpRoute:
-  enabled: true
-  gatewayName: external-gateway
-  gatewayNamespace: istio-ingress
-  hostnames:
-    - shop.shortlink.best
-  rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /api
-      filters:
-        - type: URLRewrite
-          urlRewrite:
-            path:
-              type: ReplacePrefixMatch
-              replacePrefixMatch: /
-      backendRefs:
-        - name: shortlink-shop-bff
-          port: 9991
+  enabled: false
 
 # ==============================================================================
 deploy:
@@ -42,27 +22,22 @@ deploy:
   imagePullSecrets: []
 
   env:
-    # Subgraph URLs for Cosmo Router
-    CARTS_SUBGRAPH_URL: http://shortlink-shop-oms-graphql.shortlink-shop:8100/graphql
-    ADMIN_SUBGRAPH_URL: http://shortlink-shop-admin-graphql.shortlink-shop:8101/graphql
-    COUNTRIES_SUBGRAPH_URL: https://countries.trevorblades.com/
-    # Router configuration
-    LOG_LEVEL: info
-    LISTEN_ADDR: "0.0.0.0:9991"
+    # Delivery gRPC URL
+    DELIVERY_GRPC_URL: http://shortlink-shop-delivery.shortlink-shop:50051
 
   resources:
     limits:
-      cpu: 1000m
-      memory: 512Mi
+      cpu: 500m
+      memory: 256Mi
     requests:
-      cpu: 100m
-      memory: 64Mi
+      cpu: 50m
+      memory: 32Mi
 
   # -- Annotations to be added to controller pods
   annotations: {}
 
   image:
-    repository: registry.gitlab.com/shortlink-org/shop/bff
+    repository: registry.gitlab.com/shortlink-org/shop/delivery-graphql
     tag: latest
     # -- Global imagePullPolicy
     # Default: 'Always' if image tag is 'latest', else 'IfNotPresent'
@@ -73,15 +48,15 @@ deploy:
   livenessProbe:
     enabled: true
     httpGet:
-      path: /health
-      port: 9991
+      path: /graphql
+      port: 8102
 
   # -- define a readiness probe that checks every 5 seconds, starting after 5 seconds
   readinessProbe:
     enabled: true
     httpGet:
-      path: /ready
-      port: 9991
+      path: /graphql
+      port: 8102
 
   securityContext:
     readOnlyRootFilesystem: true
@@ -97,11 +72,12 @@ service:
   type: ClusterIP
   ports:
     - name: http
-      port: 9991
+      port: 8102
       protocol: TCP
-      public: true
+      public: false
     - name: metrics
-      port: 8088
+      port: 8102
+      targetPort: 8102
       protocol: TCP
       public: false
 

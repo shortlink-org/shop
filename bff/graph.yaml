@@ -16,6 +16,12 @@ subgraphs:
     introspection:
       url: http://localhost:8101/graphql
 
+  # Delivery API (gRPC -> GraphQL via Tailcall) - couriers, deliveries
+  - name: delivery
+    routing_url: http://localhost:8102/graphql
+    introspection:
+      url: http://localhost:8102/graphql
+
   # Countries (external GraphQL API)
   - name: countries
     routing_url: https://countries.trevorblades.com/

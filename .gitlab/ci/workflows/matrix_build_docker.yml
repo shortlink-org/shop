@@ -74,3 +74,16 @@
         WORKDIR: $APPLICATION
         DOCKERFILE_PATH: ops/dockerfile/Dockerfile
         DOCKERFILE_ARGS: "--build-arg NEXT_PUBLIC_API_URI=https://shortlink.best"
+
+      # Admin UI - Delivery Admin Panel (Refine/Next.js)
+      - APPLICATION: admin-ui
+        REGISTRY_IMAGE: $CI_REGISTRY_IMAGE/$APPLICATION
+        WORKDIR: $APPLICATION
+        DOCKERFILE_PATH: ops/dockerfile/Dockerfile
+        DOCKERFILE_ARGS: "--build-arg NEXT_PUBLIC_GRAPHQL_URL=https://shop.shortlink.best/graphql --build-arg NEXT_PUBLIC_ORY_SDK_URL=https://shortlink.best/api/auth"
+
+      # Delivery GraphQL Subgraph (Tailcall)
+      - APPLICATION: delivery-graphql
+        REGISTRY_IMAGE: $CI_REGISTRY_IMAGE/$APPLICATION
+        WORKDIR: $APPLICATION
+        DOCKERFILE_PATH: ops/dockerfile/Dockerfile

@@ -1,4 +1,4 @@
-# Common default values for shortlink.
+# Common default values for admin-ui.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -13,27 +13,14 @@ ingress:
 
 # ==============================================================================
 # HTTPRoute configuration for Gateway API
-# URL rewrite: /api/* → /* (e.g., /api/graphql → /graphql)
 httpRoute:
   enabled: true
   gatewayName: external-gateway
   gatewayNamespace: istio-ingress
   hostnames:
-    - shop.shortlink.best
-  rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /api
-      filters:
-        - type: URLRewrite
-          urlRewrite:
-            path:
-              type: ReplacePrefixMatch
-              replacePrefixMatch: /
-      backendRefs:
-        - name: shortlink-shop-bff
-          port: 9991
+    - admin.shop.shortlink.best
+  path: /
+  port: 3001
 
 # ==============================================================================
 deploy:
@@ -42,49 +29,50 @@ deploy:
   imagePullSecrets: []
 
   env:
-    # Subgraph URLs for Cosmo Router
-    CARTS_SUBGRAPH_URL: http://shortlink-shop-oms-graphql.shortlink-shop:8100/graphql
-    ADMIN_SUBGRAPH_URL: http://shortlink-shop-admin-graphql.shortlink-shop:8101/graphql
-    COUNTRIES_SUBGRAPH_URL: https://countries.trevorblades.com/
-    # Router configuration
-    LOG_LEVEL: info
-    LISTEN_ADDR: "0.0.0.0:9991"
+    # GraphQL BFF URL
+    NEXT_PUBLIC_GRAPHQL_URL: http://shortlink-shop-bff.shortlink-shop:9991/graphql
+    # Ory Kratos URL
+    NEXT_PUBLIC_ORY_SDK_URL: http://shortlink-ory-kratos-public.shortlink:4433
 
   resources:
     limits:
-      cpu: 1000m
-      memory: 512Mi
+      cpu: 200m
+      memory: 256Mi
     requests:
-      cpu: 100m
-      memory: 64Mi
+      cpu: 25m
+      memory: 128Mi
 
   # -- Annotations to be added to controller pods
   annotations: {}
 
   image:
-    repository: registry.gitlab.com/shortlink-org/shop/bff
+    repository: registry.gitlab.com/shortlink-org/shop/admin-ui
     tag: latest
     # -- Global imagePullPolicy
     # Default: 'Always' if image tag is 'latest', else 'IfNotPresent'
     # Ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
     pullPolicy: Always
 
-  # -- define a liveness probe that checks every 5 seconds, starting after 5 seconds
+  # -- define a liveness probe that checks
   livenessProbe:
     enabled: true
+    initialDelaySeconds: 30
+    timeoutSeconds: 10
     httpGet:
-      path: /health
-      port: 9991
+      path: /
+      port: 3001
 
-  # -- define a readiness probe that checks every 5 seconds, starting after 5 seconds
+  # -- define a readiness probe that checks
   readinessProbe:
     enabled: true
+    initialDelaySeconds: 15
+    timeoutSeconds: 5
     httpGet:
-      path: /ready
-      port: 9991
+      path: /
+      port: 3001
 
   securityContext:
-    readOnlyRootFilesystem: true
+    readOnlyRootFilesystem: false
 
   volumes:
     - name: tmp
@@ -97,13 +85,9 @@ service:
   type: ClusterIP
   ports:
     - name: http
-      port: 9991
+      port: 3001
       protocol: TCP
       public: true
-    - name: metrics
-      port: 8088
-      protocol: TCP
-      public: false
 
 # ==============================================================================
 # Prometheus Operator ServiceMonitor configuration

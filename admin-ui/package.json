@@ -1,0 +1,51 @@
+{
+  "name": "admin-ui",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Admin UI for Delivery management - Refine + Next.js",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "dev": "next dev --port 3001",
+    "build": "next build",
+    "start": "next start --port 3001",
+    "lint": "next lint",
+    "codegen": "graphql-codegen --config codegen.ts"
+  },
+  "dependencies": {
+    "@ory/client": "^1.22.22",
+    "@refinedev/antd": "^6.0.3",
+    "@refinedev/cli": "^2.16.36",
+    "@refinedev/core": "^5.0.8",
+    "@refinedev/simple-rest": "^5.0.8",
+    "urql": "^4.2.0",
+    "@urql/core": "^5.1.1",
+    "@refinedev/nextjs-router": "^7.0.4",
+    "@refinedev/kbar": "^2.0.0",
+    "@ant-design/icons": "^5.6.1",
+    "@apollo/client": "^3.12.5",
+    "antd": "^5.23.4",
+    "dayjs": "^1.11.13",
+    "graphql": "^16.10.0",
+    "graphql-tag": "^2.12.6",
+    "next": "^15.2.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^5.0.3",
+    "@graphql-codegen/typescript": "^4.1.2",
+    "@graphql-codegen/typescript-operations": "^4.4.0",
+    "@graphql-codegen/typescript-react-apollo": "^4.3.2",
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.5.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.0"
+  }
+}

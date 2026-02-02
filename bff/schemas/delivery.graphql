@@ -1,0 +1,270 @@
+# Delivery Subgraph SDL Schema
+# Auto-generated for federation composition
+# Source: delivery-graphql service
+
+"""
+Courier transport type
+"""
+enum TransportType {
+  UNSPECIFIED
+  WALKING
+  BICYCLE
+  MOTORCYCLE
+  CAR
+}
+
+"""
+Courier availability status
+"""
+enum CourierStatus {
+  UNSPECIFIED
+  UNAVAILABLE
+  FREE
+  BUSY
+  ARCHIVED
+}
+
+"""
+Package delivery status
+"""
+enum PackageStatus {
+  UNSPECIFIED
+  ACCEPTED
+  IN_POOL
+  ASSIGNED
+  IN_TRANSIT
+  DELIVERED
+  NOT_DELIVERED
+  REQUIRES_HANDLING
+}
+
+"""
+Delivery priority level
+"""
+enum Priority {
+  UNSPECIFIED
+  NORMAL
+  URGENT
+}
+
+"""
+GPS location coordinates
+"""
+type Location {
+  latitude: Float!
+  longitude: Float!
+}
+
+"""
+Courier work hours schedule
+"""
+type WorkHours {
+  startTime: String!
+  endTime: String!
+  workDays: [Int!]!
+}
+
+"""
+Physical address for pickup/delivery
+"""
+type Address {
+  street: String!
+  city: String!
+  postalCode: String
+  country: String!
+  latitude: Float
+  longitude: Float
+}
+
+"""
+Pagination metadata
+"""
+type PaginationInfo {
+  currentPage: Int!
+  pageSize: Int!
+  totalPages: Int!
+  totalItems: Int!
+}
+
+"""
+Courier entity representing a delivery person
+"""
+type Courier {
+  courierId: String!
+  name: String!
+  phone: String!
+  email: String!
+  transportType: TransportType!
+  maxDistanceKm: Float!
+  status: CourierStatus!
+  currentLoad: Int!
+  maxLoad: Int!
+  rating: Float!
+  workHours: WorkHours
+  workZone: String!
+  currentLocation: Location
+  successfulDeliveries: Int!
+  failedDeliveries: Int!
+  createdAt: String
+  lastActiveAt: String
+}
+
+"""
+Paginated list of couriers
+"""
+type CourierListResponse {
+  couriers: [Courier!]!
+  totalCount: Int!
+  pagination: PaginationInfo
+}
+
+"""
+Delivery record for a package
+"""
+type DeliveryRecord {
+  packageId: String!
+  orderId: String!
+  status: PackageStatus!
+  pickupAddress: Address
+  deliveryAddress: Address
+  assignedAt: String
+  deliveredAt: String
+  priority: Priority!
+}
+
+"""
+Courier's delivery history
+"""
+type CourierDeliveriesResponse {
+  deliveries: [DeliveryRecord!]!
+  totalCount: Int!
+}
+
+input CourierFilterInput {
+  statusFilter: [CourierStatus!]
+  transportTypeFilter: [TransportType!]
+  zoneFilter: String
+  availableOnly: Boolean
+  includeLocation: Boolean
+}
+
+input PaginationInput {
+  page: Int!
+  pageSize: Int!
+}
+
+input WorkHoursInput {
+  startTime: String!
+  endTime: String!
+  workDays: [Int!]!
+}
+
+input RegisterCourierInput {
+  name: String!
+  phone: String!
+  email: String!
+  transportType: TransportType!
+  maxDistanceKm: Float!
+  workZone: String!
+  workHours: WorkHoursInput!
+  pushToken: String
+}
+
+input UpdateContactInput {
+  phone: String
+  email: String
+  pushToken: String
+}
+
+input UpdateScheduleInput {
+  workHours: WorkHoursInput
+  workZone: String
+  maxDistanceKm: Float
+}
+
+type Query {
+  """
+  Get list of couriers with filtering and pagination
+  """
+  couriers(filter: CourierFilterInput, pagination: PaginationInput): CourierListResponse!
+
+  """
+  Get a single courier by ID
+  """
+  courier(id: String!, includeLocation: Boolean): Courier
+
+  """
+  Get courier's delivery history
+  """
+  courierDeliveries(courierId: String!, limit: Int): CourierDeliveriesResponse!
+}
+
+type Mutation {
+  """
+  Register a new courier
+  """
+  registerCourier(input: RegisterCourierInput!): RegisterCourierResponse!
+
+  """
+  Activate courier (set status to FREE)
+  """
+  activateCourier(id: String!): CourierStatusResponse!
+
+  """
+  Deactivate courier (set status to UNAVAILABLE)
+  """
+  deactivateCourier(id: String!, reason: String): CourierStatusResponse!
+
+  """
+  Archive courier (soft delete)
+  """
+  archiveCourier(id: String!, reason: String): CourierStatusResponse!
+
+  """
+  Update courier contact information
+  """
+  updateCourierContact(id: String!, input: UpdateContactInput!): UpdateContactResponse!
+
+  """
+  Update courier work schedule
+  """
+  updateCourierSchedule(id: String!, input: UpdateScheduleInput!): UpdateScheduleResponse!
+
+  """
+  Change courier transport type
+  """
+  changeCourierTransport(id: String!, transportType: TransportType!): ChangeTransportResponse!
+}
+
+type RegisterCourierResponse {
+  courierId: String!
+  status: CourierStatus!
+  createdAt: String!
+}
+
+type CourierStatusResponse {
+  courierId: String!
+  status: CourierStatus!
+}
+
+type UpdateContactResponse {
+  courierId: String!
+  phone: String!
+  email: String!
+  updatedAt: String!
+}
+
+type UpdateScheduleResponse {
+  courierId: String!
+  workHours: WorkHours
+  workZone: String!
+  maxDistanceKm: Float!
+  updatedAt: String!
+}
+
+type ChangeTransportResponse {
+  courierId: String!
+  transportType: TransportType!
+  maxLoad: Int!
+  updatedAt: String!
+}

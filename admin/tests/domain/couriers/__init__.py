@@ -1,1 +1,0 @@
-"""Courier domain tests package."""

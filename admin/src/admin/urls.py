@@ -26,7 +26,6 @@ from . import admin as user_admin  # noqa: F401 - Register User/Group with Unfol
 urlpatterns = [
     path("__debug__/", include("debug_toolbar.urls")),
     path("admin/logout/", views.logout_view, name="admin_logout"),
-    path("admin/couriers/", include("domain.couriers.urls", namespace="couriers")),
     path("admin/orders/", include("domain.orders.urls", namespace="orders")),
     path("admin/", admin.site.urls),
     path("hello/", views.hello, name="hello"),

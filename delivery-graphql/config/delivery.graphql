@@ -1,0 +1,399 @@
+schema
+@server(port: 8102, enableFederation: true)
+@upstream(
+  allowedHeaders: ["Authorization", "user-id"]
+)
+@telemetry(
+  export: {
+    prometheus: {
+      path: "/metrics"
+    }
+  }
+)
+@link(src: "{{.env.DELIVERY_GRPC_URL}}", type: Grpc) {
+  query: Query
+  mutation: Mutation
+}
+
+# ============================================
+# Enums
+# ============================================
+
+enum TransportType {
+  UNSPECIFIED
+  WALKING
+  BICYCLE
+  MOTORCYCLE
+  CAR
+}
+
+enum CourierStatus {
+  UNSPECIFIED
+  UNAVAILABLE
+  FREE
+  BUSY
+  ARCHIVED
+}
+
+enum PackageStatus {
+  UNSPECIFIED
+  ACCEPTED
+  IN_POOL
+  ASSIGNED
+  IN_TRANSIT
+  DELIVERED
+  NOT_DELIVERED
+  REQUIRES_HANDLING
+}
+
+enum Priority {
+  UNSPECIFIED
+  NORMAL
+  URGENT
+}
+
+# ============================================
+# Common Types
+# ============================================
+
+type Location {
+  latitude: Float!
+  longitude: Float!
+}
+
+type WorkHours {
+  startTime: String!
+  endTime: String!
+  workDays: [Int!]!
+}
+
+type Address {
+  street: String!
+  city: String!
+  postalCode: String
+  country: String!
+  latitude: Float
+  longitude: Float
+}
+
+type PaginationInfo {
+  currentPage: Int!
+  pageSize: Int!
+  totalPages: Int!
+  totalItems: Int!
+}
+
+# ============================================
+# Courier Types
+# ============================================
+
+type Courier {
+  courierId: String!
+  name: String!
+  phone: String!
+  email: String!
+  transportType: TransportType!
+  maxDistanceKm: Float!
+  status: CourierStatus!
+  currentLoad: Int!
+  maxLoad: Int!
+  rating: Float!
+  workHours: WorkHours
+  workZone: String!
+  currentLocation: Location
+  successfulDeliveries: Int!
+  failedDeliveries: Int!
+  createdAt: String
+  lastActiveAt: String
+}
+
+type CourierListResponse {
+  couriers: [Courier!]!
+  totalCount: Int!
+  pagination: PaginationInfo
+}
+
+type RegisterCourierResponse {
+  courierId: String!
+  status: CourierStatus!
+  createdAt: String!
+}
+
+type CourierStatusResponse {
+  courierId: String!
+  status: CourierStatus!
+}
+
+type UpdateContactResponse {
+  courierId: String!
+  phone: String!
+  email: String!
+  updatedAt: String!
+}
+
+type UpdateScheduleResponse {
+  courierId: String!
+  workHours: WorkHours
+  workZone: String!
+  maxDistanceKm: Float!
+  updatedAt: String!
+}
+
+type ChangeTransportResponse {
+  courierId: String!
+  transportType: TransportType!
+  maxLoad: Int!
+  updatedAt: String!
+}
+
+# ============================================
+# Delivery Types
+# ============================================
+
+type DeliveryRecord {
+  packageId: String!
+  orderId: String!
+  status: PackageStatus!
+  pickupAddress: Address
+  deliveryAddress: Address
+  assignedAt: String
+  deliveredAt: String
+  priority: Priority!
+}
+
+type CourierDeliveriesResponse {
+  deliveries: [DeliveryRecord!]!
+  totalCount: Int!
+}
+
+# ============================================
+# Query Inputs
+# ============================================
+
+input CourierFilterInput {
+  statusFilter: [CourierStatus!]
+  transportTypeFilter: [TransportType!]
+  zoneFilter: String
+  availableOnly: Boolean
+  includeLocation: Boolean
+}
+
+input PaginationInput {
+  page: Int!
+  pageSize: Int!
+}
+
+# ============================================
+# Queries
+# ============================================
+
+type Query {
+  """
+  Get list of couriers with filtering and pagination
+  """
+  couriers(filter: CourierFilterInput, pagination: PaginationInput): CourierListResponse!
+  @grpc(
+    url: "{{.env.DELIVERY_GRPC_URL}}"
+    method: "infrastructure.rpc.delivery.v1.DeliveryService.GetCourierPool"
+    body: """
+    {
+      "status_filter": {{.args.filter.statusFilter | default: []}},
+      "transport_type_filter": {{.args.filter.transportTypeFilter | default: []}},
+      "zone_filter": "{{.args.filter.zoneFilter | default: ""}}",
+      "available_only": {{.args.filter.availableOnly | default: false}},
+      "include_location": {{.args.filter.includeLocation | default: false}},
+      "pagination": {
+        "page": {{.args.pagination.page | default: 1}},
+        "page_size": {{.args.pagination.pageSize | default: 20}}
+      }
+    }
+    """
+  )
+
+  """
+  Get a single courier by ID
+  """
+  courier(id: String!, includeLocation: Boolean): Courier
+  @grpc(
+    url: "{{.env.DELIVERY_GRPC_URL}}"
+    method: "infrastructure.rpc.delivery.v1.DeliveryService.GetCourier"
+    body: """
+    {
+      "courier_id": "{{.args.id}}",
+      "include_location": {{.args.includeLocation | default: false}}
+    }
+    """
+  )
+
+  """
+  Get courier's delivery history
+  """
+  courierDeliveries(courierId: String!, limit: Int): CourierDeliveriesResponse!
+  @grpc(
+    url: "{{.env.DELIVERY_GRPC_URL}}"
+    method: "infrastructure.rpc.delivery.v1.DeliveryService.GetCourierDeliveries"
+    body: """
+    {
+      "courier_id": "{{.args.courierId}}",
+      "limit": {{.args.limit | default: 5}}
+    }
+    """
+  )
+}
+
+# ============================================
+# Mutation Inputs
+# ============================================
+
+input WorkHoursInput {
+  startTime: String!
+  endTime: String!
+  workDays: [Int!]!
+}
+
+input RegisterCourierInput {
+  name: String!
+  phone: String!
+  email: String!
+  transportType: TransportType!
+  maxDistanceKm: Float!
+  workZone: String!
+  workHours: WorkHoursInput!
+  pushToken: String
+}
+
+input UpdateContactInput {
+  phone: String
+  email: String
+  pushToken: String
+}
+
+input UpdateScheduleInput {
+  workHours: WorkHoursInput
+  workZone: String
+  maxDistanceKm: Float
+}
+
+# ============================================
+# Mutations
+# ============================================
+
+type Mutation {
+  """
+  Register a new courier
+  """
+  registerCourier(input: RegisterCourierInput!): RegisterCourierResponse!
+  @grpc(
+    url: "{{.env.DELIVERY_GRPC_URL}}"
+    method: "infrastructure.rpc.delivery.v1.DeliveryService.RegisterCourier"
+    body: """
+    {
+      "name": "{{.args.input.name}}",
+      "phone": "{{.args.input.phone}}",
+      "email": "{{.args.input.email}}",
+      "transport_type": "{{.args.input.transportType}}",
+      "max_distance_km": {{.args.input.maxDistanceKm}},
+      "work_zone": "{{.args.input.workZone}}",
+      "work_hours": {
+        "start_time": "{{.args.input.workHours.startTime}}",
+        "end_time": "{{.args.input.workHours.endTime}}",
+        "work_days": {{.args.input.workHours.workDays}}
+      },
+      "push_token": "{{.args.input.pushToken | default: ""}}"
+    }
+    """
+  )
+
+  """
+  Activate courier (set status to FREE)
+  """
+  activateCourier(id: String!): CourierStatusResponse!
+  @grpc(
+    url: "{{.env.DELIVERY_GRPC_URL}}"
+    method: "infrastructure.rpc.delivery.v1.DeliveryService.ActivateCourier"
+    body: """
+    {
+      "courier_id": "{{.args.id}}"
+    }
+    """
+  )
+
+  """
+  Deactivate courier (set status to UNAVAILABLE)
+  """
+  deactivateCourier(id: String!, reason: String): CourierStatusResponse!
+  @grpc(
+    url: "{{.env.DELIVERY_GRPC_URL}}"
+    method: "infrastructure.rpc.delivery.v1.DeliveryService.DeactivateCourier"
+    body: """
+    {
+      "courier_id": "{{.args.id}}",
+      "reason": "{{.args.reason | default: ""}}"
+    }
+    """
+  )
+
+  """
+  Archive courier (soft delete)
+  """
+  archiveCourier(id: String!, reason: String): CourierStatusResponse!
+  @grpc(
+    url: "{{.env.DELIVERY_GRPC_URL}}"
+    method: "infrastructure.rpc.delivery.v1.DeliveryService.ArchiveCourier"
+    body: """
+    {
+      "courier_id": "{{.args.id}}",
+      "reason": "{{.args.reason | default: ""}}"
+    }
+    """
+  )
+
+  """
+  Update courier contact information
+  """
+  updateCourierContact(id: String!, input: UpdateContactInput!): UpdateContactResponse!
+  @grpc(
+    url: "{{.env.DELIVERY_GRPC_URL}}"
+    method: "infrastructure.rpc.delivery.v1.DeliveryService.UpdateContactInfo"
+    body: """
+    {
+      "courier_id": "{{.args.id}}",
+      "phone": "{{.args.input.phone | default: ""}}",
+      "email": "{{.args.input.email | default: ""}}",
+      "push_token": "{{.args.input.pushToken | default: ""}}"
+    }
+    """
+  )
+
+  """
+  Update courier work schedule
+  """
+  updateCourierSchedule(id: String!, input: UpdateScheduleInput!): UpdateScheduleResponse!
+  @grpc(
+    url: "{{.env.DELIVERY_GRPC_URL}}"
+    method: "infrastructure.rpc.delivery.v1.DeliveryService.UpdateWorkSchedule"
+    body: """
+    {
+      "courier_id": "{{.args.id}}",
+      "work_hours": {{.args.input.workHours | default: null}},
+      "work_zone": "{{.args.input.workZone | default: ""}}",
+      "max_distance_km": {{.args.input.maxDistanceKm | default: 0}}
+    }
+    """
+  )
+
+  """
+  Change courier transport type
+  """
+  changeCourierTransport(id: String!, transportType: TransportType!): ChangeTransportResponse!
+  @grpc(
+    url: "{{.env.DELIVERY_GRPC_URL}}"
+    method: "infrastructure.rpc.delivery.v1.DeliveryService.ChangeTransportType"
+    body: """
+    {
+      "courier_id": "{{.args.id}}",
+      "transport_type": "{{.args.transportType}}"
+    }
+    """
+  )
+}
