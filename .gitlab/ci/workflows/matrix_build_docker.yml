@@ -73,3 +73,4 @@
         REGISTRY_IMAGE: $CI_REGISTRY_IMAGE/$APPLICATION
         WORKDIR: $APPLICATION
         DOCKERFILE_PATH: ops/dockerfile/Dockerfile
+        DOCKERFILE_ARGS: "--build-arg NEXT_PUBLIC_API_URI=https://shortlink.best"

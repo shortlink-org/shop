@@ -1,6 +1,7 @@
 import { CartProvider } from 'components/cart/cart-context';
 import { Navbar } from 'components/layout/navbar';
 import { Footer } from 'components/layout/footer';
+import { Providers } from 'components/providers';
 import { GeistSans } from 'geist/font/sans';
 import { getCart } from 'lib/shopify';
 import { ensureStartsWith } from 'lib/utils';
@@ -50,14 +51,16 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     <html lang="en" className={GeistSans.variable} suppressHydrationWarning>
       <body className="bg-neutral-50 text-black selection:bg-teal-300 dark:bg-neutral-900 dark:text-white dark:selection:bg-pink-500 dark:selection:text-white">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <CartProvider cartPromise={Promise.resolve(cart)}>
-            <Navbar />
-            <main className="min-h-screen">
-              {children}
-              <Toaster closeButton />
-            </main>
-            <Footer />
-          </CartProvider>
+          <Providers>
+            <CartProvider cartPromise={Promise.resolve(cart)}>
+              <Navbar />
+              <main className="min-h-screen">
+                {children}
+                <Toaster closeButton />
+              </main>
+              <Footer />
+            </CartProvider>
+          </Providers>
         </ThemeProvider>
       </body>
     </html>

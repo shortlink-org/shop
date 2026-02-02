@@ -1,5 +1,6 @@
 import CartModal from 'components/cart/modal';
 import LogoSquare from 'components/logo-square';
+import { ProfileWidget } from 'components/user';
 
 import { Menu } from 'lib/shopify/types';
 import Link from 'next/link';
@@ -57,7 +58,8 @@ export async function Navbar() {
             <Search />
           </Suspense>
         </div>
-        <div className="flex justify-end md:w-1/3">
+        <div className="flex items-center justify-end gap-4 md:w-1/3">
+          <ProfileWidget />
           <CartModal />
         </div>
       </div>

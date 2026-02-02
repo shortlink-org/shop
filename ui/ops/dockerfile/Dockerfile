@@ -39,6 +39,10 @@ COPY . .
 # Set build-time environment variables
 ARG API_URI
 ENV API_URI=${API_URI}
+
+ARG NEXT_PUBLIC_API_URI
+ENV NEXT_PUBLIC_API_URI=${NEXT_PUBLIC_API_URI}
+
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Build the application
