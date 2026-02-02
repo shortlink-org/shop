@@ -4,6 +4,7 @@ import { TAGS } from 'lib/constants';
 import { addToCart, createCart, updateCart } from 'lib/shopify';
 import { revalidateTag } from 'next/cache';
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 async function getOrCreateCartId() {
   const cookieStore = await cookies();
@@ -79,21 +80,14 @@ export async function updateItemQuantity(
 }
 
 export async function redirectToCheckout(): Promise<void> {
-  let cartId = (await cookies()).get('cartId')?.value;
+  const cartId = (await cookies()).get('cartId')?.value;
 
   if (!cartId) {
     console.error('Missing cart ID');
     return;
   }
 
-  // let cart = await getCart(cartId);
-  //
-  // if (!cart) {
-  //   console.error('Error fetching cart');
-  //   return;
-  // }
-  //
-  // redirect(cart.checkoutUrl);
+  redirect('/checkout');
 }
 
 export async function createCartAndSetCookie() {

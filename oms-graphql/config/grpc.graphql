@@ -179,6 +179,15 @@ input UpdateDeliveryInfoInput {
   deliveryInfo: DeliveryInfoInput!
 }
 
+input CheckoutInput {
+  customerId: String!
+  deliveryInfo: DeliveryInfoInput
+}
+
+type CheckoutResult {
+  orderId: String!
+}
+
 type Mutation {
   addItem(addRequest: ItemRequest): Empty!
   @grpc(
@@ -238,6 +247,16 @@ type Mutation {
     body: "{\"order_id\": \"{{.args.input.orderId}}\", \"delivery_info\": {{.args.input.deliveryInfo}}}"
     headers: [
       {key: "user-id", value: "3e173751-8840-4b0d-8065-fbea88357cc5"}
+    ]
+  )
+
+  checkout(input: CheckoutInput!): CheckoutResult!
+  @grpc(
+    url: "{{.env.OMS_GRPC_URL}}"
+    method: "infrastructure.rpc.order.v1.OrderService.Checkout"
+    body: "{\"customer_id\": \"{{.args.input.customerId}}\", \"delivery_info\": {{.args.input.deliveryInfo}}}"
+    headers: [
+      {key: "user-id", value: "{{.args.input.customerId}}"}
     ]
   )
 }

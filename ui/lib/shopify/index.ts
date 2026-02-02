@@ -5,7 +5,8 @@ import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   addToCartMutation,
-  removeFromCartMutation
+  removeFromCartMutation,
+  checkoutMutation
 } from './mutations/cart';
 import { getCartQuery } from './queries/cart';
 import {
@@ -22,6 +23,8 @@ import {
 } from './queries/good';
 import {
   Cart,
+  CheckoutInput,
+  CheckoutResult,
   Collection,
   Connection,
   Good,
@@ -30,6 +33,7 @@ import {
   Page,
   ShopifyAddToCartOperation,
   ShopifyCartOperation,
+  ShopifyCheckoutOperation,
   ShopifyCollection,
   ShopifyCollectionOperation,
   ShopifyCollectionProductsOperation,
@@ -313,6 +317,18 @@ export async function getCart(cartId: string | undefined): Promise<Cart | undefi
   });
 
   return buildCartFromState(res.body.data.getCart?.state, cartId);
+}
+
+export async function checkout(input: CheckoutInput): Promise<CheckoutResult> {
+  const res = await shopifyFetch<ShopifyCheckoutOperation>({
+    query: checkoutMutation,
+    variables: {
+      input
+    },
+    cache: 'no-store'
+  });
+
+  return res.body.data.checkout;
 }
 
 export async function getCollection(id: number): Promise<Collection | undefined> {

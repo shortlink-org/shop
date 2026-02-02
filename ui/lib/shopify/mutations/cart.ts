@@ -29,3 +29,11 @@ export const resetCartMutation = /* GraphQL */ `
     resetCart(customerId: $customerId)
   }
 `;
+
+export const checkoutMutation = /* GraphQL */ `
+  mutation Checkout($input: CheckoutInput!) {
+    checkout(input: $input) {
+      orderId
+    }
+  }
+`;

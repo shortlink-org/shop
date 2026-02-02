@@ -304,3 +304,49 @@ export type ShopifyProductsOperation = {
     page?: number;
   };
 };
+
+// Checkout types
+export type DeliveryAddress = {
+  street: string;
+  city: string;
+  postalCode?: string;
+  country: string;
+  latitude?: number;
+  longitude?: number;
+};
+
+export type DeliveryPeriod = {
+  startTime: string;
+  endTime: string;
+};
+
+export type PackageInfo = {
+  weightKg: number;
+  dimensions: string;
+};
+
+export type DeliveryInfo = {
+  pickupAddress: DeliveryAddress;
+  deliveryAddress: DeliveryAddress;
+  deliveryPeriod: DeliveryPeriod;
+  packageInfo: PackageInfo;
+  priority?: string;
+};
+
+export type CheckoutInput = {
+  customerId: string;
+  deliveryInfo?: DeliveryInfo;
+};
+
+export type CheckoutResult = {
+  orderId: string;
+};
+
+export type ShopifyCheckoutOperation = {
+  data: {
+    checkout: CheckoutResult;
+  };
+  variables: {
+    input: CheckoutInput;
+  };
+};
