@@ -52,6 +52,7 @@ RUN apk add --no-cache \
 # Copy recipe and build dependencies (cached layer)
 COPY --from=planner /app/recipe.json recipe.json
 COPY .cargo ./.cargo
+COPY migration ./migration
 RUN cargo chef cook --release --recipe-path recipe.json
 
 # Copy source and build application
