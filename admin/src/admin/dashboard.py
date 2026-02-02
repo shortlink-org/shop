@@ -201,9 +201,6 @@ def dashboard_callback(request, context):
     This function is called when rendering the admin index page.
     It adds custom components to the dashboard.
     """
-    # Import here to avoid circular imports
-    from unfold.components import render_component
-
     context.update({
         "dashboard_components": [
             {
