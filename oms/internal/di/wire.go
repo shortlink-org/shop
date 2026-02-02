@@ -99,6 +99,9 @@ type OMSService struct {
 	DeliveryClient   ports.DeliveryClient
 	DeliveryConsumer *omsKafka.DeliveryConsumer
 
+	// Pricer Integration
+	PricerClient ports.PricerClient
+
 	// Temporal
 	temporalClient client.Client
 	cartWorker     cart_worker.CartWorker
@@ -156,6 +159,9 @@ var OMSSet = wire.NewSet(
 	// Delivery Integration (gRPC client + Kafka consumer)
 	NewDeliveryClient,
 	NewDeliveryConsumer,
+
+	// Pricer Integration
+	NewPricerClient,
 
 	// Cart Handlers
 	cartAddItems.NewHandler,
@@ -263,6 +269,9 @@ func NewOMSService(
 	deliveryClient ports.DeliveryClient,
 	deliveryConsumer *omsKafka.DeliveryConsumer,
 
+	// Pricer Integration
+	pricerClient ports.PricerClient,
+
 	// gRPC Servers
 	run *run.Response,
 	cartRPCServer *cartRPC.CartRPC,
@@ -304,6 +313,9 @@ func NewOMSService(
 		// Delivery Integration
 		DeliveryClient:   deliveryClient,
 		DeliveryConsumer: deliveryConsumer,
+
+		// Pricer Integration
+		PricerClient: pricerClient,
 
 		// gRPC Servers
 		run:            run,

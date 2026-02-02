@@ -91,6 +91,14 @@ message CheckoutRequest {
 message CheckoutResponse {
   // ID of the created order
   string order_id = 1;
+  // Subtotal before discounts and taxes
+  double subtotal = 2;
+  // Total discount amount
+  double total_discount = 3;
+  // Total tax amount
+  double total_tax = 4;
+  // Final price (subtotal - discount + tax)
+  double final_price = 5;
 }
 
 // Pagination info for list requests

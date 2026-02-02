@@ -551,7 +551,15 @@ func (x *CheckoutRequest) GetDeliveryInfo() *v1.DeliveryInfo {
 type CheckoutResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// ID of the created order
-	OrderId       string `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
+	OrderId string `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
+	// Subtotal before discounts and taxes
+	Subtotal float64 `protobuf:"fixed64,2,opt,name=subtotal,proto3" json:"subtotal,omitempty"`
+	// Total discount amount
+	TotalDiscount float64 `protobuf:"fixed64,3,opt,name=total_discount,json=totalDiscount,proto3" json:"total_discount,omitempty"`
+	// Total tax amount
+	TotalTax float64 `protobuf:"fixed64,4,opt,name=total_tax,json=totalTax,proto3" json:"total_tax,omitempty"`
+	// Final price (subtotal - discount + tax)
+	FinalPrice    float64 `protobuf:"fixed64,5,opt,name=final_price,json=finalPrice,proto3" json:"final_price,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -591,6 +599,34 @@ func (x *CheckoutResponse) GetOrderId() string {
 		return x.OrderId
 	}
 	return ""
+}
+
+func (x *CheckoutResponse) GetSubtotal() float64 {
+	if x != nil {
+		return x.Subtotal
+	}
+	return 0
+}
+
+func (x *CheckoutResponse) GetTotalDiscount() float64 {
+	if x != nil {
+		return x.TotalDiscount
+	}
+	return 0
+}
+
+func (x *CheckoutResponse) GetTotalTax() float64 {
+	if x != nil {
+		return x.TotalTax
+	}
+	return 0
+}
+
+func (x *CheckoutResponse) GetFinalPrice() float64 {
+	if x != nil {
+		return x.FinalPrice
+	}
+	return 0
 }
 
 // Pagination info for list requests
@@ -881,9 +917,14 @@ const file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDesc = "" +
 	"\x0fCheckoutRequest\x12\x1f\n" +
 	"\vcustomer_id\x18\x01 \x01(\tR\n" +
 	"customerId\x12I\n" +
-	"\rdelivery_info\x18\x02 \x01(\v2$.domain.order.common.v1.DeliveryInfoR\fdeliveryInfo\"-\n" +
+	"\rdelivery_info\x18\x02 \x01(\v2$.domain.order.common.v1.DeliveryInfoR\fdeliveryInfo\"\xae\x01\n" +
 	"\x10CheckoutResponse\x12\x19\n" +
-	"\border_id\x18\x01 \x01(\tR\aorderId\"=\n" +
+	"\border_id\x18\x01 \x01(\tR\aorderId\x12\x1a\n" +
+	"\bsubtotal\x18\x02 \x01(\x01R\bsubtotal\x12%\n" +
+	"\x0etotal_discount\x18\x03 \x01(\x01R\rtotalDiscount\x12\x1b\n" +
+	"\ttotal_tax\x18\x04 \x01(\x01R\btotalTax\x12\x1f\n" +
+	"\vfinal_price\x18\x05 \x01(\x01R\n" +
+	"finalPrice\"=\n" +
 	"\n" +
 	"Pagination\x12\x12\n" +
 	"\x04page\x18\x01 \x01(\x05R\x04page\x12\x1b\n" +

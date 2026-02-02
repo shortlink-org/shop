@@ -30,6 +30,10 @@ func (o *OrderRPC) Checkout(ctx context.Context, in *v1.CheckoutRequest) (*v1.Ch
 	}
 
 	return &v1.CheckoutResponse{
-		OrderId: result.Order.GetOrderID().String(),
+		OrderId:       result.Order.GetOrderID().String(),
+		Subtotal:      result.Subtotal.InexactFloat64(),
+		TotalDiscount: result.TotalDiscount.InexactFloat64(),
+		TotalTax:      result.TotalTax.InexactFloat64(),
+		FinalPrice:    result.FinalPrice.InexactFloat64(),
 	}, nil
 }
