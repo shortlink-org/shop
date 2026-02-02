@@ -1257,7 +1257,7 @@ requires-dist = [
     { name = "protobuf", specifier = "==6.33.5" },
     { name = "psycopg2-binary", specifier = "==2.9.11" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=9.0.2" },
-    { name = "pytest-cov", marker = "extra == 'test'", specifier = ">=4.0" },
+    { name = "pytest-cov", marker = "extra == 'test'", specifier = ">=7.0.0" },
     { name = "pytest-django", marker = "extra == 'test'", specifier = ">=4.5" },
     { name = "pytest-mock", marker = "extra == 'test'", specifier = ">=3.12" },
     { name = "pytz", specifier = "==2025.2" },
