@@ -19,19 +19,12 @@ spec:
     - to:
         - operation:
             ports: ["9090"]
-    # Allow requests from services within the same namespace (admin, oms, etc.)
-    - from:
-        - source:
-            namespaces: ["shortlink-shop"]
-    # Allow requests from istio-ingress (for external gRPC calls with JWT)
-    - from:
-        - source:
-            namespaces: ["istio-ingress"]
-    # Allow requests from temporal namespace (for workflow callbacks)
-    - from:
-        - source:
-            namespaces: ["temporal"]
-    # Allow requests with valid JWT (from any external source through ingress)
+    # Allow all gRPC requests on port 50051
+    # Security is enforced by NetworkPolicy (only shortlink-shop, istio-ingress, temporal namespaces allowed)
+    - to:
+        - operation:
+            ports: ["50051"]
+    # Allow requests with valid JWT (for external calls through ingress with JWT)
     - from:
         - source:
             requestPrincipals: ["*"]
