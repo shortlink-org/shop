@@ -364,6 +364,7 @@ SECURE_CSP = {
         CSP.SELF,
         CSP.NONCE,
         CSP.UNSAFE_INLINE,  # Unfold admin requires inline scripts
+        CSP.UNSAFE_EVAL,  # Alpine.js requires eval for x-data expressions
         "https://cdn.jsdelivr.net",
         "https://unpkg.com",  # Leaflet
     ],
