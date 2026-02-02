@@ -94,7 +94,7 @@ WORKDIR /app
 RUN addgroup -S app && adduser -S app -G app
 
 # Copy the binary from builder
-COPY --from=builder /app/delivery/target/release/delivery /app/delivery
+COPY --from=builder /app/target/release/delivery /app/delivery
 
 # Change ownership
 RUN chown -R app:app /app
