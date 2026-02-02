@@ -16,7 +16,8 @@ WORKDIR /app
 
 # Install build dependencies
 # bash, make, gcc, g++ are required for rdkafka-sys to build librdkafka from source
-RUN apk add --no-cache musl-dev protobuf-dev bash make gcc g++
+# zlib-dev and zlib-static are required for static linking
+RUN apk add --no-cache musl-dev protobuf-dev bash make gcc g++ zlib-dev zlib-static
 
 # Create a new empty shell project for caching dependencies
 RUN cargo new --bin delivery
