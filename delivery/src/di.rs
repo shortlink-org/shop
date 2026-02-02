@@ -9,7 +9,7 @@ use migration::{Migrator, MigratorTrait};
 use sea_orm::{Database, DatabaseConnection};
 use thiserror::Error;
 use tokio::sync::broadcast;
-use tracing::{error, info};
+use tracing::info;
 
 use crate::config::{Config, TemporalConfig};
 use crate::infrastructure::cache::{CourierRedisCache, RedisLocationCache};

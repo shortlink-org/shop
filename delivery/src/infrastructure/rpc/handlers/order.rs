@@ -24,7 +24,7 @@ use crate::usecases::package::command::pick_up_order::{
     Command as PickUpCommand, Handler as PickUpHandler, PickUpOrderError,
 };
 use crate::usecases::package::command::deliver_order::{
-    Command as DeliverCommand, DeliveryResult, Handler as DeliverHandler, DeliverOrderError,
+    Command as DeliverCommand, Handler as DeliverHandler, DeliverOrderError,
     NotDeliveredReason,
 };
 

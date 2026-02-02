@@ -10,7 +10,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use thiserror::Error;
-use tracing::{error, info};
+use tracing::info;
 
 use temporalio_common::{
     telemetry::TelemetryOptions,
