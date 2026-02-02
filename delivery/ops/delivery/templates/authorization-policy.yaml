@@ -1,0 +1,38 @@
+{{- if .Values.authorizationPolicy.enabled }}
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: {{ include "shortlink-common.fullname" . }}-require-jwt
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "shortlink-common.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "shortlink-common.matchLabels" . | nindent 6 }}
+  action: ALLOW
+  rules:
+    # Allow health checks (kubelet) and metrics (Prometheus) without authorization
+    - to:
+        - operation:
+            paths: ["/grpc.health.v1.Health/*"]
+    - to:
+        - operation:
+            ports: ["9090"]
+    # Allow requests from services within the same namespace (admin, oms, etc.)
+    - from:
+        - source:
+            namespaces: ["shortlink-shop"]
+    # Allow requests from istio-ingress (for external gRPC calls with JWT)
+    - from:
+        - source:
+            namespaces: ["istio-ingress"]
+    # Allow requests from temporal namespace (for workflow callbacks)
+    - from:
+        - source:
+            namespaces: ["temporal"]
+    # Allow requests with valid JWT (from any external source through ingress)
+    - from:
+        - source:
+            requestPrincipals: ["*"]
+{{- end }}

@@ -16,4 +16,4 @@
 
 {{ include "shortlink-common.RequestAuthentication" . }}
 
-{{ include "shortlink-common.AuthorizationPolicy" . }}
+{{/* AuthorizationPolicy is defined in authorization-policy.yaml */}}
