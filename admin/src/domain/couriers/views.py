@@ -7,7 +7,12 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET, require_http_methods
 
-from infrastructure.grpc import DeliveryServiceError, WorkHours, get_delivery_client
+from infrastructure.grpc import (
+    DeliveryServiceError,
+    WorkHours,
+    get_auth_token_from_request,
+    get_delivery_client,
+)
 
 from .forms import (
     ArchiveCourierForm,
@@ -58,7 +63,7 @@ def courier_list(request):
         available_only = form.cleaned_data.get("available_only", False)
 
     try:
-        client = get_delivery_client()
+        client = get_delivery_client(get_auth_token_from_request(request))
         result = client.get_courier_pool(
             status_filter=status_filter,
             transport_type_filter=transport_filter,
@@ -104,7 +109,7 @@ def courier_list(request):
 def courier_detail(request, courier_id):
     """Display courier details."""
     try:
-        client = get_delivery_client()
+        client = get_delivery_client(get_auth_token_from_request(request))
         courier = client.get_courier(courier_id, include_location=True)
 
         if not courier:
@@ -153,7 +158,7 @@ def courier_register(request):
         form = RegisterCourierForm(request.POST)
         if form.is_valid():
             try:
-                client = get_delivery_client()
+                client = get_delivery_client(get_auth_token_from_request(request))
                 work_hours = WorkHours(
                     start_time=form.cleaned_data["work_start"].strftime("%H:%M"),
                     end_time=form.cleaned_data["work_end"].strftime("%H:%M"),
@@ -192,7 +197,7 @@ def courier_register(request):
 def courier_activate(request, courier_id):
     """Activate a courier."""
     try:
-        client = get_delivery_client()
+        client = get_delivery_client(get_auth_token_from_request(request))
         client.activate_courier(courier_id)
         messages.success(request, "Courier activated successfully.")
     except DeliveryServiceError as e:
@@ -209,7 +214,7 @@ def courier_deactivate(request, courier_id):
     reason = request.POST.get("reason")
 
     try:
-        client = get_delivery_client()
+        client = get_delivery_client(get_auth_token_from_request(request))
         client.deactivate_courier(courier_id, reason=reason)
         messages.success(request, "Courier deactivated successfully.")
     except DeliveryServiceError as e:
@@ -227,7 +232,7 @@ def courier_archive(request, courier_id):
 
     if form.is_valid():
         try:
-            client = get_delivery_client()
+            client = get_delivery_client(get_auth_token_from_request(request))
             client.archive_courier(courier_id, reason=form.cleaned_data.get("reason"))
             messages.success(request, "Courier archived successfully.")
             return redirect("couriers:list")
@@ -248,7 +253,7 @@ def courier_update_contact(request, courier_id):
 
     if form.is_valid():
         try:
-            client = get_delivery_client()
+            client = get_delivery_client(get_auth_token_from_request(request))
             client.update_contact_info(
                 courier_id=courier_id,
                 phone=form.cleaned_data.get("phone"),
@@ -273,7 +278,7 @@ def courier_update_schedule(request, courier_id):
 
     if form.is_valid():
         try:
-            client = get_delivery_client()
+            client = get_delivery_client(get_auth_token_from_request(request))
 
             work_hours = None
             if form.cleaned_data.get("work_start") and form.cleaned_data.get("work_end"):
@@ -305,7 +310,7 @@ def courier_change_transport(request, courier_id):
 
     if form.is_valid():
         try:
-            client = get_delivery_client()
+            client = get_delivery_client(get_auth_token_from_request(request))
             new_max_load = client.change_transport_type(
                 courier_id=courier_id,
                 transport_type=form.cleaned_data["transport_type"],
@@ -326,7 +331,7 @@ def courier_change_transport(request, courier_id):
 def courier_map(request):
     """Display map with courier locations."""
     try:
-        client = get_delivery_client()
+        client = get_delivery_client(get_auth_token_from_request(request))
         # Get all active couriers with locations
         result = client.get_courier_pool(
             status_filter=["FREE", "BUSY"],

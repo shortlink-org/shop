@@ -170,15 +170,24 @@ class DeliveryClient:
         2: "URGENT",
     }
 
-    def __init__(self, host: Optional[str] = None):
+    def __init__(self, host: Optional[str] = None, auth_token: Optional[str] = None):
         """Initialize the Delivery Service client.
 
         Args:
             host: gRPC host address. Defaults to settings.DELIVERY_GRPC_HOST.
+            auth_token: JWT token for authentication. Will be passed as
+                        Authorization header to downstream gRPC service.
         """
         self.host = host or getattr(settings, "DELIVERY_GRPC_HOST", "localhost:50051")
         self._channel: Optional[grpc.Channel] = None
         self._stub = None
+        self._auth_token = auth_token
+
+    def _get_metadata(self) -> list[tuple[str, str]]:
+        """Get gRPC call metadata including auth token if available."""
+        if self._auth_token:
+            return [("authorization", f"Bearer {self._auth_token}")]
+        return []
 
     def _ensure_connected(self):
         """Ensure gRPC channel is connected."""
@@ -266,7 +275,7 @@ class DeliveryClient:
         )
 
         try:
-            response = self._stub.GetCourier(request)
+            response = self._stub.GetCourier(request, metadata=self._get_metadata())
             return self._proto_to_courier(response.courier)
         except grpc.RpcError as e:
             if e.code() == grpc.StatusCode.NOT_FOUND:
@@ -296,7 +305,7 @@ class DeliveryClient:
         )
 
         try:
-            response = self._stub.GetCourierDeliveries(request)
+            response = self._stub.GetCourierDeliveries(request, metadata=self._get_metadata())
             deliveries = []
             for proto_delivery in response.deliveries:
                 pickup = None
@@ -406,7 +415,7 @@ class DeliveryClient:
         )
 
         try:
-            response = self._stub.GetCourierPool(request)
+            response = self._stub.GetCourierPool(request, metadata=self._get_metadata())
             couriers = [self._proto_to_courier(c) for c in response.couriers]
 
             return CourierPoolResult(
@@ -470,7 +479,7 @@ class DeliveryClient:
             request.push_token = push_token
 
         try:
-            response = self._stub.RegisterCourier(request)
+            response = self._stub.RegisterCourier(request, metadata=self._get_metadata())
             return response.courier_id
         except grpc.RpcError as e:
             logger.error(f"gRPC error registering courier: {e}")
@@ -492,7 +501,7 @@ class DeliveryClient:
         request = delivery_pb2.ActivateCourierRequest(courier_id=courier_id)
 
         try:
-            self._stub.ActivateCourier(request)
+            self._stub.ActivateCourier(request, metadata=self._get_metadata())
             return True
         except grpc.RpcError as e:
             logger.error(f"gRPC error activating courier: {e}")
@@ -519,7 +528,7 @@ class DeliveryClient:
             request.reason = reason
 
         try:
-            self._stub.DeactivateCourier(request)
+            self._stub.DeactivateCourier(request, metadata=self._get_metadata())
             return True
         except grpc.RpcError as e:
             logger.error(f"gRPC error deactivating courier: {e}")
@@ -544,7 +553,7 @@ class DeliveryClient:
             request.reason = reason
 
         try:
-            self._stub.ArchiveCourier(request)
+            self._stub.ArchiveCourier(request, metadata=self._get_metadata())
             return True
         except grpc.RpcError as e:
             logger.error(f"gRPC error archiving courier: {e}")
@@ -581,7 +590,7 @@ class DeliveryClient:
             request.push_token = push_token
 
         try:
-            self._stub.UpdateContactInfo(request)
+            self._stub.UpdateContactInfo(request, metadata=self._get_metadata())
             return True
         except grpc.RpcError as e:
             logger.error(f"gRPC error updating contact info: {e}")
@@ -625,7 +634,7 @@ class DeliveryClient:
             request.max_distance_km = max_distance_km
 
         try:
-            self._stub.UpdateWorkSchedule(request)
+            self._stub.UpdateWorkSchedule(request, metadata=self._get_metadata())
             return True
         except grpc.RpcError as e:
             logger.error(f"gRPC error updating work schedule: {e}")
@@ -653,7 +662,7 @@ class DeliveryClient:
         )
 
         try:
-            response = self._stub.ChangeTransportType(request)
+            response = self._stub.ChangeTransportType(request, metadata=self._get_metadata())
             return response.max_load
         except grpc.RpcError as e:
             logger.error(f"gRPC error changing transport type: {e}")
@@ -671,13 +680,39 @@ class DeliveryClient:
 _client: Optional[DeliveryClient] = None
 
 
-def get_delivery_client() -> DeliveryClient:
-    """Get the singleton Delivery Service client.
+def get_delivery_client(auth_token: Optional[str] = None) -> DeliveryClient:
+    """Get a Delivery Service client.
+
+    Args:
+        auth_token: JWT token for authentication. If provided, creates a new
+                    client with the token. If not, returns the singleton client.
 
     Returns:
         DeliveryClient instance.
     """
+    if auth_token:
+        # Create a new client with the auth token for this request
+        return DeliveryClient(auth_token=auth_token)
+
+    # Fallback to singleton for backward compatibility (no auth)
     global _client
     if _client is None:
         _client = DeliveryClient()
     return _client
+
+
+def get_auth_token_from_request(request) -> Optional[str]:
+    """Extract JWT token from request Authorization header.
+
+    Oathkeeper injects the JWT via id_token mutator as Authorization header.
+
+    Args:
+        request: Django HttpRequest object.
+
+    Returns:
+        JWT token string or None if not present.
+    """
+    auth_header = request.META.get("HTTP_AUTHORIZATION", "")
+    if auth_header.startswith("Bearer "):
+        return auth_header[7:]  # Remove "Bearer " prefix
+    return None

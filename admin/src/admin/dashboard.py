@@ -7,7 +7,11 @@ from typing import Any
 from django.utils.translation import gettext_lazy as _
 from unfold.components import BaseComponent, register_component
 
-from infrastructure.grpc import DeliveryServiceError, get_delivery_client
+from infrastructure.grpc import (
+    DeliveryServiceError,
+    get_auth_token_from_request,
+    get_delivery_client,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -19,8 +23,12 @@ class DeliveryTrackerComponent(BaseComponent):
     def get_context_data(self, **kwargs) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
 
+        # Extract auth token from request if available
+        request = kwargs.get("request") or getattr(self, "request", None)
+        auth_token = get_auth_token_from_request(request) if request else None
+
         # Try to get real data from delivery service
-        tracker_data = self._get_delivery_tracker_data()
+        tracker_data = self._get_delivery_tracker_data(auth_token)
 
         context.update({
             "title": _("Delivery History (Last 30 Days)"),
@@ -28,10 +36,10 @@ class DeliveryTrackerComponent(BaseComponent):
         })
         return context
 
-    def _get_delivery_tracker_data(self) -> list[dict]:
+    def _get_delivery_tracker_data(self, auth_token=None) -> list[dict]:
         """Fetch delivery data and format for tracker component."""
         try:
-            client = get_delivery_client()
+            client = get_delivery_client(auth_token)
             # Get delivery statistics for the last 30 days
             stats = client.get_delivery_statistics(days=30)
 
@@ -124,7 +132,11 @@ class CourierStatusTrackerComponent(BaseComponent):
     def get_context_data(self, **kwargs) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
 
-        tracker_data = self._get_courier_tracker_data()
+        # Extract auth token from request if available
+        request = kwargs.get("request") or getattr(self, "request", None)
+        auth_token = get_auth_token_from_request(request) if request else None
+
+        tracker_data = self._get_courier_tracker_data(auth_token)
 
         context.update({
             "title": _("Courier Availability (Last 7 Days)"),
@@ -132,10 +144,10 @@ class CourierStatusTrackerComponent(BaseComponent):
         })
         return context
 
-    def _get_courier_tracker_data(self) -> list[dict]:
+    def _get_courier_tracker_data(self, auth_token=None) -> list[dict]:
         """Get courier availability data."""
         try:
-            client = get_delivery_client()
+            client = get_delivery_client(auth_token)
             result = client.get_courier_pool(
                 status_filter=None,
                 include_location=False,

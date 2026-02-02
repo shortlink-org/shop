@@ -13,6 +13,7 @@ from .delivery_client import (
     DeliveryServiceError,
     Location,
     WorkHours,
+    get_auth_token_from_request,
     get_delivery_client,
 )
 from .oms_client import (
@@ -40,6 +41,7 @@ __all__ = [
     "DeliveryServiceError",
     "Location",
     "WorkHours",
+    "get_auth_token_from_request",
     "get_delivery_client",
     # OMS
     "DeliveryAddress",
