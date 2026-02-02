@@ -58,7 +58,7 @@ deploy:
     REDIS_URL: redis://redis-master.shortlink-shop:6379/0
 
     # gRPC Services ---------------------
-    DELIVERY_GRPC_HOST: delivery.shortlink-shop:50051
+    DELIVERY_GRPC_HOST: shortlink-shop-delivery:50051
 
     # Security --------------------------
     # TODO: set false, when research as work with static files
