@@ -33,32 +33,4 @@
 
 {% block sidebar %}
 {{ block.super }}
-
-<div id="custom-apps" class="module">
-    <table>
-        <caption>
-            <a href="{% url 'couriers:list' %}" class="section">{% trans "Courier Management" %}</a>
-        </caption>
-        <tr>
-            <th scope="row">
-                <a href="{% url 'couriers:list' %}">{% trans "Couriers" %}</a>
-            </th>
-            <td>
-                <a href="{% url 'couriers:register' %}" class="addlink">{% trans "Add" %}</a>
-            </td>
-            <td>
-                <a href="{% url 'couriers:list' %}" class="changelink">{% trans "View all" %}</a>
-            </td>
-        </tr>
-        <tr>
-            <th scope="row">
-                <a href="{% url 'couriers:map' %}">{% trans "Courier Map" %}</a>
-            </th>
-            <td></td>
-            <td>
-                <a href="{% url 'couriers:map' %}" class="viewlink">{% trans "View" %}</a>
-            </td>
-        </tr>
-    </table>
-</div>
 {% endblock %}

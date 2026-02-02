@@ -86,7 +86,6 @@ INSTALLED_APPS = [
     "mapwidgets",  # Django Map Widgets for GeoDjango
     "domain.goods",
     "domain.offices",
-    "domain.couriers",
     "domain.orders",
     "drf_spectacular",
 ]
@@ -187,11 +186,6 @@ UNFOLD = {
                         "icon": "location_on",
                         "link": reverse_lazy("admin:offices_office_changelist"),
                     },
-                    {
-                        "title": _("Couriers"),
-                        "icon": "local_shipping",
-                        "link": reverse_lazy("couriers:list"),
-                    },
                 ],
             },
             {
@@ -263,11 +257,6 @@ UNFOLD = {
                     "icon": "location_on",
                     "link": reverse_lazy("admin:offices_office_changelist"),
                 },
-                {
-                    "title": _("Couriers"),
-                    "icon": "local_shipping",
-                    "link": reverse_lazy("couriers:list"),
-                },
             ],
         },
         {
@@ -280,11 +269,6 @@ UNFOLD = {
                     "title": _("Offices"),
                     "icon": "location_on",
                     "link": reverse_lazy("admin:offices_office_changelist"),
-                },
-                {
-                    "title": _("Couriers"),
-                    "icon": "local_shipping",
-                    "link": reverse_lazy("couriers:list"),
                 },
             ],
         },
