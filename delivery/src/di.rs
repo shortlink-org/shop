@@ -5,6 +5,7 @@
 use std::sync::Arc;
 
 use redis::aio::ConnectionManager;
+use migration::{Migrator, MigratorTrait};
 use sea_orm::{Database, DatabaseConnection};
 use thiserror::Error;
 use tokio::sync::broadcast;
@@ -83,6 +84,13 @@ impl AppState {
             .await
             .map_err(|e| DiError::DatabaseError(e.to_string()))?;
         info!("PostgreSQL connected");
+
+        // Run migrations
+        info!("Running database migrations...");
+        Migrator::up(&db, None)
+            .await
+            .map_err(|e| DiError::DatabaseError(format!("Migration failed: {}", e)))?;
+        info!("Migrations completed");
 
         // Connect to Redis
         info!("Connecting to Redis...");
