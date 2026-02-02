@@ -34,8 +34,8 @@ migration = { path = "migration" }
 # Redis
 redis = { version = "0.27", features = ["tokio-comp", "connection-manager"] }
 
-# Kafka
-rdkafka = { version = "0.36", features = ["tokio"] }
+# Kafka (dynamic linking to system librdkafka for faster builds)
+rdkafka = { version = "0.36", features = ["tokio", "dynamic-linking"] }
 
 # Common utilities
 uuid = { version = "1", features = ["v4", "serde"] }
@@ -72,4 +72,9 @@ testcontainers = "0.23"
 testcontainers-modules = { version = "0.11", features = ["postgres", "redis"] }
 migration = { path = "migration" }
 mockall = "0.13"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true
 
