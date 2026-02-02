@@ -2,10 +2,10 @@
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
-  name: {{ include "shortlink-common.fullname" . }}-require-jwt
+  name: {{ include "helpers.fullname" . }}-require-jwt
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "shortlink-common.labels" . | nindent 4 }}
+    {{- include "helpers.labels" . | nindent 4 }}
 spec:
   selector:
     matchLabels:
