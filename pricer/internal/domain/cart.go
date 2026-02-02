@@ -6,15 +6,14 @@ import (
 )
 
 type CartItem struct {
-	GoodID   uuid.UUID
-	Quantity int32
-	Price    decimal.Decimal
-	Brand    string
+	GoodID   uuid.UUID       `json:"productId"`
+	Quantity int32           `json:"quantity"`
+	Price    decimal.Decimal `json:"price"`
 }
 
 type Cart struct {
-	Items      []CartItem
-	CustomerID uuid.UUID
+	Items      []CartItem `json:"items"`
+	CustomerID uuid.UUID  `json:"customerId"`
 }
 
 func (c *Cart) AddItem(item CartItem) {

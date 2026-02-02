@@ -5,13 +5,14 @@ policies:
 
 # Queries for OPA policies
 queries:
-  discounts: "data.pricing.discount.total_brand_discount"
+  discounts: "data.pricing.discount.total_discount"
   taxes: "data.pricing.tax.total_markup"
 
-# Parameters for policies
+# Parameters for policies (quantity + combination only)
 params:
   discount:
-    apple_samsung_discount: 0.05
+    min_quantity_for_discount: 3  # 3-for-2: buy 3 get 1 free
+    combination_discount_percent: 0.05  # 5% when 2+ different products
   tax:
     tax_rate: 0.05
 

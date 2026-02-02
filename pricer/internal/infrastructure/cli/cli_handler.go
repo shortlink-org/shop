@@ -4,18 +4,25 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	"github.com/shortlink-org/shop/pricer/internal/application"
 	"github.com/shortlink-org/shop/pricer/internal/domain"
+	"github.com/shortlink-org/shop/pricer/internal/usecases/cart/command/calculate_total"
 )
 
 // CLIHandler handles command-line interactions
 type CLIHandler struct {
-	CartService *application.CartService
-	OutputDir   string
+	calculateTotalHandler *calculate_total.Handler
+	OutputDir             string
+}
+
+// NewCLIHandler creates a new CLIHandler
+func NewCLIHandler(calculateTotalHandler *calculate_total.Handler, outputDir string) *CLIHandler {
+	return &CLIHandler{
+		calculateTotalHandler: calculateTotalHandler,
+		OutputDir:             outputDir,
+	}
 }
 
 // Run processes a single cart file with provided parameters
@@ -27,7 +34,8 @@ func (h *CLIHandler) Run(cartFile string, discountParams, taxParams map[string]i
 	}
 
 	// Calculate totals
-	total, err := h.CartService.CalculateTotal(context.Background(), &cart, discountParams, taxParams)
+	cmd := calculate_total.NewCommand(&cart, discountParams, taxParams)
+	total, err := h.calculateTotalHandler.Handle(context.Background(), cmd)
 	if err != nil {
 		return fmt.Errorf("failed to calculate total for cart %s: %w", cartFile, err)
 	}
@@ -54,7 +62,7 @@ func (h *CLIHandler) Run(cartFile string, discountParams, taxParams map[string]i
 // loadCart reads and unmarshals the cart JSON file
 func loadCart(filePath string) (domain.Cart, error) {
 	var cart domain.Cart
-	file, err := ioutil.ReadFile(filePath)
+	file, err := os.ReadFile(filePath)
 	if err != nil {
 		return cart, err
 	}
@@ -79,7 +87,7 @@ func saveResultToFile(result map[string]interface{}, outDir string, filename str
 	}
 
 	// Write the JSON data to the output file
-	if err := ioutil.WriteFile(outputFile, data, 0644); err != nil {
+	if err := os.WriteFile(outputFile, data, 0o644); err != nil {
 		return err
 	}
 

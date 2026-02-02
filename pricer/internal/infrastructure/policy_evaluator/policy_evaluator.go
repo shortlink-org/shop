@@ -140,7 +140,6 @@ func (e *OPAEvaluator) generateCacheKey(cart *domain.Cart, params map[string]int
 		h.Write([]byte(item.GoodID.String()))
 		h.Write([]byte(fmt.Sprintf("%d", item.Quantity)))
 		h.Write([]byte(item.Price.String()))
-		h.Write([]byte(item.Brand))
 	}
 
 	// Hash params in sorted order for determinism
@@ -164,10 +163,9 @@ func transformCartToInput(cart *domain.Cart, params map[string]interface{}) map[
 	var items []map[string]interface{}
 	for _, item := range cart.Items {
 		items = append(items, map[string]interface{}{
-			"goodId":   item.GoodID.String(), // Convert UUID to string
-			"quantity": item.Quantity,
-			"price":    item.Price.InexactFloat64(), // Convert decimal to float64
-			"brand":    item.Brand,
+			"productId": item.GoodID.String(),
+			"quantity":  item.Quantity,
+			"price":     item.Price.InexactFloat64(),
 		})
 	}
 

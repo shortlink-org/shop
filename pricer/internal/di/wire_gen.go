@@ -13,22 +13,20 @@ import (
 	"github.com/shortlink-org/go-sdk/config"
 	"github.com/shortlink-org/go-sdk/context"
 	"github.com/shortlink-org/go-sdk/flags"
+	"github.com/shortlink-org/go-sdk/grpc"
 	"github.com/shortlink-org/go-sdk/logger"
 	"github.com/shortlink-org/go-sdk/observability/metrics"
 	"github.com/shortlink-org/go-sdk/observability/profiling"
 	"github.com/shortlink-org/go-sdk/observability/tracing"
-	"github.com/shortlink-org/shop/pricer/internal/application"
 	"github.com/shortlink-org/shop/pricer/internal/di/pkg"
+	"github.com/shortlink-org/shop/pricer/internal/domain/pricing"
 	"github.com/shortlink-org/shop/pricer/internal/infrastructure/cli"
 	"github.com/shortlink-org/shop/pricer/internal/infrastructure/policy_evaluator"
+	"github.com/shortlink-org/shop/pricer/internal/infrastructure/rpc/cart/v1"
 	"github.com/shortlink-org/shop/pricer/internal/infrastructure/rpc/run"
-	"github.com/shortlink-org/shop/pricer/internal/loggeradapter"
-	logger2 "github.com/shortlink-org/shortlink/pkg/logger"
-	"github.com/shortlink-org/shortlink/pkg/observability/monitoring"
-	"github.com/shortlink-org/shortlink/pkg/rpc"
+	"github.com/shortlink-org/shop/pricer/internal/usecases/cart/command/calculate_total"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel/trace"
-	"log/slog"
 )
 
 // Injectors from wire.go:
@@ -69,7 +67,7 @@ func InitializePricerService() (*PricerService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	loggerLogger, cleanup5, err := legacyLoggerAdapter(logger)
+	pkg_diConfig, err := pkg_di.ReadConfig()
 	if err != nil {
 		cleanup4()
 		cleanup3()
@@ -77,10 +75,33 @@ func InitializePricerService() (*PricerService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	monitoringMonitoring := legacyMonitoringFromGoSDK(monitoring)
-	server, err := rpc.InitServer(context, loggerLogger, tracerProvider, monitoringMonitoring)
+	discountPolicy, err := newDiscountPolicy(context, logger, pkg_diConfig)
 	if err != nil {
-		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	taxPolicy, err := newTaxPolicy(context, logger, pkg_diConfig)
+	if err != nil {
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	v, err := newPolicyNames(pkg_diConfig)
+	if err != nil {
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	handler := calculate_total.NewHandler(logger, discountPolicy, taxPolicy, v)
+	server, err := newGRPCServerWithHandler(context, logger, tracerProvider, monitoring, config, handler)
+	if err != nil {
 		cleanup4()
 		cleanup3()
 		cleanup2()
@@ -89,38 +110,15 @@ func InitializePricerService() (*PricerService, func(), error) {
 	}
 	response, err := NewRunRPCServer(server)
 	if err != nil {
-		cleanup5()
 		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	pkg_diConfig, err := pkg_di.ReadConfig()
+	cliHandler := newCLIHandler(handler, pkg_diConfig)
+	pricerService, err := NewPricerService(logger, config, monitoring, tracerProvider, pprofEndpoint, response, handler, cliHandler)
 	if err != nil {
-		cleanup5()
-		cleanup4()
-		cleanup3()
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	discountPolicy := newDiscountPolicy(context, logger, pkg_diConfig)
-	taxPolicy := newTaxPolicy(context, logger, pkg_diConfig)
-	v, err := newPolicyNames(pkg_diConfig)
-	if err != nil {
-		cleanup5()
-		cleanup4()
-		cleanup3()
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	cartService := application.NewCartService(logger, discountPolicy, taxPolicy, v)
-	cliHandler := newCLIHandler(context, logger, cartService, pkg_diConfig)
-	pricerService, err := NewPricerService(logger, config, monitoring, tracerProvider, pprofEndpoint, response, cartService, cliHandler)
-	if err != nil {
-		cleanup5()
 		cleanup4()
 		cleanup3()
 		cleanup2()
@@ -128,7 +126,6 @@ func InitializePricerService() (*PricerService, func(), error) {
 		return nil, nil, err
 	}
 	return pricerService, func() {
-		cleanup5()
 		cleanup4()
 		cleanup3()
 		cleanup2()
@@ -151,8 +148,8 @@ type PricerService struct {
 	// Delivery
 	run *run.Response
 
-	// Application
-	CartService *application.CartService
+	// Use cases
+	CalculateTotalHandler *calculate_total.Handler
 
 	// CLI
 	CLIHandler *cli.CLIHandler
@@ -160,24 +157,23 @@ type PricerService struct {
 
 // PricerService =======================================================================================================
 // CustomDefaultSet - DefaultSet with go-sdk packages (config, context, flags, profiling)
-var CustomDefaultSet = wire.NewSet(ctx.New, flags.New, legacyLoggerAdapter,
-	newGoSDKProfiling,
-)
+var CustomDefaultSet = wire.NewSet(ctx.New, flags.New, newGoSDKProfiling)
 
 var PricerSet = wire.NewSet(
 
-	CustomDefaultSet, rpc.InitServer, pkg_di.ReadConfig, newGoSDKConfig,
+	CustomDefaultSet, pkg_di.ReadConfig, newGoSDKConfig,
 	newGoSDKLogger,
 
 	newGoSDKTracer,
 	newGoSDKMonitoring,
-	legacyMonitoringFromGoSDK,
+
+	newGRPCServerWithHandler,
 
 	newDiscountPolicy,
 	newTaxPolicy,
 	newPolicyNames,
 
-	NewRunRPCServer, application.NewCartService, newCLIHandler,
+	NewRunRPCServer, calculate_total.NewHandler, newCLIHandler,
 
 	NewPricerService,
 )
@@ -207,48 +203,48 @@ func newGoSDKProfiling(ctx2 context.Context, log logger.Logger, tracer trace.Tra
 	return profiling.New(ctx2, log, tracer, cfg)
 }
 
-// legacyMonitoringFromGoSDK converts go-sdk monitoring to legacy shortlink monitoring structure.
-func legacyMonitoringFromGoSDK(modern *metrics.Monitoring) *monitoring.Monitoring {
-	if modern == nil {
-		return nil
+// newGRPCServerWithHandler creates gRPC server and registers CartService handler
+func newGRPCServerWithHandler(ctx2 context.Context, log logger.Logger, tracer trace.TracerProvider, monitoring *metrics.Monitoring, cfg *config.Config, calculateTotalHandler *calculate_total.Handler) (*grpc.Server, error) {
+	promRegistry := monitoring.Prometheus
+	server, err := grpc.InitServer(ctx2, log, tracer, promRegistry, nil, cfg)
+	if err != nil {
+		return nil, err
 	}
-
-	return &monitoring.Monitoring{
-		Handler:    modern.Handler,
-		Prometheus: modern.Prometheus,
-		Metrics:    modern.Metrics,
+	if server != nil {
+		handler := v1.NewCartHandler(calculateTotalHandler)
+		v1.RegisterCartServiceServer(server.Server, handler)
 	}
+	return server, nil
 }
 
-// TODO: refactoring. maybe drop this function
-func NewRunRPCServer(runRPCServer *rpc.Server) (*run.Response, error) {
+func NewRunRPCServer(runRPCServer *grpc.Server) (*run.Response, error) {
 	return run.Run(runRPCServer)
 }
 
-// newDiscountPolicy creates a new DiscountPolicy
-func newDiscountPolicy(ctx2 context.Context, log logger.Logger, cfg *pkg_di.Config) application.DiscountPolicy {
+// newDiscountPolicy creates a new discount policy
+func newDiscountPolicy(ctx2 context.Context, log logger.Logger, cfg *pkg_di.Config) (*pricing.DiscountPolicy, error) {
 	discountPolicyPath := viper.GetString("policies.discounts")
 	discountQuery := viper.GetString("queries.discounts")
 
-	discountEvaluator, err := policy_evaluator.NewOPAEvaluator(log, discountPolicyPath, discountQuery)
+	evaluator, err := policy_evaluator.NewOPAEvaluator(log, discountPolicyPath, discountQuery)
 	if err != nil {
-		log.ErrorWithContext(ctx2, "Failed to initialize discount policy evaluator", slog.Any("error", err))
+		return nil, fmt.Errorf("failed to initialize discount policy evaluator: %w", err)
 	}
 
-	return discountEvaluator
+	return &pricing.DiscountPolicy{Evaluator: evaluator}, nil
 }
 
-// newTaxPolicy creates a new TaxPolicy
-func newTaxPolicy(ctx2 context.Context, log logger.Logger, cfg *pkg_di.Config) application.TaxPolicy {
+// newTaxPolicy creates a new tax policy
+func newTaxPolicy(ctx2 context.Context, log logger.Logger, cfg *pkg_di.Config) (*pricing.TaxPolicy, error) {
 	taxPolicyPath := viper.GetString("policies.taxes")
 	taxQuery := viper.GetString("queries.taxes")
 
-	taxEvaluator, err := policy_evaluator.NewOPAEvaluator(log, taxPolicyPath, taxQuery)
+	evaluator, err := policy_evaluator.NewOPAEvaluator(log, taxPolicyPath, taxQuery)
 	if err != nil {
-		log.ErrorWithContext(ctx2, "Failed to initialize tax policy evaluator", slog.Any("error", err))
+		return nil, fmt.Errorf("failed to initialize tax policy evaluator: %w", err)
 	}
 
-	return taxEvaluator
+	return &pricing.TaxPolicy{Evaluator: evaluator}, nil
 }
 
 // newPolicyNames retrieves policy names
@@ -259,40 +255,21 @@ func newPolicyNames(cfg *pkg_di.Config) ([]string, error) {
 	return policy_evaluator.GetPolicyNames(discountPolicyPath, taxPolicyPath)
 }
 
-// newCLIHandler creates a new CLIHandler
-func newCLIHandler(ctx2 context.Context, log logger.Logger, cartService *application.CartService, cfg *pkg_di.Config) *cli.CLIHandler {
-	cartFiles := viper.GetStringSlice("cart_files")
+// newCLIHandler creates a new CLIHandler (does not run processing - use Run() explicitly for CLI mode)
+func newCLIHandler(calculateTotalHandler *calculate_total.Handler, cfg *pkg_di.Config) *cli.CLIHandler {
 	outputDir := viper.GetString("output_dir")
-
-	discountParams := viper.GetStringMap("params.discount")
-	taxParams := viper.GetStringMap("params.tax")
-
-	cliHandler := &cli.CLIHandler{
-		CartService: cartService,
-		OutputDir:   outputDir,
-	}
-
-	for _, cartFile := range cartFiles {
-		fmt.Printf("Processing cart file: %s\n", cartFile)
-		if err := cliHandler.Run(cartFile, discountParams, taxParams); err != nil {
-			log.ErrorWithContext(ctx2, "Error processing cart", slog.String("cart_file", cartFile), slog.Any("error", err))
-		}
-	}
-
-	return cliHandler
-}
-
-func legacyLoggerAdapter(log logger.Logger) (logger2.Logger, func(), error) {
-	return loggeradapter.New(log), func() {}, nil
+	return cli.NewCLIHandler(calculateTotalHandler, outputDir)
 }
 
 func NewPricerService(
 
-	log logger.Logger, config2 *config.Config, monitoring2 *metrics.Monitoring,
+	log logger.Logger, config2 *config.Config,
+
+	monitoring *metrics.Monitoring,
 	tracer trace.TracerProvider,
 	pprofHTTP profiling.PprofEndpoint, run2 *run.Response,
 
-	cartService *application.CartService,
+	calculateTotalHandler *calculate_total.Handler,
 
 	cliHandler *cli.CLIHandler,
 ) (*PricerService, error) {
@@ -302,12 +279,12 @@ func NewPricerService(
 		Config: config2,
 
 		Tracer:        tracer,
-		Monitoring:    monitoring2,
+		Monitoring:    monitoring,
 		PprofEndpoint: pprofHTTP,
 
 		run: run2,
 
-		CartService: cartService,
+		CalculateTotalHandler: calculateTotalHandler,
 
 		CLIHandler: cliHandler,
 	}, nil

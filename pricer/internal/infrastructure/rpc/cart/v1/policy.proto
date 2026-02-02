@@ -2,14 +2,13 @@ syntax = "proto3";
 
 package cart;
 
-option go_package = "github.com/shortlink-org/shortlink/boundaries/shop/pricer/internal/infrastructure/rpc/cart/v1";
+option go_package = "github.com/shortlink-org/shop/pricer/internal/infrastructure/rpc/cart/v1";
 
 // CartItem represents an item in the shopping cart
 message CartItem {
   string product_id = 1; // UUID as a string
   int32 quantity = 2;
   string price = 3; // Decimal as a string to preserve precision
-  string brand = 4;
 }
 
 // Cart represents a customer's shopping cart

@@ -1,0 +1,13 @@
+version: v2
+modules:
+  - path: internal
+    name: buf.build/shortlink-org/shop-pricer
+lint:
+  use:
+    - COMMENTS
+    - STANDARD
+breaking:
+  use:
+    - FIELD_SAME_CARDINALITY
+    - FIELD_SAME_TYPE
+    - WIRE_JSON
