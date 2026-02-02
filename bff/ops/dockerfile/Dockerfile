@@ -43,4 +43,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:9991/health || exit 1
 
 # Run the router
-CMD ["router", "--config", "/app/router.yaml"]
+CMD ["/router", "--config", "/app/router.yaml"]

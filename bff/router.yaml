@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/wundergraph/cosmo/main/router/pkg/config/config.schema.json
 # Cosmo Router Configuration
 # https://cosmo-docs.wundergraph.com/router/configuration
 
@@ -9,13 +10,26 @@ execution_config:
     path: "./router-config.json"
 
 # Server configuration
-graph:
-  sign_key: ""  # Optional: JWT signing key for graph token validation
-
 listen_addr: "0.0.0.0:9991"
 
 # Logging configuration
 log_level: "info"
+
+# Enable GraphQL Playground
+playground_enabled: true
+playground_path: "/"
+
+# Enable GraphQL introspection
+introspection:
+  enabled: true
+
+# GraphQL endpoint path
+graphql_path: "/graphql"
+
+# Health check endpoints
+health_check_path: "/health"
+readiness_check_path: "/health/ready"
+liveness_check_path: "/health/live"
 
 # CORS configuration
 cors:
@@ -32,45 +46,15 @@ cors:
     - "X-Request-ID"
   allow_credentials: true
 
-# GraphQL configuration
-graphql:
-  # Enable GraphQL introspection
-  introspection: true
-  # Enable GraphQL Playground
-  playground: true
-  # GraphQL endpoint path
-  path: "/graphql"
-
 # Telemetry configuration
 telemetry:
-  # Prometheus metrics
   metrics:
     prometheus:
       enabled: true
       path: "/metrics"
       listen_addr: "0.0.0.0:8088"
 
-# Health check endpoints
-health_check:
-  enabled: true
-  path: "/health"
-
-# Ready check endpoints
-readiness_check:
-  enabled: true
-  path: "/ready"
-
 # Traffic shaping
 traffic_shaping:
   router:
-    # Maximum request body size
     max_request_body_size: "5MB"
-
-# Subgraph configuration overrides
-subgraphs:
-  carts:
-    routing_url: "${CARTS_SUBGRAPH_URL:http://localhost:8100/graphql}"
-  admin:
-    routing_url: "${ADMIN_SUBGRAPH_URL:http://localhost:8101/graphql}"
-  countries:
-    routing_url: "${COUNTRIES_SUBGRAPH_URL:https://countries.trevorblades.com/}"
