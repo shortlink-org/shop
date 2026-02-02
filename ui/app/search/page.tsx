@@ -1,7 +1,7 @@
 import Grid from 'components/grid';
 import GoodGridItems from 'components/layout/good-grid-items';
 import { defaultSort, sorting } from 'lib/constants';
-import { getGoods } from 'lib/shopify';
+import { getGoods, GOODS_UNAVAILABLE } from 'lib/shopify';
 
 export const metadata = {
   title: 'Search',
@@ -16,6 +16,18 @@ export default async function SearchPage(props: {
   const { sortKey, reverse } = sorting.find((item) => item.slug === sort) || defaultSort;
 
   const goods = await getGoods({ sortKey, reverse, query: searchValue });
+
+  if (goods === GOODS_UNAVAILABLE) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 py-16 dark:border-neutral-800 dark:bg-neutral-900">
+        <p className="text-lg font-semibold">We couldn&apos;t load products</p>
+        <p className="mt-2 text-center text-sm text-neutral-500 dark:text-neutral-400">
+          We&apos;ll show them when they&apos;re available again.
+        </p>
+      </div>
+    );
+  }
+
   const resultsText = goods.length > 1 ? 'results' : 'result';
 
   return (

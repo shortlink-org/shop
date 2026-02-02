@@ -1,6 +1,7 @@
 'use client';
 
 import type { Cart, CartItem, Good, GoodVariant } from 'lib/shopify/types';
+import { CART_UNAVAILABLE, type CartLoadResult } from 'lib/shopify';
 import React, { createContext, use, useContext, useMemo, useOptimistic } from 'react';
 
 type UpdateType = 'plus' | 'minus' | 'delete';
@@ -11,6 +12,8 @@ type CartAction =
 
 type CartContextType = {
   cart: Cart | undefined;
+  /** True when cart service failed to load — show "we couldn't load your cart, we'll show it later" */
+  cartUnavailable: boolean;
   updateCartItem: (merchandiseId: string, updateType: UpdateType) => void;
   addCartItem: (variant: GoodVariant, good: Good) => void;
 };
@@ -151,9 +154,11 @@ export function CartProvider({
   cartPromise
 }: {
   children: React.ReactNode;
-  cartPromise: Promise<Cart | undefined>;
+  cartPromise: Promise<CartLoadResult>;
 }) {
-  const initialCart = use(cartPromise);
+  const initialResult = use(cartPromise);
+  const cartUnavailable = initialResult === CART_UNAVAILABLE;
+  const initialCart = cartUnavailable ? undefined : initialResult;
   const [optimisticCart, updateOptimisticCart] = useOptimistic(initialCart, cartReducer);
 
   const updateCartItem = (merchandiseId: string, updateType: UpdateType) => {
@@ -167,10 +172,11 @@ export function CartProvider({
   const value = useMemo(
     () => ({
       cart: optimisticCart,
+      cartUnavailable,
       updateCartItem,
       addCartItem
     }),
-    [optimisticCart]
+    [optimisticCart, cartUnavailable]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

@@ -74,7 +74,7 @@ service:
     - name: http
       port: 8100
       protocol: TCP
-      public: false
+      public: true
 
 # ==============================================================================
 # Prometheus Operator ServiceMonitor configuration

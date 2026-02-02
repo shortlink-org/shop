@@ -1,2 +1,19 @@
-# Generated
-out/
+# Rust
+/target/
+*.rlib
+**/*.rs.bk
+Cargo.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local env
+.env
+.env.local

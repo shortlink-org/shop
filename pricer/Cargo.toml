@@ -1,0 +1,37 @@
+[package]
+name = "pricer"
+version = "0.1.0"
+edition = "2021"
+description = "Pricer service: tax and discount calculation for cart/order (Rust + OPA)"
+
+[dependencies]
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Money / decimals
+rust_decimal = { version = "1", features = ["serde"] }
+
+# Errors
+thiserror = "2"
+anyhow = "1"
+
+# Configuration
+dotenvy = "0.15"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Common
+uuid = { version = "1", features = ["v4", "serde"] }
+async-trait = "0.1"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+
+[profile.release]
+strip = true

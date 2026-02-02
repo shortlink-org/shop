@@ -49,6 +49,14 @@ import {
 const domain = process.env.API_URI ?? '';
 const endpoint = `${domain}/graphql`;
 
+/** Sentinel: cart service failed to load; UI should show "we'll display it later" instead of empty cart */
+export const CART_UNAVAILABLE = Symbol('CART_UNAVAILABLE');
+export type CartLoadResult = Cart | undefined | typeof CART_UNAVAILABLE;
+
+/** Sentinel: goods/collections service failed to load; UI should show "we'll display it later" */
+export const GOODS_UNAVAILABLE = Symbol('GOODS_UNAVAILABLE');
+export type GoodsLoadResult<T> = T | typeof GOODS_UNAVAILABLE;
+
 type ExtractVariables<T> = T extends { variables: object } ? T['variables'] : never;
 
 export async function shopifyFetch<T>({
@@ -64,6 +72,9 @@ export async function shopifyFetch<T>({
   tags?: string[];
   variables?: ExtractVariables<T>;
 }): Promise<{ status: number; body: T } | never> {
+  const upstreamUnavailableMessage =
+    'Service temporarily unavailable. Please try again in a moment.';
+
   try {
     const result = await fetch(endpoint, {
       method: 'POST',
@@ -78,10 +89,51 @@ export async function shopifyFetch<T>({
       cache,
     });
 
-    const body = await result.json();
+    const text = await result.text();
+    let body: T & {
+      error?: { message?: string };
+      errors?: Array<{ message: string; cause?: unknown; status?: number }>;
+    };
+
+    try {
+      body = JSON.parse(text) as typeof body;
+    } catch {
+      const rawMessage = text?.trim() || 'Invalid response from server';
+      const message =
+        rawMessage.toLowerCase().includes('no healthy upstream')
+          ? upstreamUnavailableMessage
+          : rawMessage;
+      throw {
+        cause: 'unknown',
+        status: result.status || 500,
+        message,
+        query
+      };
+    }
 
     if (body.errors) {
       throw body.errors[0];
+    }
+
+    const bffMessage = body.error?.message ?? '';
+    const isUpstreamUnavailable =
+      bffMessage.toLowerCase().includes('no healthy upstream') ||
+      bffMessage.toLowerCase().includes('failed to fetch from subgraph');
+    if (body.error && isUpstreamUnavailable) {
+      throw {
+        cause: 'unknown',
+        status: result.status || 500,
+        message: upstreamUnavailableMessage,
+        query
+      };
+    }
+    if (body.error) {
+      throw {
+        cause: 'unknown',
+        status: result.status || 500,
+        message: bffMessage || 'Request failed',
+        query
+      };
     }
 
     return {
@@ -96,6 +148,16 @@ export async function shopifyFetch<T>({
         message: e.message,
         query
       };
+    }
+
+    if (
+      typeof e === 'object' &&
+      e !== null &&
+      'status' in e &&
+      'message' in e &&
+      'query' in e
+    ) {
+      throw e;
     }
 
     throw {
@@ -177,7 +239,8 @@ const buildCartFromState = async (
       }
 
       const numericGoodId = Number(goodId);
-      const good = Number.isFinite(numericGoodId) ? await getGood(numericGoodId) : undefined;
+      const rawGood = Number.isFinite(numericGoodId) ? await getGood(numericGoodId) : undefined;
+      const good = rawGood === GOODS_UNAVAILABLE ? undefined : rawGood;
       const price = good?.price ?? 0;
       const title = good?.name ?? 'Unknown item';
 
@@ -301,20 +364,25 @@ export async function updateCart(
   }
 }
 
-export async function getCart(cartId: string | undefined): Promise<Cart | undefined> {
+export async function getCart(cartId: string | undefined): Promise<CartLoadResult> {
   if (!cartId) {
     return undefined;
   }
 
-  const res = await shopifyFetch<ShopifyCartOperation>({
-    query: getCartQuery,
-    variables: {
-      customerId: cartId
-    },
-    cache: 'no-store'
-  });
+  try {
+    const res = await shopifyFetch<ShopifyCartOperation>({
+      query: getCartQuery,
+      variables: {
+        customerId: cartId
+      },
+      cache: 'no-store'
+    });
 
-  return buildCartFromState(res.body.data.getCart?.state, cartId);
+    return buildCartFromState(res.body.data.getCart?.state, cartId);
+  } catch {
+    // Cart service unavailable — return sentinel so UI can show "we couldn't load your cart, we'll show it later"
+    return CART_UNAVAILABLE;
+  }
 }
 
 export async function checkout(input: CheckoutInput): Promise<CheckoutResult> {
@@ -329,62 +397,78 @@ export async function checkout(input: CheckoutInput): Promise<CheckoutResult> {
   return res.body.data.checkout;
 }
 
-export async function getCollection(id: number): Promise<Collection | undefined> {
-  const res = await shopifyFetch<ShopifyCollectionOperation>({
-    query: getCollectionQuery,
-    tags: [TAGS.collections],
-    variables: {
-      id
-    }
-  });
+export async function getCollection(
+  id: number
+): Promise<Collection | undefined | typeof GOODS_UNAVAILABLE> {
+  try {
+    const res = await shopifyFetch<ShopifyCollectionOperation>({
+      query: getCollectionQuery,
+      tags: [TAGS.collections],
+      variables: {
+        id
+      }
+    });
 
-  return reshapeCollection(res.body.data.collection);
-}
-
-export async function getCollectionProducts({ page }: {
-  page?: number;
-}): Promise<Good[]> {
-  const res = await shopifyFetch<ShopifyCollectionProductsOperation>({
-    query: getCollectionProductsQuery,
-  });
-
-  if (!res.body.data.goods_goods_list) {
-    console.log(`No collection found for \`${res.body.data}\``);
-    return [];
+    return reshapeCollection(res.body.data.collection);
+  } catch {
+    return GOODS_UNAVAILABLE;
   }
-
-  return res.body.data.goods_goods_list.results.map(normalizeGood);
 }
 
-export async function getCollections(): Promise<Collection[]> {
-  const res = await shopifyFetch<ShopifyCollectionsOperation>({
-    query: getCollectionsQuery,
-    tags: [TAGS.collections],
-  });
+export async function getCollectionProducts({
+  page
+}: {
+  page?: number;
+}): Promise<Good[] | typeof GOODS_UNAVAILABLE> {
+  try {
+    const res = await shopifyFetch<ShopifyCollectionProductsOperation>({
+      query: getCollectionProductsQuery,
+    });
 
-  const shopifyCollections = res.body?.data?.collections
-    ? res.body.data.collections.edges.map((edge) => edge.node)
-    : [];
+    if (!res.body.data.goods_goods_list) {
+      console.log(`No collection found for \`${res.body.data}\``);
+      return [];
+    }
 
-  const collections = [
-    {
-      handle: '',
-      title: 'All',
-      description: 'All products',
-      seo: {
+    return res.body.data.goods_goods_list.results.map(normalizeGood);
+  } catch {
+    return GOODS_UNAVAILABLE;
+  }
+}
+
+export async function getCollections(): Promise<Collection[] | typeof GOODS_UNAVAILABLE> {
+  try {
+    const res = await shopifyFetch<ShopifyCollectionsOperation>({
+      query: getCollectionsQuery,
+      tags: [TAGS.collections],
+    });
+
+    const shopifyCollections = res.body?.data?.collections
+      ? res.body.data.collections.edges.map((edge) => edge.node)
+      : [];
+
+    const collections = [
+      {
+        handle: '',
         title: 'All',
         description: 'All products',
+        seo: {
+          title: 'All',
+          description: 'All products',
+        },
+        path: '/search',
+        updatedAt: new Date().toISOString(),
       },
-      path: '/search',
-      updatedAt: new Date().toISOString(),
-    },
-    // Filter out the `hidden` collections.
-    ...reshapeCollections(shopifyCollections).filter(
-      (collection) => !collection.handle.startsWith('hidden')
-    ),
-  ];
+      // Filter out the `hidden` collections.
+      ...reshapeCollections(shopifyCollections).filter(
+        (collection) => !collection.handle.startsWith('hidden')
+      ),
+    ];
 
-  return collections;
+    return collections;
+  } catch {
+    return GOODS_UNAVAILABLE;
+  }
 }
 
 export async function getMenu(id: number): Promise<Menu[]> {
@@ -428,49 +512,65 @@ export async function getPages(): Promise<Page[]> {
 /**
  * Retrieves a Good by ID from the Admin Service.
  */
-export async function getGood(id: number): Promise<Good | undefined> {
-  const res = await shopifyFetch<ShopifyProductOperation>({
-    query: getGoodQuery,
-    variables: {
-      id: id,
-    },
-  });
+export async function getGood(
+  id: number
+): Promise<Good | undefined | typeof GOODS_UNAVAILABLE> {
+  try {
+    const res = await shopifyFetch<ShopifyProductOperation>({
+      query: getGoodQuery,
+      variables: {
+        id: id,
+      },
+    });
 
-  return res.body.data.good ? normalizeGood(res.body.data.good) : undefined;
+    return res.body.data.good ? normalizeGood(res.body.data.good) : undefined;
+  } catch {
+    return GOODS_UNAVAILABLE;
+  }
 }
 
-export async function getGoodRecommendations(id: number): Promise<Good[]> {
-  const res = await shopifyFetch<ShopifyProductRecommendationsOperation>({
-    query: getGoodRecommendationsQuery,
-    variables: {
-      page: 1,
-    }
-  });
+export async function getGoodRecommendations(
+  id: number
+): Promise<Good[] | typeof GOODS_UNAVAILABLE> {
+  try {
+    const res = await shopifyFetch<ShopifyProductRecommendationsOperation>({
+      query: getGoodRecommendationsQuery,
+      variables: {
+        page: 1,
+      }
+    });
 
-  const recommendations = res.body.data.goods?.results ?? [];
-  return recommendations.filter((good) => good.id !== id).map(normalizeGood);
+    const recommendations = res.body.data.goods?.results ?? [];
+    return recommendations.filter((good) => good.id !== id).map(normalizeGood);
+  } catch {
+    return GOODS_UNAVAILABLE;
+  }
 }
 
 export async function getGoods({
-                                  query,
-                                  reverse,
-                                  sortKey
-                                }: {
+  query,
+  reverse,
+  sortKey
+}: {
   query?: string;
   reverse?: boolean;
   sortKey?: string;
-}): Promise<Good[]> {
-  const res = await shopifyFetch<ShopifyProductsOperation>({
-    query: getGoodsQuery,
-    tags: [TAGS.goods],
-    variables: {
-      query,
-      reverse,
-      sortKey
-    }
-  });
+}): Promise<Good[] | typeof GOODS_UNAVAILABLE> {
+  try {
+    const res = await shopifyFetch<ShopifyProductsOperation>({
+      query: getGoodsQuery,
+      tags: [TAGS.goods],
+      variables: {
+        query,
+        reverse,
+        sortKey
+      }
+    });
 
-  const goods = res.body.data.goods?.results ?? [];
-  return goods.map(normalizeGood);
+    const goods = res.body.data.goods?.results ?? [];
+    return goods.map(normalizeGood);
+  } catch {
+    return GOODS_UNAVAILABLE;
+  }
 }
 

@@ -1,11 +1,18 @@
 import clsx from 'clsx';
 import { Suspense } from 'react';
 
-import { getCollections } from 'lib/shopify';
+import { getCollections, GOODS_UNAVAILABLE } from 'lib/shopify';
 import FilterList from './filter';
 
 async function CollectionList() {
   const collections = await getCollections();
+  if (collections === GOODS_UNAVAILABLE) {
+    return (
+      <div className="py-2 text-sm text-neutral-500 dark:text-neutral-400">
+        Collections unavailable. We&apos;ll show them when available.
+      </div>
+    );
+  }
   return <FilterList list={collections} title="Collections" />;
 }
 

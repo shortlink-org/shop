@@ -22,17 +22,17 @@ type MerchandiseSearchParams = {
 };
 
 export default function CartModal() {
-  const { cart, updateCartItem } = useCart();
+  const { cart, cartUnavailable, updateCartItem } = useCart();
   const [isOpen, setIsOpen] = useState(false);
   const quantityRef = useRef(cart?.totalQuantity);
   const openCart = () => setIsOpen(true);
   const closeCart = () => setIsOpen(false);
 
   useEffect(() => {
-    if (!cart) {
+    if (!cart && !cartUnavailable) {
       createCartAndSetCookie();
     }
-  }, [cart]);
+  }, [cart, cartUnavailable]);
 
   useEffect(() => {
     if (
@@ -82,7 +82,17 @@ export default function CartModal() {
                 </button>
               </div>
 
-              {!cart || cart.lines.length === 0 ? (
+              {cartUnavailable ? (
+                <div className="mt-20 flex w-full flex-col items-center justify-center overflow-hidden px-4">
+                  <ShoppingCartIcon className="h-16 text-neutral-400" />
+                  <p className="mt-6 text-center text-lg font-semibold">
+                    We couldn&apos;t load your cart
+                  </p>
+                  <p className="mt-2 text-center text-sm text-neutral-500 dark:text-neutral-400">
+                    We&apos;ll show it when it&apos;s available again. You can keep browsing.
+                  </p>
+                </div>
+              ) : !cart || cart.lines.length === 0 ? (
                 <div className="mt-20 flex w-full flex-col items-center justify-center overflow-hidden">
                   <ShoppingCartIcon className="h-16" />
                   <p className="mt-6 text-center text-2xl font-bold">Your cart is empty.</p>

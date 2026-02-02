@@ -3,7 +3,7 @@ import { Navbar } from 'components/layout/navbar';
 import { Footer } from 'components/layout/footer';
 import { Providers } from 'components/providers';
 import { GeistSans } from 'geist/font/sans';
-import { getCart } from 'lib/shopify';
+import { CART_UNAVAILABLE, getCart } from 'lib/shopify';
 import { ensureStartsWith } from 'lib/utils';
 import { cookies } from 'next/headers';
 import { ReactNode } from 'react';
@@ -44,15 +44,15 @@ export const metadata = {
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const cartId = (await cookies()).get('cartId')?.value;
 
-  // Don't await the fetch, pass the Promise to the context provider
-  const cart = getCart(cartId);
+  // Pass cart promise that never rejects — when carts service is down we resolve with CART_UNAVAILABLE so UI can show "we'll display it later"
+  const cartPromise = getCart(cartId).catch(() => CART_UNAVAILABLE);
 
   return (
     <html lang="en" className={GeistSans.variable} suppressHydrationWarning>
       <body className="bg-neutral-50 text-black selection:bg-teal-300 dark:bg-neutral-900 dark:text-white dark:selection:bg-pink-500 dark:selection:text-white">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <Providers>
-            <CartProvider cartPromise={Promise.resolve(cart)}>
+            <CartProvider cartPromise={cartPromise}>
               <Navbar />
               <main className="min-h-screen">
                 {children}

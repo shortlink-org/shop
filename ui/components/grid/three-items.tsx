@@ -1,5 +1,5 @@
 import { GridTileImage } from 'components/grid/tile';
-import { getCollectionProducts } from 'lib/shopify';
+import { getCollectionProducts, GOODS_UNAVAILABLE } from 'lib/shopify';
 import type { Good } from 'lib/shopify/types';
 import Link from 'next/link';
 
@@ -44,6 +44,19 @@ function ThreeItemGridItem({
 export async function ThreeItemGrid() {
   // Collections that start with `hidden-*` are hidden from the search page.
   const homepageItems = await getCollectionProducts({});
+
+  if (homepageItems === GOODS_UNAVAILABLE) {
+    return (
+      <section className="mx-auto max-w-screen-2xl px-4 pb-4">
+        <div className="flex flex-col items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 py-16 dark:border-neutral-800 dark:bg-neutral-900">
+          <p className="text-lg font-semibold">We couldn&apos;t load products</p>
+          <p className="mt-2 text-center text-sm text-neutral-500 dark:text-neutral-400">
+            We&apos;ll show them when they&apos;re available again.
+          </p>
+        </div>
+      </section>
+    );
+  }
 
   if (!homepageItems[0] || !homepageItems[1] || !homepageItems[2]) return null;
 

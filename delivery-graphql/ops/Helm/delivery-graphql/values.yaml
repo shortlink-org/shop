@@ -74,12 +74,7 @@ service:
     - name: http
       port: 8102
       protocol: TCP
-      public: false
-    - name: metrics
-      port: 8102
-      targetPort: 8102
-      protocol: TCP
-      public: false
+      public: true
 
 # ==============================================================================
 # Prometheus Operator ServiceMonitor configuration

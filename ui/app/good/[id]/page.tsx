@@ -5,7 +5,7 @@ import { GridTileImage } from 'components/grid/tile';
 import { Gallery } from 'components/good/gallery';
 import { GoodProvider } from 'components/good/good-context';
 import { GoodDescription } from 'components/good/good-description';
-import { getGood, getGoodRecommendations } from 'lib/shopify';
+import { getGood, getGoodRecommendations, GOODS_UNAVAILABLE } from 'lib/shopify';
 import { Image } from 'lib/shopify/types';
 import Link from 'next/link';
 import { Suspense } from 'react';
@@ -23,6 +23,9 @@ export async function generateMetadata(props: {
 
   const good = await getGood(id);
 
+  if (good === GOODS_UNAVAILABLE) {
+    return { title: 'Product unavailable' };
+  }
   if (!good) return notFound();
 
   return {
@@ -39,6 +42,18 @@ export default async function GoodPage(props: { params: Promise<{ id: string }> 
 
   const good = await getGood(id);
 
+  if (good === GOODS_UNAVAILABLE) {
+    return (
+      <div className="mx-auto max-w-screen-2xl px-4 py-16">
+        <div className="flex flex-col items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 py-16 dark:border-neutral-800 dark:bg-neutral-900">
+          <p className="text-lg font-semibold">We couldn&apos;t load this product</p>
+          <p className="mt-2 text-center text-sm text-neutral-500 dark:text-neutral-400">
+            We&apos;ll show it when it&apos;s available again.
+          </p>
+        </div>
+      </div>
+    );
+  }
   if (!good) return notFound();
 
   const goodJsonLd = {
@@ -101,9 +116,9 @@ export default async function GoodPage(props: { params: Promise<{ id: string }> 
 }
 
 async function RelatedGoods({ id }: { id: number }) {
-  const relatedGoods = await getGoodRecommendations(id)
+  const relatedGoods = await getGoodRecommendations(id);
 
-  if (!relatedGoods.length) return null
+  if (relatedGoods === GOODS_UNAVAILABLE || !relatedGoods.length) return null;
 
   return (
     <div className='py-8'>

@@ -77,7 +77,7 @@ service:
     - name: http
       port: 8101
       protocol: TCP
-      public: false
+      public: true
 
 # ==============================================================================
 # Prometheus Operator ServiceMonitor configuration

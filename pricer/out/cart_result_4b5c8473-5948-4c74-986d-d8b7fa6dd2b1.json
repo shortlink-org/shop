@@ -1,0 +1,15 @@
+{
+  "customerId": "4b5c8473-5948-4c74-986d-d8b7fa6dd2b1",
+  "finalPrice": "1651.44",
+  "policies": [
+    "combination_discount",
+    "quantity_discount",
+    "total",
+    "service_markup",
+    "service_markup_test",
+    "vat",
+    "vat_test"
+  ],
+  "totalDiscount": "147.99",
+  "totalTax": "39.50"
+}

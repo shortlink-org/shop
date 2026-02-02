@@ -28,7 +28,7 @@ const DEFAULT_PACKAGE_INFO = {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cart } = useCart();
+  const { cart, cartUnavailable } = useCart();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -81,6 +81,30 @@ export default function CheckoutPage() {
             <div className="h-96 rounded-lg bg-neutral-200 dark:bg-neutral-700" />
             <div className="h-96 rounded-lg bg-neutral-200 dark:bg-neutral-700" />
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Cart service unavailable
+  if (cartUnavailable) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-8">
+        <div className="flex flex-col items-center justify-center py-16">
+          <ShoppingCartIcon className="h-16 w-16 text-neutral-400" />
+          <h2 className="mt-4 text-xl font-semibold text-black dark:text-white">
+            We couldn&apos;t load your cart
+          </h2>
+          <p className="mt-2 text-center text-neutral-600 dark:text-neutral-400">
+            We&apos;ll show it when it&apos;s available again. You can keep browsing.
+          </p>
+          <Link
+            href="/"
+            className="mt-6 inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-6 py-2 text-sm font-medium dark:border-neutral-700 dark:bg-neutral-800"
+          >
+            <ArrowLeftIcon className="h-4 w-4" />
+            Continue shopping
+          </Link>
         </div>
       </div>
     );
