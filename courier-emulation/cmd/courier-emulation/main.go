@@ -7,6 +7,7 @@ Courier Emulation service
 package main
 
 import (
+	"context"
 	"log/slog"
 	"os"
 
@@ -33,9 +34,29 @@ func main() {
 		}
 	}()
 
-	// Handle SIGINT, SIGQUIT and SIGTERM.
+	// Create context for subscriber that can be cancelled on shutdown
+	ctx, cancel := context.WithCancel(context.Background())
+
+	// Start the delivery subscriber to consume order assignment events
+	if service.DeliverySubscriber != nil {
+		if err := service.DeliverySubscriber.Start(ctx); err != nil {
+			service.Log.Error("Failed to start delivery subscriber", slog.String("error", err.Error()))
+		} else {
+			service.Log.Info("Delivery subscriber started, listening for order assignments")
+		}
+	} else {
+		service.Log.Warn("Delivery subscriber not available, running without event consumption")
+	}
+
+	service.Log.Info("Courier Emulation Service running")
+
+	// Handle SIGINT, SIGQUIT and SIGTERM - blocks until signal received
 	signal := graceful_shutdown.GracefulShutdown()
 
+	// Cancel the subscriber context to signal it to stop
+	cancel()
+
+	// Run cleanup (stops simulations and closes publishers)
 	cleanup()
 
 	service.Log.Info("Courier Emulation Service stopped", slog.String("signal", signal.String()))

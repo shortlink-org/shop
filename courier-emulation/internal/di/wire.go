@@ -41,8 +41,9 @@ type CourierEmulationService struct {
 	DeliverySimulator *services.DeliverySimulator
 
 	// Infrastructure
-	LocationPublisher *kafka.LocationPublisher
-	StatusPublisher   *kafka.KafkaStatusPublisher
+	LocationPublisher  *kafka.LocationPublisher
+	StatusPublisher    *kafka.KafkaStatusPublisher
+	DeliverySubscriber *kafka.DeliverySubscriber
 }
 
 // DefaultSet ==========================================================================================================
@@ -69,6 +70,7 @@ var CourierEmulationSet = wire.NewSet(
 	// Infrastructure
 	pkg_di.NewLocationPublisher,
 	pkg_di.NewStatusPublisher,
+	pkg_di.NewDeliverySubscriber,
 
 	NewCourierEmulationService,
 )
@@ -91,6 +93,7 @@ func NewCourierEmulationService(
 	// Infrastructure
 	locationPublisher *kafka.LocationPublisher,
 	statusPublisher *kafka.KafkaStatusPublisher,
+	deliverySubscriber *kafka.DeliverySubscriber,
 ) (*CourierEmulationService, func(), error) {
 	cleanup := func() {
 		log.Info("Shutting down courier simulation...")
@@ -99,8 +102,8 @@ func NewCourierEmulationService(
 		simulator.Stop()
 		deliverySimulator.Stop()
 
-		// Note: Kafka publisher cleanup is handled by Wire via the cleanup function
-		// returned by pkg_di.NewLocationPublisher and pkg_di.NewStatusPublisher
+		// Note: Kafka publisher/subscriber cleanup is handled by Wire via the cleanup function
+		// returned by pkg_di.NewLocationPublisher, pkg_di.NewStatusPublisher, and pkg_di.NewDeliverySubscriber
 	}
 
 	return &CourierEmulationService{
@@ -119,8 +122,9 @@ func NewCourierEmulationService(
 		DeliverySimulator: deliverySimulator,
 
 		// Infrastructure
-		LocationPublisher: locationPublisher,
-		StatusPublisher:   statusPublisher,
+		LocationPublisher:  locationPublisher,
+		StatusPublisher:    statusPublisher,
+		DeliverySubscriber: deliverySubscriber,
 	}, cleanup, nil
 }
 

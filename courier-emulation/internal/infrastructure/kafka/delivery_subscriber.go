@@ -21,16 +21,36 @@ const (
 	ConsumerGroupCourierEmulation = "courier-emulation"
 )
 
+// Address represents a delivery address with location coordinates.
+// Matches proto: domain.delivery.common.v1.Address
+type Address struct {
+	Street     string  `json:"street,omitempty"`
+	City       string  `json:"city,omitempty"`
+	PostalCode string  `json:"postal_code,omitempty"`
+	Country    string  `json:"country,omitempty"`
+	Latitude   float64 `json:"latitude"`
+	Longitude  float64 `json:"longitude"`
+}
+
+// DeliveryPeriod represents the desired delivery time window.
+// Matches proto: domain.delivery.common.v1.DeliveryPeriod
+type DeliveryPeriod struct {
+	StartTime time.Time `json:"start_time,omitempty"`
+	EndTime   time.Time `json:"end_time,omitempty"`
+}
+
 // OrderAssignedEvent represents an order assigned to a courier.
+// Matches proto: domain.delivery.events.v1.PackageAssignedEvent
 type OrderAssignedEvent struct {
-	OrderID     string    `json:"order_id"`
-	PackageID   string    `json:"package_id"`
-	CourierID   string    `json:"courier_id"`
-	PickupLat   float64   `json:"pickup_lat"`
-	PickupLon   float64   `json:"pickup_lon"`
-	DeliveryLat float64   `json:"delivery_lat"`
-	DeliveryLon float64   `json:"delivery_lon"`
-	AssignedAt  time.Time `json:"assigned_at"`
+	PackageID       string         `json:"package_id"`
+	CourierID       string         `json:"courier_id"`
+	Status          int32          `json:"status,omitempty"`
+	AssignedAt      time.Time      `json:"assigned_at"`
+	PickupAddress   Address        `json:"pickup_address"`
+	DeliveryAddress Address        `json:"delivery_address"`
+	DeliveryPeriod  DeliveryPeriod `json:"delivery_period,omitempty"`
+	CustomerPhone   string         `json:"customer_phone,omitempty"`
+	OccurredAt      time.Time      `json:"occurred_at,omitempty"`
 }
 
 // OrderAssignmentHandler handles order assignment events.
@@ -162,25 +182,21 @@ func NewCourierEmulationHandler(deliverySimulator DeliverySimulatorInterface) *C
 
 // HandleOrderAssigned handles an order assignment by starting a delivery simulation.
 func (h *CourierEmulationHandler) HandleOrderAssigned(ctx context.Context, event OrderAssignedEvent) error {
-	pickup, err := vo.NewLocation(event.PickupLat, event.PickupLon)
+	// Extract coordinates from Address objects
+	pickup, err := vo.NewLocation(event.PickupAddress.Latitude, event.PickupAddress.Longitude)
 	if err != nil {
 		return err
 	}
 
-	delivery, err := vo.NewLocation(event.DeliveryLat, event.DeliveryLon)
+	delivery, err := vo.NewLocation(event.DeliveryAddress.Latitude, event.DeliveryAddress.Longitude)
 	if err != nil {
 		return err
 	}
 
-	// Use PackageID if available, otherwise fall back to OrderID
-	packageID := event.PackageID
-	if packageID == "" {
-		packageID = event.OrderID
-	}
-
+	// PackageID is required in the new format
 	order := vo.NewDeliveryOrder(
-		event.OrderID,
-		packageID,
+		event.PackageID, // Use PackageID as OrderID (they map 1:1 in this context)
+		event.PackageID,
 		pickup,
 		delivery,
 		event.AssignedAt,
