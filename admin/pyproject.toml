@@ -84,7 +84,7 @@ dependencies = [
 [project.optional-dependencies]
 test = [
   "pytest>=9.0.2",
-  "pytest-django>=4.5",
+  "pytest-django>=4.11.1",
   "pytest-cov>=7.0.0",
   "pytest-mock>=3.12",
 ]
