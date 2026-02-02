@@ -13,7 +13,7 @@ require (
 	github.com/google/wire v0.7.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/jackc/pgx/v5 v5.8.0
-	github.com/redis/rueidis v1.0.70
+	github.com/redis/rueidis v1.0.71
 	github.com/shopspring/decimal v1.4.0
 	github.com/shortlink-org/go-sdk/auth v0.0.0-20260130191740-6ca93b747e53
 	github.com/shortlink-org/go-sdk/config v0.0.0-20260130191740-6ca93b747e53
