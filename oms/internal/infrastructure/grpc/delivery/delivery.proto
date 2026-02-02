@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package infrastructure.grpc.delivery.v1;
+
+option go_package = "github.com/shortlink-org/shop/oms/internal/infrastructure/grpc/delivery";
+
+import "google/protobuf/timestamp.proto";
+
+// DeliveryService client for OMS to communicate with Delivery service
+service DeliveryService {
+  // AcceptOrder accepts an order from OMS for delivery
+  rpc AcceptOrder(AcceptOrderRequest) returns (AcceptOrderResponse);
+}
+
+// Address represents a physical address for pickup/delivery
+message Address {
+  string street = 1;
+  string city = 2;
+  string postal_code = 3;
+  string country = 4;
+  double latitude = 5;
+  double longitude = 6;
+}
+
+// DeliveryPeriod represents the desired delivery time window
+message DeliveryPeriod {
+  google.protobuf.Timestamp start_time = 1;
+  google.protobuf.Timestamp end_time = 2;
+}
+
+// PackageInfo contains physical characteristics of the package
+message PackageInfo {
+  double weight_kg = 1;
+  string dimensions = 2;
+}
+
+// Priority level for delivery
+enum Priority {
+  PRIORITY_UNSPECIFIED = 0;
+  PRIORITY_NORMAL = 1;
+  PRIORITY_URGENT = 2;
+}
+
+// PackageStatus represents the delivery lifecycle state
+enum PackageStatus {
+  PACKAGE_STATUS_UNSPECIFIED = 0;
+  PACKAGE_STATUS_ACCEPTED = 1;
+  PACKAGE_STATUS_IN_POOL = 2;
+  PACKAGE_STATUS_ASSIGNED = 3;
+  PACKAGE_STATUS_IN_TRANSIT = 4;
+  PACKAGE_STATUS_DELIVERED = 5;
+  PACKAGE_STATUS_NOT_DELIVERED = 6;
+  PACKAGE_STATUS_REQUIRES_HANDLING = 7;
+}
+
+// AcceptOrderRequest contains data to accept an order for delivery
+message AcceptOrderRequest {
+  string order_id = 1;
+  string customer_id = 2;
+  Address pickup_address = 3;
+  Address delivery_address = 4;
+  DeliveryPeriod delivery_period = 5;
+  PackageInfo package_info = 6;
+  Priority priority = 7;
+}
+
+// AcceptOrderResponse returns the created package data
+message AcceptOrderResponse {
+  string package_id = 1;
+  PackageStatus status = 2;
+  google.protobuf.Timestamp created_at = 3;
+}

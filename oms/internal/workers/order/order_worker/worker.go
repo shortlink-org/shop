@@ -10,6 +10,7 @@ import (
 
 	v1 "github.com/shortlink-org/shop/oms/internal/domain/queue/v1"
 	temporalInfra "github.com/shortlink-org/shop/oms/internal/infrastructure/temporal"
+	"github.com/shortlink-org/shop/oms/internal/workers/order/activities"
 	order_workflow "github.com/shortlink-org/shop/oms/internal/workers/order/workflow"
 )
 
@@ -18,9 +19,14 @@ type OrderWorker struct {
 	Worker worker.Worker
 }
 
+// New creates a basic order worker without activities (for standalone worker service).
 func New(ctx context.Context, c client.Client, log logger.Logger) (OrderWorker, error) {
-	// This worker hosts Workflow functions
-	// Activities are registered separately when order UC is available
+	return NewWithActivities(ctx, c, log, nil)
+}
+
+// NewWithActivities creates an order worker with activities (for full OMS service).
+func NewWithActivities(ctx context.Context, c client.Client, log logger.Logger, acts *activities.Activities) (OrderWorker, error) {
+	// This worker hosts Workflow functions and Activities
 	w := worker.New(c, temporalInfra.GetQueueName(v1.OrderTaskQueue), worker.Options{})
 
 	// Register workflow with a specific name to avoid import cycles
@@ -29,8 +35,15 @@ func New(ctx context.Context, c client.Client, log logger.Logger) (OrderWorker, 
 		Name: temporalInfra.OrderWorkflowName,
 	})
 
-	// Note: Activities should be registered by the main application
-	// when the order handlers are available, using RegisterActivities()
+	// Register activities (only if provided)
+	if acts != nil {
+		w.RegisterActivity(acts.CancelOrder)
+		w.RegisterActivity(acts.GetOrder)
+		w.RegisterActivity(acts.RequestDelivery)
+		log.Info("Order worker started with activities")
+	} else {
+		log.Info("Order worker started without activities (workflow-only mode)")
+	}
 
 	// Start listening to the Task Queue
 	go func() {
@@ -39,8 +52,6 @@ func New(ctx context.Context, c client.Client, log logger.Logger) (OrderWorker, 
 			panic(err)
 		}
 	}()
-
-	log.Info("Worker started")
 
 	return OrderWorker{Worker: w}, nil
 }

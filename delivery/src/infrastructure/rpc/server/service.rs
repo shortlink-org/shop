@@ -12,11 +12,11 @@ use crate::infrastructure::rpc::{
     AcceptOrderRequest, AcceptOrderResponse, ActivateCourierRequest, ActivateCourierResponse,
     ArchiveCourierRequest, ArchiveCourierResponse, AssignOrderRequest, AssignOrderResponse,
     ChangeTransportTypeRequest, ChangeTransportTypeResponse, DeactivateCourierRequest,
-    DeactivateCourierResponse, DeliveryService, GetCourierDeliveriesRequest,
-    GetCourierDeliveriesResponse, GetCourierPoolRequest, GetCourierPoolResponse,
-    GetCourierRequest, GetCourierResponse, RegisterCourierRequest, RegisterCourierResponse,
-    UpdateContactInfoRequest, UpdateContactInfoResponse, UpdateWorkScheduleRequest,
-    UpdateWorkScheduleResponse,
+    DeactivateCourierResponse, DeliverOrderRequest, DeliverOrderResponse, DeliveryService,
+    GetCourierDeliveriesRequest, GetCourierDeliveriesResponse, GetCourierPoolRequest,
+    GetCourierPoolResponse, GetCourierRequest, GetCourierResponse, PickUpOrderRequest,
+    PickUpOrderResponse, RegisterCourierRequest, RegisterCourierResponse, UpdateContactInfoRequest,
+    UpdateContactInfoResponse, UpdateWorkScheduleRequest, UpdateWorkScheduleResponse,
 };
 
 #[tonic::async_trait]
@@ -115,6 +115,22 @@ impl DeliveryService for DeliveryServiceImpl {
         request: Request<AssignOrderRequest>,
     ) -> Result<Response<AssignOrderResponse>, Status> {
         order::assign_order(&self.state, request.into_inner()).await
+    }
+
+    #[instrument(skip(self, request), fields(package_id = %request.get_ref().package_id, courier_id = %request.get_ref().courier_id))]
+    async fn pick_up_order(
+        &self,
+        request: Request<PickUpOrderRequest>,
+    ) -> Result<Response<PickUpOrderResponse>, Status> {
+        order::pick_up_order(&self.state, request.into_inner()).await
+    }
+
+    #[instrument(skip(self, request), fields(package_id = %request.get_ref().package_id, courier_id = %request.get_ref().courier_id))]
+    async fn deliver_order(
+        &self,
+        request: Request<DeliverOrderRequest>,
+    ) -> Result<Response<DeliverOrderResponse>, Status> {
+        order::deliver_order(&self.state, request.into_inner()).await
     }
 
     // ==================== Courier Deliveries ====================

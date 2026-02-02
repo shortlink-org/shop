@@ -53,6 +53,12 @@ service DeliveryService {
   // AssignOrder assigns a package to a courier
   rpc AssignOrder(AssignOrderRequest) returns (AssignOrderResponse);
   
+  // PickUpOrder confirms package pickup by courier
+  rpc PickUpOrder(PickUpOrderRequest) returns (PickUpOrderResponse);
+  
+  // DeliverOrder confirms delivery or failed delivery attempt by courier
+  rpc DeliverOrder(DeliverOrderRequest) returns (DeliverOrderResponse);
+  
   // ==================== Courier Deliveries ====================
   // Courier delivery history
   
@@ -382,4 +388,52 @@ message DeliveryRecord {
 message GetCourierDeliveriesResponse {
   repeated DeliveryRecord deliveries = 1;
   int32 total_count = 2;  // Total deliveries for this courier
+}
+
+// ==================== PickUpOrder ====================
+
+// PickUpOrderRequest contains data for confirming package pickup
+message PickUpOrderRequest {
+  string package_id = 1;
+  string courier_id = 2;
+  Location pickup_location = 3;
+}
+
+// PickUpOrderResponse returns pickup confirmation result
+message PickUpOrderResponse {
+  string package_id = 1;
+  PackageStatus status = 2;
+  google.protobuf.Timestamp picked_up_at = 3;
+}
+
+// ==================== DeliverOrder ====================
+
+// NotDeliveredReason defines reasons for failed delivery
+enum NotDeliveredReason {
+  NOT_DELIVERED_REASON_UNSPECIFIED = 0;
+  NOT_DELIVERED_REASON_CUSTOMER_UNAVAILABLE = 1;
+  NOT_DELIVERED_REASON_WRONG_ADDRESS = 2;
+  NOT_DELIVERED_REASON_REFUSED = 3;
+  NOT_DELIVERED_REASON_ACCESS_DENIED = 4;
+  NOT_DELIVERED_REASON_OTHER = 5;
+}
+
+// DeliverOrderRequest contains data for confirming delivery
+message DeliverOrderRequest {
+  string package_id = 1;
+  string courier_id = 2;
+  bool is_delivered = 3;
+  NotDeliveredReason not_delivered_reason = 4;
+  string reason_description = 5;
+  Location confirmation_location = 6;
+  bytes photo_proof = 7;
+  bytes signature = 8;
+  string notes = 9;
+}
+
+// DeliverOrderResponse returns delivery confirmation result
+message DeliverOrderResponse {
+  string package_id = 1;
+  PackageStatus status = 2;
+  google.protobuf.Timestamp updated_at = 3;
 }

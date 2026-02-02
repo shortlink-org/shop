@@ -32,6 +32,7 @@ import (
 
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/events"
+	omsKafka "github.com/shortlink-org/shop/oms/internal/infrastructure/kafka"
 	cartRepo "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart"
 	orderRepo "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order"
 	cartGoodsIndex "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/redis/cart_goods_index"
@@ -59,6 +60,7 @@ import (
 
 	// Temporal workers
 	cart_worker "github.com/shortlink-org/shop/oms/internal/workers/cart/cart_worker"
+	"github.com/shortlink-org/shop/oms/internal/workers/order/activities"
 	order_worker "github.com/shortlink-org/shop/oms/internal/workers/order/order_worker"
 )
 
@@ -92,6 +94,10 @@ type OMSService struct {
 
 	// Event Infrastructure
 	EventPublisher *events.InMemoryPublisher
+
+	// Delivery Integration
+	DeliveryClient   ports.DeliveryClient
+	DeliveryConsumer *omsKafka.DeliveryConsumer
 
 	// Temporal
 	temporalClient client.Client
@@ -147,6 +153,10 @@ var OMSSet = wire.NewSet(
 	events.NewInMemoryPublisher,
 	wire.Bind(new(ports.EventPublisher), new(*events.InMemoryPublisher)),
 
+	// Delivery Integration (gRPC client + Kafka consumer)
+	NewDeliveryClient,
+	NewDeliveryConsumer,
+
 	// Cart Handlers
 	cartAddItems.NewHandler,
 	cartRemoveItems.NewHandler,
@@ -174,7 +184,8 @@ var OMSSet = wire.NewSet(
 
 	// Temporal Workers
 	cart_worker.New,
-	order_worker.New,
+	activities.New,
+	order_worker.NewWithActivities,
 
 	NewOMSService,
 )
@@ -248,7 +259,11 @@ func NewOMSService(
 	// Event Infrastructure
 	eventPublisher *events.InMemoryPublisher,
 
-	// Delivery
+	// Delivery Integration
+	deliveryClient ports.DeliveryClient,
+	deliveryConsumer *omsKafka.DeliveryConsumer,
+
+	// gRPC Servers
 	run *run.Response,
 	cartRPCServer *cartRPC.CartRPC,
 	orderRPCServer *orderRPC.OrderRPC,
@@ -286,7 +301,11 @@ func NewOMSService(
 		// Event Infrastructure
 		EventPublisher: eventPublisher,
 
-		// Delivery
+		// Delivery Integration
+		DeliveryClient:   deliveryClient,
+		DeliveryConsumer: deliveryConsumer,
+
+		// gRPC Servers
 		run:            run,
 		cartRPCServer:  cartRPCServer,
 		orderRPCServer: orderRPCServer,

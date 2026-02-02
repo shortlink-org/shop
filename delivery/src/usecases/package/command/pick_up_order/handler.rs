@@ -8,16 +8,20 @@
 //! 3. Validate courier is assigned to package
 //! 4. Start transit (ASSIGNED -> IN_TRANSIT)
 //! 5. Save package
-//! 6. Return response
+//! 6. Publish PackageInTransitEvent
+//! 7. Return response
 
 use std::sync::Arc;
 
 use chrono::{DateTime, Utc};
 use thiserror::Error;
+use tracing::{info, warn};
 use uuid::Uuid;
 
+use crate::domain::model::domain::delivery::common::v1 as proto_common;
+use crate::domain::model::domain::delivery::events::v1::PackageInTransitEvent;
 use crate::domain::model::package::{PackageId, PackageStatus};
-use crate::domain::ports::{CommandHandlerWithResult, PackageRepository, RepositoryError};
+use crate::domain::ports::{CommandHandlerWithResult, EventPublisher, PackageRepository, RepositoryError};
 
 use super::Command;
 
@@ -57,26 +61,33 @@ pub struct Response {
 }
 
 /// Pick Up Order Handler
-pub struct Handler<P>
+pub struct Handler<P, E>
 where
     P: PackageRepository,
+    E: EventPublisher,
 {
     package_repo: Arc<P>,
+    event_publisher: Arc<E>,
 }
 
-impl<P> Handler<P>
+impl<P, E> Handler<P, E>
 where
     P: PackageRepository,
+    E: EventPublisher,
 {
     /// Create a new handler instance
-    pub fn new(package_repo: Arc<P>) -> Self {
-        Self { package_repo }
+    pub fn new(package_repo: Arc<P>, event_publisher: Arc<E>) -> Self {
+        Self {
+            package_repo,
+            event_publisher,
+        }
     }
 }
 
-impl<P> CommandHandlerWithResult<Command, Response> for Handler<P>
+impl<P, E> CommandHandlerWithResult<Command, Response> for Handler<P, E>
 where
     P: PackageRepository + Send + Sync,
+    E: EventPublisher + Send + Sync,
 {
     type Error = PickUpOrderError;
 
@@ -125,7 +136,45 @@ where
         // 5. Save package to repository
         self.package_repo.save(&package).await?;
 
-        // 6. TODO: Generate and publish PackageInTransitEvent
+        // 6. Publish PackageInTransitEvent
+        let now = Utc::now();
+        let event = PackageInTransitEvent {
+            package_id: package.id().0.to_string(),
+            courier_id: cmd.courier_id.to_string(),
+            status: proto_common::PackageStatus::InTransit as i32,
+            in_transit_at: Some(pbjson_types::Timestamp {
+                seconds: now.timestamp(),
+                nanos: now.timestamp_subsec_nanos() as i32,
+            }),
+            courier_location: Some(proto_common::Location {
+                latitude: cmd.pickup_location.latitude(),
+                longitude: cmd.pickup_location.longitude(),
+                accuracy: cmd.pickup_location.accuracy(),
+                timestamp: None,
+                speed: None,
+                heading: None,
+            }),
+            occurred_at: Some(pbjson_types::Timestamp {
+                seconds: now.timestamp(),
+                nanos: now.timestamp_subsec_nanos() as i32,
+            }),
+        };
+
+        if let Err(e) = self.event_publisher.publish_package_in_transit(event).await {
+            warn!(
+                package_id = %cmd.package_id,
+                courier_id = %cmd.courier_id,
+                error = %e,
+                "Failed to publish PackageInTransit event (non-fatal)"
+            );
+        } else {
+            info!(
+                package_id = %cmd.package_id,
+                courier_id = %cmd.courier_id,
+                "PackageInTransit event published"
+            );
+        }
+
         // 7. TODO: Update courier location via Geolocation service
 
         Ok(Response {
@@ -139,13 +188,53 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::domain::model::domain::delivery::events::v1::{
+        CourierLocationUpdatedEvent, CourierRegisteredEvent, CourierStatusChangedEvent,
+        PackageAcceptedEvent, PackageAssignedEvent, PackageDeliveredEvent,
+        PackageNotDeliveredEvent, PackageRequiresHandlingEvent,
+    };
     use crate::domain::model::package::{Address, DeliveryPeriod, Package, Priority};
     use crate::domain::model::vo::location::Location;
-    use crate::domain::ports::PackageFilter;
+    use crate::domain::ports::{EventPublisherError, PackageFilter};
     use async_trait::async_trait;
     use chrono::Utc;
     use std::collections::HashMap;
     use std::sync::Mutex;
+
+    // ==================== Mock Event Publisher ====================
+
+    struct MockEventPublisher;
+
+    #[async_trait]
+    impl EventPublisher for MockEventPublisher {
+        async fn publish_package_accepted(&self, _event: PackageAcceptedEvent) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_package_assigned(&self, _event: PackageAssignedEvent) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_package_in_transit(&self, _event: PackageInTransitEvent) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_package_delivered(&self, _event: PackageDeliveredEvent) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_package_not_delivered(&self, _event: PackageNotDeliveredEvent) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_package_requires_handling(&self, _event: PackageRequiresHandlingEvent) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_courier_registered(&self, _event: CourierRegisteredEvent) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_courier_location_updated(&self, _event: CourierLocationUpdatedEvent) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_courier_status_changed(&self, _event: CourierStatusChangedEvent) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+    }
 
     // ==================== Mock Repository ====================
 
@@ -257,13 +346,14 @@ mod tests {
     #[tokio::test]
     async fn test_pick_up_order_success() {
         let package_repo = Arc::new(MockPackageRepository::new());
+        let event_publisher = Arc::new(MockEventPublisher);
 
         let courier_id = Uuid::new_v4();
         let package = create_assigned_package(courier_id);
         let package_id = package.id().0;
         package_repo.add_package(package);
 
-        let handler = Handler::new(package_repo.clone());
+        let handler = Handler::new(package_repo.clone(), event_publisher);
 
         let cmd = Command::new(package_id, courier_id, create_test_location());
         let result = handler.handle(cmd).await;
@@ -285,7 +375,8 @@ mod tests {
     #[tokio::test]
     async fn test_pick_up_order_package_not_found() {
         let package_repo = Arc::new(MockPackageRepository::new());
-        let handler = Handler::new(package_repo);
+        let event_publisher = Arc::new(MockEventPublisher);
+        let handler = Handler::new(package_repo, event_publisher);
 
         let cmd = Command::new(Uuid::new_v4(), Uuid::new_v4(), create_test_location());
         let result = handler.handle(cmd).await;
@@ -296,13 +387,14 @@ mod tests {
     #[tokio::test]
     async fn test_pick_up_order_already_picked_up() {
         let package_repo = Arc::new(MockPackageRepository::new());
+        let event_publisher = Arc::new(MockEventPublisher);
 
         let courier_id = Uuid::new_v4();
         let package = create_in_transit_package(courier_id);
         let package_id = package.id().0;
         package_repo.add_package(package);
 
-        let handler = Handler::new(package_repo);
+        let handler = Handler::new(package_repo, event_publisher);
 
         let cmd = Command::new(package_id, courier_id, create_test_location());
         let result = handler.handle(cmd).await;
@@ -313,6 +405,7 @@ mod tests {
     #[tokio::test]
     async fn test_pick_up_order_courier_not_assigned() {
         let package_repo = Arc::new(MockPackageRepository::new());
+        let event_publisher = Arc::new(MockEventPublisher);
 
         let assigned_courier_id = Uuid::new_v4();
         let wrong_courier_id = Uuid::new_v4();
@@ -321,7 +414,7 @@ mod tests {
         let package_id = package.id().0;
         package_repo.add_package(package);
 
-        let handler = Handler::new(package_repo);
+        let handler = Handler::new(package_repo, event_publisher);
 
         // Try to pick up with wrong courier
         let cmd = Command::new(package_id, wrong_courier_id, create_test_location());
@@ -336,6 +429,7 @@ mod tests {
     #[tokio::test]
     async fn test_pick_up_order_invalid_status() {
         let package_repo = Arc::new(MockPackageRepository::new());
+        let event_publisher = Arc::new(MockEventPublisher);
 
         let courier_id = Uuid::new_v4();
 
@@ -363,7 +457,7 @@ mod tests {
         let package_id = package.id().0;
         package_repo.add_package(package);
 
-        let handler = Handler::new(package_repo);
+        let handler = Handler::new(package_repo, event_publisher);
 
         let cmd = Command::new(package_id, courier_id, create_test_location());
         let result = handler.handle(cmd).await;

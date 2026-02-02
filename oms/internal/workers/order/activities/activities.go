@@ -2,11 +2,13 @@ package activities
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 
-	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	orderv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
+	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	orderCancel "github.com/shortlink-org/shop/oms/internal/usecases/order/command/cancel"
 	orderGet "github.com/shortlink-org/shop/oms/internal/usecases/order/query/get"
 )
@@ -19,18 +21,21 @@ import (
 // (CreateOrder command handler publishes event, which triggers the workflow).
 // Activities are used for compensation (cancel) and queries during workflow execution.
 type Activities struct {
-	cancelHandler ports.CommandHandler[orderCancel.Command]
-	getHandler    ports.QueryHandler[orderGet.Query, orderGet.Result]
+	cancelHandler  *orderCancel.Handler
+	getHandler     *orderGet.Handler
+	deliveryClient ports.DeliveryClient
 }
 
 // New creates a new Activities instance.
 func New(
-	cancelHandler ports.CommandHandler[orderCancel.Command],
-	getHandler ports.QueryHandler[orderGet.Query, orderGet.Result],
+	cancelHandler *orderCancel.Handler,
+	getHandler *orderGet.Handler,
+	deliveryClient ports.DeliveryClient,
 ) *Activities {
 	return &Activities{
-		cancelHandler: cancelHandler,
-		getHandler:    getHandler,
+		cancelHandler:  cancelHandler,
+		getHandler:     getHandler,
+		deliveryClient: deliveryClient,
 	}
 }
 
@@ -65,4 +70,81 @@ func (a *Activities) GetOrder(ctx context.Context, req GetOrderRequest) (*GetOrd
 	}
 
 	return &GetOrderResponse{Order: order}, nil
+}
+
+// RequestDeliveryRequest represents the request for RequestDelivery activity.
+type RequestDeliveryRequest struct {
+	OrderID         uuid.UUID
+	CustomerID      uuid.UUID
+	PickupAddress   DeliveryAddressDTO
+	DeliveryAddress DeliveryAddressDTO
+	StartTime       time.Time
+	EndTime         time.Time
+	WeightKg        float64
+	Dimensions      string
+	Priority        int32 // 0=unspecified, 1=normal, 2=urgent
+}
+
+// DeliveryAddressDTO represents address data for delivery request.
+type DeliveryAddressDTO struct {
+	Street     string
+	City       string
+	PostalCode string
+	Country    string
+	Latitude   float64
+	Longitude  float64
+}
+
+// RequestDeliveryResponse represents the response from RequestDelivery activity.
+type RequestDeliveryResponse struct {
+	PackageID string
+	Status    string
+}
+
+// RequestDelivery sends the order to the Delivery service for processing.
+// This activity calls the Delivery service's AcceptOrder gRPC endpoint.
+func (a *Activities) RequestDelivery(ctx context.Context, req RequestDeliveryRequest) (*RequestDeliveryResponse, error) {
+	if a.deliveryClient == nil {
+		return nil, fmt.Errorf("delivery client not configured")
+	}
+
+	deliveryReq := ports.AcceptOrderRequest{
+		OrderID:    req.OrderID,
+		CustomerID: req.CustomerID,
+		PickupAddress: ports.DeliveryAddress{
+			Street:     req.PickupAddress.Street,
+			City:       req.PickupAddress.City,
+			PostalCode: req.PickupAddress.PostalCode,
+			Country:    req.PickupAddress.Country,
+			Latitude:   req.PickupAddress.Latitude,
+			Longitude:  req.PickupAddress.Longitude,
+		},
+		DeliveryAddress: ports.DeliveryAddress{
+			Street:     req.DeliveryAddress.Street,
+			City:       req.DeliveryAddress.City,
+			PostalCode: req.DeliveryAddress.PostalCode,
+			Country:    req.DeliveryAddress.Country,
+			Latitude:   req.DeliveryAddress.Latitude,
+			Longitude:  req.DeliveryAddress.Longitude,
+		},
+		DeliveryPeriod: ports.DeliveryPeriodDTO{
+			StartTime: req.StartTime,
+			EndTime:   req.EndTime,
+		},
+		PackageInfo: ports.PackageInfoDTO{
+			WeightKg:   req.WeightKg,
+			Dimensions: req.Dimensions,
+		},
+		Priority: ports.DeliveryPriorityDTO(req.Priority),
+	}
+
+	resp, err := a.deliveryClient.AcceptOrder(ctx, deliveryReq)
+	if err != nil {
+		return nil, fmt.Errorf("failed to request delivery: %w", err)
+	}
+
+	return &RequestDeliveryResponse{
+		PackageID: resp.PackageID,
+		Status:    resp.Status,
+	}, nil
 }

@@ -1,6 +1,6 @@
 //! Order-related gRPC handlers
 //!
-//! Handles order acceptance and assignment operations.
+//! Handles order acceptance, assignment, pickup, and delivery operations.
 
 use std::sync::Arc;
 
@@ -11,6 +11,7 @@ use tracing::{error, info};
 
 use crate::di::AppState;
 use crate::domain::model::package::{PackageStatus, Priority};
+use crate::domain::model::vo::location::Location as DomainLocation;
 use crate::domain::ports::CommandHandlerWithResult;
 use crate::usecases::package::command::accept_order::{
     AcceptOrderError, AddressInput, Command as AcceptCommand, DeliveryPeriodInput,
@@ -19,11 +20,20 @@ use crate::usecases::package::command::accept_order::{
 use crate::usecases::package::command::assign_order::{
     AssignmentMode, Command as AssignCommand, Handler as AssignHandler,
 };
+use crate::usecases::package::command::pick_up_order::{
+    Command as PickUpCommand, Handler as PickUpHandler, PickUpOrderError,
+};
+use crate::usecases::package::command::deliver_order::{
+    Command as DeliverCommand, DeliveryResult, Handler as DeliverHandler, DeliverOrderError,
+    NotDeliveredReason,
+};
 
 use crate::infrastructure::rpc::converters::now_timestamp;
 use crate::infrastructure::rpc::{
     assign_order_request, AcceptOrderRequest, AcceptOrderResponse, AssignOrderRequest,
-    AssignOrderResponse, PackageStatus as ProtoPackageStatus, Priority as ProtoPriority,
+    AssignOrderResponse, DeliverOrderRequest, DeliverOrderResponse,
+    NotDeliveredReason as ProtoNotDeliveredReason, PackageStatus as ProtoPackageStatus,
+    PickUpOrderRequest, PickUpOrderResponse, Priority as ProtoPriority,
 };
 
 /// Convert proto Priority to domain Priority
@@ -232,6 +242,163 @@ pub async fn assign_order(
         courier_id: result.courier_id.to_string(),
         assigned_at: Some(now_timestamp()),
         estimated_delivery_minutes: result.estimated_delivery_minutes as i32,
+    };
+
+    Ok(Response::new(response))
+}
+
+/// Handle PickUpOrder request
+pub async fn pick_up_order(
+    state: &Arc<AppState>,
+    req: PickUpOrderRequest,
+) -> Result<Response<PickUpOrderResponse>, Status> {
+    info!("PickUpOrder request received for package_id: {}", req.package_id);
+
+    // Parse UUIDs
+    let package_id = uuid::Uuid::parse_str(&req.package_id)
+        .map_err(|_| Status::invalid_argument("invalid package_id format"))?;
+
+    let courier_id = uuid::Uuid::parse_str(&req.courier_id)
+        .map_err(|_| Status::invalid_argument("invalid courier_id format"))?;
+
+    // Parse pickup location
+    let location = req
+        .pickup_location
+        .ok_or_else(|| Status::invalid_argument("pickup_location is required"))?;
+
+    let pickup_location = DomainLocation::new(location.latitude, location.longitude, 10.0)
+        .map_err(|e| Status::invalid_argument(format!("invalid location: {}", e)))?;
+
+    // Build command
+    let cmd = PickUpCommand::new(package_id, courier_id, pickup_location);
+
+    // Execute handler
+    let handler = PickUpHandler::new(
+        state.package_repo.clone(),
+        state.event_publisher.clone(),
+    );
+
+    let result = handler.handle(cmd).await.map_err(|e| {
+        error!(error = %e, "Failed to pick up order");
+        match e {
+            PickUpOrderError::PackageNotFound(_) => Status::not_found(e.to_string()),
+            PickUpOrderError::CourierNotAssigned(_, _) => Status::permission_denied(e.to_string()),
+            PickUpOrderError::InvalidPackageStatus(_) => Status::failed_precondition(e.to_string()),
+            PickUpOrderError::AlreadyPickedUp(_) => Status::already_exists(e.to_string()),
+            PickUpOrderError::RepositoryError(_) => Status::internal(e.to_string()),
+        }
+    })?;
+
+    info!(
+        package_id = %result.package_id,
+        status = ?result.status,
+        "Order picked up successfully"
+    );
+
+    let response = PickUpOrderResponse {
+        package_id: result.package_id.to_string(),
+        status: domain_to_proto_status(result.status),
+        picked_up_at: Some(datetime_to_timestamp(result.picked_up_at)),
+    };
+
+    Ok(Response::new(response))
+}
+
+/// Convert proto NotDeliveredReason to domain NotDeliveredReason
+fn proto_to_domain_reason(proto: i32, description: String) -> Option<NotDeliveredReason> {
+    match ProtoNotDeliveredReason::try_from(proto) {
+        Ok(ProtoNotDeliveredReason::CustomerUnavailable) => Some(NotDeliveredReason::CustomerUnavailable),
+        Ok(ProtoNotDeliveredReason::WrongAddress) => Some(NotDeliveredReason::WrongAddress),
+        Ok(ProtoNotDeliveredReason::Refused) => Some(NotDeliveredReason::Refused),
+        Ok(ProtoNotDeliveredReason::AccessDenied) => Some(NotDeliveredReason::AccessDenied),
+        Ok(ProtoNotDeliveredReason::Other) => Some(NotDeliveredReason::Other(description)),
+        _ => None,
+    }
+}
+
+/// Handle DeliverOrder request
+pub async fn deliver_order(
+    state: &Arc<AppState>,
+    req: DeliverOrderRequest,
+) -> Result<Response<DeliverOrderResponse>, Status> {
+    info!("DeliverOrder request received for package_id: {}", req.package_id);
+
+    // Parse UUIDs
+    let package_id = uuid::Uuid::parse_str(&req.package_id)
+        .map_err(|_| Status::invalid_argument("invalid package_id format"))?;
+
+    let courier_id = uuid::Uuid::parse_str(&req.courier_id)
+        .map_err(|_| Status::invalid_argument("invalid courier_id format"))?;
+
+    // Parse confirmation location
+    let location = req
+        .confirmation_location
+        .ok_or_else(|| Status::invalid_argument("confirmation_location is required"))?;
+
+    let confirmation_location = DomainLocation::new(location.latitude, location.longitude, 10.0)
+        .map_err(|e| Status::invalid_argument(format!("invalid location: {}", e)))?;
+
+    // Build command based on delivery result
+    let cmd = if req.is_delivered {
+        DeliverCommand::delivered(
+            package_id,
+            courier_id,
+            confirmation_location,
+            if req.photo_proof.is_empty() {
+                None
+            } else {
+                Some(String::from_utf8_lossy(&req.photo_proof).to_string())
+            },
+            if req.signature.is_empty() {
+                None
+            } else {
+                Some(String::from_utf8_lossy(&req.signature).to_string())
+            },
+        )
+    } else {
+        let reason = proto_to_domain_reason(req.not_delivered_reason, req.reason_description.clone())
+            .ok_or_else(|| Status::invalid_argument("not_delivered_reason is required for failed delivery"))?;
+
+        DeliverCommand::not_delivered(
+            package_id,
+            courier_id,
+            confirmation_location,
+            reason,
+            if req.notes.is_empty() { None } else { Some(req.notes) },
+        )
+    };
+
+    // Execute handler
+    let handler = DeliverHandler::new(
+        state.courier_repo.clone(),
+        state.courier_cache.clone(),
+        state.package_repo.clone(),
+        state.event_publisher.clone(),
+    );
+
+    let result = handler.handle(cmd).await.map_err(|e| {
+        error!(error = %e, "Failed to deliver order");
+        match e {
+            DeliverOrderError::PackageNotFound(_) => Status::not_found(e.to_string()),
+            DeliverOrderError::CourierNotFound(_) => Status::not_found(e.to_string()),
+            DeliverOrderError::CourierNotAssigned(_, _) => Status::permission_denied(e.to_string()),
+            DeliverOrderError::InvalidPackageStatus(_) => Status::failed_precondition(e.to_string()),
+            DeliverOrderError::MissingNotDeliveredReason => Status::invalid_argument(e.to_string()),
+            DeliverOrderError::AlreadyDelivered(_) => Status::already_exists(e.to_string()),
+            DeliverOrderError::RepositoryError(_) => Status::internal(e.to_string()),
+        }
+    })?;
+
+    info!(
+        package_id = %result.package_id,
+        status = ?result.status,
+        "Order delivery confirmed"
+    );
+
+    let response = DeliverOrderResponse {
+        package_id: result.package_id.to_string(),
+        status: domain_to_proto_status(result.status),
+        updated_at: Some(datetime_to_timestamp(result.updated_at)),
     };
 
     Ok(Response::new(response))

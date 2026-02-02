@@ -9,26 +9,57 @@ import (
 	"go.temporal.io/sdk/workflow"
 
 	v2 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
+	"github.com/shortlink-org/shop/oms/internal/workers/order/activities"
 )
+
+// WorkflowInput contains all inputs for the order workflow.
+type WorkflowInput struct {
+	OrderID      uuid.UUID
+	CustomerID   uuid.UUID
+	Items        v2.Items
+	DeliveryInfo *DeliveryInfoInput // Optional: if nil, no delivery is requested
+}
+
+// DeliveryInfoInput contains delivery info for the workflow.
+type DeliveryInfoInput struct {
+	PickupAddress   activities.DeliveryAddressDTO
+	DeliveryAddress activities.DeliveryAddressDTO
+	StartTime       time.Time
+	EndTime         time.Time
+	WeightKg        float64
+	Dimensions      string
+	Priority        int32
+}
 
 // Workflow is a Temporal workflow that orchestrates order processing.
 // This workflow implements the saga pattern for order creation:
 // 1. Create order in database
 // 2. Reserve stock (TODO: implement stock service integration)
 // 3. Process payment (TODO: implement payment service integration)
-// 4. Complete order
+// 4. Request delivery (if delivery info provided)
+// 5. Complete order
 //
 // On failure, compensation activities are executed to rollback changes.
 // The workflow is deterministic - all side effects go through activities.
 func Workflow(ctx workflow.Context, orderID, customerID uuid.UUID, items v2.Items) error {
+	return WorkflowWithDelivery(ctx, WorkflowInput{
+		OrderID:      orderID,
+		CustomerID:   customerID,
+		Items:        items,
+		DeliveryInfo: nil, // No delivery info in legacy signature
+	})
+}
+
+// WorkflowWithDelivery is the extended workflow that supports delivery integration.
+func WorkflowWithDelivery(ctx workflow.Context, input WorkflowInput) error {
 	logger := workflow.GetLogger(ctx)
 
 	// Set initial workflow details for UI visibility
-	workflow.SetCurrentDetails(ctx, fmt.Sprintf("Initializing order processing for %d items", len(items)))
+	workflow.SetCurrentDetails(ctx, fmt.Sprintf("Initializing order processing for %d items", len(input.Items)))
 
 	// Activity options with retry policy
 	ao := workflow.ActivityOptions{
-		StartToCloseTimeout: 10 * time.Second,
+		StartToCloseTimeout: 30 * time.Second,
 		RetryPolicy: &temporal.RetryPolicy{
 			InitialInterval:    time.Second,
 			BackoffCoefficient: 2.0,
@@ -72,7 +103,7 @@ func Workflow(ctx workflow.Context, orderID, customerID uuid.UUID, items v2.Item
 	// Run saga in a goroutine so we can handle signals
 	sagaDone := workflow.NewChannel(ctx)
 	workflow.Go(ctx, func(ctx workflow.Context) {
-		sagaErr := executeSaga(sagaCtx, orderID, customerID, items)
+		sagaErr := executeSagaWithDelivery(sagaCtx, input)
 		if sagaErr != nil {
 			orderStatus = "FAILED"
 			orderError = sagaErr
@@ -113,31 +144,47 @@ func Workflow(ctx workflow.Context, orderID, customerID uuid.UUID, items v2.Item
 	return orderError
 }
 
-// executeSaga executes the order processing saga.
+// executeSaga executes the order processing saga (legacy version without delivery).
 // Returns error if any step fails (compensation should be handled).
 func executeSaga(ctx workflow.Context, orderID, customerID uuid.UUID, items v2.Items) error {
+	return executeSagaWithDelivery(ctx, WorkflowInput{
+		OrderID:      orderID,
+		CustomerID:   customerID,
+		Items:        items,
+		DeliveryInfo: nil,
+	})
+}
+
+// executeSagaWithDelivery executes the order processing saga with optional delivery.
+// Returns error if any step fails (compensation should be handled).
+func executeSagaWithDelivery(ctx workflow.Context, input WorkflowInput) error {
 	logger := workflow.GetLogger(ctx)
+	hasDelivery := input.DeliveryInfo != nil
+	totalSteps := 4
+	if hasDelivery {
+		totalSteps = 5
+	}
 
 	// Step 1: Create order in database (already done by usecase before workflow starts)
 	// The order is created by the usecase that starts this workflow
-	workflow.SetCurrentDetails(ctx, "**Step 1/4:** Order created in database ✓")
-	logger.Info("Order already created in database", "orderID", orderID)
+	workflow.SetCurrentDetails(ctx, fmt.Sprintf("**Step 1/%d:** Order created in database ✓", totalSteps))
+	logger.Info("Order already created in database", "orderID", input.OrderID)
 
 	// Step 2: Reserve stock (TODO: implement stock service activity)
-	workflow.SetCurrentDetails(ctx, "**Step 2/4:** Reserving stock...")
+	workflow.SetCurrentDetails(ctx, fmt.Sprintf("**Step 2/%d:** Reserving stock...", totalSteps))
 	// err := workflow.ExecuteActivity(ctx, activities.ReserveStock, activities.ReserveStockRequest{
-	//     OrderID: orderID,
-	//     Items:   items,
+	//     OrderID: input.OrderID,
+	//     Items:   input.Items,
 	// }).Get(ctx, nil)
 	// if err != nil {
 	//     workflow.SetCurrentDetails(ctx, "**Failed:** Stock reservation failed, compensating...")
 	//     // Compensation: cancel order
-	//     _ = workflow.ExecuteActivity(ctx, activities.CancelOrder, activities.CancelOrderRequest{OrderID: orderID}).Get(ctx, nil)
+	//     _ = workflow.ExecuteActivity(ctx, activities.CancelOrder, activities.CancelOrderRequest{OrderID: input.OrderID}).Get(ctx, nil)
 	//     return err
 	// }
 
 	// Step 3: Process payment (TODO: implement payment service activity)
-	workflow.SetCurrentDetails(ctx, "**Step 3/4:** Processing payment...")
+	workflow.SetCurrentDetails(ctx, fmt.Sprintf("**Step 3/%d:** Processing payment...", totalSteps))
 	// err = workflow.ExecuteActivity(ctx, activities.ProcessPayment, ...).Get(ctx, nil)
 	// if err != nil {
 	//     workflow.SetCurrentDetails(ctx, "**Failed:** Payment processing failed, compensating...")
@@ -147,10 +194,42 @@ func executeSaga(ctx workflow.Context, orderID, customerID uuid.UUID, items v2.I
 	//     return err
 	// }
 
-	// Step 4: Complete order
-	workflow.SetCurrentDetails(ctx, "**Step 4/4:** Completing order...")
+	// Step 4: Request delivery (if delivery info provided)
+	if hasDelivery {
+		workflow.SetCurrentDetails(ctx, fmt.Sprintf("**Step 4/%d:** Requesting delivery...", totalSteps))
+
+		var deliveryResp activities.RequestDeliveryResponse
+		err := workflow.ExecuteActivity(ctx, "RequestDelivery", activities.RequestDeliveryRequest{
+			OrderID:         input.OrderID,
+			CustomerID:      input.CustomerID,
+			PickupAddress:   input.DeliveryInfo.PickupAddress,
+			DeliveryAddress: input.DeliveryInfo.DeliveryAddress,
+			StartTime:       input.DeliveryInfo.StartTime,
+			EndTime:         input.DeliveryInfo.EndTime,
+			WeightKg:        input.DeliveryInfo.WeightKg,
+			Dimensions:      input.DeliveryInfo.Dimensions,
+			Priority:        input.DeliveryInfo.Priority,
+		}).Get(ctx, &deliveryResp)
+		if err != nil {
+			workflow.SetCurrentDetails(ctx, "**Failed:** Delivery request failed, compensating...")
+			logger.Error("Failed to request delivery", "error", err, "orderID", input.OrderID)
+			// Compensation: cancel order (stock release would also be needed if implemented)
+			var cancelActivities *activities.Activities
+			_ = workflow.ExecuteActivity(ctx, cancelActivities.CancelOrder, activities.CancelOrderRequest{OrderID: input.OrderID}).Get(ctx, nil)
+			return err
+		}
+
+		logger.Info("Delivery requested successfully",
+			"orderID", input.OrderID,
+			"packageID", deliveryResp.PackageID,
+			"status", deliveryResp.Status)
+	}
+
+	// Final Step: Complete order
+	currentStep := totalSteps
+	workflow.SetCurrentDetails(ctx, fmt.Sprintf("**Step %d/%d:** Completing order...", currentStep, totalSteps))
 	// Note: For now, we just log. In a real implementation, you'd call an activity.
-	logger.Info("Order processing completed", "orderID", orderID)
+	logger.Info("Order processing completed", "orderID", input.OrderID)
 
 	workflow.SetCurrentDetails(ctx, "**Completed:** Order processed successfully ✓")
 
