@@ -116,6 +116,3 @@ func (h *Handler) HandleDeliveryStatus(ctx context.Context, event kafka.Delivery
 
 	return nil
 }
-
-// Ensure Handler implements kafka.DeliveryEventHandler interface.
-var _ kafka.DeliveryEventHandler = (*Handler)(nil)

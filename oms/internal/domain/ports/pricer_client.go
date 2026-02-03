@@ -37,7 +37,7 @@ type CartData struct {
 
 // CartItemData represents a cart item for pricing calculation.
 type CartItemData struct {
-	ProductID uuid.UUID
-	Quantity  int32
-	Price     decimal.Decimal
+	ProductID uuid.UUID       // Good/product identifier
+	Quantity  int32           // Number of units
+	UnitPrice decimal.Decimal // Price per unit (before discount/tax)
 }

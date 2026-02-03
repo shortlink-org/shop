@@ -64,9 +64,3 @@ func SubscribeTyped[E ports.Event](p *InMemoryPublisher, handler func(ctx contex
 		return handler(ctx, typedEvent)
 	})
 }
-
-// Ensure InMemoryPublisher implements both interfaces.
-var (
-	_ ports.EventPublisher  = (*InMemoryPublisher)(nil)
-	_ ports.EventSubscriber = (*InMemoryPublisher)(nil)
-)

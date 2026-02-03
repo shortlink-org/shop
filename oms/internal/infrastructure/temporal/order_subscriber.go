@@ -11,7 +11,6 @@ import (
 	"go.temporal.io/sdk/client"
 
 	eventsv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/events/v1"
-	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	queuev1 "github.com/shortlink-org/shop/oms/internal/domain/queue/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/events"
 )
@@ -112,9 +111,3 @@ func (s *OrderEventSubscriber) OnOrderCancelled(ctx context.Context, event *even
 
 	return nil
 }
-
-// Ensure proto events implement ports.Event interface.
-var (
-	_ ports.Event = (*eventsv1.OrderCreated)(nil)
-	_ ports.Event = (*eventsv1.OrderCancelled)(nil)
-)

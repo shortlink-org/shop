@@ -6,11 +6,8 @@ import (
 	"log/slog"
 
 	"github.com/shopspring/decimal"
-
 	"github.com/shortlink-org/go-sdk/logger"
 
-	cartv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
-	cartItemsv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/items/v1"
 	orderDomain "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 )
@@ -84,26 +81,29 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (Result, error) {
 		return Result{}, fmt.Errorf("invalid delivery info")
 	}
 
-	// 5. Calculate pricing using Pricer service
-	var pricingResp *ports.CalculateTotalResponse
-	if h.pricerClient != nil {
-		pricingReq := convertCartToPricerRequest(cart)
-		var pricerErr error
-		pricingResp, pricerErr = h.pricerClient.CalculateTotal(ctx, pricingReq)
-		if pricerErr != nil {
-			h.log.Warn("Failed to calculate pricing, using cart prices",
-				slog.Any("error", pricerErr),
-				slog.String("customer_id", cmd.CustomerID.String()))
-			// Continue without pricing - graceful degradation
-		}
+	// 5. Calculate pricing using Pricer service (required for taxes and correct charge)
+	if h.pricerClient == nil {
+		return Result{}, fmt.Errorf("pricer client required for checkout")
+	}
+	builder := NewPricerRequestBuilder(cart.GetCustomerId(), cartItems)
+	if cmd.DeliveryInfo != nil {
+		addr := cmd.DeliveryInfo.GetDeliveryAddress()
+		builder = builder.
+			WithTaxParam("country", addr.Country()).
+			WithTaxParam("city", addr.City()).
+			WithTaxParam("postalCode", addr.PostalCode())
+	}
+	pricingResp, err := h.pricerClient.CalculateTotal(ctx, builder.Build())
+	if err != nil {
+		return Result{}, fmt.Errorf("failed to calculate pricing: %w", err)
 	}
 
-	// 6. Convert cart items to order items
-	orderItems := convertCartToOrderItems(cartItems)
+	// 6. Prepare neutral lines from cart (application-layer mapping)
+	lines := cartItemsToLines(cartItems)
 
-	// 7. Create order from cart items
+	// 7. Create order from lines (domain keeps invariants)
 	order := orderDomain.NewOrderState(cmd.CustomerID)
-	if err := order.CreateOrder(orderItems); err != nil {
+	if err := order.CreateFromLines(lines); err != nil {
 		return Result{}, fmt.Errorf("failed to create order: %w", err)
 	}
 
@@ -142,72 +142,11 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (Result, error) {
 	}
 
 	// 14. Build result with pricing info
-	result := Result{
-		Order: order,
-	}
-
-	if pricingResp != nil {
-		result.Subtotal = pricingResp.Subtotal
-		result.TotalDiscount = pricingResp.TotalDiscount
-		result.TotalTax = pricingResp.TotalTax
-		result.FinalPrice = pricingResp.FinalPrice
-	} else {
-		// Fallback: subtotal = sum(price * qty), discount/tax = 0, final = subtotal
-		result.Subtotal = cartSubtotal(cartItems)
-		result.TotalDiscount = decimal.Zero
-		result.TotalTax = decimal.Zero
-		result.FinalPrice = result.Subtotal
-	}
-
-	return result, nil
+	return Result{
+		Order:         order,
+		Subtotal:      pricingResp.Subtotal,
+		TotalDiscount: pricingResp.TotalDiscount,
+		TotalTax:      pricingResp.TotalTax,
+		FinalPrice:    pricingResp.FinalPrice,
+	}, nil
 }
-
-// cartSubtotal returns sum of (price * quantity) for all cart items.
-func cartSubtotal(cartItems cartItemsv1.Items) decimal.Decimal {
-	var sum decimal.Decimal
-	for _, item := range cartItems {
-		sum = sum.Add(item.GetPrice().Mul(decimal.NewFromInt32(item.GetQuantity())))
-	}
-	return sum
-}
-
-// convertCartToOrderItems converts cart items to order items.
-func convertCartToOrderItems(cartItems cartItemsv1.Items) orderDomain.Items {
-	orderItems := make(orderDomain.Items, 0, len(cartItems))
-	for _, cartItem := range cartItems {
-		// Use price from cart item (already includes discount calculation)
-		orderItem := orderDomain.NewItem(
-			cartItem.GetGoodId(),
-			cartItem.GetQuantity(),
-			cartItem.GetPrice(),
-		)
-		orderItems = append(orderItems, orderItem)
-	}
-	return orderItems
-}
-
-// convertCartToPricerRequest converts cart state to pricer request.
-func convertCartToPricerRequest(cart *cartv1.State) ports.CalculateTotalRequest {
-	items := cart.GetItems()
-	cartItems := make([]ports.CartItemData, 0, len(items))
-
-	for _, item := range items {
-		cartItems = append(cartItems, ports.CartItemData{
-			ProductID: item.GetGoodId(),
-			Quantity:  item.GetQuantity(),
-			Price:     item.GetPrice(),
-		})
-	}
-
-	return ports.CalculateTotalRequest{
-		Cart: ports.CartData{
-			CustomerID: cart.GetCustomerId(),
-			Items:      cartItems,
-		},
-		DiscountParams: make(map[string]string),
-		TaxParams:      make(map[string]string),
-	}
-}
-
-// Ensure Handler implements CommandHandlerWithResult interface.
-var _ ports.CommandHandlerWithResult[Command, Result] = (*Handler)(nil)

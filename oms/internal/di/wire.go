@@ -56,7 +56,7 @@ import (
 	orderList "github.com/shortlink-org/shop/oms/internal/usecases/order/query/list"
 
 	// Checkout handlers
-	checkout "github.com/shortlink-org/shop/oms/internal/usecases/checkout/command/create_order_from_cart"
+	checkout "github.com/shortlink-org/shop/oms/internal/usecases/order/command/create_order_from_cart"
 
 	// Temporal workers
 	cart_worker "github.com/shortlink-org/shop/oms/internal/workers/cart/cart_worker"

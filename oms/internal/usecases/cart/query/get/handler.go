@@ -54,6 +54,3 @@ func (h *Handler) Handle(ctx context.Context, q Query) (Result, error) {
 
 	return cart, nil
 }
-
-// Ensure Handler implements QueryHandler interface.
-var _ ports.QueryHandler[Query, Result] = (*Handler)(nil)

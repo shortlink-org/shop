@@ -82,6 +82,3 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 
 	return nil
 }
-
-// Ensure Handler implements CommandHandler interface.
-var _ ports.CommandHandler[Command] = (*Handler)(nil)

@@ -8,7 +8,7 @@ import (
 
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/dto"
 	v1 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/model/v1"
-	"github.com/shortlink-org/shop/oms/internal/usecases/checkout/command/create_order_from_cart"
+	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/create_order_from_cart"
 )
 
 // Checkout creates an order from customer's cart.

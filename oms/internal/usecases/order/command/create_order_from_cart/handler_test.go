@@ -16,7 +16,7 @@ import (
 	itemv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/item/v1"
 	itemsv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/items/v1"
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
-	"github.com/shortlink-org/shop/oms/internal/usecases/checkout/command/create_order_from_cart/mocks"
+	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/create_order_from_cart/mocks"
 )
 
 func TestHandler_Handle_WithPricer(t *testing.T) {
@@ -88,7 +88,7 @@ func TestHandler_Handle_WithPricer(t *testing.T) {
 }
 
 func TestHandler_Handle_WithoutPricer(t *testing.T) {
-	// Test graceful degradation when pricer is nil
+	// Pricer is required — nil pricer should fail checkout
 	log, err := logger.New(logger.Default())
 	require.NoError(t, err)
 	defer log.Close()
@@ -97,30 +97,19 @@ func TestHandler_Handle_WithoutPricer(t *testing.T) {
 	customerID := uuid.New()
 	goodID := uuid.New()
 
-	// Create cart with item
 	item, err := itemv1.NewItemWithPricing(goodID, 2, decimal.NewFromInt(50), decimal.Zero, decimal.Zero)
 	require.NoError(t, err)
 	cart := cartv1.Reconstitute(customerID, itemsv1.Items{item}, 1)
 
-	// Create mocks
 	mockUoW := mocks.NewMockUnitOfWork(t)
 	mockCartRepo := mocks.NewMockCartRepository(t)
 	mockOrderRepo := mocks.NewMockOrderRepository(t)
 	mockPublisher := mocks.NewMockEventPublisher(t)
 
-	// Setup expectations
 	mockUoW.EXPECT().Begin(mock.Anything).Return(ctx, nil)
-	mockUoW.EXPECT().Commit(mock.Anything).Return(nil)
 	mockUoW.EXPECT().Rollback(mock.Anything).Return(nil)
-
 	mockCartRepo.EXPECT().Load(mock.Anything, customerID).Return(cart, nil)
-	mockCartRepo.EXPECT().Save(mock.Anything, mock.Anything).Return(nil)
 
-	mockOrderRepo.EXPECT().Save(mock.Anything, mock.Anything).Return(nil)
-
-	mockPublisher.EXPECT().Publish(mock.Anything, mock.Anything).Return(nil)
-
-	// Create handler with nil pricer
 	handler, err := NewHandler(
 		log,
 		mockUoW,
@@ -131,21 +120,16 @@ func TestHandler_Handle_WithoutPricer(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	// Execute
 	cmd := NewCommand(customerID, nil)
 	result, err := handler.Handle(ctx, cmd)
 
-	// Assert - should succeed with fallback pricing (subtotal = sum(price*qty))
-	assert.NoError(t, err)
-	assert.NotNil(t, result.Order)
-	assert.Equal(t, decimal.NewFromInt(100), result.Subtotal) // 2 * 50
-	assert.True(t, result.TotalDiscount.IsZero())
-	assert.True(t, result.TotalTax.IsZero())
-	assert.Equal(t, decimal.NewFromInt(100), result.FinalPrice)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "pricer client required")
+	assert.Nil(t, result.Order)
 }
 
 func TestHandler_Handle_PricerError(t *testing.T) {
-	// Test handling of pricer errors (graceful degradation)
+	// Pricer failure fails checkout (needed for taxes and correct charge)
 	log, err := logger.New(logger.Default())
 	require.NoError(t, err)
 	defer log.Close()
@@ -154,37 +138,23 @@ func TestHandler_Handle_PricerError(t *testing.T) {
 	customerID := uuid.New()
 	goodID := uuid.New()
 
-	// Create cart with item
 	item, err := itemv1.NewItemWithPricing(goodID, 2, decimal.NewFromInt(50), decimal.Zero, decimal.Zero)
 	require.NoError(t, err)
 	cart := cartv1.Reconstitute(customerID, itemsv1.Items{item}, 1)
 
-	// Create mocks
 	mockUoW := mocks.NewMockUnitOfWork(t)
 	mockCartRepo := mocks.NewMockCartRepository(t)
 	mockOrderRepo := mocks.NewMockOrderRepository(t)
 	mockPublisher := mocks.NewMockEventPublisher(t)
 	mockPricer := mocks.NewMockPricerClient(t)
 
-	// Setup expectations
 	mockUoW.EXPECT().Begin(mock.Anything).Return(ctx, nil)
-	mockUoW.EXPECT().Commit(mock.Anything).Return(nil)
 	mockUoW.EXPECT().Rollback(mock.Anything).Return(nil)
-
 	mockCartRepo.EXPECT().Load(mock.Anything, customerID).Return(cart, nil)
-	mockCartRepo.EXPECT().Save(mock.Anything, mock.Anything).Return(nil)
 
-	mockOrderRepo.EXPECT().Save(mock.Anything, mock.Anything).Return(nil)
+	pricerErr := errors.New("pricer service unavailable")
+	mockPricer.EXPECT().CalculateTotal(mock.Anything, mock.Anything).Return(nil, pricerErr)
 
-	mockPublisher.EXPECT().Publish(mock.Anything, mock.Anything).Return(nil)
-
-	// Pricer returns error
-	mockPricer.EXPECT().CalculateTotal(mock.Anything, mock.Anything).Return(
-		nil,
-		errors.New("pricer service unavailable"),
-	)
-
-	// Create handler
 	handler, err := NewHandler(
 		log,
 		mockUoW,
@@ -195,17 +165,12 @@ func TestHandler_Handle_PricerError(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	// Execute
 	cmd := NewCommand(customerID, nil)
 	result, err := handler.Handle(ctx, cmd)
 
-	// Assert - should succeed with fallback pricing (subtotal = sum(price*qty))
-	assert.NoError(t, err)
-	assert.NotNil(t, result.Order)
-	assert.Equal(t, decimal.NewFromInt(100), result.Subtotal) // 2 * 50
-	assert.True(t, result.TotalDiscount.IsZero())
-	assert.True(t, result.TotalTax.IsZero())
-	assert.Equal(t, decimal.NewFromInt(100), result.FinalPrice)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to calculate pricing")
+	assert.Nil(t, result.Order)
 }
 
 func TestHandler_Handle_EmptyCart(t *testing.T) {

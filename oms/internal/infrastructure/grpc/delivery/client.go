@@ -117,6 +117,3 @@ func packageStatusToString(status PackageStatus) string {
 		return "UNSPECIFIED"
 	}
 }
-
-// Ensure Client implements ports.DeliveryClient interface.
-var _ ports.DeliveryClient = (*Client)(nil)

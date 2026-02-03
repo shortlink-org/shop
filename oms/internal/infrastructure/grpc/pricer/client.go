@@ -87,7 +87,7 @@ func (c *Client) CalculateTotal(ctx context.Context, req ports.CalculateTotalReq
 		protoReq.Cart.Items = append(protoReq.Cart.Items, &pricerv1.CartItem{
 			ProductId: item.ProductID.String(),
 			Quantity:  item.Quantity,
-			Price:     item.Price.String(),
+			Price:     item.UnitPrice.String(),
 		})
 	}
 
@@ -104,7 +104,7 @@ func (c *Client) CalculateTotal(ctx context.Context, req ports.CalculateTotalReq
 	// Calculate subtotal from items
 	subtotal := decimal.Zero
 	for _, item := range req.Cart.Items {
-		subtotal = subtotal.Add(item.Price.Mul(decimal.NewFromInt32(item.Quantity)))
+		subtotal = subtotal.Add(item.UnitPrice.Mul(decimal.NewFromInt32(item.Quantity)))
 	}
 
 	return &ports.CalculateTotalResponse{
@@ -131,6 +131,3 @@ func loadTLSCredentials(certPath string) (credentials.TransportCredentials, erro
 		MinVersion: tls.VersionTLS12,
 	}), nil
 }
-
-// Ensure Client implements ports.PricerClient interface.
-var _ ports.PricerClient = (*Client)(nil)

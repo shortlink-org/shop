@@ -19,5 +19,3 @@ type Querier interface {
 	InsertCartItem(ctx context.Context, arg InsertCartItemParams) error
 	UpsertCart(ctx context.Context, arg UpsertCartParams) (pgconn.CommandTag, error)
 }
-
-var _ Querier = (*Queries)(nil)

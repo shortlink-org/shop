@@ -161,6 +161,3 @@ func (h *Handler) processCart(ctx context.Context, customerID, goodID uuid.UUID)
 
 	return nil
 }
-
-// Ensure Handler implements EventHandler interface.
-var _ ports.EventHandler[Event] = (*Handler)(nil)

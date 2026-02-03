@@ -8,9 +8,9 @@ import (
 	"github.com/shortlink-org/go-sdk/grpc"
 	logger "github.com/shortlink-org/go-sdk/logger"
 
-	"github.com/shortlink-org/shop/oms/internal/usecases/checkout/command/create_order_from_cart"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/cancel"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/create"
+	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/create_order_from_cart"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/update_delivery_info"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/query/get"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/query/list"
