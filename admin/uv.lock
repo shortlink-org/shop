@@ -1259,7 +1259,7 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'test'", specifier = ">=9.0.2" },
     { name = "pytest-cov", marker = "extra == 'test'", specifier = ">=7.0.0" },
     { name = "pytest-django", marker = "extra == 'test'", specifier = ">=4.11.1" },
-    { name = "pytest-mock", marker = "extra == 'test'", specifier = ">=3.12" },
+    { name = "pytest-mock", marker = "extra == 'test'", specifier = ">=3.15.1" },
     { name = "pytz", specifier = "==2025.2" },
     { name = "pyyaml", specifier = "==6.0.3" },
     { name = "redis" },
