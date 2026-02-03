@@ -7,23 +7,7 @@ ARG BUILDKIT_SBOM_SCAN_STAGE=true
 ARG BUILDKIT_SBOM_SCAN_CONTEXT=true
 
 # =============================================================================
-# Stage 1: Dependencies
-# =============================================================================
-FROM node:24.13.0-alpine AS deps
-
-WORKDIR /app
-
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-# Copy package files
-COPY package.json pnpm-lock.yaml .npmrc* ./
-
-# Install dependencies
-RUN pnpm install --frozen-lockfile
-
-# =============================================================================
-# Stage 2: Builder
+# Stage 1: Builder
 # =============================================================================
 FROM node:24.13.0-alpine AS builder
 
@@ -32,8 +16,14 @@ WORKDIR /app
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy dependencies from deps stage
-COPY --from=deps /app/node_modules ./node_modules
+# Copy package files first (better layer caching)
+COPY package.json pnpm-lock.yaml .npmrc* ./
+
+# Fetch + offline install using cache mount for pnpm store (no node_modules copy between stages)
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+    pnpm fetch --frozen-lockfile && pnpm install --offline --frozen-lockfile
+
+# Copy application source
 COPY . .
 
 # Set build-time environment variables
@@ -48,11 +38,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Build the application
 RUN pnpm build
 
-# Ensure public directory exists (Next.js optional directory)
-RUN mkdir -p public
-
 # =============================================================================
-# Stage 3: Runner
+# Stage 2: Runner
 # =============================================================================
 FROM node:24.13.0-alpine AS runner
 
@@ -67,16 +54,15 @@ LABEL org.opencontainers.image.source="https://github.com/shortlink-org/shortlin
 
 WORKDIR /app
 
-# Install pnpm and tini
-RUN apk add --no-cache tini && \
-    corepack enable && corepack prepare pnpm@latest --activate
+# Install tini (init for node process)
+RUN apk add --no-cache tini
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Create non-root user
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
+# Create non-root user (UID/GID 1000 to match chart's runAsUser/runAsGroup)
+RUN addgroup --system --gid 1000 nodejs && \
+    adduser --system --uid 1000 nextjs
 
 # Copy built assets
 COPY --from=builder /app/public ./public
@@ -93,6 +79,8 @@ EXPOSE 3000
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
+# Writable temp for Next/Node; if using readOnlyRootFilesystem, mount tmpfs on /tmp
+ENV TMPDIR=/tmp
 
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["node", "server.js"]
