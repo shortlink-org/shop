@@ -24,13 +24,13 @@ func NewHandler(
 	uow ports.UnitOfWork,
 	orderRepo ports.OrderRepository,
 	publisher ports.EventPublisher,
-) *Handler {
+) (*Handler, error) {
 	return &Handler{
 		log:       log,
 		uow:       uow,
 		orderRepo: orderRepo,
 		publisher: publisher,
-	}
+	}, nil
 }
 
 // Handle executes the CancelOrder command.
@@ -59,23 +59,17 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 		return err
 	}
 
-	// Commit transaction before publishing events
-	if err := h.uow.Commit(ctx); err != nil {
-		return fmt.Errorf("failed to commit transaction: %w", err)
+	// 4. Publish domain events to outbox (same transaction)
+	for _, event := range order.GetDomainEvents() {
+		if err := h.publisher.Publish(ctx, event); err != nil {
+			h.log.Error("failed to publish domain event",
+				slog.String("order_id", cmd.OrderID.String()),
+				slog.Any("error", err))
+		}
 	}
 
-	// 4. Publish domain events (collected by aggregate during state transitions)
-	// Temporal subscriber will listen and signal workflow
-	for _, event := range order.GetDomainEvents() {
-		if publishableEvent, ok := event.(ports.Event); ok {
-			if err := h.publisher.Publish(ctx, publishableEvent); err != nil {
-				// Log error but don't fail - order is already persisted
-				h.log.Error("failed to publish domain event",
-					slog.String("event_type", event.EventType()),
-					slog.String("order_id", cmd.OrderID.String()),
-					slog.Any("error", err))
-			}
-		}
+	if err := h.uow.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 	order.ClearDomainEvents()
 

@@ -9,31 +9,32 @@ import (
 	order "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/domain/order/v1/vo/address"
 	"github.com/shortlink-org/shop/oms/internal/domain/order/v1/vo/location"
-	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order/schema/crud"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order/schema/queries"
 )
 
-// ToDomain converts database models to domain aggregate.
-func ToDomain(row crud.OmsOrder, items []crud.GetOrderItemsRow, deliveryInfoRow *crud.OmsOrderDeliveryInfo) *order.OrderState {
-	domainItems := make(order.Items, 0, len(items))
-
-	for _, i := range items {
-		item := order.NewItem(i.GoodID, i.Quantity, i.Price)
-		domainItems = append(domainItems, item)
-	}
-
-	status := stringToOrderStatus(row.Status)
-	deliveryInfo := toDeliveryInfoDomain(deliveryInfoRow)
-
-	return order.Reconstitute(row.ID, row.CustomerID, domainItems, status, int(row.Version), deliveryInfo)
+// OrderRow holds DB rows for one order (header + items + delivery) for conversion to domain.
+type OrderRow struct {
+	Order    queries.OmsOrder
+	Items    []queries.GetOrderItemsRow
+	Delivery *queries.OmsOrderDeliveryInfo
 }
 
-// ToDomainFromList converts database models from list query to domain aggregate.
-func ToDomainFromList(row crud.OmsOrder, items []crud.GetOrderItemsRow, deliveryInfoRow *crud.OmsOrderDeliveryInfo) *order.OrderState {
-	return ToDomain(row, items, deliveryInfoRow)
+// ToDomain converts the row to domain aggregate.
+func (r *OrderRow) ToDomain() *order.OrderState {
+	domainItems := make(order.Items, 0, len(r.Items))
+	for _, i := range r.Items {
+		domainItems = append(domainItems, order.NewItem(i.GoodID, i.Quantity, i.Price))
+	}
+	status := stringToOrderStatus(r.Order.Status)
+	deliveryInfo := toDeliveryInfoDomain(r.Delivery)
+	return order.NewOrderStateFromPersisted(
+		r.Order.ID, r.Order.CustomerID, domainItems,
+		status, int(r.Order.Version), deliveryInfo,
+	)
 }
 
 // toDeliveryInfoDomain converts database delivery info row to domain DeliveryInfo.
-func toDeliveryInfoDomain(row *crud.OmsOrderDeliveryInfo) *order.DeliveryInfo {
+func toDeliveryInfoDomain(row *queries.OmsOrderDeliveryInfo) *order.DeliveryInfo {
 	if row == nil {
 		return nil
 	}

@@ -10,9 +10,9 @@ sql:
     schema: ../migrations
     codegen:
       - plugin: golang
-        out: crud
+        out: queries
         options:
-          package: crud
+          package: queries
           emit_interface: true
           sql_package: pgx/v5
           overrides:

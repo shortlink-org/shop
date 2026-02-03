@@ -29,14 +29,14 @@ func NewHandler(
 	uow ports.UnitOfWork,
 	cartRepo ports.CartRepository,
 	goodsIndex ports.CartGoodsIndex,
-) *Handler {
+) (*Handler, error) {
 	return &Handler{
 		log:        log,
 		uow:        uow,
 		cartRepo:   cartRepo,
 		goodsIndex: goodsIndex,
 		notifier:   nil,
-	}
+	}, nil
 }
 
 // SetNotifier sets the websocket notifier for UI notifications.

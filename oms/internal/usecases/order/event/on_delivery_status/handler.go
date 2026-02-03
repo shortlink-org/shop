@@ -24,11 +24,11 @@ type Handler struct {
 func NewHandler(
 	log logger.Logger,
 	orderRepo ports.OrderRepository,
-) *Handler {
+) (*Handler, error) {
 	return &Handler{
 		log:       log,
 		orderRepo: orderRepo,
-	}
+	}, nil
 }
 
 // HandleDeliveryStatus processes a delivery status event.

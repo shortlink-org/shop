@@ -6,11 +6,11 @@ import (
 	cart "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
 	itemv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/item/v1"
 	itemsv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/items/v1"
-	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart/schema/crud"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart/schema/queries"
 )
 
 // ToDomain converts database models to domain aggregate.
-func ToDomain(row crud.OmsCart, items []crud.GetCartItemsRow) *cart.State {
+func ToDomain(row queries.OmsCart, items []queries.GetCartItemsRow) *cart.State {
 	domainItems := make(itemsv1.Items, 0, len(items))
 
 	for _, i := range items {

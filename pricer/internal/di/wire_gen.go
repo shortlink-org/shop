@@ -99,7 +99,14 @@ func InitializePricerService() (*PricerService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	handler := calculate_total.NewHandler(logger, discountPolicy, taxPolicy, v)
+	handler, err := calculate_total.NewHandler(logger, discountPolicy, taxPolicy, v)
+	if err != nil {
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
 	server, err := newGRPCServerWithHandler(context, logger, tracerProvider, monitoring, config, handler)
 	if err != nil {
 		cleanup4()

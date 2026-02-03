@@ -10,7 +10,7 @@ import (
 	order "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order/dto"
-	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order/schema/crud"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order/schema/queries"
 	"github.com/shortlink-org/shop/oms/pkg/uow"
 )
 
@@ -48,7 +48,7 @@ func (s *Store) Load(ctx context.Context, orderID uuid.UUID) (*order.OrderState,
 	}
 
 	// Get delivery info (optional)
-	var deliveryInfoRow *crud.OmsOrderDeliveryInfo
+	var deliveryInfoRow *queries.OmsOrderDeliveryInfo
 	deliveryRow, err := qtx.GetOrderDeliveryInfo(ctx, orderID)
 	if err != nil {
 		if !errors.Is(err, pgx.ErrNoRows) {
@@ -59,7 +59,7 @@ func (s *Store) Load(ctx context.Context, orderID uuid.UUID) (*order.OrderState,
 		deliveryInfoRow = &deliveryRow
 	}
 
-	result := dto.ToDomain(row, items, deliveryInfoRow)
+	result := (&dto.OrderRow{Order: row, Items: items, Delivery: deliveryInfoRow}).ToDomain()
 
 	// Store in L1 cache: cost = base + items * per-item cost
 	cost := int64(200 + len(items)*50)
@@ -92,7 +92,7 @@ func (s *Store) ListByCustomer(ctx context.Context, customerID uuid.UUID) ([]*or
 		}
 
 		// Get delivery info (optional)
-		var deliveryInfoRow *crud.OmsOrderDeliveryInfo
+		var deliveryInfoRow *queries.OmsOrderDeliveryInfo
 		deliveryRow, err := qtx.GetOrderDeliveryInfo(ctx, row.ID)
 		if err != nil {
 			if !errors.Is(err, pgx.ErrNoRows) {
@@ -102,7 +102,7 @@ func (s *Store) ListByCustomer(ctx context.Context, customerID uuid.UUID) ([]*or
 			deliveryInfoRow = &deliveryRow
 		}
 
-		orders = append(orders, dto.ToDomainFromList(row, items, deliveryInfoRow))
+		orders = append(orders, (&dto.OrderRow{Order: row, Items: items, Delivery: deliveryInfoRow}).ToDomain())
 	}
 
 	return orders, nil

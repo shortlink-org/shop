@@ -42,7 +42,7 @@ func NewHandler(
 	orderRepo ports.OrderRepository,
 	publisher ports.EventPublisher,
 	pricerClient ports.PricerClient,
-) *Handler {
+) (*Handler, error) {
 	return &Handler{
 		log:          log,
 		uow:          uow,
@@ -50,7 +50,7 @@ func NewHandler(
 		orderRepo:    orderRepo,
 		publisher:    publisher,
 		pricerClient: pricerClient,
-	}
+	}, nil
 }
 
 // Handle executes the CreateOrderFromCart command.
@@ -126,21 +126,18 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (Result, error) {
 		return Result{}, fmt.Errorf("failed to save cart: %w", err)
 	}
 
-	// 12. Commit transaction
-	if err := h.uow.Commit(ctx); err != nil {
-		return Result{}, fmt.Errorf("failed to commit transaction: %w", err)
+	// 12. Publish domain events to outbox (same transaction)
+	for _, event := range order.GetDomainEvents() {
+		if err := h.publisher.Publish(ctx, event); err != nil {
+			h.log.Error("failed to publish domain event",
+				slog.String("order_id", order.GetOrderID().String()),
+				slog.Any("error", err))
+		}
 	}
 
-	// 13. Publish domain events
-	for _, event := range order.GetDomainEvents() {
-		if publishableEvent, ok := event.(ports.Event); ok {
-			if err := h.publisher.Publish(ctx, publishableEvent); err != nil {
-				h.log.Error("failed to publish domain event",
-					slog.String("event_type", event.EventType()),
-					slog.String("order_id", order.GetOrderID().String()),
-					slog.Any("error", err))
-			}
-		}
+	// 13. Commit transaction
+	if err := h.uow.Commit(ctx); err != nil {
+		return Result{}, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 	order.ClearDomainEvents()
 

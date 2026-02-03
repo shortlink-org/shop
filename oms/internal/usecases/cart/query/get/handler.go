@@ -22,11 +22,11 @@ type Handler struct {
 func NewHandler(
 	uow ports.UnitOfWork,
 	cartRepo ports.CartRepository,
-) *Handler {
+) (*Handler, error) {
 	return &Handler{
 		uow:      uow,
 		cartRepo: cartRepo,
-	}
+	}, nil
 }
 
 // Handle executes the GetCart query.

@@ -9,7 +9,9 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/shortlink-org/go-sdk/fsm"
-	common "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common/v1"
+	commonv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common/v1"
+	eventsv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/events/v1"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // OrderState represents the order state.
@@ -26,100 +28,127 @@ type OrderState struct {
 	version int
 	// fsm is the finite state machine for the order status
 	fsm *fsm.FSM
-	// domainEvents stores domain events that occurred during aggregate operations
-	// Events are collected here and can be retrieved by application layer for publishing
-	domainEvents []DomainEvent
+	// domainEvents stores domain events (proto) that occurred during aggregate operations
+	domainEvents []any
 	// deliveryInfo contains delivery information for the order (nil = self-pickup)
 	deliveryInfo *DeliveryInfo
 	// deliveryStatus tracks the delivery status (ACCEPTED, ASSIGNED, IN_TRANSIT, etc.)
-	deliveryStatus common.DeliveryStatus
+	deliveryStatus commonv1.DeliveryStatus
 }
 
 // NewOrderState creates a new OrderState instance with the given customer ID.
 func NewOrderState(customerId uuid.UUID) *OrderState {
-	order := &OrderState{
-		id:           uuid.New(),
-		items:        make(Items, 0),
-		customerId:   customerId,
-		version:      0,
-		domainEvents: make([]DomainEvent, 0),
+	return newOrderState(uuid.New(), customerId, make(Items, 0), OrderStatus_ORDER_STATUS_PENDING, 0, nil)
+}
+
+// NewOrderStateFromPersisted builds an OrderState from persisted data (repository load).
+// Single constructor for both "new order" and "reconstitute"; FSM rules live only here.
+func NewOrderStateFromPersisted(id uuid.UUID, customerId uuid.UUID, items Items, status OrderStatus, version int, deliveryInfo *DeliveryInfo) *OrderState {
+	if items == nil {
+		items = make(Items, 0)
 	}
+	return newOrderState(id, customerId, items, status, version, deliveryInfo)
+}
 
-	// Initialize the FSM with the initial state.
-	order.fsm = fsm.New(fsm.State(OrderStatus_ORDER_STATUS_PENDING.String()))
+// newOrderState is the single place that builds OrderState and configures the FSM.
+func newOrderState(id uuid.UUID, customerId uuid.UUID, items Items, status OrderStatus, version int, deliveryInfo *DeliveryInfo) *OrderState {
+	order := &OrderState{
+		id:           id,
+		items:        items,
+		customerId:   customerId,
+		version:      version,
+		domainEvents: make([]any, 0),
+		deliveryInfo: deliveryInfo,
+	}
+	order.fsm = fsm.New(fsm.State(status.String()))
+	order.addOrderTransitionRules(order.fsm)
+	order.fsm.SetOnEnterState(order.onEnterState)
+	order.fsm.SetOnExitState(order.onExitState)
+	return order
+}
 
-	// Define transition rules.
-	order.fsm.AddTransitionRule(
+// addOrderTransitionRules registers the order FSM transition rules (single source of truth).
+func (o *OrderState) addOrderTransitionRules(f *fsm.FSM) {
+	f.AddTransitionRule(
 		fsm.State(OrderStatus_ORDER_STATUS_PENDING.String()),
 		fsm.Event(OrderStatus_ORDER_STATUS_PENDING.String()),
 		fsm.State(OrderStatus_ORDER_STATUS_PROCESSING.String()),
 	)
-	order.fsm.AddTransitionRule(
+	f.AddTransitionRule(
 		fsm.State(OrderStatus_ORDER_STATUS_PROCESSING.String()),
 		fsm.Event(OrderStatus_ORDER_STATUS_PROCESSING.String()),
 		fsm.State(OrderStatus_ORDER_STATUS_PROCESSING.String()),
 	)
-	order.fsm.AddTransitionRule(
+	f.AddTransitionRule(
 		fsm.State(OrderStatus_ORDER_STATUS_PENDING.String()),
 		fsm.Event(OrderStatus_ORDER_STATUS_CANCELLED.String()),
 		fsm.State(OrderStatus_ORDER_STATUS_CANCELLED.String()),
 	)
-	order.fsm.AddTransitionRule(
+	f.AddTransitionRule(
 		fsm.State(OrderStatus_ORDER_STATUS_PROCESSING.String()),
 		fsm.Event(OrderStatus_ORDER_STATUS_CANCELLED.String()),
 		fsm.State(OrderStatus_ORDER_STATUS_CANCELLED.String()),
 	)
-	order.fsm.AddTransitionRule(
+	f.AddTransitionRule(
 		fsm.State(OrderStatus_ORDER_STATUS_PROCESSING.String()),
 		fsm.Event(OrderStatus_ORDER_STATUS_COMPLETED.String()),
 		fsm.State(OrderStatus_ORDER_STATUS_COMPLETED.String()),
 	)
+}
 
-	// Set up callbacks.
-	order.fsm.SetOnEnterState(order.onEnterState)
-	order.fsm.SetOnExitState(order.onExitState)
+// GetVersion returns the current version for optimistic concurrency control.
+func (o *OrderState) GetVersion() int {
+	return o.version
+}
 
-	return order
+// SetID sets the order ID (used when persisting a new order).
+func (o *OrderState) SetID(id uuid.UUID) {
+	o.id = id
 }
 
 // onEnterState is the callback executed when entering a new state.
-// This is where we generate domain events based on state transitions.
+// This is where we generate domain events (proto) based on state transitions.
 func (o *OrderState) onEnterState(ctx context.Context, from, to fsm.State, event fsm.Event) {
-	// Convert FSM state to OrderStatus
 	toStatus := o.fsmStateToOrderStatus(to)
-
-	// Generate domain events based on state transitions
 	now := time.Now()
+	ts := timestamppb.New(now)
+
 	switch toStatus {
 	case OrderStatus_ORDER_STATUS_PROCESSING:
-		// OrderCreated event - when transitioning to PROCESSING from PENDING
 		if o.fsmStateToOrderStatus(from) == OrderStatus_ORDER_STATUS_PENDING {
-			// Create a copy of items for the event
-			itemsCopy := make(Items, len(o.items))
-			copy(itemsCopy, o.items)
-			o.addDomainEvent(&OrderCreatedEvent{
-				OrderID:    o.id,
-				CustomerID: o.customerId,
-				Items:      itemsCopy,
+			items := make([]*commonv1.OrderItem, 0, len(o.items))
+			for _, it := range o.items {
+				items = append(items, &commonv1.OrderItem{
+					GoodId:   it.GetGoodId().String(),
+					Quantity: it.GetQuantity(),
+					Price:    it.GetPrice().String(),
+				})
+			}
+			o.addDomainEvent(&eventsv1.OrderCreated{
+				OrderId:    o.id.String(),
+				CustomerId: o.customerId.String(),
+				Items:      items,
 				Status:     toStatus,
-				OccurredAt: now,
+				CreatedAt:  ts,
+				OccurredAt: ts,
 			})
 		}
 	case OrderStatus_ORDER_STATUS_CANCELLED:
-		// OrderCancelled event
-		o.addDomainEvent(&OrderCancelledEvent{
-			OrderID:    o.id,
-			CustomerID: o.customerId,
-			Status:     toStatus,
-			OccurredAt: now,
+		o.addDomainEvent(&eventsv1.OrderCancelled{
+			OrderId:     o.id.String(),
+			CustomerId:  o.customerId.String(),
+			Status:      toStatus,
+			Reason:      "", // Set by command layer when CancelOrder(reason) is added
+			CancelledAt: ts,
+			OccurredAt:  ts,
 		})
 	case OrderStatus_ORDER_STATUS_COMPLETED:
-		// OrderCompleted event
-		o.addDomainEvent(&OrderCompletedEvent{
-			OrderID:    o.id,
-			CustomerID: o.customerId,
-			Status:     toStatus,
-			OccurredAt: now,
+		o.addDomainEvent(&eventsv1.OrderCompleted{
+			OrderId:     o.id.String(),
+			CustomerId:  o.customerId.String(),
+			Status:      toStatus,
+			CompletedAt: ts,
+			OccurredAt:  ts,
 		})
 	}
 }
@@ -182,10 +211,10 @@ func (o *OrderState) SetDeliveryInfo(info DeliveryInfo) error {
 	}
 
 	// Check DeliveryStatus - cannot change after package is assigned to courier or in transit
-	if o.deliveryStatus == common.DeliveryStatus_DELIVERY_STATUS_ASSIGNED ||
-		o.deliveryStatus == common.DeliveryStatus_DELIVERY_STATUS_IN_TRANSIT ||
-		o.deliveryStatus == common.DeliveryStatus_DELIVERY_STATUS_DELIVERED ||
-		o.deliveryStatus == common.DeliveryStatus_DELIVERY_STATUS_NOT_DELIVERED {
+	if o.deliveryStatus == commonv1.DeliveryStatus_DELIVERY_STATUS_ASSIGNED ||
+		o.deliveryStatus == commonv1.DeliveryStatus_DELIVERY_STATUS_IN_TRANSIT ||
+		o.deliveryStatus == commonv1.DeliveryStatus_DELIVERY_STATUS_DELIVERED ||
+		o.deliveryStatus == commonv1.DeliveryStatus_DELIVERY_STATUS_NOT_DELIVERED {
 		return fmt.Errorf("cannot update delivery info: package already %s", o.deliveryStatus)
 	}
 
@@ -202,7 +231,7 @@ func (o *OrderState) HasDeliveryInfo() bool {
 }
 
 // GetDeliveryStatus returns the current delivery status.
-func (o *OrderState) GetDeliveryStatus() common.DeliveryStatus {
+func (o *OrderState) GetDeliveryStatus() commonv1.DeliveryStatus {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
@@ -211,7 +240,7 @@ func (o *OrderState) GetDeliveryStatus() common.DeliveryStatus {
 
 // SetDeliveryStatus updates the delivery status.
 // Returns an error if the order is in a terminal state or if the transition is invalid.
-func (o *OrderState) SetDeliveryStatus(status common.DeliveryStatus) error {
+func (o *OrderState) SetDeliveryStatus(status commonv1.DeliveryStatus) error {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
@@ -233,23 +262,23 @@ func (o *OrderState) SetDeliveryStatus(status common.DeliveryStatus) error {
 
 // isValidDeliveryStatusTransition checks if the delivery status transition is valid.
 // Delivery status can only move forward: UNSPECIFIED -> ACCEPTED -> ASSIGNED -> IN_TRANSIT -> DELIVERED/NOT_DELIVERED
-func (o *OrderState) isValidDeliveryStatusTransition(from, to common.DeliveryStatus) bool {
+func (o *OrderState) isValidDeliveryStatusTransition(from, to commonv1.DeliveryStatus) bool {
 	// Allow setting initial status
-	if from == common.DeliveryStatus_DELIVERY_STATUS_UNSPECIFIED {
+	if from == commonv1.DeliveryStatus_DELIVERY_STATUS_UNSPECIFIED {
 		return true
 	}
 
 	// Define valid transitions
-	validTransitions := map[common.DeliveryStatus][]common.DeliveryStatus{
-		common.DeliveryStatus_DELIVERY_STATUS_ACCEPTED: {
-			common.DeliveryStatus_DELIVERY_STATUS_ASSIGNED,
+	validTransitions := map[commonv1.DeliveryStatus][]commonv1.DeliveryStatus{
+		commonv1.DeliveryStatus_DELIVERY_STATUS_ACCEPTED: {
+			commonv1.DeliveryStatus_DELIVERY_STATUS_ASSIGNED,
 		},
-		common.DeliveryStatus_DELIVERY_STATUS_ASSIGNED: {
-			common.DeliveryStatus_DELIVERY_STATUS_IN_TRANSIT,
+		commonv1.DeliveryStatus_DELIVERY_STATUS_ASSIGNED: {
+			commonv1.DeliveryStatus_DELIVERY_STATUS_IN_TRANSIT,
 		},
-		common.DeliveryStatus_DELIVERY_STATUS_IN_TRANSIT: {
-			common.DeliveryStatus_DELIVERY_STATUS_DELIVERED,
-			common.DeliveryStatus_DELIVERY_STATUS_NOT_DELIVERED,
+		commonv1.DeliveryStatus_DELIVERY_STATUS_IN_TRANSIT: {
+			commonv1.DeliveryStatus_DELIVERY_STATUS_DELIVERED,
+			commonv1.DeliveryStatus_DELIVERY_STATUS_NOT_DELIVERED,
 		},
 	}
 
@@ -290,20 +319,18 @@ func (o *OrderState) fsmStateToOrderStatus(state fsm.State) OrderStatus {
 	return OrderStatus_ORDER_STATUS_UNSPECIFIED
 }
 
-// addDomainEvent adds a domain event to the aggregate's event list
-func (o *OrderState) addDomainEvent(event DomainEvent) {
+// addDomainEvent adds a domain event (proto) to the aggregate's event list.
+func (o *OrderState) addDomainEvent(event any) {
 	o.domainEvents = append(o.domainEvents, event)
 }
 
-// GetDomainEvents returns all domain events that occurred during aggregate operations
-// Application layer should call this after aggregate operations to publish events
-// and then call ClearDomainEvents() to reset the list
-func (o *OrderState) GetDomainEvents() []DomainEvent {
+// GetDomainEvents returns all domain events that occurred during aggregate operations.
+// Application layer should publish them (e.g. to outbox) then call ClearDomainEvents().
+func (o *OrderState) GetDomainEvents() []any {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
-	// Return a copy to prevent external modification
-	eventsCopy := make([]DomainEvent, len(o.domainEvents))
+	eventsCopy := make([]any, len(o.domainEvents))
 	copy(eventsCopy, o.domainEvents)
 	return eventsCopy
 }

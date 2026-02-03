@@ -18,6 +18,7 @@ require (
 	github.com/shortlink-org/go-sdk/auth v0.0.0-20260130191740-6ca93b747e53
 	github.com/shortlink-org/go-sdk/config v0.0.0-20260130191740-6ca93b747e53
 	github.com/shortlink-org/go-sdk/context v0.0.0-20260130191740-6ca93b747e53
+	github.com/shortlink-org/go-sdk/cqrs v0.0.0-20260203161513-4f25da7bb06c
 	github.com/shortlink-org/go-sdk/db v0.0.0-20260130191740-6ca93b747e53
 	github.com/shortlink-org/go-sdk/flags v0.0.0-20260130191740-6ca93b747e53
 	github.com/shortlink-org/go-sdk/flight_trace v0.0.0-20260130191740-6ca93b747e53
@@ -28,6 +29,7 @@ require (
 	github.com/shortlink-org/go-sdk/observability v0.0.0-20260131202010-0fe4bdf647bf
 	github.com/shortlink-org/go-sdk/specification v0.0.0-20260130191740-6ca93b747e53
 	github.com/shortlink-org/go-sdk/temporal v0.0.0-20260201121039-0dcf44d0db33
+	github.com/shortlink-org/go-sdk/uow v0.0.0-20260203154416-5370b71ece91
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.40.0
@@ -47,6 +49,7 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
 	github.com/Masterminds/semver/v3 v3.4.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
+	github.com/ThreeDotsLabs/watermill-sql/v4 v4.1.2 // indirect
 	github.com/Unleash/unleash-go-sdk/v5 v5.0.3 // indirect
 	github.com/XSAM/otelsql v0.41.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -110,7 +113,7 @@ require (
 	github.com/johejo/golang-migrate-extra v0.0.0-20211005021153-c17dd75f8b4a // indirect
 	github.com/jzelinskie/stringz v0.0.3 // indirect
 	github.com/klauspost/compress v1.18.2 // indirect
-	github.com/lib/pq v1.10.9 // indirect
+	github.com/lib/pq v1.11.1 // indirect
 	github.com/lithammer/shortuuid/v3 v3.0.7 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/magiconair/properties v1.8.10 // indirect
@@ -148,7 +151,9 @@ require (
 	github.com/samber/lo v1.52.0 // indirect
 	github.com/shirou/gopsutil/v4 v4.25.6 // indirect
 	github.com/shortlink-org/go-sdk/http v0.0.0-20260130191740-6ca93b747e53 // indirect
+	github.com/shortlink-org/go-sdk/watermill v0.0.0-20260203152419-4eef21d2d412 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
+	github.com/sony/gobreaker v1.0.0 // indirect
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/cast v1.10.0 // indirect

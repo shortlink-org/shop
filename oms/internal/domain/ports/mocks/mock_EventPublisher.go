@@ -5,7 +5,6 @@ package mocks
 import (
 	context "context"
 
-	ports "github.com/shortlink-org/shop/oms/internal/domain/ports"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -23,7 +22,7 @@ func (_m *MockEventPublisher) EXPECT() *MockEventPublisher_Expecter {
 }
 
 // Publish provides a mock function with given fields: ctx, event
-func (_m *MockEventPublisher) Publish(ctx context.Context, event ports.Event) error {
+func (_m *MockEventPublisher) Publish(ctx context.Context, event interface{}) error {
 	ret := _m.Called(ctx, event)
 
 	if len(ret) == 0 {
@@ -31,7 +30,7 @@ func (_m *MockEventPublisher) Publish(ctx context.Context, event ports.Event) er
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, ports.Event) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, interface{}) error); ok {
 		r0 = rf(ctx, event)
 	} else {
 		r0 = ret.Error(0)
@@ -47,14 +46,14 @@ type MockEventPublisher_Publish_Call struct {
 
 // Publish is a helper method to define mock.On call
 //   - ctx context.Context
-//   - event ports.Event
+//   - event interface{}
 func (_e *MockEventPublisher_Expecter) Publish(ctx interface{}, event interface{}) *MockEventPublisher_Publish_Call {
 	return &MockEventPublisher_Publish_Call{Call: _e.mock.On("Publish", ctx, event)}
 }
 
-func (_c *MockEventPublisher_Publish_Call) Run(run func(ctx context.Context, event ports.Event)) *MockEventPublisher_Publish_Call {
+func (_c *MockEventPublisher_Publish_Call) Run(run func(ctx context.Context, event interface{})) *MockEventPublisher_Publish_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(ports.Event))
+		run(args[0].(context.Context), args[1].(interface{}))
 	})
 	return _c
 }
@@ -64,7 +63,7 @@ func (_c *MockEventPublisher_Publish_Call) Return(_a0 error) *MockEventPublisher
 	return _c
 }
 
-func (_c *MockEventPublisher_Publish_Call) RunAndReturn(run func(context.Context, ports.Event) error) *MockEventPublisher_Publish_Call {
+func (_c *MockEventPublisher_Publish_Call) RunAndReturn(run func(context.Context, interface{}) error) *MockEventPublisher_Publish_Call {
 	_c.Call.Return(run)
 	return _c
 }

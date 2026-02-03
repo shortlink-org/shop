@@ -35,7 +35,10 @@ func NewDeliveryConsumer(
 	}
 
 	// Create event handler
-	handler := on_delivery_status.NewHandler(log, orderRepo)
+	handler, err := on_delivery_status.NewHandler(log, orderRepo)
+	if err != nil {
+		return nil, func() {}, err
+	}
 
 	consumer, err := kafka.NewDeliveryConsumer(consumerConfig, handler, log)
 	if err != nil {

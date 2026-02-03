@@ -6,7 +6,7 @@ import (
 
 	cart "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
-	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart/schema/crud"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart/schema/queries"
 	"github.com/shortlink-org/shop/oms/pkg/uow"
 )
 
@@ -30,7 +30,7 @@ func (s *Store) Save(ctx context.Context, state *cart.State) error {
 
 	// Try to update with optimistic lock
 	if oldVersion > 0 {
-		result, err := qtx.UpsertCart(ctx, crud.UpsertCartParams{
+		result, err := qtx.UpsertCart(ctx, queries.UpsertCartParams{
 			CustomerID: customerID,
 			Version:    newVersion,
 			Version_2:  oldVersion,
@@ -56,7 +56,7 @@ func (s *Store) Save(ctx context.Context, state *cart.State) error {
 	}
 
 	for _, item := range state.GetItems() {
-		if err := qtx.InsertCartItem(ctx, crud.InsertCartItemParams{
+		if err := qtx.InsertCartItem(ctx, queries.InsertCartItemParams{
 			CartID:   customerID,
 			GoodID:   item.GetGoodId(),
 			Quantity: item.GetQuantity(),

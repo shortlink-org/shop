@@ -15,7 +15,7 @@ import (
 	"github.com/shortlink-org/go-sdk/db/drivers/postgres/migrate"
 
 	order "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
-	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order/schema/crud"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order/schema/queries"
 )
 
 var (
@@ -47,7 +47,7 @@ func New(ctx context.Context, store db.DB) (*Store, error) {
 
 	return &Store{
 		client: client,
-		query:  crud.New(client),
+		query:  queries.New(client),
 		cache:  cache,
 	}, nil
 }

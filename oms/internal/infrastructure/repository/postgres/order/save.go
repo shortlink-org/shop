@@ -9,7 +9,7 @@ import (
 
 	order "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
-	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order/schema/crud"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order/schema/queries"
 	"github.com/shortlink-org/shop/oms/pkg/uow"
 )
 
@@ -34,7 +34,7 @@ func (s *Store) Save(ctx context.Context, state *order.OrderState) error {
 
 	if oldVersion == 0 {
 		// New order - insert
-		if err := qtx.InsertOrder(ctx, crud.InsertOrderParams{
+		if err := qtx.InsertOrder(ctx, queries.InsertOrderParams{
 			ID:         orderID,
 			CustomerID: customerID,
 			Status:     status,
@@ -43,7 +43,7 @@ func (s *Store) Save(ctx context.Context, state *order.OrderState) error {
 		}
 	} else {
 		// Update with optimistic lock
-		result, err := qtx.UpdateOrder(ctx, crud.UpdateOrderParams{
+		result, err := qtx.UpdateOrder(ctx, queries.UpdateOrderParams{
 			ID:        orderID,
 			Status:    status,
 			Version:   newVersion,
@@ -64,7 +64,7 @@ func (s *Store) Save(ctx context.Context, state *order.OrderState) error {
 	}
 
 	for _, item := range state.GetItems() {
-		if err := qtx.InsertOrderItem(ctx, crud.InsertOrderItemParams{
+		if err := qtx.InsertOrderItem(ctx, queries.InsertOrderItemParams{
 			OrderID:  orderID,
 			GoodID:   item.GetGoodId(),
 			Quantity: item.GetQuantity(),
@@ -86,7 +86,7 @@ func (s *Store) Save(ctx context.Context, state *order.OrderState) error {
 }
 
 // saveDeliveryInfo saves or updates delivery info for an order.
-func (s *Store) saveDeliveryInfo(ctx context.Context, qtx *crud.Queries, orderID uuid.UUID, deliveryInfo *order.DeliveryInfo, isNew bool) error {
+func (s *Store) saveDeliveryInfo(ctx context.Context, qtx *queries.Queries, orderID uuid.UUID, deliveryInfo *order.DeliveryInfo, isNew bool) error {
 	if deliveryInfo == nil {
 		// No delivery info - delete if exists (for updates)
 		if !isNew {
@@ -106,7 +106,7 @@ func (s *Store) saveDeliveryInfo(ctx context.Context, qtx *crud.Queries, orderID
 		packageID = pgtype.UUID{Bytes: *pkgID, Valid: true}
 	}
 
-	params := crud.InsertOrderDeliveryInfoParams{
+	params := queries.InsertOrderDeliveryInfoParams{
 		OrderID:            orderID,
 		PickupStreet:       pgtype.Text{String: pickupAddr.Street(), Valid: pickupAddr.Street() != ""},
 		PickupCity:         pgtype.Text{String: pickupAddr.City(), Valid: pickupAddr.City() != ""},

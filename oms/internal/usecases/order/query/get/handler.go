@@ -21,11 +21,11 @@ type Handler struct {
 func NewHandler(
 	uow ports.UnitOfWork,
 	orderRepo ports.OrderRepository,
-) *Handler {
+) (*Handler, error) {
 	return &Handler{
 		uow:       uow,
 		orderRepo: orderRepo,
-	}
+	}, nil
 }
 
 // Handle executes the GetOrder query.

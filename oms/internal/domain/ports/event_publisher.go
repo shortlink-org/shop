@@ -8,10 +8,9 @@ type Event interface {
 	EventType() string
 }
 
-// EventPublisher publishes domain events to subscribers.
+// EventPublisher publishes domain events (e.g. to outbox/Kafka via go-sdk/cqrs EventBus).
 type EventPublisher interface {
-	// Publish publishes an event to all registered subscribers.
-	Publish(ctx context.Context, event Event) error
+	Publish(ctx context.Context, event any) error
 }
 
 // EventSubscriber subscribes to domain events.

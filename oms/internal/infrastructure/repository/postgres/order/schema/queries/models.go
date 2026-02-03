@@ -2,7 +2,7 @@
 // versions:
 //   sqlc v1.27.0
 
-package crud
+package queries
 
 import (
 	"github.com/google/uuid"
@@ -57,4 +57,14 @@ type OmsOrderItem struct {
 	GoodID   uuid.UUID
 	Quantity int32
 	Price    decimal.Decimal
+}
+
+// Outbox for OMS domain events; forwarded to Kafka by RunForwarder
+type WatermillOmsOutbox struct {
+	Offset        int64
+	Uuid          string
+	CreatedAt     pgtype.Timestamp
+	Payload       []byte
+	Metadata      []byte
+	TransactionID interface{}
 }

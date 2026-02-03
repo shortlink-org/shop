@@ -14,6 +14,7 @@ import (
 	"github.com/shortlink-org/go-sdk/auth/permission"
 	"github.com/shortlink-org/go-sdk/config"
 	"github.com/shortlink-org/go-sdk/context"
+	"github.com/shortlink-org/go-sdk/cqrs/bus"
 	"github.com/shortlink-org/go-sdk/db"
 	"github.com/shortlink-org/go-sdk/flags"
 	"github.com/shortlink-org/go-sdk/flight_trace"
@@ -24,7 +25,6 @@ import (
 	"github.com/shortlink-org/go-sdk/observability/tracing"
 	"github.com/shortlink-org/go-sdk/temporal"
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
-	"github.com/shortlink-org/shop/oms/internal/infrastructure/events"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/kafka"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart"
 	postgres2 "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order"
@@ -32,7 +32,6 @@ import (
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1"
 	v1_2 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/run"
-	temporal2 "github.com/shortlink-org/shop/oms/internal/infrastructure/temporal"
 	"github.com/shortlink-org/shop/oms/internal/usecases/cart/command/add_items"
 	"github.com/shortlink-org/shop/oms/internal/usecases/cart/command/remove_items"
 	"github.com/shortlink-org/shop/oms/internal/usecases/cart/command/reset"
@@ -130,7 +129,8 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	inMemoryPublisher := events.NewInMemoryPublisher()
+	eventBus := newEventBus(loggerLogger)
+	eventPublisher := bus.NewEventPublisher(eventBus)
 	deliveryClient, cleanup5, err := NewDeliveryClient(configConfig, loggerLogger)
 	if err != nil {
 		cleanup4()
@@ -193,10 +193,54 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		return nil, nil, err
 	}
 	cart_goods_indexStore := cart_goods_index.New(rueidisClient)
-	handler := add_items.NewHandler(loggerLogger, uoW, store, cart_goods_indexStore)
-	remove_itemsHandler := remove_items.NewHandler(loggerLogger, uoW, store, cart_goods_indexStore)
-	resetHandler := reset.NewHandler(loggerLogger, uoW, store, cart_goods_indexStore)
-	getHandler := get.NewHandler(uoW, store)
+	handler, err := add_items.NewHandler(loggerLogger, uoW, store, cart_goods_indexStore)
+	if err != nil {
+		cleanup8()
+		cleanup7()
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	remove_itemsHandler, err := remove_items.NewHandler(loggerLogger, uoW, store, cart_goods_indexStore)
+	if err != nil {
+		cleanup8()
+		cleanup7()
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	resetHandler, err := reset.NewHandler(loggerLogger, uoW, store, cart_goods_indexStore)
+	if err != nil {
+		cleanup8()
+		cleanup7()
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	getHandler, err := get.NewHandler(uoW, store)
+	if err != nil {
+		cleanup8()
+		cleanup7()
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
 	cartRPC, err := v1.New(server, loggerLogger, handler, remove_itemsHandler, resetHandler, getHandler)
 	if err != nil {
 		cleanup8()
@@ -221,12 +265,78 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	createHandler := create.NewHandler(loggerLogger, uoW, postgresStore, inMemoryPublisher)
-	cancelHandler := cancel.NewHandler(loggerLogger, uoW, postgresStore, inMemoryPublisher)
-	update_delivery_infoHandler := update_delivery_info.NewHandler(loggerLogger, uoW, postgresStore, inMemoryPublisher)
-	create_order_from_cartHandler := create_order_from_cart.NewHandler(loggerLogger, uoW, store, postgresStore, inMemoryPublisher, pricerClient)
-	handler2 := get2.NewHandler(uoW, postgresStore)
-	listHandler := list.NewHandler(uoW, postgresStore)
+	createHandler, err := create.NewHandler(loggerLogger, uoW, postgresStore, eventPublisher)
+	if err != nil {
+		cleanup8()
+		cleanup7()
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	cancelHandler, err := cancel.NewHandler(loggerLogger, uoW, postgresStore, eventPublisher)
+	if err != nil {
+		cleanup8()
+		cleanup7()
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	update_delivery_infoHandler, err := update_delivery_info.NewHandler(loggerLogger, uoW, postgresStore, eventPublisher)
+	if err != nil {
+		cleanup8()
+		cleanup7()
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	create_order_from_cartHandler, err := create_order_from_cart.NewHandler(loggerLogger, uoW, store, postgresStore, eventPublisher, pricerClient)
+	if err != nil {
+		cleanup8()
+		cleanup7()
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	handler2, err := get2.NewHandler(uoW, postgresStore)
+	if err != nil {
+		cleanup8()
+		cleanup7()
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	listHandler, err := list.NewHandler(uoW, postgresStore)
+	if err != nil {
+		cleanup8()
+		cleanup7()
+		cleanup6()
+		cleanup5()
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
 	orderRPC, err := v1_2.New(server, loggerLogger, createHandler, cancelHandler, update_delivery_infoHandler, create_order_from_cartHandler, handler2, listHandler)
 	if err != nil {
 		cleanup8()
@@ -251,7 +361,6 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	orderEventSubscriber := newOrderEventSubscriber(loggerLogger, clientClient, inMemoryPublisher)
 	cartWorker, err := cart_worker.New(context, clientClient, loggerLogger)
 	if err != nil {
 		cleanup8()
@@ -277,7 +386,7 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	omsService, err := NewOMSService(loggerLogger, configConfig, monitoring, tracerProvider, pprofEndpoint, client, dbDB, uoW, store, postgresStore, inMemoryPublisher, deliveryClient, deliveryConsumer, pricerClient, response, cartRPC, orderRPC, clientClient, orderEventSubscriber, cartWorker, orderWorker)
+	omsService, err := NewOMSService(loggerLogger, configConfig, monitoring, tracerProvider, pprofEndpoint, client, dbDB, uoW, store, postgresStore, eventPublisher, deliveryClient, deliveryConsumer, pricerClient, response, cartRPC, orderRPC, clientClient, cartWorker, orderWorker)
 	if err != nil {
 		cleanup8()
 		cleanup7()
@@ -331,8 +440,8 @@ type OMSService struct {
 	cartRPCServer  *v1.CartRPC
 	orderRPCServer *v1_2.OrderRPC
 
-	// Event Infrastructure
-	EventPublisher *events.InMemoryPublisher
+	// Event Infrastructure (go-sdk/cqrs EventBus + tx-aware outbox)
+	EventPublisher ports.EventPublisher
 
 	// Delivery Integration
 	DeliveryClient   ports.DeliveryClient
@@ -355,10 +464,10 @@ var OMSSet = wire.NewSet(
 
 	CustomDefaultSet, flight_trace.New, grpc.InitServer, config.New, logger.NewDefault, tracing.New, metrics.New, db.New, wire.FieldsOf(new(*metrics.Monitoring), "Metrics", "Prometheus"), newRedisClient,
 
-	newUnitOfWork, wire.Bind(new(ports.UnitOfWork), new(*postgres3.UoW)), postgres.New, postgres2.New, wire.Bind(new(ports.CartRepository), new(*postgres.Store)), wire.Bind(new(ports.OrderRepository), new(*postgres2.Store)), cart_goods_index.New, wire.Bind(new(ports.CartGoodsIndex), new(*cart_goods_index.Store)), events.NewInMemoryPublisher, wire.Bind(new(ports.EventPublisher), new(*events.InMemoryPublisher)), NewDeliveryClient,
+	newUnitOfWork, wire.Bind(new(ports.UnitOfWork), new(*postgres3.UoW)), postgres.New, postgres2.New, wire.Bind(new(ports.CartRepository), new(*postgres.Store)), wire.Bind(new(ports.OrderRepository), new(*postgres2.Store)), cart_goods_index.New, wire.Bind(new(ports.CartGoodsIndex), new(*cart_goods_index.Store)), newEventBus, bus.NewEventPublisher, wire.Bind(new(ports.EventPublisher), new(*bus.EventPublisher)), NewDeliveryClient,
 	NewDeliveryConsumer,
 
-	NewPricerClient, add_items.NewHandler, remove_items.NewHandler, reset.NewHandler, get.NewHandler, create.NewHandler, cancel.NewHandler, update_delivery_info.NewHandler, get2.NewHandler, list.NewHandler, create_order_from_cart.NewHandler, v1.New, v1_2.New, NewRunRPCServer, temporal.New, newOrderEventSubscriber, cart_worker.New, activities.New, order_worker.NewWithActivities, NewOMSService,
+	NewPricerClient, add_items.NewHandler, remove_items.NewHandler, reset.NewHandler, get.NewHandler, create.NewHandler, cancel.NewHandler, update_delivery_info.NewHandler, get2.NewHandler, list.NewHandler, create_order_from_cart.NewHandler, v1.New, v1_2.New, NewRunRPCServer, temporal.New, cart_worker.New, activities.New, order_worker.NewWithActivities, NewOMSService,
 )
 
 // NewRunRPCServer starts the gRPC server
@@ -397,13 +506,6 @@ func newRedisClient(cfg *config.Config) (rueidis.Client, func(), error) {
 	return client2, cleanup, nil
 }
 
-// newOrderEventSubscriber creates and registers the order event subscriber
-func newOrderEventSubscriber(log logger.Logger, temporalClient client.Client, publisher *events.InMemoryPublisher) *temporal2.OrderEventSubscriber {
-	subscriber := temporal2.NewOrderEventSubscriber(log, temporalClient)
-	subscriber.Register(publisher)
-	return subscriber
-}
-
 func NewOMSService(
 
 	log logger.Logger, config2 *config.Config,
@@ -421,7 +523,7 @@ func NewOMSService(
 	cartRepository ports.CartRepository,
 	orderRepository ports.OrderRepository,
 
-	eventPublisher *events.InMemoryPublisher,
+	eventPublisher ports.EventPublisher,
 
 	deliveryClient ports.DeliveryClient,
 	deliveryConsumer *kafka.DeliveryConsumer,
@@ -431,7 +533,6 @@ func NewOMSService(
 	orderRPCServer *v1_2.OrderRPC,
 
 	temporalClient client.Client,
-	_ *temporal2.OrderEventSubscriber,
 	cartWorker cart_worker.CartWorker,
 	orderWorker order_worker.OrderWorker,
 ) (*OMSService, error) {

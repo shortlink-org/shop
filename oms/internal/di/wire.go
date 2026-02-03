@@ -30,8 +30,9 @@ import (
 
 	"github.com/redis/rueidis"
 
+	"github.com/shortlink-org/go-sdk/cqrs/bus"
+
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
-	"github.com/shortlink-org/shop/oms/internal/infrastructure/events"
 	omsKafka "github.com/shortlink-org/shop/oms/internal/infrastructure/kafka"
 	cartRepo "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart"
 	orderRepo "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order"
@@ -39,7 +40,6 @@ import (
 	cartRPC "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1"
 	orderRPC "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/run"
-	temporalInfra "github.com/shortlink-org/shop/oms/internal/infrastructure/temporal"
 	pguow "github.com/shortlink-org/shop/oms/pkg/uow/postgres"
 
 	// Cart handlers
@@ -92,8 +92,8 @@ type OMSService struct {
 	cartRPCServer  *cartRPC.CartRPC
 	orderRPCServer *orderRPC.OrderRPC
 
-	// Event Infrastructure
-	EventPublisher *events.InMemoryPublisher
+	// Event Infrastructure (go-sdk/cqrs EventBus + tx-aware outbox)
+	EventPublisher ports.EventPublisher
 
 	// Delivery Integration
 	DeliveryClient   ports.DeliveryClient
@@ -152,9 +152,10 @@ var OMSSet = wire.NewSet(
 	cartGoodsIndex.New,
 	wire.Bind(new(ports.CartGoodsIndex), new(*cartGoodsIndex.Store)),
 
-	// Event Infrastructure
-	events.NewInMemoryPublisher,
-	wire.Bind(new(ports.EventPublisher), new(*events.InMemoryPublisher)),
+	// Event Infrastructure (EventBus with WithTxAwareOutbox, go-sdk/uow)
+	newEventBus,
+	bus.NewEventPublisher,
+	wire.Bind(new(ports.EventPublisher), new(*bus.EventPublisher)),
 
 	// Delivery Integration (gRPC client + Kafka consumer)
 	NewDeliveryClient,
@@ -186,7 +187,6 @@ var OMSSet = wire.NewSet(
 
 	// Temporal
 	temporal.New,
-	newOrderEventSubscriber,
 
 	// Temporal Workers
 	cart_worker.New,
@@ -232,13 +232,6 @@ func newRedisClient(cfg *config.Config) (rueidis.Client, func(), error) {
 	return client, cleanup, nil
 }
 
-// newOrderEventSubscriber creates and registers the order event subscriber
-func newOrderEventSubscriber(log logger.Logger, temporalClient client.Client, publisher *events.InMemoryPublisher) *temporalInfra.OrderEventSubscriber {
-	subscriber := temporalInfra.NewOrderEventSubscriber(log, temporalClient)
-	subscriber.Register(publisher)
-	return subscriber
-}
-
 func NewOMSService(
 	// Common
 	log logger.Logger,
@@ -263,7 +256,7 @@ func NewOMSService(
 	orderRepository ports.OrderRepository,
 
 	// Event Infrastructure
-	eventPublisher *events.InMemoryPublisher,
+	eventPublisher ports.EventPublisher,
 
 	// Delivery Integration
 	deliveryClient ports.DeliveryClient,
@@ -279,7 +272,6 @@ func NewOMSService(
 
 	// Temporal
 	temporalClient client.Client,
-	_ *temporalInfra.OrderEventSubscriber, // ensure subscriber is created
 	cartWorker cart_worker.CartWorker,
 	orderWorker order_worker.OrderWorker,
 ) (*OMSService, error) {

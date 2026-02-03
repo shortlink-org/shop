@@ -74,7 +74,7 @@ func TestHandler_Handle_WithPricer(t *testing.T) {
 	)
 
 	// Create handler
-	handler := NewHandler(
+	handler, err := NewHandler(
 		&mockLogger{},
 		mockUoW,
 		mockCartRepo,
@@ -82,6 +82,7 @@ func TestHandler_Handle_WithPricer(t *testing.T) {
 		mockPublisher,
 		mockPricer,
 	)
+	require.NoError(t, err)
 
 	// Execute
 	cmd := NewCommand(customerID, nil)
@@ -126,7 +127,7 @@ func TestHandler_Handle_WithoutPricer(t *testing.T) {
 	mockPublisher.EXPECT().Publish(mock.Anything, mock.Anything).Return(nil)
 
 	// Create handler with nil pricer
-	handler := NewHandler(
+	handler, err := NewHandler(
 		&mockLogger{},
 		mockUoW,
 		mockCartRepo,
@@ -134,6 +135,7 @@ func TestHandler_Handle_WithoutPricer(t *testing.T) {
 		mockPublisher,
 		nil, // No pricer client
 	)
+	require.NoError(t, err)
 
 	// Execute
 	cmd := NewCommand(customerID, nil)
@@ -185,7 +187,7 @@ func TestHandler_Handle_PricerError(t *testing.T) {
 	)
 
 	// Create handler
-	handler := NewHandler(
+	handler, err := NewHandler(
 		&mockLogger{},
 		mockUoW,
 		mockCartRepo,
@@ -193,6 +195,7 @@ func TestHandler_Handle_PricerError(t *testing.T) {
 		mockPublisher,
 		mockPricer,
 	)
+	require.NoError(t, err)
 
 	// Execute
 	cmd := NewCommand(customerID, nil)
@@ -227,7 +230,7 @@ func TestHandler_Handle_EmptyCart(t *testing.T) {
 	mockCartRepo.EXPECT().Load(mock.Anything, customerID).Return(cart, nil)
 
 	// Create handler
-	handler := NewHandler(
+	handler, err := NewHandler(
 		&mockLogger{},
 		mockUoW,
 		mockCartRepo,
@@ -235,6 +238,7 @@ func TestHandler_Handle_EmptyCart(t *testing.T) {
 		mockPublisher,
 		nil,
 	)
+	require.NoError(t, err)
 
 	// Execute
 	cmd := NewCommand(customerID, nil)
@@ -295,7 +299,7 @@ func TestHandler_Handle_MultipleItems(t *testing.T) {
 	)
 
 	// Create handler
-	handler := NewHandler(
+	handler, err := NewHandler(
 		&mockLogger{},
 		mockUoW,
 		mockCartRepo,
@@ -303,6 +307,7 @@ func TestHandler_Handle_MultipleItems(t *testing.T) {
 		mockPublisher,
 		mockPricer,
 	)
+	require.NoError(t, err)
 
 	// Execute
 	cmd := NewCommand(customerID, nil)

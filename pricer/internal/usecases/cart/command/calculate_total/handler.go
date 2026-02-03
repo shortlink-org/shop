@@ -27,13 +27,13 @@ func NewHandler(
 	discountPolicy *pricing.DiscountPolicy,
 	taxPolicy *pricing.TaxPolicy,
 	policyNames []string,
-) *Handler {
+) (*Handler, error) {
 	return &Handler{
 		log:            log,
 		discountPolicy: discountPolicy,
 		taxPolicy:      taxPolicy,
 		policyNames:    policyNames,
-	}
+	}, nil
 }
 
 // Handle executes the CalculateTotal command.

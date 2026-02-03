@@ -7,7 +7,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	cart "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
-	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart/schema/crud"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart/schema/queries"
 )
 
 const (
@@ -21,6 +21,6 @@ const (
 // Store implements CartRepository using PostgreSQL with L1 Ristretto cache.
 type Store struct {
 	client *pgxpool.Pool
-	query  *crud.Queries
+	query  *queries.Queries
 	cache  *ristretto.Cache[string, *cart.State]
 }

@@ -24,13 +24,13 @@ func NewHandler(
 	uow ports.UnitOfWork,
 	orderRepo ports.OrderRepository,
 	publisher ports.EventPublisher,
-) *Handler {
+) (*Handler, error) {
 	return &Handler{
 		log:       log,
 		uow:       uow,
 		orderRepo: orderRepo,
 		publisher: publisher,
-	}
+	}, nil
 }
 
 // Handle executes the UpdateDeliveryInfo command.
@@ -68,14 +68,10 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 
 	// 4. Publish domain events (if any)
 	for _, event := range order.GetDomainEvents() {
-		if publishableEvent, ok := event.(ports.Event); ok {
-			if err := h.publisher.Publish(ctx, publishableEvent); err != nil {
-				// Log error but don't fail - order is already persisted
-				h.log.Error("failed to publish domain event",
-					slog.String("event_type", event.EventType()),
-					slog.String("order_id", cmd.OrderID.String()),
-					slog.Any("error", err))
-			}
+		if err := h.publisher.Publish(ctx, event); err != nil {
+			h.log.Error("failed to publish domain event",
+				slog.String("order_id", cmd.OrderID.String()),
+				slog.Any("error", err))
 		}
 	}
 	order.ClearDomainEvents()
