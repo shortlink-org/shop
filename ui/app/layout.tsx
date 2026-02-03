@@ -3,7 +3,7 @@ import { Navbar } from 'components/layout/navbar';
 import { Footer } from 'components/layout/footer';
 import { Providers } from 'components/providers';
 import { GeistSans } from 'geist/font/sans';
-import { CART_UNAVAILABLE, getCart } from 'lib/shopify';
+import { CART_UNAVAILABLE, getCart, type CartLoadResult } from 'lib/shopify';
 import { ensureStartsWith } from 'lib/utils';
 import { cookies } from 'next/headers';
 import { ReactNode } from 'react';
@@ -45,7 +45,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const cartId = (await cookies()).get('cartId')?.value;
 
   // Pass cart promise that never rejects — when carts service is down we resolve with CART_UNAVAILABLE so UI can show "we'll display it later"
-  const cartPromise = getCart(cartId).catch(() => CART_UNAVAILABLE);
+  const cartPromise: Promise<CartLoadResult> = getCart(cartId).catch(() => CART_UNAVAILABLE);
 
   return (
     <html lang="en" className={GeistSans.variable} suppressHydrationWarning>
