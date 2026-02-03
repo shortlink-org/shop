@@ -1,5 +1,3 @@
-//go:build wireinject
-
 package oms_di
 
 import (

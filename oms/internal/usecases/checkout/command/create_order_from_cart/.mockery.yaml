@@ -1,11 +1,11 @@
 with-expecter: true
-dir: "internal/domain/ports/mocks"
+dir: "mocks"
 outpkg: mocks
 packages:
   github.com/shortlink-org/shop/oms/internal/domain/ports:
     interfaces:
-      PricerClient:
+      UnitOfWork:
       CartRepository:
       OrderRepository:
-      UnitOfWork:
       EventPublisher:
+      PricerClient:

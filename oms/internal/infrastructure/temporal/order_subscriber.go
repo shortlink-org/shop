@@ -6,10 +6,11 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/shortlink-org/go-sdk/logger"
 	"go.temporal.io/sdk/client"
 
-	orderv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
+	eventsv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/events/v1"
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	queuev1 "github.com/shortlink-org/shop/oms/internal/domain/queue/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/events"
@@ -42,20 +43,28 @@ func (s *OrderEventSubscriber) Register(publisher *events.InMemoryPublisher) {
 }
 
 // OnOrderCreated handles OrderCreated events by starting the order workflow.
-func (s *OrderEventSubscriber) OnOrderCreated(ctx context.Context, event *orderv1.OrderCreatedEvent) error {
-	workflowID := fmt.Sprintf("order-%s", event.OrderID.String())
+func (s *OrderEventSubscriber) OnOrderCreated(ctx context.Context, event *eventsv1.OrderCreated) error {
+	orderID, err := uuid.Parse(event.GetOrderId())
+	if err != nil {
+		return err
+	}
+	customerID, err := uuid.Parse(event.GetCustomerId())
+	if err != nil {
+		return err
+	}
+	workflowID := fmt.Sprintf("order-%s", orderID.String())
 
 	s.log.Info("Starting order workflow",
 		slog.String("workflow_id", workflowID),
-		slog.String("order_id", event.OrderID.String()),
-		slog.String("customer_id", event.CustomerID.String()))
+		slog.String("order_id", orderID.String()),
+		slog.String("customer_id", customerID.String()))
 
-	_, err := s.temporalClient.ExecuteWorkflow(ctx, client.StartWorkflowOptions{
+	_, err = s.temporalClient.ExecuteWorkflow(ctx, client.StartWorkflowOptions{
 		ID:                       workflowID,
 		TaskQueue:                GetQueueName(queuev1.OrderTaskQueue),
 		WorkflowExecutionTimeout: 24 * time.Hour, // Maximum order processing time
 		// UI enrichment for better visibility in Temporal Web UI
-		StaticSummary: fmt.Sprintf("Order %s for customer %s", event.OrderID.String()[:8], event.CustomerID.String()[:8]),
+		StaticSummary: fmt.Sprintf("Order %s for customer %s", orderID.String()[:8], customerID.String()[:8]),
 		StaticDetails: fmt.Sprintf(`**Order Processing Workflow**
 
 - **Order ID:** %s
@@ -67,15 +76,15 @@ This workflow orchestrates the order processing saga:
 2. Reserve stock
 3. Process payment
 4. Complete order`,
-			event.OrderID.String(),
-			event.CustomerID.String(),
-			len(event.Items)),
-	}, OrderWorkflowName, event.OrderID, event.CustomerID, event.Items)
+			orderID.String(),
+			customerID.String(),
+			len(event.GetItems())),
+	}, OrderWorkflowName, orderID, customerID, event.GetItems())
 
 	if err != nil {
 		s.log.Error("Failed to start order workflow",
 			slog.String("workflow_id", workflowID),
-			slog.String("order_id", event.OrderID.String()),
+			slog.String("order_id", orderID.String()),
 			slog.Any("error", err))
 		return err
 	}
@@ -84,19 +93,19 @@ This workflow orchestrates the order processing saga:
 }
 
 // OnOrderCancelled handles OrderCancelled events by signaling the order workflow.
-func (s *OrderEventSubscriber) OnOrderCancelled(ctx context.Context, event *orderv1.OrderCancelledEvent) error {
-	workflowID := fmt.Sprintf("order-%s", event.OrderID.String())
+func (s *OrderEventSubscriber) OnOrderCancelled(ctx context.Context, event *eventsv1.OrderCancelled) error {
+	workflowID := fmt.Sprintf("order-%s", event.GetOrderId())
 
 	s.log.Info("Signaling order cancellation to workflow",
 		slog.String("workflow_id", workflowID),
-		slog.String("order_id", event.OrderID.String()))
+		slog.String("order_id", event.GetOrderId()))
 
 	// Signal the workflow to cancel
-	err := s.temporalClient.SignalWorkflow(ctx, workflowID, "", "cancel", event.Reason)
+	err := s.temporalClient.SignalWorkflow(ctx, workflowID, "", "cancel", event.GetReason())
 	if err != nil {
 		s.log.Error("Failed to signal order workflow for cancellation",
 			slog.String("workflow_id", workflowID),
-			slog.String("order_id", event.OrderID.String()),
+			slog.String("order_id", event.GetOrderId()),
 			slog.Any("error", err))
 		return err
 	}
@@ -104,8 +113,8 @@ func (s *OrderEventSubscriber) OnOrderCancelled(ctx context.Context, event *orde
 	return nil
 }
 
-// Ensure OrderCreatedEvent implements ports.Event interface.
-var _ ports.Event = (*orderv1.OrderCreatedEvent)(nil)
-
-// Ensure OrderCancelledEvent implements ports.Event interface.
-var _ ports.Event = (*orderv1.OrderCancelledEvent)(nil)
+// Ensure proto events implement ports.Event interface.
+var (
+	_ ports.Event = (*eventsv1.OrderCreated)(nil)
+	_ ports.Event = (*eventsv1.OrderCancelled)(nil)
+)

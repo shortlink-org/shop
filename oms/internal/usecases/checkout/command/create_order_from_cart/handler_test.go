@@ -16,7 +16,7 @@ import (
 	itemv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/item/v1"
 	itemsv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/items/v1"
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
-	"github.com/shortlink-org/shop/oms/internal/domain/ports/mocks"
+	"github.com/shortlink-org/shop/oms/internal/usecases/checkout/command/create_order_from_cart/mocks"
 )
 
 // mockLogger is a simple mock for the logger interface

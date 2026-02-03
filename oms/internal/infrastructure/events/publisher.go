@@ -23,14 +23,18 @@ func NewInMemoryPublisher() *InMemoryPublisher {
 
 // Publish publishes an event to all registered subscribers.
 // Returns the first error encountered, but continues to call all handlers.
-func (p *InMemoryPublisher) Publish(ctx context.Context, event ports.Event) error {
+func (p *InMemoryPublisher) Publish(ctx context.Context, event any) error {
+	e, ok := event.(ports.Event)
+	if !ok {
+		return nil
+	}
 	p.mu.RLock()
-	handlers := p.handlers[event.EventType()]
+	handlers := p.handlers[e.EventType()]
 	p.mu.RUnlock()
 
 	var firstErr error
 	for _, handler := range handlers {
-		if err := handler(ctx, event); err != nil && firstErr == nil {
+		if err := handler(ctx, e); err != nil && firstErr == nil {
 			firstErr = err
 		}
 	}

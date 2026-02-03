@@ -26,29 +26,29 @@ func (_m *MockOrderRepository) EXPECT() *MockOrderRepository_Expecter {
 	return &MockOrderRepository_Expecter{mock: &_m.Mock}
 }
 
-// List provides a mock function with given fields: ctx, filter, page, pageSize
-func (_m *MockOrderRepository) List(ctx context.Context, filter ports.ListFilter, page int32, pageSize int32) (*ports.ListResult, error) {
-	ret := _m.Called(ctx, filter, page, pageSize)
+// List provides a mock function with given fields: ctx, filter
+func (_m *MockOrderRepository) List(ctx context.Context, filter ports.ListFilter) ([]*v1.OrderState, error) {
+	ret := _m.Called(ctx, filter)
 
 	if len(ret) == 0 {
 		panic("no return value specified for List")
 	}
 
-	var r0 *ports.ListResult
+	var r0 []*v1.OrderState
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, ports.ListFilter, int32, int32) (*ports.ListResult, error)); ok {
-		return rf(ctx, filter, page, pageSize)
+	if rf, ok := ret.Get(0).(func(context.Context, ports.ListFilter) ([]*v1.OrderState, error)); ok {
+		return rf(ctx, filter)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, ports.ListFilter, int32, int32) *ports.ListResult); ok {
-		r0 = rf(ctx, filter, page, pageSize)
+	if rf, ok := ret.Get(0).(func(context.Context, ports.ListFilter) []*v1.OrderState); ok {
+		r0 = rf(ctx, filter)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*ports.ListResult)
+			r0 = ret.Get(0).([]*v1.OrderState)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, ports.ListFilter, int32, int32) error); ok {
-		r1 = rf(ctx, filter, page, pageSize)
+	if rf, ok := ret.Get(1).(func(context.Context, ports.ListFilter) error); ok {
+		r1 = rf(ctx, filter)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -64,25 +64,23 @@ type MockOrderRepository_List_Call struct {
 // List is a helper method to define mock.On call
 //   - ctx context.Context
 //   - filter ports.ListFilter
-//   - page int32
-//   - pageSize int32
-func (_e *MockOrderRepository_Expecter) List(ctx interface{}, filter interface{}, page interface{}, pageSize interface{}) *MockOrderRepository_List_Call {
-	return &MockOrderRepository_List_Call{Call: _e.mock.On("List", ctx, filter, page, pageSize)}
+func (_e *MockOrderRepository_Expecter) List(ctx interface{}, filter interface{}) *MockOrderRepository_List_Call {
+	return &MockOrderRepository_List_Call{Call: _e.mock.On("List", ctx, filter)}
 }
 
-func (_c *MockOrderRepository_List_Call) Run(run func(ctx context.Context, filter ports.ListFilter, page int32, pageSize int32)) *MockOrderRepository_List_Call {
+func (_c *MockOrderRepository_List_Call) Run(run func(ctx context.Context, filter ports.ListFilter)) *MockOrderRepository_List_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(ports.ListFilter), args[2].(int32), args[3].(int32))
+		run(args[0].(context.Context), args[1].(ports.ListFilter))
 	})
 	return _c
 }
 
-func (_c *MockOrderRepository_List_Call) Return(_a0 *ports.ListResult, _a1 error) *MockOrderRepository_List_Call {
+func (_c *MockOrderRepository_List_Call) Return(_a0 []*v1.OrderState, _a1 error) *MockOrderRepository_List_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockOrderRepository_List_Call) RunAndReturn(run func(context.Context, ports.ListFilter, int32, int32) (*ports.ListResult, error)) *MockOrderRepository_List_Call {
+func (_c *MockOrderRepository_List_Call) RunAndReturn(run func(context.Context, ports.ListFilter) ([]*v1.OrderState, error)) *MockOrderRepository_List_Call {
 	_c.Call.Return(run)
 	return _c
 }

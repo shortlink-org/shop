@@ -21,15 +21,15 @@ import (
 // (CreateOrder command handler publishes event, which triggers the workflow).
 // Activities are used for compensation (cancel) and queries during workflow execution.
 type Activities struct {
-	cancelHandler  *orderCancel.Handler
-	getHandler     *orderGet.Handler
+	cancelHandler  ports.CommandHandler[orderCancel.Command]
+	getHandler     ports.QueryHandler[orderGet.Query, orderGet.Result]
 	deliveryClient ports.DeliveryClient
 }
 
 // New creates a new Activities instance.
 func New(
-	cancelHandler *orderCancel.Handler,
-	getHandler *orderGet.Handler,
+	cancelHandler ports.CommandHandler[orderCancel.Command],
+	getHandler ports.QueryHandler[orderGet.Query, orderGet.Result],
 	deliveryClient ports.DeliveryClient,
 ) *Activities {
 	return &Activities{

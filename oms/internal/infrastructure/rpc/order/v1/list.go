@@ -42,25 +42,45 @@ func (o *OrderRPC) List(ctx context.Context, in *v1.ListRequest) (*v1.ListRespon
 	}
 
 	// Create query and execute handler
-	query := list.NewQuery(customerID, statusFilter, page, pageSize)
-	result, err := o.listHandler.Handle(ctx, query)
+	query := list.NewQuery(customerID, statusFilter)
+	orders, err := o.listHandler.Handle(ctx, query)
 	if err != nil {
 		return nil, err
 	}
 
+	totalCount := int32(len(orders))
+	// Paginate in RPC layer
+	start := (page - 1) * pageSize
+	if start < 0 {
+		start = 0
+	}
+	if start >= totalCount {
+		start = totalCount
+	}
+	end := start + pageSize
+	if end > totalCount {
+		end = totalCount
+	}
+	pageOrders := orders[start:end]
+
 	// Convert domain orders to proto
-	protoOrders := make([]*v1.OrderState, len(result.Orders))
-	for i, o := range result.Orders {
+	protoOrders := make([]*v1.OrderState, len(pageOrders))
+	for i, o := range pageOrders {
 		protoOrders[i] = dto.DomainToOrderState(o)
+	}
+
+	totalPages := (totalCount + pageSize - 1) / pageSize
+	if totalPages < 1 {
+		totalPages = 1
 	}
 
 	return &v1.ListResponse{
 		Orders:     protoOrders,
-		TotalCount: int32(result.TotalCount),
+		TotalCount: totalCount,
 		Pagination: &v1.PaginationResponse{
 			CurrentPage: page,
 			PageSize:    pageSize,
-			TotalPages:  result.TotalPages,
+			TotalPages:  totalPages,
 		},
 	}, nil
 }
