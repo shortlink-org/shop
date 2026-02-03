@@ -62,8 +62,9 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (Result, error) {
 		return Result{}, fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer func() {
-		// Rollback is no-op if already committed
-		_ = h.uow.Rollback(ctx)
+		if err := h.uow.Rollback(ctx); err != nil {
+			h.log.Warn("rollback failed", slog.Any("error", err))
+		}
 	}()
 
 	// 2. Load cart (uses tx from ctx)
@@ -126,20 +127,19 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (Result, error) {
 		return Result{}, fmt.Errorf("failed to save cart: %w", err)
 	}
 
-	// 12. Publish domain events to outbox (same transaction)
+	// 12. Publish domain events to outbox (same transaction).
+	// If outbox write fails, we must not commit — same as failing to save order/cart.
 	for _, event := range order.GetDomainEvents() {
 		if err := h.publisher.Publish(ctx, event); err != nil {
-			h.log.Error("failed to publish domain event",
-				slog.String("order_id", order.GetOrderID().String()),
-				slog.Any("error", err))
+			return Result{}, fmt.Errorf("failed to publish domain event to outbox: %w", err)
 		}
 	}
+	order.ClearDomainEvents()
 
 	// 13. Commit transaction
 	if err := h.uow.Commit(ctx); err != nil {
 		return Result{}, fmt.Errorf("failed to commit transaction: %w", err)
 	}
-	order.ClearDomainEvents()
 
 	// 14. Build result with pricing info
 	result := Result{
@@ -151,9 +151,24 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (Result, error) {
 		result.TotalDiscount = pricingResp.TotalDiscount
 		result.TotalTax = pricingResp.TotalTax
 		result.FinalPrice = pricingResp.FinalPrice
+	} else {
+		// Fallback: subtotal = sum(price * qty), discount/tax = 0, final = subtotal
+		result.Subtotal = cartSubtotal(cartItems)
+		result.TotalDiscount = decimal.Zero
+		result.TotalTax = decimal.Zero
+		result.FinalPrice = result.Subtotal
 	}
 
 	return result, nil
+}
+
+// cartSubtotal returns sum of (price * quantity) for all cart items.
+func cartSubtotal(cartItems cartItemsv1.Items) decimal.Decimal {
+	var sum decimal.Decimal
+	for _, item := range cartItems {
+		sum = sum.Add(item.GetPrice().Mul(decimal.NewFromInt32(item.GetQuantity())))
+	}
+	return sum
 }
 
 // convertCartToOrderItems converts cart items to order items.

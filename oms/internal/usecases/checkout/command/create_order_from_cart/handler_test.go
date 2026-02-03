@@ -3,11 +3,11 @@ package create_order_from_cart
 import (
 	"context"
 	"errors"
-	"log/slog"
 	"testing"
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
+	"github.com/shortlink-org/go-sdk/logger"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -19,21 +19,11 @@ import (
 	"github.com/shortlink-org/shop/oms/internal/usecases/checkout/command/create_order_from_cart/mocks"
 )
 
-// mockLogger is a simple mock for the logger interface
-type mockLogger struct{}
-
-func (m *mockLogger) Debug(msg string, args ...slog.Attr)                                 {}
-func (m *mockLogger) Info(msg string, args ...slog.Attr)                                  {}
-func (m *mockLogger) Warn(msg string, args ...slog.Attr)                                  {}
-func (m *mockLogger) Error(msg string, args ...slog.Attr)                                 {}
-func (m *mockLogger) DebugWithContext(ctx context.Context, msg string, args ...slog.Attr) {}
-func (m *mockLogger) InfoWithContext(ctx context.Context, msg string, args ...slog.Attr)  {}
-func (m *mockLogger) WarnWithContext(ctx context.Context, msg string, args ...slog.Attr)  {}
-func (m *mockLogger) ErrorWithContext(ctx context.Context, msg string, args ...slog.Attr) {}
-func (m *mockLogger) Close() error                                                        { return nil }
-
 func TestHandler_Handle_WithPricer(t *testing.T) {
-	// Setup
+	log, err := logger.New(logger.Default())
+	require.NoError(t, err)
+	defer log.Close()
+
 	ctx := context.Background()
 	customerID := uuid.New()
 	goodID := uuid.New()
@@ -75,7 +65,7 @@ func TestHandler_Handle_WithPricer(t *testing.T) {
 
 	// Create handler
 	handler, err := NewHandler(
-		&mockLogger{},
+		log,
 		mockUoW,
 		mockCartRepo,
 		mockOrderRepo,
@@ -99,6 +89,10 @@ func TestHandler_Handle_WithPricer(t *testing.T) {
 
 func TestHandler_Handle_WithoutPricer(t *testing.T) {
 	// Test graceful degradation when pricer is nil
+	log, err := logger.New(logger.Default())
+	require.NoError(t, err)
+	defer log.Close()
+
 	ctx := context.Background()
 	customerID := uuid.New()
 	goodID := uuid.New()
@@ -128,7 +122,7 @@ func TestHandler_Handle_WithoutPricer(t *testing.T) {
 
 	// Create handler with nil pricer
 	handler, err := NewHandler(
-		&mockLogger{},
+		log,
 		mockUoW,
 		mockCartRepo,
 		mockOrderRepo,
@@ -141,17 +135,21 @@ func TestHandler_Handle_WithoutPricer(t *testing.T) {
 	cmd := NewCommand(customerID, nil)
 	result, err := handler.Handle(ctx, cmd)
 
-	// Assert - should succeed without pricing info
+	// Assert - should succeed with fallback pricing (subtotal = sum(price*qty))
 	assert.NoError(t, err)
 	assert.NotNil(t, result.Order)
-	assert.True(t, result.Subtotal.IsZero())
+	assert.Equal(t, decimal.NewFromInt(100), result.Subtotal) // 2 * 50
 	assert.True(t, result.TotalDiscount.IsZero())
 	assert.True(t, result.TotalTax.IsZero())
-	assert.True(t, result.FinalPrice.IsZero())
+	assert.Equal(t, decimal.NewFromInt(100), result.FinalPrice)
 }
 
 func TestHandler_Handle_PricerError(t *testing.T) {
 	// Test handling of pricer errors (graceful degradation)
+	log, err := logger.New(logger.Default())
+	require.NoError(t, err)
+	defer log.Close()
+
 	ctx := context.Background()
 	customerID := uuid.New()
 	goodID := uuid.New()
@@ -188,7 +186,7 @@ func TestHandler_Handle_PricerError(t *testing.T) {
 
 	// Create handler
 	handler, err := NewHandler(
-		&mockLogger{},
+		log,
 		mockUoW,
 		mockCartRepo,
 		mockOrderRepo,
@@ -201,16 +199,21 @@ func TestHandler_Handle_PricerError(t *testing.T) {
 	cmd := NewCommand(customerID, nil)
 	result, err := handler.Handle(ctx, cmd)
 
-	// Assert - should succeed with warning (graceful degradation)
+	// Assert - should succeed with fallback pricing (subtotal = sum(price*qty))
 	assert.NoError(t, err)
 	assert.NotNil(t, result.Order)
-	// Pricing should be zero since pricer failed
-	assert.True(t, result.Subtotal.IsZero())
+	assert.Equal(t, decimal.NewFromInt(100), result.Subtotal) // 2 * 50
 	assert.True(t, result.TotalDiscount.IsZero())
+	assert.True(t, result.TotalTax.IsZero())
+	assert.Equal(t, decimal.NewFromInt(100), result.FinalPrice)
 }
 
 func TestHandler_Handle_EmptyCart(t *testing.T) {
 	// Test checkout with empty cart
+	log, err := logger.New(logger.Default())
+	require.NoError(t, err)
+	defer log.Close()
+
 	ctx := context.Background()
 	customerID := uuid.New()
 
@@ -231,7 +234,7 @@ func TestHandler_Handle_EmptyCart(t *testing.T) {
 
 	// Create handler
 	handler, err := NewHandler(
-		&mockLogger{},
+		log,
 		mockUoW,
 		mockCartRepo,
 		mockOrderRepo,
@@ -252,6 +255,10 @@ func TestHandler_Handle_EmptyCart(t *testing.T) {
 
 func TestHandler_Handle_MultipleItems(t *testing.T) {
 	// Test checkout with multiple items
+	log, err := logger.New(logger.Default())
+	require.NoError(t, err)
+	defer log.Close()
+
 	ctx := context.Background()
 	customerID := uuid.New()
 	goodID1 := uuid.New()
@@ -300,7 +307,7 @@ func TestHandler_Handle_MultipleItems(t *testing.T) {
 
 	// Create handler
 	handler, err := NewHandler(
-		&mockLogger{},
+		log,
 		mockUoW,
 		mockCartRepo,
 		mockOrderRepo,
