@@ -83,8 +83,8 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Next.js prerender cache must be writable at runtime (non-root user)
-RUN mkdir -p .next/cache && chown -R nextjs:nodejs .next
+# Next.js prerender cache must be writable at runtime (non-root user); fetch-cache is created on first request
+RUN mkdir -p .next/cache/fetch-cache .next/cache/fetch-cache-tmp && chown -R nextjs:nodejs .next
 
 USER nextjs
 
