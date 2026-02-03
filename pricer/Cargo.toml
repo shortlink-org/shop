@@ -28,7 +28,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # Common
 uuid = { version = "1", features = ["v4", "serde"] }
-async-trait = "0.1"
+async-trait = "0.1.89"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }

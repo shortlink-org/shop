@@ -40,7 +40,7 @@ rdkafka = { version = "0.36", features = ["tokio", "dynamic-linking"] }
 # Common utilities
 uuid = { version = "1", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
-async-trait = "0.1"
+async-trait = "0.1.89"
 thiserror = "2"
 rust_decimal = { version = "1", features = ["db-postgres"] }
 
