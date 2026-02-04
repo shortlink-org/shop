@@ -62,13 +62,13 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 # Use base image's node user (UID/GID 1000). Do not run addgroup/adduser with 1000 — it's already in use in node:* Alpine.
 
-# Copy built assets
-COPY --from=builder /app/public ./public
+# Copy built assets (this app has no public/ — static assets are in app/; create empty public for runtime)
+RUN mkdir -p public
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 
 # Next.js prerender cache must be writable at runtime (non-root user); fetch-cache is created on first request
-RUN mkdir -p .next/cache/fetch-cache .next/cache/fetch-cache-tmp && chown -R node:node .next
+RUN mkdir -p .next/cache/fetch-cache .next/cache/fetch-cache-tmp && chown -R node:node .next public
 
 USER node
 
