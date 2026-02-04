@@ -48,8 +48,8 @@ rust_decimal = { version = "1", features = ["db-postgres"] }
 dotenvy = "0.15.7"
 
 # Logging
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 
 # Temporal SDK (pre-alpha, Git dependency)
 temporalio-sdk = { git = "https://github.com/temporalio/sdk-core", package = "temporalio-sdk" }
