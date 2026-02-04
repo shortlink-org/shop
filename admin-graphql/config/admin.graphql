@@ -1,17 +1,11 @@
 schema
 @server(port: 8101, enableFederation: true, introspection: true)
-@upstream(
-  baseURL: "{{.env.ADMIN_API_URL}}"
-  allowedHeaders: ["Authorization", "Cookie"]
-)
+@upstream(allowedHeaders: ["Authorization", "Cookie"])
 @telemetry(
   export: {
     prometheus: {
       path: "/metrics"
       format: "text"
-    }
-    otlp: {
-      url: "{{.env.OTLP_URL}}"
     }
   }
   requestHeaders: ["Authorization", "Cookie"]
@@ -92,7 +86,7 @@ type Query {
   """
   goods(page: Int): GoodsList
     @http(
-      url: "/goods/"
+      url: "{{.env.ADMIN_API_URL}}/goods/"
       query: [{key: "page", value: "{{.args.page}}"}]
     )
 
@@ -100,7 +94,7 @@ type Query {
   Get a single good by ID.
   """
   good(id: Int!): Good
-    @http(url: "/goods/{{.args.id}}/")
+    @http(url: "{{.env.ADMIN_API_URL}}/goods/{{.args.id}}/")
 
   # -------------------------------------------------------------------------
   # Offices queries
@@ -111,7 +105,7 @@ type Query {
   """
   offices(page: Int): OfficesList
     @http(
-      url: "/offices/"
+      url: "{{.env.ADMIN_API_URL}}/offices/"
       query: [{key: "page", value: "{{.args.page}}"}]
     )
 
@@ -119,5 +113,5 @@ type Query {
   Get a single office by ID.
   """
   office(id: Int!): Office
-    @http(url: "/offices/{{.args.id}}/")
+    @http(url: "{{.env.ADMIN_API_URL}}/offices/{{.args.id}}/")
 }

@@ -9,9 +9,6 @@ schema
       path: "/metrics"
       format: "text"
     }
-    otlp: {
-      url: "{{.env.OTLP_URL}}"
-    }
   }
   requestHeaders: ["user-id", "Authorization"]
 )
