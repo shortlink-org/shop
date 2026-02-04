@@ -22,7 +22,8 @@ export async function getCollection(
     });
 
     return reshapeCollection(res.body.data.collection);
-  } catch {
+  } catch (err) {
+    console.error('[getCollection] Failed to load collection', { id, err });
     return GOODS_UNAVAILABLE;
   }
 }
@@ -43,7 +44,8 @@ export async function getCollectionProducts({
     }
 
     return res.body.data.goods_goods_list.results.map(normalizeGood);
-  } catch {
+  } catch (err) {
+    console.error('[getCollectionProducts] Failed to load products', { err });
     return GOODS_UNAVAILABLE;
   }
 }
@@ -77,7 +79,8 @@ export async function getCollections(): Promise<Collection[] | typeof GOODS_UNAV
     ];
 
     return collections;
-  } catch {
+  } catch (err) {
+    console.error('[getCollections] Failed to load collections', { err });
     return GOODS_UNAVAILABLE;
   }
 }

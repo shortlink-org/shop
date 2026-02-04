@@ -15,6 +15,20 @@ listen_addr: "0.0.0.0:9991"
 # Logging configuration
 log_level: "info"
 
+# Access logs: log subgraph requests so failures (e.g. admin-graphql down) are visible
+access_logs:
+  enabled: true
+  level: "info"
+  subgraphs:
+    enabled: true
+    fields:
+      - key: "subgraph_error"
+        value_from:
+          context_field: "response_error_message"
+      - key: "request_error"
+        value_from:
+          context_field: "request_error"
+
 # Enable GraphQL Playground
 playground_enabled: true
 playground_path: "/"

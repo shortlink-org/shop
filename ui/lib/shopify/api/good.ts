@@ -17,7 +17,8 @@ export async function getGood(
     });
 
     return res.body.data.good ? normalizeGood(res.body.data.good) : undefined;
-  } catch {
+  } catch (err) {
+    console.error('[getGood] Failed to load good', { id, err });
     return GOODS_UNAVAILABLE;
   }
 }
@@ -35,7 +36,8 @@ export async function getGoodRecommendations(
 
     const recommendations = res.body.data.goods?.results ?? [];
     return recommendations.filter((good) => good.id !== id).map(normalizeGood);
-  } catch {
+  } catch (err) {
+    console.error('[getGoodRecommendations] Failed to load recommendations', { id, err });
     return GOODS_UNAVAILABLE;
   }
 }
@@ -62,7 +64,8 @@ export async function getGoods({
 
     const goods = res.body.data.goods?.results ?? [];
     return goods.map(normalizeGood);
-  } catch {
+  } catch (err) {
+    console.error('[getGoods] Failed to load products', { query, sortKey, reverse, err });
     return GOODS_UNAVAILABLE;
   }
 }
