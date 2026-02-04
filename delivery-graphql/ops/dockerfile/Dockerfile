@@ -1,50 +1,32 @@
-# syntax=docker/dockerfile:1.9
+# syntax=docker/dockerfile:1.21
+# delivery-graphql Dockerfile
+# Uses Tailcall for gRPC → GraphQL
 
-# ========================================
-# Builder stage
-# ========================================
-FROM node:22-alpine AS builder
+FROM ghcr.io/tailcallhq/tailcall/tc-server:latest
 
+LABEL maintainer=batazor111@gmail.com
+LABEL org.opencontainers.image.title="shortlink-shop-delivery-graphql"
+LABEL org.opencontainers.image.description="Delivery GraphQL Subgraph - gRPC to GraphQL via Tailcall"
+LABEL org.opencontainers.image.authors="Login Viktor @batazor"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.url="http://shortlink.best/"
+LABEL org.opencontainers.image.source="https://github.com/shortlink-org/shortlink"
+
+# Set working directory
 WORKDIR /app
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Copy Tailcall configuration
+COPY config/ /app/config/
 
-# Copy package files
-COPY package.json pnpm-lock.yaml* ./
-
-# Install dependencies
-RUN pnpm install --frozen-lockfile || pnpm install
-
-# ========================================
-# Runtime stage
-# ========================================
-FROM node:22-alpine AS runtime
-
-WORKDIR /app
-
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-# Copy dependencies from builder
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./
-
-# Copy application files
-COPY config/ ./config/
-
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S tailcall -u 1001 -G nodejs
-
-USER tailcall
+# Environment variables
+ENV DELIVERY_GRPC_URL="http://localhost:50051"
 
 # Expose port
 EXPOSE 8102
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8102/graphql || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8102/graphql || exit 1
 
-# Start Tailcall
-CMD ["pnpm", "start"]
+# Run Tailcall (full path: PATH contains ~/.tailcall/bin which is not expanded in exec without shell)
+CMD ["/root/.tailcall/bin/tailcall", "start", "/app/config/delivery.graphql"]

@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.21
 # oms-graphql Dockerfile
 # Uses Tailcall for gRPC → GraphQL
 
@@ -27,5 +28,5 @@ EXPOSE 8100
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:8100/graphql || exit 1
 
-# Run Tailcall
-CMD ["tailcall", "start", "/app/config/grpc.graphql"]
+# Run Tailcall (full path: PATH contains ~/.tailcall/bin which is not expanded in exec without shell)
+CMD ["/root/.tailcall/bin/tailcall", "start", "/app/config/grpc.graphql"]

@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.12
+# syntax=docker/dockerfile:1.21
 
 # =============================================================================
 # Stage 1: Download OSM data using modern image
