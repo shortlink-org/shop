@@ -47,17 +47,18 @@ deploy:
     pullPolicy: Always
 
   # -- define a liveness probe that checks every 5 seconds, starting after 5 seconds
+  # GET /graphql without query returns 500; use /metrics which returns 200
   livenessProbe:
     enabled: true
     httpGet:
-      path: /graphql
+      path: /metrics
       port: 8101
 
   # -- define a readiness probe that checks every 5 seconds, starting after 5 seconds
   readinessProbe:
     enabled: true
     httpGet:
-      path: /graphql
+      path: /metrics
       port: 8101
 
   securityContext:

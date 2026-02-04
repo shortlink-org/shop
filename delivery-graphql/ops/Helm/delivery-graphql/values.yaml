@@ -46,18 +46,18 @@ deploy:
     # Ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
     pullPolicy: Always
 
-  # -- define a liveness probe that checks every 5 seconds, starting after 5 seconds
+  # -- define a liveness probe; GET /graphql without query returns 500, use /metrics
   livenessProbe:
     enabled: true
     httpGet:
-      path: /graphql
+      path: /metrics
       port: 8102
 
-  # -- define a readiness probe that checks every 5 seconds, starting after 5 seconds
+  # -- define a readiness probe
   readinessProbe:
     enabled: true
     httpGet:
-      path: /graphql
+      path: /metrics
       port: 8102
 
   securityContext:

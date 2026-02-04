@@ -27,8 +27,8 @@ ENV DELIVERY_GRPC_URL="http://localhost:50051"
 # Expose port
 EXPOSE 8102
 
-# Health check
+# Health check (GET /graphql without query returns 500; /metrics returns 200)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8102/graphql || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8102/metrics || exit 1
 
 CMD ["/app/bin/tailcall", "start", "/app/config/delivery.graphql"]
