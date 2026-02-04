@@ -16,7 +16,7 @@ serde_json = "1"
 rust_decimal = { version = "1", features = ["serde"] }
 
 # Errors
-thiserror = "2"
+thiserror = "2.0.18"
 anyhow = "1"
 
 # Configuration
