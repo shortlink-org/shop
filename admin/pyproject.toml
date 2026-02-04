@@ -82,6 +82,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+dev = [
+  "ruff>=0.15.0",
+]
 test = [
   "pytest>=9.0.2",
   "pytest-django>=4.11.1",
@@ -136,6 +139,12 @@ select = [
 "src/manage.py" = ["PLC0415"]
 "src/made.py" = ["PLC0415"]
 "src/migration.py" = ["PLC0415"]
+# Lazy imports for Buf-generated gRPC stubs; singleton getter
+"src/infrastructure/grpc/oms_client.py" = ["PLC0415", "PLW0603"]
+# Django inner Meta and import_export Resource.Meta typically have no docstring
+"src/domain/goods/admin.py" = ["D106"]
+"src/domain/goods/models.py" = ["D106"]
+"src/domain/offices/admin.py" = ["D106"]
 
 [tool.ruff.lint.isort]
 no-lines-before = ["standard-library", "local-folder"]

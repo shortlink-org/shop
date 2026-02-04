@@ -10,7 +10,6 @@ urlpatterns = [
     # List and detail views
     path("", views.order_list, name="list"),
     path("<str:order_id>/", views.order_detail, name="detail"),
-
     # Actions
     path("<str:order_id>/cancel/", views.order_cancel, name="cancel"),
 ]

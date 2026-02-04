@@ -1,6 +1,7 @@
 """Define the admin view for the Good model."""
 
 from decimal import Decimal
+from typing import ClassVar
 
 from django.contrib import admin, messages
 from django.contrib.postgres.fields import ArrayField
@@ -13,8 +14,7 @@ from django.utils.translation import gettext_lazy as _
 from djmoney.money import Money
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
-from mimesis import Generic
-from mimesis import Locale
+from mimesis import Generic, Locale
 from simple_history.admin import SimpleHistoryAdmin
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.contrib.filters.admin import RangeDateTimeFilter
@@ -69,13 +69,14 @@ class GoodAdmin(SimpleHistoryAdmin, ModelAdmin, ImportExportModelAdmin):
 
     list_display = ("display_good_header", "display_tags", "image_count", "created_at")
     search_fields = ("name", "price", "tags")
-    inlines = [GoodImageInline]
+    inlines: ClassVar[list] = [GoodImageInline]
 
     @display(description=_("Images"))
     def image_count(self, obj):
         """Display number of images."""
         count = obj.images.count()
         return count if count > 0 else "-"
+
     paginator = InfinitePaginator
     show_full_result_count = False
     list_filter = (
@@ -85,10 +86,10 @@ class GoodAdmin(SimpleHistoryAdmin, ModelAdmin, ImportExportModelAdmin):
     list_filter_submit = True
     ordering = ("created_at",)
     change_list_template = "admin/goods/good/change_list.html"
-    actions_row = ["duplicate_good"]
+    actions_row: ClassVar[list[str]] = ["duplicate_good"]
 
     # Custom widgets for fields
-    formfield_overrides = {
+    formfield_overrides: ClassVar[dict] = {
         ArrayField: {
             "widget": ArrayWidget,
         },
@@ -211,16 +212,24 @@ class GoodAdmin(SimpleHistoryAdmin, ModelAdmin, ImportExportModelAdmin):
 
             # Description templates (HTML formatted for WYSIWYG)
             def generate_description():
-                intro = gen.choice([
-                    f"<p><strong>Premium Quality Product</strong></p>",
-                    f"<p><strong>Artisan Selection</strong></p>",
-                    f"<p><strong>Fresh & Natural</strong></p>",
-                ])
+                intro = gen.choice(
+                    [
+                        "<p><strong>Premium Quality Product</strong></p>",
+                        "<p><strong>Artisan Selection</strong></p>",
+                        "<p><strong>Fresh & Natural</strong></p>",
+                    ]
+                )
                 features = [
                     f"Made with {gen.choice(['100%', 'premium', 'finest', 'selected', 'organic'])} ingredients.",
-                    f"Perfect for {gen.choice(['breakfast', 'lunch', 'dinner', 'snacking', 'parties', 'everyday meals'])}.",
-                    f"{gen.choice(['Rich in', 'Contains', 'Source of', 'Packed with'])} {gen.choice(['vitamins', 'nutrients', 'antioxidants', 'fiber', 'protein'])}.",
-                    f"Best served {gen.choice(['chilled', 'warm', 'at room temperature', 'fresh', 'immediately'])}.",
+                    (
+                        "Perfect for "
+                        f"{gen.choice(['breakfast', 'lunch', 'dinner', 'snacking', 'parties', 'everyday meals'])}."
+                    ),
+                    (
+                        f"{gen.choice(['Rich in', 'Contains', 'Source of', 'Packed with'])} "
+                        f"{gen.choice(['vitamins', 'nutrients', 'antioxidants', 'fiber', 'protein'])}."
+                    ),
+                    (f"Best served {gen.choice(['chilled', 'warm', 'at room temperature', 'fresh', 'immediately'])}."),
                 ]
                 selected_features = gen.random.choices(features, k=3)
                 features_html = "<ul>" + "".join(f"<li>{f}</li>" for f in selected_features) + "</ul>"

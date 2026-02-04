@@ -6,8 +6,7 @@ See: admin-ui/ROADMAP.md
 
 
 def dashboard_callback(request, context):
-    """
-    Callback for customizing the admin dashboard.
+    """Callback for customizing the admin dashboard.
 
     This function is called when rendering the admin index page.
     """

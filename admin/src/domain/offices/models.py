@@ -1,5 +1,7 @@
 """Define the Office model for order pickup locations."""
 
+from typing import ClassVar
+
 from django.contrib.gis.db import models
 from simple_history.models import HistoricalRecords
 
@@ -74,7 +76,7 @@ class Office(models.Model):
 
         verbose_name = "Office"
         verbose_name_plural = "Offices"
-        ordering = ["name"]
+        ordering: ClassVar[list[str]] = ["name"]
 
     def __str__(self):
         """Return the name of the office."""

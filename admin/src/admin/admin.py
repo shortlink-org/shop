@@ -1,11 +1,12 @@
-"""
-Override default User and Group admin classes with Unfold styling.
+"""Override default User and Group admin classes with Unfold styling.
 
 This is required because Django's built-in User and Group admin classes
 don't inherit from unfold.admin.ModelAdmin, so they appear unstyled.
 
 See: https://unfoldadmin.com/docs/installation/auth/
 """
+
+from typing import ClassVar
 
 from django.contrib import admin, messages
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
@@ -15,7 +16,6 @@ from django.http import HttpRequest
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
-
 from unfold.admin import ModelAdmin
 from unfold.contrib.filters.admin import (
     AutocompleteSelectMultipleFilter,
@@ -91,7 +91,7 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
         ("last_login", RangeDateTimeFilter),
     )
     list_filter_submit = True
-    actions_row = ["activate_user", "deactivate_user"]
+    actions_row: ClassVar[list[str]] = ["activate_user", "deactivate_user"]
 
     @action(
         description=_("Activate"),
@@ -213,4 +213,4 @@ class GroupAdmin(BaseGroupAdmin, ModelAdmin):
 
     paginator = InfinitePaginator
     show_full_result_count = False
-    search_fields = ["name"]  # Required for autocomplete filter
+    search_fields: ClassVar[list[str]] = ["name"]  # Required for autocomplete filter

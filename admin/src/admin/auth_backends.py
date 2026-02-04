@@ -44,7 +44,7 @@ class OryRemoteUserBackend(RemoteUserBackend):
             The configured User instance.
         """
         update_fields = []
-        
+
         # All users authenticated via Oathkeeper are trusted admins
         # Grant staff and superuser access for Django admin
         if not user.is_staff:
@@ -53,14 +53,14 @@ class OryRemoteUserBackend(RemoteUserBackend):
         if not user.is_superuser:
             user.is_superuser = True
             update_fields.append("is_superuser")
-        
+
         # Update email from Oathkeeper header
         email = request.META.get("HTTP_X_EMAIL")
         if email and user.email != email:
             user.email = email
             update_fields.append("email")
-        
+
         if update_fields:
             user.save(update_fields=update_fields)
-        
+
         return user

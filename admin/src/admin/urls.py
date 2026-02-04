@@ -20,8 +20,8 @@ from django.urls import include, path
 from django.views.generic import TemplateView
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
-from . import views
 from . import admin as user_admin  # noqa: F401 - Register User/Group with Unfold styling
+from . import views
 
 urlpatterns = [
     path("__debug__/", include("debug_toolbar.urls")),

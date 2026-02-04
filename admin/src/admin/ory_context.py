@@ -48,7 +48,7 @@ def processor(request):
                 timeout=5,
             )
             logger.info("Kratos logout request: %s -> %s", url, r.status_code)
-            if r.status_code == 200:
+            if r.status_code == requests.codes.ok:
                 ory_logout = r.json().get("logout_url", "")
                 if ory_logout:
                     context["logout_url"] = ory_logout

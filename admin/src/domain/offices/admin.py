@@ -1,5 +1,7 @@
 """Define the admin view for the Office model."""
 
+from typing import ClassVar
+
 from django.contrib import admin, messages
 from django.http import HttpRequest
 from django.shortcuts import redirect
@@ -24,12 +26,27 @@ class OfficeResource(resources.ModelResource):
     class Meta:
         model = Office
         fields = (
-            "id", "name", "address", "opening_time", "closing_time",
-            "working_days", "phone", "email", "is_active", "created_at",
+            "id",
+            "name",
+            "address",
+            "opening_time",
+            "closing_time",
+            "working_days",
+            "phone",
+            "email",
+            "is_active",
+            "created_at",
         )
         export_order = (
-            "id", "name", "address", "opening_time", "closing_time",
-            "working_days", "phone", "email", "is_active",
+            "id",
+            "name",
+            "address",
+            "opening_time",
+            "closing_time",
+            "working_days",
+            "phone",
+            "email",
+            "is_active",
         )
 
 
@@ -59,7 +76,7 @@ class OfficeAdmin(SimpleHistoryAdmin, ModelAdmin, ImportExportModelAdmin):
     ordering = ("name",)
     paginator = InfinitePaginator
     show_full_result_count = False
-    actions_row = ["toggle_active", "view_on_map"]
+    actions_row: ClassVar[list[str]] = ["toggle_active", "view_on_map"]
 
     @action(
         description=_("Toggle Active"),
@@ -99,7 +116,7 @@ class OfficeAdmin(SimpleHistoryAdmin, ModelAdmin, ImportExportModelAdmin):
         return request.user.has_perm("offices.view_office")
 
     # Show working hours and contact info only when office is active
-    conditional_fields = {
+    conditional_fields: ClassVar[dict] = {
         "opening_time": "is_active == true",
         "closing_time": "is_active == true",
         "working_days": "is_active == true",
@@ -147,7 +164,7 @@ class OfficeAdmin(SimpleHistoryAdmin, ModelAdmin, ImportExportModelAdmin):
     )
 
     # Use Leaflet map widget for the location field
-    formfield_overrides = {
+    formfield_overrides: ClassVar[dict] = {
         # Override PointField to use Leaflet widget
     }
 
@@ -164,9 +181,10 @@ class OfficeAdmin(SimpleHistoryAdmin, ModelAdmin, ImportExportModelAdmin):
         # Get initials from office name
         words = obj.name.split()
         initials = "".join(w[0].upper() for w in words[:2]) if words else "O"
+        address_max_len = 50
         return [
             obj.name,
-            obj.address[:50] + "..." if len(obj.address) > 50 else obj.address,
+            obj.address[:address_max_len] + "..." if len(obj.address) > address_max_len else obj.address,
             initials,
         ]
 

@@ -9,10 +9,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import IntEnum
-from typing import Optional
+
+from django.conf import settings
 
 import grpc
-from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -61,17 +61,17 @@ class DeliveryAddress:
 class DeliveryPeriod:
     """Delivery time window."""
 
-    start_time: Optional[datetime]
-    end_time: Optional[datetime]
+    start_time: datetime | None
+    end_time: datetime | None
 
 
 @dataclass
 class DeliveryInfo:
     """Delivery information."""
 
-    pickup_address: Optional[DeliveryAddress]
-    delivery_address: Optional[DeliveryAddress]
-    delivery_period: Optional[DeliveryPeriod]
+    pickup_address: DeliveryAddress | None
+    delivery_address: DeliveryAddress | None
+    delivery_period: DeliveryPeriod | None
     priority: int  # 0=unspecified, 1=normal, 2=urgent
 
 
@@ -83,9 +83,9 @@ class Order:
     customer_id: str
     items: list[OrderItem]
     status: OrderStatus
-    created_at: Optional[datetime]
-    updated_at: Optional[datetime]
-    delivery_info: Optional[DeliveryInfo]
+    created_at: datetime | None
+    updated_at: datetime | None
+    delivery_info: DeliveryInfo | None
 
     @property
     def status_name(self) -> str:
@@ -129,14 +129,14 @@ class OrderNotFoundError(OmsServiceError):
 class OmsClient:
     """Client for OMS gRPC API."""
 
-    def __init__(self, host: Optional[str] = None):
+    def __init__(self, host: str | None = None):
         """Initialize the OMS client.
 
         Args:
             host: gRPC host address. Defaults to settings.OMS_GRPC_HOST.
         """
         self.host = host or getattr(settings, "OMS_GRPC_HOST", "localhost:50052")
-        self._channel: Optional[grpc.Channel] = None
+        self._channel: grpc.Channel | None = None
         self._stub = None
 
     def _ensure_connected(self):
@@ -217,7 +217,7 @@ class OmsClient:
             delivery_info=delivery_info,
         )
 
-    def get_order(self, order_id: str) -> Optional[Order]:
+    def get_order(self, order_id: str) -> Order | None:
         """Get a single order by ID.
 
         Args:
@@ -243,8 +243,8 @@ class OmsClient:
 
     def list_orders(
         self,
-        customer_id: Optional[str] = None,
-        status_filter: Optional[list[OrderStatus]] = None,
+        customer_id: str | None = None,
+        status_filter: list[OrderStatus] | None = None,
         page: int = 1,
         page_size: int = 20,
     ) -> OrderListResult:
@@ -319,7 +319,7 @@ class OmsClient:
 
 
 # Singleton instance for use across the application
-_client: Optional[OmsClient] = None
+_client: OmsClient | None = None
 
 
 def get_oms_client() -> OmsClient:

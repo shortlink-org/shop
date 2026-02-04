@@ -1,5 +1,7 @@
 """Forms for order management with Crispy Forms and Unfold styling."""
 
+from typing import ClassVar
+
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Field, Layout
 from django import forms
@@ -14,7 +16,7 @@ from unfold.widgets import (
 class OrderFilterForm(forms.Form):
     """Form for filtering order list."""
 
-    STATUS_CHOICES = [
+    STATUS_CHOICES: ClassVar[list[tuple[str, str]]] = [
         ("", _("All Statuses")),
         ("1", _("Pending")),
         ("2", _("Processing")),

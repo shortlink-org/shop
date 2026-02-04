@@ -487,7 +487,8 @@ DEBUG_TOOLBAR_CONFIG = {
 
 # Prometheus
 # Only export metrics when running server (not management commands)
-import sys
+import sys  # noqa: E402
+
 _is_runserver = len(sys.argv) > 1 and sys.argv[1] == "runserver"
 PROMETHEUS_METRICS_EXPORT_PORT = 9090 if _is_runserver else None
 PROMETHEUS_METRICS_EXPORT_ADDRESS = "0.0.0.0" if _is_runserver else ""

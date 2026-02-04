@@ -24,8 +24,8 @@ test: ## Run tests
 
 .PHONY: lint
 lint: ## Run linter (ruff format + check)
-	uvx ruff format
-	uvx ruff check --fix .
+	uv run --extra dev ruff format .
+	uv run --extra dev ruff check --fix .
 
 .PHONY: typecheck
 typecheck: ## Run type checker (ty)

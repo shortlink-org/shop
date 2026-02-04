@@ -1,10 +1,12 @@
 """Define the Good model."""
 
+from typing import ClassVar
+
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from djmoney.models.fields import MoneyField
 from django_prometheus.models import ExportModelOperationsMixin
+from djmoney.models.fields import MoneyField
 from simple_history.models import HistoricalRecords
 
 
@@ -75,7 +77,7 @@ class GoodImage(models.Model):
     class Meta:
         verbose_name = _("Good Image")
         verbose_name_plural = _("Good Images")
-        ordering = ["sort_order", "created_at"]
+        ordering: ClassVar[list[str]] = ["sort_order", "created_at"]
 
     def __str__(self):
         """Return a description of the image."""

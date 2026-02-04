@@ -8,7 +8,6 @@ from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET, require_http_methods
 
 from infrastructure.grpc import OmsServiceError, OrderStatus, get_oms_client
-
 from .forms import CancelOrderForm, OrderFilterForm
 
 logger = logging.getLogger(__name__)

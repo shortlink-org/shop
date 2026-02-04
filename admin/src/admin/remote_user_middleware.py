@@ -11,9 +11,9 @@ from django.contrib.auth.middleware import RemoteUserMiddleware
 
 class OathkeeperRemoteUserMiddleware(RemoteUserMiddleware):
     """RemoteUserMiddleware that reads X-User-ID header from Oathkeeper.
-    
+
     Oathkeeper validates the Kratos session and injects X-User-ID header.
     Django converts HTTP headers to META keys: X-User-ID -> HTTP_X_USER_ID
     """
-    
+
     header = "HTTP_X_USER_ID"
