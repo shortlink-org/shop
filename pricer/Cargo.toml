@@ -20,7 +20,7 @@ thiserror = "2"
 anyhow = "1"
 
 # Configuration
-dotenvy = "0.15"
+dotenvy = "0.15.7"
 
 # Logging
 tracing = "0.1"

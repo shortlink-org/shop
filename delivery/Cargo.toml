@@ -45,7 +45,7 @@ thiserror = "2"
 rust_decimal = { version = "1", features = ["db-postgres"] }
 
 # Configuration
-dotenvy = "0.15"
+dotenvy = "0.15.7"
 
 # Logging
 tracing = "0.1"
