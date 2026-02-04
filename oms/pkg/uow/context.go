@@ -24,3 +24,15 @@ func WithTx(ctx context.Context, tx pgx.Tx) context.Context {
 func HasTx(ctx context.Context) bool {
 	return sdkuow.HasTx(ctx)
 }
+
+// ContextWithoutTx returns a context that has the same deadline as ctx (if any)
+// but does not carry the transaction. Use it for operations that must run after
+// Commit (e.g. updating an external index) to avoid using a closed tx.
+// The caller should call the returned CancelFunc when done (e.g. defer cancel()).
+func ContextWithoutTx(ctx context.Context) (context.Context, context.CancelFunc) {
+	ctx2 := context.Background()
+	if deadline, ok := ctx.Deadline(); ok {
+		return context.WithDeadline(ctx2, deadline)
+	}
+	return context.WithCancel(ctx2)
+}

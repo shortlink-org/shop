@@ -42,7 +42,11 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer func() { _ = h.uow.Rollback(ctx) }()
+	defer func() {
+		if err := h.uow.Rollback(ctx); err != nil {
+			h.log.Warn("transaction rollback failed", slog.Any("error", err))
+		}
+	}()
 
 	// 1. Create domain aggregate
 	order := orderv1.NewOrderState(cmd.CustomerID)

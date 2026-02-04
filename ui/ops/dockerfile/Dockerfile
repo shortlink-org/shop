@@ -60,19 +60,17 @@ RUN apk add --no-cache tini
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Create non-root user (UID/GID 1000 to match chart's runAsUser/runAsGroup)
-RUN addgroup --system --gid 1000 nodejs && \
-    adduser --system --uid 1000 nextjs
+# Use base image's node user (UID/GID 1000). Do not run addgroup/adduser with 1000 — it's already in use in node:* Alpine.
 
 # Copy built assets
 COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=node:node /app/.next/standalone ./
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 
 # Next.js prerender cache must be writable at runtime (non-root user); fetch-cache is created on first request
-RUN mkdir -p .next/cache/fetch-cache .next/cache/fetch-cache-tmp && chown -R nextjs:nodejs .next
+RUN mkdir -p .next/cache/fetch-cache .next/cache/fetch-cache-tmp && chown -R node:node .next
 
-USER nextjs
+USER node
 
 # Next.js port
 EXPOSE 3000

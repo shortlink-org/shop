@@ -3,20 +3,20 @@ package reset
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log/slog"
 
 	"github.com/shortlink-org/go-sdk/logger"
 
+	"github.com/shortlink-org/shop/oms/internal/domain"
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 )
 
 // Handler handles Reset commands.
 type Handler struct {
-	log        logger.Logger
-	uow        ports.UnitOfWork
-	cartRepo   ports.CartRepository
-	goodsIndex ports.CartGoodsIndex
+	log       logger.Logger
+	uow       ports.UnitOfWork
+	cartRepo  ports.CartRepository
+	publisher ports.EventPublisher
 }
 
 // NewHandler creates a new Reset handler.
@@ -24,13 +24,13 @@ func NewHandler(
 	log logger.Logger,
 	uow ports.UnitOfWork,
 	cartRepo ports.CartRepository,
-	goodsIndex ports.CartGoodsIndex,
+	publisher ports.EventPublisher,
 ) (*Handler, error) {
 	return &Handler{
-		log:        log,
-		uow:        uow,
-		cartRepo:   cartRepo,
-		goodsIndex: goodsIndex,
+		log:       log,
+		uow:       uow,
+		cartRepo:  cartRepo,
+		publisher: publisher,
 	}, nil
 }
 
@@ -40,42 +40,43 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 	// Begin transaction
 	ctx, err := h.uow.Begin(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to begin transaction: %w", err)
+		return domain.MapInfraErr("uow.Begin", err)
 	}
-	defer func() { _ = h.uow.Rollback(ctx) }()
+	defer func() {
+		if err := h.uow.Rollback(ctx); err != nil {
+			h.log.Warn("transaction rollback failed", slog.Any("error", err))
+		}
+	}()
 
 	// 1. Load aggregate
 	cart, err := h.cartRepo.Load(ctx, cmd.CustomerID)
 	if err != nil {
-		if errors.Is(err, ports.ErrNotFound) {
+		if errors.Is(err, domain.ErrNotFound) {
 			// Cart doesn't exist, nothing to reset
 			return nil
 		}
-		return err
+		return domain.MapInfraErr("cartRepo.Load", err)
 	}
-
-	// Get items before reset for index cleanup
-	items := cart.GetItems()
 
 	// 2. Call domain method (business logic)
 	cart.Reset()
 
 	// 3. Save aggregate
 	if err := h.cartRepo.Save(ctx, cart); err != nil {
-		return err
+		return domain.MapInfraErr("cartRepo.Save", err)
 	}
 
-	// Commit transaction
-	if err := h.uow.Commit(ctx); err != nil {
-		return fmt.Errorf("failed to commit transaction: %w", err)
-	}
-
-	// Update index: remove all goods from cart index
-	for _, item := range items {
-		if err := h.goodsIndex.RemoveGoodFromCart(ctx, item.GetGoodId(), cmd.CustomerID); err != nil {
-			// Log but don't fail - index is eventually consistent
-			h.log.Warn("failed to update cart goods index", slog.Any("error", err))
+	// 4. Publish domain events to outbox (same transaction)
+	for _, event := range cart.GetDomainEvents() {
+		if err := h.publisher.Publish(ctx, event); err != nil {
+			return domain.MapInfraErr("eventBus.Publish", err)
 		}
+	}
+	cart.ClearDomainEvents()
+
+	// 5. Commit transaction
+	if err := h.uow.Commit(ctx); err != nil {
+		return domain.MapInfraErr("uow.Commit", err)
 	}
 
 	return nil

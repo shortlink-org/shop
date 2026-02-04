@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 
+	"github.com/shortlink-org/shop/oms/internal/domain"
 	v1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 )
@@ -36,11 +38,15 @@ func (h *Handler) Handle(ctx context.Context, q Query) (Result, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer func() { _ = h.uow.Rollback(ctx) }()
+	defer func() {
+		if err := h.uow.Rollback(ctx); err != nil {
+			slog.Default().WarnContext(ctx, "transaction rollback failed", "error", err)
+		}
+	}()
 
 	cart, err := h.cartRepo.Load(ctx, q.CustomerID)
 	if err != nil {
-		if errors.Is(err, ports.ErrNotFound) {
+		if errors.Is(err, domain.ErrNotFound) {
 			// Return empty cart if not found
 			return v1.New(q.CustomerID), nil
 		}

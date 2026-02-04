@@ -1,11 +1,13 @@
 package ports
 
-import "errors"
+import "github.com/shortlink-org/shop/oms/internal/domain"
 
+// Re-export domain errors so repository interfaces can document "returns domain.ErrNotFound"
+// and callers can use errors.Is(err, ports.ErrNotFound). The canonical definitions are in domain.
 var (
-	// ErrNotFound is returned when an aggregate is not found in the repository.
-	ErrNotFound = errors.New("aggregate not found")
-
-	// ErrVersionConflict is returned when optimistic locking detects a version mismatch.
-	ErrVersionConflict = errors.New("optimistic lock: version conflict")
+	ErrNotFound        = domain.ErrNotFound
+	ErrVersionConflict = domain.ErrVersionConflict
+	ErrConflict        = domain.ErrConflict
+	ErrValidation      = domain.ErrValidation
+	ErrUnavailable     = domain.ErrUnavailable
 )

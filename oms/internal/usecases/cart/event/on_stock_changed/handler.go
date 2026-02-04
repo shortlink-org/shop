@@ -9,9 +9,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/shortlink-org/go-sdk/logger"
 
+	"github.com/shortlink-org/shop/oms/internal/domain"
 	itemv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/item/v1"
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/websocket"
+	"github.com/shortlink-org/shop/oms/pkg/uow"
 )
 
 // Handler handles StockChangedEvent by adjusting affected carts.
@@ -88,12 +90,16 @@ func (h *Handler) processCart(ctx context.Context, customerID, goodID uuid.UUID)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer func() { _ = h.uow.Rollback(ctx) }()
+	defer func() {
+		if err := h.uow.Rollback(ctx); err != nil {
+			h.log.Warn("transaction rollback failed", slog.Any("error", err))
+		}
+	}()
 
 	// Load cart
 	cart, err := h.cartRepo.Load(ctx, customerID)
 	if err != nil {
-		if errors.Is(err, ports.ErrNotFound) {
+		if errors.Is(err, domain.ErrNotFound) {
 			// Cart doesn't exist, clean up index
 			_ = h.goodsIndex.RemoveGoodFromCart(ctx, goodID, customerID)
 			return nil
@@ -144,8 +150,12 @@ func (h *Handler) processCart(ctx context.Context, customerID, goodID uuid.UUID)
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
+	// Post-commit: use a context without tx so index/notifier don't see a closed transaction
+	ctxClean, cancel := uow.ContextWithoutTx(ctx)
+	defer cancel()
+
 	// Update index
-	if err := h.goodsIndex.RemoveGoodFromCart(ctx, goodID, customerID); err != nil {
+	if err := h.goodsIndex.RemoveGoodFromCart(ctxClean, goodID, customerID); err != nil {
 		h.log.Warn("failed to update cart goods index", slog.Any("error", err))
 	}
 

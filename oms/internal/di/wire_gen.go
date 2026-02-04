@@ -13,7 +13,7 @@ import (
 	"github.com/redis/rueidis"
 	"github.com/shortlink-org/go-sdk/auth/permission"
 	"github.com/shortlink-org/go-sdk/config"
-	ctx "github.com/shortlink-org/go-sdk/context"
+	"github.com/shortlink-org/go-sdk/context"
 	"github.com/shortlink-org/go-sdk/cqrs/bus"
 	"github.com/shortlink-org/go-sdk/db"
 	"github.com/shortlink-org/go-sdk/flags"
@@ -26,10 +26,10 @@ import (
 	"github.com/shortlink-org/go-sdk/temporal"
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/kafka"
-	postgres "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart"
 	postgres2 "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/redis/cart_goods_index"
-	v1 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1"
 	v1_2 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/run"
 	"github.com/shortlink-org/shop/oms/internal/usecases/cart/command/add_items"
@@ -181,7 +181,7 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	rueidisClient, cleanup8, err := newRedisClient(configConfig)
+	handler, err := add_items.NewHandler(loggerLogger, uoW, store, eventPublisher)
 	if err != nil {
 		cleanup7()
 		cleanup6()
@@ -192,10 +192,8 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	cart_goods_indexStore := cart_goods_index.New(rueidisClient)
-	handler, err := add_items.NewHandler(loggerLogger, uoW, store, cart_goods_indexStore)
+	remove_itemsHandler, err := remove_items.NewHandler(loggerLogger, uoW, store, eventPublisher)
 	if err != nil {
-		cleanup8()
 		cleanup7()
 		cleanup6()
 		cleanup5()
@@ -205,21 +203,8 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	remove_itemsHandler, err := remove_items.NewHandler(loggerLogger, uoW, store, cart_goods_indexStore)
+	resetHandler, err := reset.NewHandler(loggerLogger, uoW, store, eventPublisher)
 	if err != nil {
-		cleanup8()
-		cleanup7()
-		cleanup6()
-		cleanup5()
-		cleanup4()
-		cleanup3()
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	resetHandler, err := reset.NewHandler(loggerLogger, uoW, store, cart_goods_indexStore)
-	if err != nil {
-		cleanup8()
 		cleanup7()
 		cleanup6()
 		cleanup5()
@@ -231,7 +216,6 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	}
 	getHandler, err := get.NewHandler(uoW, store)
 	if err != nil {
-		cleanup8()
 		cleanup7()
 		cleanup6()
 		cleanup5()
@@ -243,7 +227,6 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	}
 	cartRPC, err := v1.New(server, loggerLogger, handler, remove_itemsHandler, resetHandler, getHandler)
 	if err != nil {
-		cleanup8()
 		cleanup7()
 		cleanup6()
 		cleanup5()
@@ -255,7 +238,6 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	}
 	response, err := NewRunRPCServer(server, cartRPC)
 	if err != nil {
-		cleanup8()
 		cleanup7()
 		cleanup6()
 		cleanup5()
@@ -267,7 +249,6 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	}
 	createHandler, err := create.NewHandler(loggerLogger, uoW, postgresStore, eventPublisher)
 	if err != nil {
-		cleanup8()
 		cleanup7()
 		cleanup6()
 		cleanup5()
@@ -279,7 +260,6 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	}
 	cancelHandler, err := cancel.NewHandler(loggerLogger, uoW, postgresStore, eventPublisher)
 	if err != nil {
-		cleanup8()
 		cleanup7()
 		cleanup6()
 		cleanup5()
@@ -291,7 +271,6 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	}
 	update_delivery_infoHandler, err := update_delivery_info.NewHandler(loggerLogger, uoW, postgresStore, eventPublisher)
 	if err != nil {
-		cleanup8()
 		cleanup7()
 		cleanup6()
 		cleanup5()
@@ -303,7 +282,6 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	}
 	create_order_from_cartHandler, err := create_order_from_cart.NewHandler(loggerLogger, uoW, store, postgresStore, eventPublisher, pricerClient)
 	if err != nil {
-		cleanup8()
 		cleanup7()
 		cleanup6()
 		cleanup5()
@@ -315,7 +293,6 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	}
 	handler2, err := get2.NewHandler(uoW, postgresStore)
 	if err != nil {
-		cleanup8()
 		cleanup7()
 		cleanup6()
 		cleanup5()
@@ -327,7 +304,6 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	}
 	listHandler, err := list.NewHandler(uoW, postgresStore)
 	if err != nil {
-		cleanup8()
 		cleanup7()
 		cleanup6()
 		cleanup5()
@@ -339,7 +315,6 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	}
 	orderRPC, err := v1_2.New(server, loggerLogger, createHandler, cancelHandler, update_delivery_infoHandler, create_order_from_cartHandler, handler2, listHandler)
 	if err != nil {
-		cleanup8()
 		cleanup7()
 		cleanup6()
 		cleanup5()
@@ -351,7 +326,6 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	}
 	clientClient, err := temporal.New(loggerLogger, configConfig, tracerProvider, monitoring)
 	if err != nil {
-		cleanup8()
 		cleanup7()
 		cleanup6()
 		cleanup5()
@@ -363,7 +337,6 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	}
 	cartWorker, err := cart_worker.New(context, clientClient, loggerLogger)
 	if err != nil {
-		cleanup8()
 		cleanup7()
 		cleanup6()
 		cleanup5()
@@ -376,7 +349,6 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	activitiesActivities := activities.New(cancelHandler, handler2, deliveryClient)
 	orderWorker, err := order_worker.NewWithActivities(context, clientClient, loggerLogger, activitiesActivities)
 	if err != nil {
-		cleanup8()
 		cleanup7()
 		cleanup6()
 		cleanup5()
@@ -388,7 +360,6 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	}
 	omsService, err := NewOMSService(loggerLogger, configConfig, monitoring, tracerProvider, pprofEndpoint, client, dbDB, uoW, store, postgresStore, eventPublisher, deliveryClient, deliveryConsumer, pricerClient, response, cartRPC, orderRPC, clientClient, cartWorker, orderWorker)
 	if err != nil {
-		cleanup8()
 		cleanup7()
 		cleanup6()
 		cleanup5()
@@ -399,7 +370,6 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		return nil, nil, err
 	}
 	return omsService, func() {
-		cleanup8()
 		cleanup7()
 		cleanup6()
 		cleanup5()
