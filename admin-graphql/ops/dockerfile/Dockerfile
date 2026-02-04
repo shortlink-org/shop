@@ -15,6 +15,9 @@ LABEL org.opencontainers.image.source="https://github.com/shortlink-org/shortlin
 # Set working directory
 WORKDIR /app
 
+# Copy tailcall binary to /app so it works when container runs as non-root (e.g. Kubernetes runAsNonRoot)
+RUN mkdir -p /app/bin && cp /root/.tailcall/bin/tailcall /app/bin/tailcall && chmod 755 /app/bin/tailcall
+
 # Copy Tailcall configuration
 COPY config/admin.graphql /app/config/admin.graphql
 
@@ -28,5 +31,4 @@ EXPOSE 8101
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:8101/graphql || exit 1
 
-# Run Tailcall (full path: PATH contains ~/.tailcall/bin which is not expanded in exec without shell)
-CMD ["/root/.tailcall/bin/tailcall", "start", "/app/config/admin.graphql"]
+CMD ["/app/bin/tailcall", "start", "/app/config/admin.graphql"]
