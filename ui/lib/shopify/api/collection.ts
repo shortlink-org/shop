@@ -38,12 +38,12 @@ export async function getCollectionProducts({
       query: getCollectionProductsQuery,
     });
 
-    if (!res.body.data.goods_goods_list) {
+    if (!res.body.data?.goods) {
       console.log(`No collection found for \`${res.body.data}\``);
       return [];
     }
 
-    return res.body.data.goods_goods_list.results.map(normalizeGood);
+    return res.body.data.goods.results.map(normalizeGood);
   } catch (err) {
     console.error('[getCollectionProducts] Failed to load products', { err });
     return GOODS_UNAVAILABLE;

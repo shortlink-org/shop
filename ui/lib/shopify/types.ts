@@ -225,7 +225,7 @@ export type ShopifyCollectionOperation = {
 
 export type ShopifyCollectionProductsOperation = {
   data: {
-    goods_goods_list: {
+    goods: {
       count: number;
       next: string | null;
       previous: string | null;

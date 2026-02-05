@@ -9,6 +9,18 @@ execution_config:
   file:
     path: "./router-config.json"
 
+# Override subgraph URLs at runtime (K8s: set in Helm deploy.env).
+# Local dev: set ADMIN_SUBGRAPH_URL, CARTS_SUBGRAPH_URL, COUNTRIES_SUBGRAPH_URL or omit to use router-config.json URLs.
+# https://cosmo-docs.wundergraph.com/router/proxy-capabilities/override-subgraph-config
+overrides:
+  subgraphs:
+    admin:
+      routing_url: "${ADMIN_SUBGRAPH_URL}"
+    carts:
+      routing_url: "${CARTS_SUBGRAPH_URL}"
+    countries:
+      routing_url: "${COUNTRIES_SUBGRAPH_URL}"
+
 # Server configuration
 listen_addr: "0.0.0.0:9991"
 
