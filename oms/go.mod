@@ -1,6 +1,6 @@
 module github.com/shortlink-org/shop/oms
 
-go 1.25.6
+go 1.25.7
 
 require (
 	github.com/IBM/sarama v1.46.3
