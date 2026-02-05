@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useList } from '@refinedev/core';
+import { useMutation } from '@apollo/client';
 import { 
   Table, 
   Card, 
@@ -25,6 +26,7 @@ import type { ColumnsType } from 'antd/es/table';
 
 import { CourierStatusBadge } from '@/components/couriers/CourierStatusBadge';
 import { TransportBadge } from '@/components/couriers/TransportBadge';
+import { ACTIVATE_COURIER, DEACTIVATE_COURIER } from '@/graphql/mutations/couriers';
 import type { Courier, CourierStatus, TransportType } from '@/types/courier';
 
 export default function CouriersListPage() {
@@ -33,21 +35,41 @@ export default function CouriersListPage() {
   const [statusFilter, setStatusFilter] = useState<CourierStatus[]>([]);
   const [transportFilter, setTransportFilter] = useState<TransportType[]>([]);
 
+  const filters = [
+    ...(statusFilter.length ? [{ field: 'status' as const, operator: 'in' as const, value: statusFilter }] : []),
+    ...(transportFilter.length ? [{ field: 'transportType' as const, operator: 'in' as const, value: transportFilter }] : []),
+  ];
+
   const { query, result } = useList<Courier>({
     resource: 'couriers',
+    pagination: { current: page, pageSize },
+    filters,
   });
   
   const { isLoading, refetch } = query;
   const data = result;
 
+  const [activateCourier] = useMutation(ACTIVATE_COURIER, {
+    onCompleted: () => {
+      message.success('Курьер активирован');
+      refetch();
+    },
+    onError: (e) => message.error(e.message),
+  });
+  const [deactivateCourier] = useMutation(DEACTIVATE_COURIER, {
+    onCompleted: () => {
+      message.success('Курьер деактивирован');
+      refetch();
+    },
+    onError: (e) => message.error(e.message),
+  });
+
   const handleActivate = (id: string) => {
-    message.success('Курьер активирован (mock)');
-    refetch();
+    activateCourier({ variables: { id } });
   };
 
   const handleDeactivate = (id: string) => {
-    message.success('Курьер деактивирован (mock)');
-    refetch();
+    deactivateCourier({ variables: { id } });
   };
 
   const columns: ColumnsType<Courier> = [

@@ -2,6 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { useOne } from '@refinedev/core';
+import { useMutation } from '@apollo/client';
 import { 
   Card, 
   Descriptions, 
@@ -9,7 +10,6 @@ import {
   Space, 
   Spin, 
   Rate,
-  Tag,
   message,
   Popconfirm,
   Divider,
@@ -28,6 +28,7 @@ import Link from 'next/link';
 
 import { CourierStatusBadge } from '@/components/couriers/CourierStatusBadge';
 import { TransportBadge } from '@/components/couriers/TransportBadge';
+import { ACTIVATE_COURIER, DEACTIVATE_COURIER, ARCHIVE_COURIER } from '@/graphql/mutations/couriers';
 import type { Courier } from '@/types/courier';
 
 const WEEKDAYS = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
@@ -43,19 +44,38 @@ export default function CourierDetailPage() {
   
   const { data, isLoading, refetch } = query;
 
+  const [activateCourier] = useMutation(ACTIVATE_COURIER, {
+    onCompleted: () => {
+      message.success('Курьер активирован');
+      refetch();
+    },
+    onError: (e) => message.error(e.message),
+  });
+  const [deactivateCourier] = useMutation(DEACTIVATE_COURIER, {
+    onCompleted: () => {
+      message.success('Курьер деактивирован');
+      refetch();
+    },
+    onError: (e) => message.error(e.message),
+  });
+  const [archiveCourier] = useMutation(ARCHIVE_COURIER, {
+    onCompleted: () => {
+      message.success('Курьер архивирован');
+      refetch();
+    },
+    onError: (e) => message.error(e.message),
+  });
+
   const handleActivate = () => {
-    message.success('Курьер активирован (mock)');
-    refetch();
+    activateCourier({ variables: { id: courierId } });
   };
 
   const handleDeactivate = () => {
-    message.success('Курьер деактивирован (mock)');
-    refetch();
+    deactivateCourier({ variables: { id: courierId } });
   };
 
   const handleArchive = () => {
-    message.success('Курьер архивирован (mock)');
-    refetch();
+    archiveCourier({ variables: { id: courierId } });
   };
 
   if (isLoading) {

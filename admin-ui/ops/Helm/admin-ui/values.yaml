@@ -29,11 +29,9 @@ deploy:
 
   imagePullSecrets: []
 
-  env:
-    # GraphQL BFF URL
-    NEXT_PUBLIC_GRAPHQL_URL: http://shortlink-shop-bff.shortlink-shop:9991/graphql
-    # Ory Kratos URL
-    NEXT_PUBLIC_ORY_SDK_URL: http://shortlink-ory-kratos-public.shortlink:4433
+  # NEXT_PUBLIC_* are baked in at build time (see GitLab CI DOCKERFILE_ARGS).
+  # Runtime env here has no effect on client-side code.
+  env: {}
 
   resources:
     limits:
