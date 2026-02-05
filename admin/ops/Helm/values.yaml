@@ -230,6 +230,8 @@ istio:
 # This prevents direct access to Django bypassing authentication
 authorizationPolicy:
   enabled: true
+  # Allow admin-graphql subgraph to call Admin API (goods, offices) without Oathkeeper
+  allowAdminGraphqlPrincipal: "cluster.local/ns/shortlink-shop/sa/shortlink-shop-admin-graphql"
 
 # ==============================================================================
 # NetworkPolicy

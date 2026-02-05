@@ -15,10 +15,27 @@ listen_addr: "0.0.0.0:9991"
 # Logging configuration
 log_level: "info"
 
-# Access logs: log subgraph requests so failures (e.g. admin-graphql down) are visible
+# Access logs: structured JSON in production; include operation and error details
 access_logs:
   enabled: true
   level: "info"
+  output:
+    stdout:
+      enabled: true
+  router:
+    fields:
+      - key: "operation_name"
+        value_from:
+          context_field: "operation_name"
+      - key: "response_error_message"
+        value_from:
+          context_field: "response_error_message"
+      - key: "request_error"
+        value_from:
+          context_field: "request_error"
+      - key: "subgraph_names"
+        value_from:
+          context_field: "operation_service_names"
   subgraphs:
     enabled: true
     fields:

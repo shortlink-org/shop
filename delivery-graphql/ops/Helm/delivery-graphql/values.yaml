@@ -26,6 +26,7 @@ deploy:
     DELIVERY_GRPC_URL: http://shortlink-shop-delivery.shortlink-shop:50051
     # OTLP exporter URL (Grafana Tempo), OTLP HTTP on 4318
     OTLP_URL: "http://grafana-tempo.grafana.svc.cluster.local:4318"
+    TC_LOG_LEVEL: "debug"
 
   resources:
     limits:

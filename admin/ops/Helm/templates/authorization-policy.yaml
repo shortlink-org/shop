@@ -16,6 +16,12 @@ spec:
     - to:
         - operation:
             paths: ["/healthz/", "/metrics"]
+    # Allow admin-graphql subgraph to call Admin API (Tailcall -> Django /goods/, /offices/)
+    {{- if .Values.authorizationPolicy.allowAdminGraphqlPrincipal }}
+    - from:
+        - source:
+            principals: ["{{ .Values.authorizationPolicy.allowAdminGraphqlPrincipal }}"]
+    {{- end }}
     # Allow requests that have X-User-ID header (set by Oathkeeper)
     # This ensures requests passed through Oathkeeper authentication
     - when:

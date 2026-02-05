@@ -88,13 +88,23 @@ type Query {
     @http(
       url: "{{.env.ADMIN_API_URL}}/goods/"
       query: [{key: "page", value: "{{.args.page}}"}]
+      headers: [
+        {key: "Authorization", value: "{{.headers.Authorization}}"}
+        {key: "Cookie", value: "{{.headers.Cookie}}"}
+      ]
     )
 
   """
   Get a single good by ID.
   """
   good(id: Int!): Good
-    @http(url: "{{.env.ADMIN_API_URL}}/goods/{{.args.id}}/")
+    @http(
+      url: "{{.env.ADMIN_API_URL}}/goods/{{.args.id}}/"
+      headers: [
+        {key: "Authorization", value: "{{.headers.Authorization}}"}
+        {key: "Cookie", value: "{{.headers.Cookie}}"}
+      ]
+    )
 
   # -------------------------------------------------------------------------
   # Offices queries
@@ -107,11 +117,21 @@ type Query {
     @http(
       url: "{{.env.ADMIN_API_URL}}/offices/"
       query: [{key: "page", value: "{{.args.page}}"}]
+      headers: [
+        {key: "Authorization", value: "{{.headers.Authorization}}"}
+        {key: "Cookie", value: "{{.headers.Cookie}}"}
+      ]
     )
 
   """
   Get a single office by ID.
   """
   office(id: Int!): Office
-    @http(url: "{{.env.ADMIN_API_URL}}/offices/{{.args.id}}/")
+    @http(
+      url: "{{.env.ADMIN_API_URL}}/offices/{{.args.id}}/"
+      headers: [
+        {key: "Authorization", value: "{{.headers.Authorization}}"}
+        {key: "Cookie", value: "{{.headers.Cookie}}"}
+      ]
+    )
 }

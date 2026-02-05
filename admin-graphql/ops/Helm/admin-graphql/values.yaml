@@ -26,6 +26,8 @@ deploy:
     ADMIN_API_URL: http://shortlink-shop-admin.shortlink-shop:8000
     # OTLP exporter URL (Grafana Tempo), OTLP HTTP on 4318
     OTLP_URL: "http://grafana-tempo.grafana.svc.cluster.local:4318"
+    # More verbose logs: upstream requests, errors (RBAC, 403, etc.)
+    TC_LOG_LEVEL: "debug"
 
   resources:
     limits:
