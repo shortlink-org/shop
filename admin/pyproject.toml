@@ -3,7 +3,7 @@ name = "shop_admin"
 version = "0.1.0"
 description = "This service is responsible for the administration of the shop."
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.14.3"
 
 dependencies = [
   "django-ory-auth @ git+https://github.com/micro-company/django_ory_auth@master",
