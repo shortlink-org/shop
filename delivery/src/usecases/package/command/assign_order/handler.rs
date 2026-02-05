@@ -778,9 +778,10 @@ mod tests {
         use crate::domain::model::courier::WorkHours;
         use chrono::NaiveTime;
 
+        // 0:00–23:00 so hours 0–22 are valid (end exclusive); avoids flakiness when test runs at hour 18
         let work_hours = WorkHours::new(
-            NaiveTime::from_hms_opt(9, 0, 0).unwrap(),
-            NaiveTime::from_hms_opt(18, 0, 0).unwrap(),
+            NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
+            NaiveTime::from_hms_opt(23, 0, 0).unwrap(),
             vec![1, 2, 3, 4, 5],
         )
         .unwrap();

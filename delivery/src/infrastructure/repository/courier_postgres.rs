@@ -322,10 +322,10 @@ mod tests {
         let (_container, db) = setup_db().await;
         let repo = CourierPostgresRepository::new(db);
 
-        let result = repo.list(10, 0).await.unwrap();
+        let result = repo.list(100, 0).await.unwrap();
 
-        // Seed migration adds 2 MVP couriers
-        assert_eq!(result.len(), 2);
+        // Seed migration adds 10 couriers (see m20260131_000003_seed_couriers)
+        assert_eq!(result.len(), 10);
     }
 
     #[tokio::test]
@@ -350,9 +350,10 @@ mod tests {
         let result = repo.list(2, 0).await.unwrap();
         assert_eq!(result.len(), 2);
 
-        // Test offset - skip first 2, should get remaining
+        // Test offset - skip first 2, should get remaining (capped by limit 10)
         let result = repo.list(10, 2).await.unwrap();
-        assert_eq!(result.len(), initial_count + 3 - 2);
+        let remaining = initial_count + 3 - 2;
+        assert_eq!(result.len(), remaining.min(10));
 
         // Test all
         let result = repo.list(100, 0).await.unwrap();
