@@ -5,6 +5,7 @@
 use chrono::{DateTime, NaiveTime, Utc};
 use tonic::Status;
 
+use crate::domain::model::CourierLocation;
 use crate::domain::ports::CachedCourierState;
 use crate::domain::model::courier::{Courier, CourierStatus as DomainCourierStatus, WorkHours as DomainWorkHours};
 use crate::domain::model::package::{
@@ -84,8 +85,20 @@ pub fn domain_to_proto_work_hours(wh: &DomainWorkHours) -> ProtoWorkHours {
     }
 }
 
+/// Convert domain CourierLocation to proto Location (for current_location in Courier)
+fn courier_location_to_proto_location(loc: &CourierLocation) -> super::Location {
+    super::Location {
+        latitude: loc.latitude(),
+        longitude: loc.longitude(),
+    }
+}
+
 /// Convert domain Courier to proto Courier
-pub fn courier_to_proto(courier: &Courier, state: Option<&CachedCourierState>) -> ProtoCourier {
+pub fn courier_to_proto(
+    courier: &Courier,
+    state: Option<&CachedCourierState>,
+    current_location: Option<&CourierLocation>,
+) -> ProtoCourier {
     let created_at = courier.created_at();
 
     ProtoCourier {
@@ -104,7 +117,7 @@ pub fn courier_to_proto(courier: &Courier, state: Option<&CachedCourierState>) -
         rating: state.map(|s| s.rating).unwrap_or(0.0),
         work_hours: Some(domain_to_proto_work_hours(courier.work_hours())),
         work_zone: courier.work_zone().to_string(),
-        current_location: None, // TODO: integrate with Geolocation Service
+        current_location: current_location.map(courier_location_to_proto_location),
         successful_deliveries: state.map(|s| s.successful_deliveries as i32).unwrap_or(0),
         failed_deliveries: state.map(|s| s.failed_deliveries as i32).unwrap_or(0),
         created_at: Some(prost_types::Timestamp {
@@ -415,7 +428,7 @@ mod tests {
     fn test_courier_to_proto_without_state() {
         let courier = create_test_courier();
 
-        let proto = courier_to_proto(&courier, None);
+        let proto = courier_to_proto(&courier, None, None);
 
         assert_eq!(proto.name, "Test Courier");
         assert_eq!(proto.phone, "+49123456789");
@@ -440,7 +453,7 @@ mod tests {
             failed_deliveries: 2,
         };
 
-        let proto = courier_to_proto(&courier, Some(&state));
+        let proto = courier_to_proto(&courier, Some(&state), None);
 
         assert_eq!(proto.status, CourierStatus::Free as i32);
         assert_eq!(proto.current_load, 1);
@@ -453,7 +466,7 @@ mod tests {
     fn test_courier_to_proto_includes_work_hours() {
         let courier = create_test_courier();
 
-        let proto = courier_to_proto(&courier, None);
+        let proto = courier_to_proto(&courier, None, None);
 
         assert!(proto.work_hours.is_some());
         let wh = proto.work_hours.unwrap();
@@ -466,7 +479,7 @@ mod tests {
     fn test_courier_to_proto_includes_timestamp() {
         let courier = create_test_courier();
 
-        let proto = courier_to_proto(&courier, None);
+        let proto = courier_to_proto(&courier, None, None);
 
         assert!(proto.created_at.is_some());
         let created_at = proto.created_at.unwrap();

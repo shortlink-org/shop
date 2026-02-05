@@ -24,8 +24,8 @@ use crate::domain::model::domain::delivery::events::v1::{
 };
 use crate::domain::model::package::{PackageId, PackageStatus};
 use crate::domain::ports::{
-    CommandHandlerWithResult, CourierCache, CourierRepository, EventPublisher, PackageRepository,
-    RepositoryError,
+    CommandHandlerWithResult, CourierCache, CourierRepository, EventPublisher, GeolocationService,
+    PackageRepository, RepositoryError,
 };
 
 use super::command::{DeliveryResult, NotDeliveredReason};
@@ -79,25 +79,28 @@ pub struct Response {
 }
 
 /// Deliver Order Handler
-pub struct Handler<R, C, P, E>
+pub struct Handler<R, C, P, E, G>
 where
     R: CourierRepository,
     C: CourierCache,
     P: PackageRepository,
     E: EventPublisher,
+    G: GeolocationService,
 {
     courier_repo: Arc<R>,
     courier_cache: Arc<C>,
     package_repo: Arc<P>,
     event_publisher: Arc<E>,
+    geolocation_service: Arc<G>,
 }
 
-impl<R, C, P, E> Handler<R, C, P, E>
+impl<R, C, P, E, G> Handler<R, C, P, E, G>
 where
     R: CourierRepository,
     C: CourierCache,
     P: PackageRepository,
     E: EventPublisher,
+    G: GeolocationService,
 {
     /// Create a new handler instance
     pub fn new(
@@ -105,12 +108,14 @@ where
         courier_cache: Arc<C>,
         package_repo: Arc<P>,
         event_publisher: Arc<E>,
+        geolocation_service: Arc<G>,
     ) -> Self {
         Self {
             courier_repo,
             courier_cache,
             package_repo,
             event_publisher,
+            geolocation_service,
         }
     }
 
@@ -147,12 +152,13 @@ where
     }
 }
 
-impl<R, C, P, E> CommandHandlerWithResult<Command, Response> for Handler<R, C, P, E>
+impl<R, C, P, E, G> CommandHandlerWithResult<Command, Response> for Handler<R, C, P, E, G>
 where
     R: CourierRepository + Send + Sync,
     C: CourierCache + Send + Sync,
     P: PackageRepository + Send + Sync,
     E: EventPublisher + Send + Sync,
+    G: GeolocationService + Send + Sync,
 {
     type Error = DeliverOrderError;
 
@@ -377,8 +383,21 @@ where
             }
         }
 
-        // 10. TODO: Notify OMS about delivery result
-        // 11. TODO: Update courier location via Geolocation service
+        // 10. OMS is notified via Kafka (PackageDeliveredEvent / PackageNotDeliveredEvent on delivery.package.status.v1)
+        // 11. Update courier location via GeolocationService
+        let now = Utc::now();
+        if let Err(e) = self
+            .geolocation_service
+            .update_location(cmd.courier_id, cmd.confirmation_location, now)
+            .await
+        {
+            warn!(
+                package_id = %cmd.package_id,
+                courier_id = %cmd.courier_id,
+                error = %e,
+                "Failed to update courier location via GeolocationService (non-fatal)"
+            );
+        }
 
         Ok(Response {
             package_id: cmd.package_id,
@@ -400,7 +419,10 @@ mod tests {
     use crate::domain::model::package::{Address, DeliveryPeriod, Package, Priority};
     use crate::domain::model::vo::location::Location;
     use crate::domain::model::vo::TransportType;
-    use crate::domain::ports::{CacheError, CachedCourierState, EventPublisherError, PackageFilter};
+    use crate::domain::ports::{
+        CacheError, CachedCourierState, EventPublisherError, GeolocationService,
+        GeolocationServiceError, PackageFilter,
+    };
     use async_trait::async_trait;
     use chrono::{NaiveTime, Utc};
     use std::collections::HashMap;
@@ -683,6 +705,27 @@ mod tests {
         }
     }
 
+    struct MockGeolocationService;
+
+    #[async_trait]
+    impl GeolocationService for MockGeolocationService {
+        async fn update_location(
+            &self,
+            _courier_id: Uuid,
+            _location: Location,
+            _timestamp: chrono::DateTime<Utc>,
+        ) -> Result<(), GeolocationServiceError> {
+            Ok(())
+        }
+
+        async fn get_location(
+            &self,
+            _courier_id: Uuid,
+        ) -> Result<Option<crate::domain::model::CourierLocation>, GeolocationServiceError> {
+            Ok(None)
+        }
+    }
+
     // ==================== Test Helpers ====================
 
     fn create_test_address() -> Address {
@@ -774,7 +817,13 @@ mod tests {
         package_repo.add_package(package);
 
         let event_publisher = Arc::new(MockEventPublisher);
-        let handler = Handler::new(courier_repo, courier_cache, package_repo.clone(), event_publisher);
+        let handler = Handler::new(
+            courier_repo,
+            courier_cache,
+            package_repo.clone(),
+            event_publisher,
+            Arc::new(MockGeolocationService),
+        );
 
         let cmd = Command::delivered(
             package_id,
@@ -814,7 +863,13 @@ mod tests {
         package_repo.add_package(package);
 
         let event_publisher = Arc::new(MockEventPublisher);
-        let handler = Handler::new(courier_repo, courier_cache, package_repo.clone(), event_publisher);
+        let handler = Handler::new(
+            courier_repo,
+            courier_cache,
+            package_repo.clone(),
+            event_publisher,
+            Arc::new(MockGeolocationService),
+        );
 
         let cmd = Command::not_delivered(
             package_id,
@@ -838,7 +893,13 @@ mod tests {
         let package_repo = Arc::new(MockPackageRepository::new());
         let event_publisher = Arc::new(MockEventPublisher);
 
-        let handler = Handler::new(courier_repo, courier_cache, package_repo, event_publisher);
+        let handler = Handler::new(
+            courier_repo,
+            courier_cache,
+            package_repo,
+            event_publisher,
+            Arc::new(MockGeolocationService),
+        );
 
         let cmd = Command::delivered(
             Uuid::new_v4(),
@@ -873,7 +934,13 @@ mod tests {
         package_repo.add_package(package);
 
         let event_publisher = Arc::new(MockEventPublisher);
-        let handler = Handler::new(courier_repo, courier_cache, package_repo, event_publisher);
+        let handler = Handler::new(
+            courier_repo,
+            courier_cache,
+            package_repo,
+            event_publisher,
+            Arc::new(MockGeolocationService),
+        );
 
         // Try to deliver with wrong courier
         let cmd = Command::delivered(
@@ -898,7 +965,13 @@ mod tests {
         let package_repo = Arc::new(MockPackageRepository::new());
         let event_publisher = Arc::new(MockEventPublisher);
 
-        let handler = Handler::new(courier_repo, courier_cache, package_repo, event_publisher);
+        let handler = Handler::new(
+            courier_repo,
+            courier_cache,
+            package_repo,
+            event_publisher,
+            Arc::new(MockGeolocationService),
+        );
 
         // Create command with NotDelivered but no reason
         let cmd = Command {
@@ -925,7 +998,13 @@ mod tests {
         let courier_cache = Arc::new(MockCourierCache);
         let package_repo = Arc::new(MockPackageRepository::new());
         let event_publisher = Arc::new(MockEventPublisher);
-        let handler = Handler::new(courier_repo, courier_cache, package_repo, event_publisher);
+        let handler = Handler::new(
+            courier_repo,
+            courier_cache,
+            package_repo,
+            event_publisher,
+            Arc::new(MockGeolocationService),
+        );
 
         let cmd = Command::not_delivered(
             Uuid::new_v4(),
@@ -979,7 +1058,13 @@ mod tests {
         package_repo.add_package(package);
 
         let event_publisher = Arc::new(MockEventPublisher);
-        let handler = Handler::new(courier_repo, courier_cache, package_repo, event_publisher);
+        let handler = Handler::new(
+            courier_repo,
+            courier_cache,
+            package_repo,
+            event_publisher,
+            Arc::new(MockGeolocationService),
+        );
 
         let cmd = Command::delivered(
             package_id,

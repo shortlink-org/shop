@@ -5,6 +5,7 @@
 pub mod courier_cache;
 pub mod courier_repository;
 pub mod event_publisher;
+pub mod geolocation_service;
 pub mod handlers;
 pub mod location_cache;
 pub mod location_repository;
@@ -14,6 +15,7 @@ pub mod package_repository;
 pub use courier_cache::*;
 pub use courier_repository::*;
 pub use event_publisher::*;
+pub use geolocation_service::*;
 pub use handlers::*;
 pub use location_cache::*;
 pub use location_repository::*;

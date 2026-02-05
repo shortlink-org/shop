@@ -7,15 +7,20 @@
 //! 2. Create CourierLocation entity with validation
 //! 3. Save to location cache (Redis - hot data)
 //! 4. Save to location history (PostgreSQL - cold data)
+//! 5. Publish CourierLocationUpdatedEvent
 
 use std::sync::Arc;
 
+use chrono::Utc;
 use thiserror::Error;
+use tracing::{info, warn};
 
+use crate::domain::model::domain::delivery::common::v1 as proto_common;
+use crate::domain::model::domain::delivery::events::v1::CourierLocationUpdatedEvent;
 use crate::domain::model::{CourierLocation, CourierLocationError, LocationHistoryEntry};
 use crate::domain::ports::{
-    CommandHandler, CourierRepository, LocationCache, LocationCacheError, LocationRepository,
-    LocationRepositoryError, RepositoryError,
+    CommandHandler, CourierRepository, EventPublisher, LocationCache,
+    LocationCacheError, LocationRepository, LocationRepositoryError, RepositoryError,
 };
 
 use super::Command;
@@ -45,42 +50,48 @@ pub enum UpdateCourierLocationError {
 }
 
 /// Update Courier Location Handler
-pub struct Handler<R, LC, LR>
+pub struct Handler<R, LC, LR, E>
 where
     R: CourierRepository,
     LC: LocationCache,
     LR: LocationRepository,
+    E: EventPublisher,
 {
     courier_repository: Arc<R>,
     location_cache: Arc<LC>,
     location_repository: Arc<LR>,
+    event_publisher: Arc<E>,
 }
 
-impl<R, LC, LR> Handler<R, LC, LR>
+impl<R, LC, LR, E> Handler<R, LC, LR, E>
 where
     R: CourierRepository,
     LC: LocationCache,
     LR: LocationRepository,
+    E: EventPublisher,
 {
     /// Create a new handler instance
     pub fn new(
         courier_repository: Arc<R>,
         location_cache: Arc<LC>,
         location_repository: Arc<LR>,
+        event_publisher: Arc<E>,
     ) -> Self {
         Self {
             courier_repository,
             location_cache,
             location_repository,
+            event_publisher,
         }
     }
 }
 
-impl<R, LC, LR> CommandHandler<Command> for Handler<R, LC, LR>
+impl<R, LC, LR, E> CommandHandler<Command> for Handler<R, LC, LR, E>
 where
     R: CourierRepository + Send + Sync,
     LC: LocationCache + Send + Sync,
     LR: LocationRepository + Send + Sync,
+    E: EventPublisher + Send + Sync,
 {
     type Error = UpdateCourierLocationError;
 
@@ -117,12 +128,42 @@ where
         );
         self.location_repository.save(&history_entry).await?;
 
-        // TODO: Publish CourierLocationUpdatedEvent to message broker
-        // event_publisher.publish(CourierLocationUpdatedEvent {
-        //     courier_id: cmd.courier_id,
-        //     location: cmd.location,
-        //     timestamp: cmd.timestamp,
-        // }).await?;
+        // 5. Publish CourierLocationUpdatedEvent
+        let now = Utc::now();
+        let event = CourierLocationUpdatedEvent {
+            courier_id: cmd.courier_id.to_string(),
+            location: Some(proto_common::Location {
+                latitude: courier_location.latitude(),
+                longitude: courier_location.longitude(),
+                accuracy: courier_location.accuracy(),
+                timestamp: Some(pbjson_types::Timestamp {
+                    seconds: cmd.timestamp.timestamp(),
+                    nanos: cmd.timestamp.timestamp_subsec_nanos() as i32,
+                }),
+                speed: cmd.speed,
+                heading: cmd.heading,
+            }),
+            updated_at: Some(pbjson_types::Timestamp {
+                seconds: cmd.timestamp.timestamp(),
+                nanos: cmd.timestamp.timestamp_subsec_nanos() as i32,
+            }),
+            occurred_at: Some(pbjson_types::Timestamp {
+                seconds: now.timestamp(),
+                nanos: now.timestamp_subsec_nanos() as i32,
+            }),
+        };
+        if let Err(e) = self.event_publisher.publish_courier_location_updated(event).await {
+            warn!(
+                courier_id = %cmd.courier_id,
+                error = %e,
+                "Failed to publish CourierLocationUpdated event (non-fatal)"
+            );
+        } else {
+            info!(
+                courier_id = %cmd.courier_id,
+                "CourierLocationUpdated event published"
+            );
+        }
 
         Ok(())
     }
@@ -131,14 +172,49 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::domain::model::domain::delivery::events::v1::*;
     use crate::domain::model::vo::location::Location;
     use crate::domain::model::courier_location::TimeRange;
     use crate::domain::model::courier::{Courier, CourierStatus};
+    use crate::domain::ports::{EventPublisher, EventPublisherError};
+    use async_trait::async_trait;
     use chrono::Utc;
     use std::collections::HashMap;
     use std::sync::Mutex;
     use uuid::Uuid;
-    use async_trait::async_trait;
+
+    struct MockEventPublisher;
+
+    #[async_trait]
+    impl EventPublisher for MockEventPublisher {
+        async fn publish_package_accepted(&self, _: PackageAcceptedEvent) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_package_assigned(&self, _: PackageAssignedEvent) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_package_in_transit(&self, _: PackageInTransitEvent) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_package_delivered(&self, _: PackageDeliveredEvent) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_package_not_delivered(&self, _: PackageNotDeliveredEvent) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_package_requires_handling(&self, _: PackageRequiresHandlingEvent) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_courier_registered(&self, _: CourierRegisteredEvent) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_courier_location_updated(&self, _: CourierLocationUpdatedEvent) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_courier_status_changed(&self, _: CourierStatusChangedEvent) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+    }
 
     // Mock CourierRepository
     struct MockCourierRepository {
@@ -404,7 +480,13 @@ mod tests {
         let location_cache = Arc::new(MockLocationCache::new());
         let location_repo = Arc::new(MockLocationRepository::new());
 
-        let handler = Handler::new(courier_repo, location_cache.clone(), location_repo.clone());
+        let event_publisher = Arc::new(MockEventPublisher);
+        let handler = Handler::new(
+            courier_repo,
+            location_cache.clone(),
+            location_repo.clone(),
+            event_publisher,
+        );
 
         let location = Location::new(52.52, 13.405, 10.0).unwrap();
         let cmd = Command::new(courier_id, location, Utc::now(), Some(35.0), Some(180.0));
@@ -427,7 +509,8 @@ mod tests {
         let location_cache = Arc::new(MockLocationCache::new());
         let location_repo = Arc::new(MockLocationRepository::new());
 
-        let handler = Handler::new(courier_repo, location_cache, location_repo);
+        let event_publisher = Arc::new(MockEventPublisher);
+        let handler = Handler::new(courier_repo, location_cache, location_repo, event_publisher);
 
         let location = Location::new(52.52, 13.405, 10.0).unwrap();
         let cmd = Command::new(Uuid::new_v4(), location, Utc::now(), None, None);

@@ -1,0 +1,35 @@
+# Validate Architecture Decision Records (ADR) structure.
+# Ensures ADR directories contain expected numbered decisions and required sections.
+name: ADR
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  validate:
+    name: Validate ADR structure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate Delivery ADRs
+        run: |
+          set -e
+          ADR_DIR="delivery/docs/ADR/decisions"
+          for n in 0001 0002 0003 0004; do
+            f="${ADR_DIR}/${n}-"*.md
+            if ! compgen -G "$f" > /dev/null; then
+              echo "Missing ADR: expected file matching ${ADR_DIR}/${n}-*.md"
+              exit 1
+            fi
+          done
+          for f in "${ADR_DIR}"/[0-9]*-*.md; do
+            [ -f "$f" ] || continue
+            grep -q 'Status' "$f" || { echo "ADR $f: missing Status section"; exit 1; }
+            grep -q 'Decision' "$f" || { echo "ADR $f: missing Decision section"; exit 1; }
+          done
+          echo "Delivery ADR structure OK"

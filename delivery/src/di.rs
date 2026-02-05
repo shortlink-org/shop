@@ -13,6 +13,7 @@ use tracing::info;
 
 use crate::config::{Config, TemporalConfig};
 use crate::infrastructure::cache::{CourierRedisCache, RedisLocationCache};
+use crate::infrastructure::geolocation::StubGeolocationService;
 use crate::infrastructure::messaging::{
     kafka_publisher::KafkaPublisherConfig, KafkaEventPublisher, LocationConsumer,
     location_consumer::LocationConsumerConfig,
@@ -59,6 +60,9 @@ pub struct AppState {
 
     /// Redis location cache
     pub location_cache: Arc<RedisLocationCache>,
+
+    /// Geolocation service (stub delegating to cache + repository)
+    pub geolocation_service: Arc<StubGeolocationService<RedisLocationCache, LocationPostgresRepository>>,
 
     /// Kafka event publisher
     pub event_publisher: Arc<KafkaEventPublisher>,
@@ -116,6 +120,10 @@ impl AppState {
         let location_repo = Arc::new(LocationPostgresRepository::new(db.clone()));
         let courier_cache = Arc::new(CourierRedisCache::new(redis_conn.clone()));
         let location_cache = Arc::new(RedisLocationCache::new(redis_conn));
+        let geolocation_service = Arc::new(StubGeolocationService::new(
+            location_cache.clone(),
+            location_repo.clone(),
+        ));
 
         // Create notification service (stub for now)
         let notification_service = Arc::new(StubNotificationService::new());
@@ -131,6 +139,7 @@ impl AppState {
             location_repo,
             courier_cache,
             location_cache,
+            geolocation_service,
             event_publisher,
             notification_service,
             db,

@@ -272,12 +272,13 @@ where
                 };
 
                 // Validate using AssignmentValidationService
+                let work_hours = courier.work_hours();
                 let courier_availability = CourierAvailability {
                     status: courier.status(),
                     current_load: courier.current_load(),
                     max_load: courier.max_load(),
-                    work_start_hour: 9,  // TODO: Get from courier work hours
-                    work_end_hour: 18,   // TODO: Get from courier work hours
+                    work_start_hour: work_hours.start.hour() as u8,
+                    work_end_hour: work_hours.end.hour() as u8,
                     max_distance_km: courier.max_distance_km(),
                 };
 

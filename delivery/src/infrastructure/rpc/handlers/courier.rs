@@ -8,8 +8,8 @@ use tonic::{Response, Status};
 use tracing::{error, info};
 
 use crate::domain::ports::{
-    CommandHandlerWithResult, CourierCache, CourierRepository, PackageFilter, PackageRepository,
-    QueryHandler,
+    CommandHandlerWithResult, CourierCache, CourierRepository, GeolocationService,
+    PackageFilter, PackageRepository, QueryHandler,
 };
 use crate::di::AppState;
 use crate::domain::model::courier::CourierStatus as DomainCourierStatus;
@@ -151,7 +151,7 @@ pub async fn get_courier_pool(
     let couriers = result
         .couriers
         .iter()
-        .map(|cws| courier_to_proto(&cws.courier, cws.state.as_ref()))
+        .map(|cws| courier_to_proto(&cws.courier, cws.state.as_ref(), None))
         .collect();
 
     let total = result.total_count as i32;
@@ -200,7 +200,15 @@ pub async fn get_courier(
         .ok()
         .flatten();
 
-    let proto_courier = courier_to_proto(&courier, cached_state.as_ref());
+    // Optionally get current location from GeolocationService
+    let current_location = state
+        .geolocation_service
+        .get_location(courier_id)
+        .await
+        .ok()
+        .flatten();
+
+    let proto_courier = courier_to_proto(&courier, cached_state.as_ref(), current_location.as_ref());
 
     Ok(Response::new(GetCourierResponse {
         courier: Some(proto_courier),

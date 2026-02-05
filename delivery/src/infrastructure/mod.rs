@@ -4,6 +4,7 @@
 //! This layer handles external concerns like databases, caches, and external services.
 
 pub mod cache;
+pub mod geolocation;
 pub mod messaging;
 pub mod notifications;
 pub mod repository;

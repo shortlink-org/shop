@@ -172,7 +172,7 @@ pub async fn accept_order(
     );
 
     // Execute handler
-    let handler = AcceptHandler::new(state.package_repo.clone());
+    let handler = AcceptHandler::new(state.package_repo.clone(), state.event_publisher.clone());
 
     let result = handler.handle(cmd).await.map_err(|e| {
         error!(error = %e, "Failed to accept order");
@@ -305,6 +305,7 @@ pub async fn pick_up_order(
     let handler = PickUpHandler::new(
         state.package_repo.clone(),
         state.event_publisher.clone(),
+        state.geolocation_service.clone(),
     );
 
     let result = handler.handle(cmd).await.map_err(|e| {
@@ -413,6 +414,7 @@ pub async fn deliver_order(
         state.courier_cache.clone(),
         state.package_repo.clone(),
         state.event_publisher.clone(),
+        state.geolocation_service.clone(),
     );
 
     let result = handler.handle(cmd).await.map_err(|e| {

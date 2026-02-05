@@ -8,16 +8,20 @@
 //! 3. Create Package aggregate
 //! 4. Move to IN_POOL status
 //! 5. Save to repository
-//! 6. Return package ID
+//! 6. Publish PackageAccepted event
+//! 7. Return package ID
 
 use std::sync::Arc;
 
 use chrono::{DateTime, Utc};
 use thiserror::Error;
+use tracing::{info, warn};
 use uuid::Uuid;
 
+use crate::domain::model::domain::delivery::common::v1 as proto_common;
+use crate::domain::model::domain::delivery::events::v1::PackageAcceptedEvent;
 use crate::domain::model::package::{Package, PackageStatus};
-use crate::domain::ports::{CommandHandlerWithResult, PackageRepository, RepositoryError};
+use crate::domain::ports::{CommandHandlerWithResult, EventPublisher, PackageRepository, RepositoryError};
 
 use super::Command;
 
@@ -59,20 +63,26 @@ pub struct Response {
 }
 
 /// Accept Order Handler
-pub struct Handler<R>
+pub struct Handler<R, E>
 where
     R: PackageRepository,
+    E: EventPublisher,
 {
     package_repo: Arc<R>,
+    event_publisher: Arc<E>,
 }
 
-impl<R> Handler<R>
+impl<R, E> Handler<R, E>
 where
     R: PackageRepository,
+    E: EventPublisher,
 {
     /// Create a new handler instance
-    pub fn new(package_repo: Arc<R>) -> Self {
-        Self { package_repo }
+    pub fn new(package_repo: Arc<R>, event_publisher: Arc<E>) -> Self {
+        Self {
+            package_repo,
+            event_publisher,
+        }
     }
 
     /// Derive work zone from delivery address (simplified)
@@ -88,9 +98,10 @@ where
     }
 }
 
-impl<R> CommandHandlerWithResult<Command, Response> for Handler<R>
+impl<R, E> CommandHandlerWithResult<Command, Response> for Handler<R, E>
 where
     R: PackageRepository + Send + Sync,
+    E: EventPublisher + Send + Sync,
 {
     type Error = AcceptOrderError;
 
@@ -155,8 +166,36 @@ where
         // 7. Save to repository
         self.package_repo.save(&package).await?;
 
-        // 8. TODO: Publish PackageAccepted event
-        // This should be done via event publisher when implemented
+        // 8. Publish PackageAccepted event
+        let now = Utc::now();
+        let event = PackageAcceptedEvent {
+            package_id: package_id.to_string(),
+            order_id: cmd.order_id.to_string(),
+            customer_id: cmd.customer_id.to_string(),
+            status: proto_common::PackageStatus::InPool as i32,
+            created_at: Some(pbjson_types::Timestamp {
+                seconds: created_at.timestamp(),
+                nanos: created_at.timestamp_subsec_nanos() as i32,
+            }),
+            occurred_at: Some(pbjson_types::Timestamp {
+                seconds: now.timestamp(),
+                nanos: now.timestamp_subsec_nanos() as i32,
+            }),
+        };
+        if let Err(e) = self.event_publisher.publish_package_accepted(event).await {
+            warn!(
+                package_id = %package_id,
+                order_id = %cmd.order_id,
+                error = %e,
+                "Failed to publish PackageAccepted event (non-fatal)"
+            );
+        } else {
+            info!(
+                package_id = %package_id,
+                order_id = %cmd.order_id,
+                "PackageAccepted event published"
+            );
+        }
 
         Ok(Response {
             package_id: package_id.0,
@@ -170,8 +209,12 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::domain::model::domain::delivery::events::v1::{
+        PackageAcceptedEvent, PackageAssignedEvent, PackageDeliveredEvent, PackageInTransitEvent,
+        PackageNotDeliveredEvent, PackageRequiresHandlingEvent,
+    };
     use crate::domain::model::package::{PackageId, Priority};
-    use crate::domain::ports::PackageFilter;
+    use crate::domain::ports::{EventPublisher, EventPublisherError, PackageFilter};
     use crate::usecases::package::command::accept_order::command::{
         AddressInput, DeliveryPeriodInput,
     };
@@ -179,6 +222,66 @@ mod tests {
     use chrono::Utc;
     use std::collections::HashMap;
     use std::sync::Mutex;
+
+    struct MockEventPublisher;
+
+    #[async_trait]
+    impl EventPublisher for MockEventPublisher {
+        async fn publish_package_accepted(
+            &self,
+            _event: PackageAcceptedEvent,
+        ) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_package_assigned(
+            &self,
+            _event: PackageAssignedEvent,
+        ) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_package_in_transit(
+            &self,
+            _event: PackageInTransitEvent,
+        ) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_package_delivered(
+            &self,
+            _event: PackageDeliveredEvent,
+        ) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_package_not_delivered(
+            &self,
+            _event: PackageNotDeliveredEvent,
+        ) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_package_requires_handling(
+            &self,
+            _event: PackageRequiresHandlingEvent,
+        ) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_courier_registered(
+            &self,
+            _event: crate::domain::model::domain::delivery::events::v1::CourierRegisteredEvent,
+        ) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_courier_status_changed(
+            &self,
+            _event: crate::domain::model::domain::delivery::events::v1::CourierStatusChangedEvent,
+        ) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+        async fn publish_courier_location_updated(
+            &self,
+            _event: crate::domain::model::domain::delivery::events::v1::CourierLocationUpdatedEvent,
+        ) -> Result<(), EventPublisherError> {
+            Ok(())
+        }
+    }
 
     /// Mock PackageRepository for testing
     struct MockPackageRepository {
@@ -280,7 +383,8 @@ mod tests {
     #[tokio::test]
     async fn test_accept_order_success() {
         let repo = Arc::new(MockPackageRepository::new());
-        let handler = Handler::new(repo.clone());
+        let event_publisher = Arc::new(MockEventPublisher);
+        let handler = Handler::new(repo.clone(), event_publisher);
 
         let cmd = create_valid_command();
         let order_id = cmd.order_id;
@@ -296,7 +400,8 @@ mod tests {
     #[tokio::test]
     async fn test_accept_order_duplicate() {
         let repo = Arc::new(MockPackageRepository::new());
-        let handler = Handler::new(repo.clone());
+        let event_publisher = Arc::new(MockEventPublisher);
+        let handler = Handler::new(repo.clone(), event_publisher);
 
         let cmd = create_valid_command();
         let order_id = cmd.order_id;
@@ -327,7 +432,8 @@ mod tests {
     #[tokio::test]
     async fn test_accept_order_invalid_weight() {
         let repo = Arc::new(MockPackageRepository::new());
-        let handler = Handler::new(repo);
+        let event_publisher = Arc::new(MockEventPublisher);
+        let handler = Handler::new(repo, event_publisher);
 
         let cmd = Command::new(
             Uuid::new_v4(),

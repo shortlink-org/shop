@@ -99,7 +99,10 @@
 ## 4. Доставка (Delivery Service - Delivery Boundary)
 
 **ADR:**
-- ⚠️ **ADR для Delivery Service отсутствует** - требуется создать при реализации сервиса
+- [ADR-0001: Init](../delivery/docs/ADR/decisions/0001-init.md) - Инициализация Delivery Service
+- [ADR-0002: C4 System](../delivery/docs/ADR/decisions/0002-c4-system.md) - Архитектура Delivery Service
+- [ADR-0003: Domain Structure](../delivery/docs/ADR/decisions/0003-domain-structure.md) - Структура домена
+- [ADR-0004: Dispatching and Geolocation](../delivery/docs/ADR/decisions/0004-dispatching-and-geolocation.md) - Диспетчеризация и геолокация
 
 **Связанные ADR:**
 - [ADR-0001: Init Shop Boundary context](./ADR/decisions/0001-init.md) - Общее описание Shop Boundary
@@ -212,10 +215,11 @@
 **План реализации:**
 
 1. **Создать/обновить Delivery Service документацию:**
-   - **ADR для Delivery Service** (требуется создать):
-     - ADR-0001: Init Delivery Service - Инициализация сервиса доставки
+   - **ADR для Delivery Service** (созданы в [delivery/docs/ADR/decisions/](../delivery/docs/ADR/decisions/)):
+     - ADR-0001: Init - Инициализация сервиса доставки
      - ADR-0002: C4 System - Архитектура Delivery Service
-     - ADR-0003: Диспетчеризация и геолокация - Алгоритмы назначения курьеров
+     - ADR-0003: Domain Structure - Структура домена
+     - ADR-0004: Dispatching and Geolocation - Диспетчеризация и геолокация
    - Use Cases для операций доставки
    - API спецификация (gRPC/GraphQL)
 
