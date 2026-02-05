@@ -66,7 +66,7 @@ RUN cargo build --release
 # ==============================================================================
 # Final stage - minimal runtime image
 # ==============================================================================
-FROM alpine:3.21
+FROM alpine:3.23
 
 LABEL maintainer=batazor111@gmail.com
 LABEL org.opencontainers.image.title="shortlink-shop-delivery"

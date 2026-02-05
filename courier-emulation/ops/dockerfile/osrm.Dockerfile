@@ -3,7 +3,7 @@
 # =============================================================================
 # Stage 1: Download OSM data using modern image
 # =============================================================================
-FROM alpine:3.21 AS downloader
+FROM alpine:3.23 AS downloader
 
 ARG REGION_URL=https://download.geofabrik.de/europe/germany/berlin-latest.osm.pbf
 ARG REGION_NAME=berlin-latest
