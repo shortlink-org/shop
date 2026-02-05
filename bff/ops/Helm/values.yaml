@@ -43,8 +43,8 @@ deploy:
 
   env:
     # Subgraph URLs for Cosmo Router
-    CARTS_SUBGRAPH_URL: http://shortlink-shop-oms-graphql.shortlink-shop:8100/graphql
-    ADMIN_SUBGRAPH_URL: http://shortlink-shop-admin-graphql.shortlink-shop:8101/graphql
+    CARTS_SUBGRAPH_URL: http://shortlink-shop-oms-graphql.shortlink-shop:8080/graphql
+    ADMIN_SUBGRAPH_URL: http://shortlink-shop-admin-graphql.shortlink-shop:8080/graphql
     COUNTRIES_SUBGRAPH_URL: https://countries.trevorblades.com/
     # Router configuration
     LOG_LEVEL: info

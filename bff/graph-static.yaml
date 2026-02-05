@@ -5,12 +5,12 @@ version: 1
 
 subgraphs:
   - name: carts
-    routing_url: http://oms-graphql:8100/graphql
+    routing_url: http://oms-graphql:8080/graphql
     schema:
       file: schemas/carts.graphql
 
   - name: admin
-    routing_url: http://admin-graphql:8101/graphql
+    routing_url: http://admin-graphql:8080/graphql
     schema:
       file: schemas/admin.graphql
 

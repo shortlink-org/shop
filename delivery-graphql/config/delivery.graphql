@@ -1,5 +1,5 @@
 schema
-@server(port: 8102, enableFederation: true, introspection: true)
+@server(port: 8080, hostname: "0.0.0.0", enableFederation: true, introspection: true)
 @upstream(
   allowedHeaders: ["Authorization", "user-id"]
 )

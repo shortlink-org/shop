@@ -52,14 +52,14 @@ deploy:
     enabled: true
     httpGet:
       path: /metrics
-      port: 8101
+      port: 8080
 
   # -- define a readiness probe that checks every 5 seconds, starting after 5 seconds
   readinessProbe:
     enabled: true
     httpGet:
       path: /metrics
-      port: 8101
+      port: 8080
 
   securityContext:
     readOnlyRootFilesystem: true
@@ -71,14 +71,14 @@ deploy:
 
 # ==============================================================================
 # Service configuration
-# NOTE: Tailcall exposes both GraphQL and Prometheus metrics on the same port 8101
+# NOTE: Tailcall exposes both GraphQL and Prometheus metrics on the same port 8080
 # - GraphQL: /graphql
 # - Metrics: /metrics
 service:
   type: ClusterIP
   ports:
     - name: http
-      port: 8101
+      port: 8080
       protocol: TCP
       public: true
 

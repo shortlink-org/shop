@@ -6,21 +6,21 @@ version: 1
 subgraphs:
   # Cart operations (gRPC -> GraphQL via Tailcall)
   - name: carts
-    routing_url: http://localhost:8100/graphql
+    routing_url: http://localhost:8080/graphql
     introspection:
-      url: http://localhost:8100/graphql
+      url: http://localhost:8080/graphql
 
   # Admin API (REST -> GraphQL via Tailcall) - goods, offices, etc.
   - name: admin
-    routing_url: http://localhost:8101/graphql
+    routing_url: http://localhost:8080/graphql
     introspection:
-      url: http://localhost:8101/graphql
+      url: http://localhost:8080/graphql
 
   # Delivery API (gRPC -> GraphQL via Tailcall) - couriers, deliveries
   - name: delivery
-    routing_url: http://localhost:8102/graphql
+    routing_url: http://localhost:8080/graphql
     introspection:
-      url: http://localhost:8102/graphql
+      url: http://localhost:8080/graphql
 
   # Countries (external GraphQL API)
   - name: countries
