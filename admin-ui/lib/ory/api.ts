@@ -65,6 +65,16 @@ export function isAdmin(session: Session | null): boolean {
   return traits.role === 'admin' || traits.is_admin === true;
 }
 
+/** Name trait can be string or Ory-style { first, last } */
+function nameTraitsToString(name: unknown): string {
+  if (typeof name === 'string') return name;
+  if (name && typeof name === 'object' && 'first' in name && 'last' in name) {
+    const n = name as { first?: string; last?: string };
+    return [n.first, n.last].filter(Boolean).join(' ').trim() || '';
+  }
+  return '';
+}
+
 /**
  * Get user display name from session
  */
@@ -72,9 +82,10 @@ export function getUserName(session: Session | null): string {
   if (!session?.identity?.traits) {
     return 'Unknown';
   }
-  
+
   const traits = session.identity.traits as Record<string, unknown>;
-  return (traits.name as string) || (traits.email as string) || 'User';
+  const nameStr = nameTraitsToString(traits.name);
+  return nameStr || (traits.email as string) || 'User';
 }
 
 /**

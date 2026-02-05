@@ -21,6 +21,7 @@ import { usePathname } from 'next/navigation';
 import { authProvider } from './auth-provider';
 import { SessionWrapper } from '@/components/auth/SessionWrapper';
 import { useSession } from '@/contexts/SessionContext';
+import { getUserName } from '@/lib/ory/api';
 
 import '@refinedev/antd/dist/reset.css';
 
@@ -141,11 +142,7 @@ const mockDataProvider: DataProvider = {
 function UserMenu() {
   const { session, logout } = useSession();
   
-  const userName = session?.identity?.traits 
-    ? (session.identity.traits as Record<string, unknown>).name as string || 
-      (session.identity.traits as Record<string, unknown>).email as string || 
-      'Пользователь'
-    : 'Пользователь';
+  const userName = session ? getUserName(session) : 'Пользователь';
 
   const items: MenuProps['items'] = [
     {

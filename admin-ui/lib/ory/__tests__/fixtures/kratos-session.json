@@ -1,0 +1,61 @@
+{
+  "id": "904cfa1e-6986-4871-826f-521f36d6e140",
+  "active": true,
+  "expires_at": "2026-02-21T09:59:57.29906Z",
+  "authenticated_at": "2026-01-22T09:59:57.29906Z",
+  "authenticator_assurance_level": "aal1",
+  "authentication_methods": [
+    {
+      "method": "password",
+      "aal": "aal1",
+      "completed_at": "2026-01-22T09:59:57.299059376Z"
+    }
+  ],
+  "issued_at": "2026-01-22T09:59:57.29906Z",
+  "identity": {
+    "id": "2526fbfc-1cdb-42bc-8a5e-2c0ae3937e97",
+    "schema_id": "default",
+    "schema_url": "https://shortlink.best/api/auth/schemas/ZGVmYXVsdA",
+    "state": "active",
+    "state_changed_at": "2026-01-22T09:59:57.274911Z",
+    "traits": {
+      "name": {
+        "last": "Login",
+        "first": "Viktor"
+      },
+      "email": "batazor111@gmail.com"
+    },
+    "verifiable_addresses": [
+      {
+        "id": "b42f9c78-17e2-44c3-a8e9-dff822c862c7",
+        "value": "batazor111@gmail.com",
+        "verified": false,
+        "via": "email",
+        "status": "sent",
+        "created_at": "2026-01-22T09:59:57.28206Z",
+        "updated_at": "2026-01-22T09:59:57.28206Z"
+      }
+    ],
+    "recovery_addresses": [
+      {
+        "id": "768f5dad-71ec-4745-9a4b-d56970551a57",
+        "value": "batazor111@gmail.com",
+        "via": "email",
+        "created_at": "2026-01-22T09:59:57.285319Z",
+        "updated_at": "2026-01-22T09:59:57.285319Z"
+      }
+    ],
+    "metadata_public": null,
+    "created_at": "2026-01-22T09:59:57.278296Z",
+    "updated_at": "2026-01-22T09:59:57.278296Z",
+    "organization_id": null
+  },
+  "devices": [
+    {
+      "id": "5a1805b2-6673-45d9-8c06-09b9d5ae6964",
+      "ip_address": "2c0f:f8f0:1519:0:d458:af9c:ed98:e729",
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
+      "location": "Harare, ZW"
+    }
+  ]
+}
