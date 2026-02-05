@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  basePath: '/admin',
+  basePath: '/admin-ui',
   transpilePackages: ['antd', '@ant-design/icons'],
 };
 
