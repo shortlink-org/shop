@@ -49,7 +49,7 @@ func (s *OrderWorkflowTestSuite) Test_Workflow_Success() {
 	customerID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174100")
 	items := createTestItems()
 
-	s.env.ExecuteWorkflow(Workflow, orderID, customerID, items)
+	s.env.ExecuteWorkflow(Workflow, orderID, customerID, items, false)
 
 	s.True(s.env.IsWorkflowCompleted())
 	s.NoError(s.env.GetWorkflowError())
@@ -74,7 +74,7 @@ func (s *OrderWorkflowTestSuite) Test_Workflow_QueryStatus() {
 		s.Contains([]string{"PROCESSING", "COMPLETED"}, status)
 	}, time.Millisecond*100)
 
-	s.env.ExecuteWorkflow(Workflow, orderID, customerID, items)
+	s.env.ExecuteWorkflow(Workflow, orderID, customerID, items, false)
 
 	s.True(s.env.IsWorkflowCompleted())
 	s.NoError(s.env.GetWorkflowError())
@@ -103,7 +103,7 @@ func (s *OrderWorkflowTestSuite) Test_Workflow_CancelSignal() {
 		s.env.SignalWorkflow(v2.WorkflowSignalCancel, nil)
 	}, 0)
 
-	s.env.ExecuteWorkflow(Workflow, orderID, customerID, items)
+	s.env.ExecuteWorkflow(Workflow, orderID, customerID, items, false)
 
 	s.True(s.env.IsWorkflowCompleted())
 	s.NoError(s.env.GetWorkflowError())
@@ -132,7 +132,7 @@ func (s *OrderWorkflowTestSuite) Test_Workflow_CompleteSignal() {
 		s.env.SignalWorkflow(v2.WorkflowSignalComplete, nil)
 	}, time.Millisecond*50)
 
-	s.env.ExecuteWorkflow(Workflow, orderID, customerID, items)
+	s.env.ExecuteWorkflow(Workflow, orderID, customerID, items, false)
 
 	s.True(s.env.IsWorkflowCompleted())
 	s.NoError(s.env.GetWorkflowError())
@@ -144,7 +144,7 @@ func (s *OrderWorkflowTestSuite) Test_Workflow_EmptyItems() {
 	customerID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174100")
 	items := v2.Items{}
 
-	s.env.ExecuteWorkflow(Workflow, orderID, customerID, items)
+	s.env.ExecuteWorkflow(Workflow, orderID, customerID, items, false)
 
 	s.True(s.env.IsWorkflowCompleted())
 	s.NoError(s.env.GetWorkflowError())
@@ -158,7 +158,7 @@ func (s *OrderWorkflowTestSuite) Test_Workflow_SingleItem() {
 		v2.NewItem(uuid.MustParse("123e4567-e89b-12d3-a456-426614174001"), 1, decimal.NewFromFloat(99.99)),
 	}
 
-	s.env.ExecuteWorkflow(Workflow, orderID, customerID, items)
+	s.env.ExecuteWorkflow(Workflow, orderID, customerID, items, false)
 
 	s.True(s.env.IsWorkflowCompleted())
 	s.NoError(s.env.GetWorkflowError())
@@ -184,7 +184,7 @@ func (s *OrderWorkflowTestSuite) Test_Workflow_MultipleSignals() {
 		s.env.SignalWorkflow(v2.WorkflowSignalComplete, nil)
 	}, 0)
 
-	s.env.ExecuteWorkflow(Workflow, orderID, customerID, items)
+	s.env.ExecuteWorkflow(Workflow, orderID, customerID, items, false)
 
 	s.True(s.env.IsWorkflowCompleted())
 	s.NoError(s.env.GetWorkflowError())

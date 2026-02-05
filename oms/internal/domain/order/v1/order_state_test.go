@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/shortlink-org/go-sdk/fsm"
-	common "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common/v1"
+	common "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common"
 	"github.com/shortlink-org/shop/oms/internal/domain/order/v1/vo/address"
 )
 
@@ -229,7 +229,7 @@ func createTestDeliveryInfo(t *testing.T) DeliveryInfo {
 
 	packageInfo := NewPackageInfo(2.5, "30x20x15")
 
-	return NewDeliveryInfo(pickupAddr, deliveryAddr, period, packageInfo, DeliveryPriorityNormal)
+	return NewDeliveryInfo(pickupAddr, deliveryAddr, period, packageInfo, DeliveryPriorityNormal, nil)
 }
 
 func TestSetDeliveryInfo_OrderStatusValidation(t *testing.T) {

@@ -7,7 +7,7 @@
 package v1
 
 import (
-	v1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common/v1"
+	common "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -33,9 +33,9 @@ type OrderCreated struct {
 	// Customer ID
 	CustomerId string `protobuf:"bytes,2,opt,name=customer_id,json=customerId,proto3" json:"customer_id,omitempty"`
 	// Order items
-	Items []*v1.OrderItem `protobuf:"bytes,3,rep,name=items,proto3" json:"items,omitempty"`
+	Items []*common.OrderItem `protobuf:"bytes,3,rep,name=items,proto3" json:"items,omitempty"`
 	// Order status
-	Status v1.OrderStatus `protobuf:"varint,4,opt,name=status,proto3,enum=domain.order.common.v1.OrderStatus" json:"status,omitempty"`
+	Status common.OrderStatus `protobuf:"varint,4,opt,name=status,proto3,enum=domain.order.common.v1.OrderStatus" json:"status,omitempty"`
 	// Created at timestamp
 	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// OccurredAt is the timestamp when the event occurred
@@ -88,18 +88,18 @@ func (x *OrderCreated) GetCustomerId() string {
 	return ""
 }
 
-func (x *OrderCreated) GetItems() []*v1.OrderItem {
+func (x *OrderCreated) GetItems() []*common.OrderItem {
 	if x != nil {
 		return x.Items
 	}
 	return nil
 }
 
-func (x *OrderCreated) GetStatus() v1.OrderStatus {
+func (x *OrderCreated) GetStatus() common.OrderStatus {
 	if x != nil {
 		return x.Status
 	}
-	return v1.OrderStatus(0)
+	return common.OrderStatus(0)
 }
 
 func (x *OrderCreated) GetCreatedAt() *timestamppb.Timestamp {
@@ -125,7 +125,7 @@ type OrderCancelled struct {
 	// Customer ID
 	CustomerId string `protobuf:"bytes,2,opt,name=customer_id,json=customerId,proto3" json:"customer_id,omitempty"`
 	// Order status
-	Status v1.OrderStatus `protobuf:"varint,3,opt,name=status,proto3,enum=domain.order.common.v1.OrderStatus" json:"status,omitempty"`
+	Status common.OrderStatus `protobuf:"varint,3,opt,name=status,proto3,enum=domain.order.common.v1.OrderStatus" json:"status,omitempty"`
 	// Cancellation reason (optional)
 	Reason string `protobuf:"bytes,4,opt,name=reason,proto3" json:"reason,omitempty"`
 	// Cancelled at timestamp
@@ -180,11 +180,11 @@ func (x *OrderCancelled) GetCustomerId() string {
 	return ""
 }
 
-func (x *OrderCancelled) GetStatus() v1.OrderStatus {
+func (x *OrderCancelled) GetStatus() common.OrderStatus {
 	if x != nil {
 		return x.Status
 	}
-	return v1.OrderStatus(0)
+	return common.OrderStatus(0)
 }
 
 func (x *OrderCancelled) GetReason() string {
@@ -217,7 +217,7 @@ type OrderCompleted struct {
 	// Customer ID
 	CustomerId string `protobuf:"bytes,2,opt,name=customer_id,json=customerId,proto3" json:"customer_id,omitempty"`
 	// Order status
-	Status v1.OrderStatus `protobuf:"varint,3,opt,name=status,proto3,enum=domain.order.common.v1.OrderStatus" json:"status,omitempty"`
+	Status common.OrderStatus `protobuf:"varint,3,opt,name=status,proto3,enum=domain.order.common.v1.OrderStatus" json:"status,omitempty"`
 	// Completed at timestamp
 	CompletedAt *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=completed_at,json=completedAt,proto3" json:"completed_at,omitempty"`
 	// OccurredAt is the timestamp when the event occurred
@@ -270,11 +270,11 @@ func (x *OrderCompleted) GetCustomerId() string {
 	return ""
 }
 
-func (x *OrderCompleted) GetStatus() v1.OrderStatus {
+func (x *OrderCompleted) GetStatus() common.OrderStatus {
 	if x != nil {
 		return x.Status
 	}
-	return v1.OrderStatus(0)
+	return common.OrderStatus(0)
 }
 
 func (x *OrderCompleted) GetCompletedAt() *timestamppb.Timestamp {
@@ -301,15 +301,15 @@ type OrderDeliveryRequestedEvent struct {
 	// Customer ID
 	CustomerId string `protobuf:"bytes,2,opt,name=customer_id,json=customerId,proto3" json:"customer_id,omitempty"`
 	// Pickup address
-	PickupAddress *v1.DeliveryAddress `protobuf:"bytes,3,opt,name=pickup_address,json=pickupAddress,proto3" json:"pickup_address,omitempty"`
+	PickupAddress *common.DeliveryAddress `protobuf:"bytes,3,opt,name=pickup_address,json=pickupAddress,proto3" json:"pickup_address,omitempty"`
 	// Delivery address
-	DeliveryAddress *v1.DeliveryAddress `protobuf:"bytes,4,opt,name=delivery_address,json=deliveryAddress,proto3" json:"delivery_address,omitempty"`
+	DeliveryAddress *common.DeliveryAddress `protobuf:"bytes,4,opt,name=delivery_address,json=deliveryAddress,proto3" json:"delivery_address,omitempty"`
 	// Delivery period
-	DeliveryPeriod *v1.DeliveryPeriod `protobuf:"bytes,5,opt,name=delivery_period,json=deliveryPeriod,proto3" json:"delivery_period,omitempty"`
+	DeliveryPeriod *common.DeliveryPeriod `protobuf:"bytes,5,opt,name=delivery_period,json=deliveryPeriod,proto3" json:"delivery_period,omitempty"`
 	// Package info
-	PackageInfo *v1.PackageInfo `protobuf:"bytes,6,opt,name=package_info,json=packageInfo,proto3" json:"package_info,omitempty"`
+	PackageInfo *common.PackageInfo `protobuf:"bytes,6,opt,name=package_info,json=packageInfo,proto3" json:"package_info,omitempty"`
 	// Priority
-	Priority v1.DeliveryPriority `protobuf:"varint,7,opt,name=priority,proto3,enum=domain.order.common.v1.DeliveryPriority" json:"priority,omitempty"`
+	Priority common.DeliveryPriority `protobuf:"varint,7,opt,name=priority,proto3,enum=domain.order.common.v1.DeliveryPriority" json:"priority,omitempty"`
 	// Timestamp when event was created
 	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// OccurredAt is the timestamp when the event occurred
@@ -362,39 +362,39 @@ func (x *OrderDeliveryRequestedEvent) GetCustomerId() string {
 	return ""
 }
 
-func (x *OrderDeliveryRequestedEvent) GetPickupAddress() *v1.DeliveryAddress {
+func (x *OrderDeliveryRequestedEvent) GetPickupAddress() *common.DeliveryAddress {
 	if x != nil {
 		return x.PickupAddress
 	}
 	return nil
 }
 
-func (x *OrderDeliveryRequestedEvent) GetDeliveryAddress() *v1.DeliveryAddress {
+func (x *OrderDeliveryRequestedEvent) GetDeliveryAddress() *common.DeliveryAddress {
 	if x != nil {
 		return x.DeliveryAddress
 	}
 	return nil
 }
 
-func (x *OrderDeliveryRequestedEvent) GetDeliveryPeriod() *v1.DeliveryPeriod {
+func (x *OrderDeliveryRequestedEvent) GetDeliveryPeriod() *common.DeliveryPeriod {
 	if x != nil {
 		return x.DeliveryPeriod
 	}
 	return nil
 }
 
-func (x *OrderDeliveryRequestedEvent) GetPackageInfo() *v1.PackageInfo {
+func (x *OrderDeliveryRequestedEvent) GetPackageInfo() *common.PackageInfo {
 	if x != nil {
 		return x.PackageInfo
 	}
 	return nil
 }
 
-func (x *OrderDeliveryRequestedEvent) GetPriority() v1.DeliveryPriority {
+func (x *OrderDeliveryRequestedEvent) GetPriority() common.DeliveryPriority {
 	if x != nil {
 		return x.Priority
 	}
-	return v1.DeliveryPriority(0)
+	return common.DeliveryPriority(0)
 }
 
 func (x *OrderDeliveryRequestedEvent) GetCreatedAt() *timestamppb.Timestamp {
@@ -421,7 +421,7 @@ type OrderDeliveryStatusUpdatedEvent struct {
 	// Package ID assigned by delivery service
 	PackageId string `protobuf:"bytes,2,opt,name=package_id,json=packageId,proto3" json:"package_id,omitempty"`
 	// Delivery status
-	Status v1.DeliveryStatus `protobuf:"varint,3,opt,name=status,proto3,enum=domain.order.common.v1.DeliveryStatus" json:"status,omitempty"`
+	Status common.DeliveryStatus `protobuf:"varint,3,opt,name=status,proto3,enum=domain.order.common.v1.DeliveryStatus" json:"status,omitempty"`
 	// Timestamp when status was updated
 	UpdatedAt *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	// Optional: courier ID if assigned
@@ -476,11 +476,11 @@ func (x *OrderDeliveryStatusUpdatedEvent) GetPackageId() string {
 	return ""
 }
 
-func (x *OrderDeliveryStatusUpdatedEvent) GetStatus() v1.DeliveryStatus {
+func (x *OrderDeliveryStatusUpdatedEvent) GetStatus() common.DeliveryStatus {
 	if x != nil {
 		return x.Status
 	}
-	return v1.DeliveryStatus(0)
+	return common.DeliveryStatus(0)
 }
 
 func (x *OrderDeliveryStatusUpdatedEvent) GetUpdatedAt() *timestamppb.Timestamp {
@@ -518,7 +518,7 @@ type OrderDeliveryCompletedEvent struct {
 	// Timestamp when delivery was completed
 	DeliveredAt *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=delivered_at,json=deliveredAt,proto3" json:"delivered_at,omitempty"`
 	// Delivery location
-	DeliveryLocation *v1.DeliveryLocation `protobuf:"bytes,5,opt,name=delivery_location,json=deliveryLocation,proto3" json:"delivery_location,omitempty"`
+	DeliveryLocation *common.DeliveryLocation `protobuf:"bytes,5,opt,name=delivery_location,json=deliveryLocation,proto3" json:"delivery_location,omitempty"`
 	// OccurredAt is the timestamp when the event occurred
 	OccurredAt    *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -583,7 +583,7 @@ func (x *OrderDeliveryCompletedEvent) GetDeliveredAt() *timestamppb.Timestamp {
 	return nil
 }
 
-func (x *OrderDeliveryCompletedEvent) GetDeliveryLocation() *v1.DeliveryLocation {
+func (x *OrderDeliveryCompletedEvent) GetDeliveryLocation() *common.DeliveryLocation {
 	if x != nil {
 		return x.DeliveryLocation
 	}
@@ -609,7 +609,7 @@ type OrderDeliveryFailedEvent struct {
 	// Courier ID
 	CourierId string `protobuf:"bytes,3,opt,name=courier_id,json=courierId,proto3" json:"courier_id,omitempty"`
 	// Reason for failure
-	Reason v1.NotDeliveredReason `protobuf:"varint,4,opt,name=reason,proto3,enum=domain.order.common.v1.NotDeliveredReason" json:"reason,omitempty"`
+	Reason common.NotDeliveredReason `protobuf:"varint,4,opt,name=reason,proto3,enum=domain.order.common.v1.NotDeliveredReason" json:"reason,omitempty"`
 	// Timestamp when delivery failed
 	FailedAt *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=failed_at,json=failedAt,proto3" json:"failed_at,omitempty"`
 	// Optional: failure description
@@ -671,11 +671,11 @@ func (x *OrderDeliveryFailedEvent) GetCourierId() string {
 	return ""
 }
 
-func (x *OrderDeliveryFailedEvent) GetReason() v1.NotDeliveredReason {
+func (x *OrderDeliveryFailedEvent) GetReason() common.NotDeliveredReason {
 	if x != nil {
 		return x.Reason
 	}
-	return v1.NotDeliveredReason(0)
+	return common.NotDeliveredReason(0)
 }
 
 func (x *OrderDeliveryFailedEvent) GetFailedAt() *timestamppb.Timestamp {
@@ -703,7 +703,7 @@ var File_domain_order_v1_events_v1_events_proto protoreflect.FileDescriptor
 
 const file_domain_order_v1_events_v1_events_proto_rawDesc = "" +
 	"\n" +
-	"&domain/order/v1/events/v1/events.proto\x12\x16domain.order.events.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a&domain/order/v1/common/v1/common.proto\"\xb8\x02\n" +
+	"&domain/order/v1/events/v1/events.proto\x12\x16domain.order.events.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a#domain/order/v1/common/common.proto\"\xb8\x02\n" +
 	"\fOrderCreated\x12\x19\n" +
 	"\border_id\x18\x01 \x01(\tR\aorderId\x12\x1f\n" +
 	"\vcustomer_id\x18\x02 \x01(\tR\n" +
@@ -799,16 +799,16 @@ var file_domain_order_v1_events_v1_events_proto_goTypes = []any{
 	(*OrderDeliveryStatusUpdatedEvent)(nil), // 4: domain.order.events.v1.OrderDeliveryStatusUpdatedEvent
 	(*OrderDeliveryCompletedEvent)(nil),     // 5: domain.order.events.v1.OrderDeliveryCompletedEvent
 	(*OrderDeliveryFailedEvent)(nil),        // 6: domain.order.events.v1.OrderDeliveryFailedEvent
-	(*v1.OrderItem)(nil),                    // 7: domain.order.common.v1.OrderItem
-	(v1.OrderStatus)(0),                     // 8: domain.order.common.v1.OrderStatus
+	(*common.OrderItem)(nil),                // 7: domain.order.common.v1.OrderItem
+	(common.OrderStatus)(0),                 // 8: domain.order.common.v1.OrderStatus
 	(*timestamppb.Timestamp)(nil),           // 9: google.protobuf.Timestamp
-	(*v1.DeliveryAddress)(nil),              // 10: domain.order.common.v1.DeliveryAddress
-	(*v1.DeliveryPeriod)(nil),               // 11: domain.order.common.v1.DeliveryPeriod
-	(*v1.PackageInfo)(nil),                  // 12: domain.order.common.v1.PackageInfo
-	(v1.DeliveryPriority)(0),                // 13: domain.order.common.v1.DeliveryPriority
-	(v1.DeliveryStatus)(0),                  // 14: domain.order.common.v1.DeliveryStatus
-	(*v1.DeliveryLocation)(nil),             // 15: domain.order.common.v1.DeliveryLocation
-	(v1.NotDeliveredReason)(0),              // 16: domain.order.common.v1.NotDeliveredReason
+	(*common.DeliveryAddress)(nil),          // 10: domain.order.common.v1.DeliveryAddress
+	(*common.DeliveryPeriod)(nil),           // 11: domain.order.common.v1.DeliveryPeriod
+	(*common.PackageInfo)(nil),              // 12: domain.order.common.v1.PackageInfo
+	(common.DeliveryPriority)(0),            // 13: domain.order.common.v1.DeliveryPriority
+	(common.DeliveryStatus)(0),              // 14: domain.order.common.v1.DeliveryStatus
+	(*common.DeliveryLocation)(nil),         // 15: domain.order.common.v1.DeliveryLocation
+	(common.NotDeliveredReason)(0),          // 16: domain.order.common.v1.NotDeliveredReason
 }
 var file_domain_order_v1_events_v1_events_proto_depIdxs = []int32{
 	7,  // 0: domain.order.events.v1.OrderCreated.items:type_name -> domain.order.common.v1.OrderItem

@@ -2,7 +2,7 @@ package dto
 
 import (
 	orderDomain "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
-	commonv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common/v1"
+	commonv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common"
 	"github.com/shortlink-org/shop/oms/internal/domain/order/v1/vo/address"
 	"github.com/shortlink-org/shop/oms/internal/domain/order/v1/vo/location"
 )
@@ -35,12 +35,24 @@ func ProtoDeliveryInfoToDomain(protoInfo *commonv1.DeliveryInfo) *orderDomain.De
 	// Convert priority
 	priority := protoPriorityToDomain(protoInfo.GetPriority())
 
+	// Convert optional recipient contacts
+	var recipientContacts *orderDomain.RecipientContacts
+	if rc := protoInfo.GetRecipientContacts(); rc != nil {
+		c := orderDomain.NewRecipientContacts(
+			rc.GetRecipientName(),
+			rc.GetRecipientPhone(),
+			rc.GetRecipientEmail(),
+		)
+		recipientContacts = &c
+	}
+
 	deliveryInfo := orderDomain.NewDeliveryInfo(
 		pickupAddr,
 		deliveryAddr,
 		period,
 		pkgInfo,
 		priority,
+		recipientContacts,
 	)
 
 	return &deliveryInfo

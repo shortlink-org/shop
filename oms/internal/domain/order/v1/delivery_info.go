@@ -5,6 +5,27 @@ import (
 	"github.com/shortlink-org/shop/oms/internal/domain/order/v1/vo/address"
 )
 
+// RecipientContacts contains contact details for the delivery recipient.
+type RecipientContacts struct {
+	name  string
+	phone string
+	email string
+}
+
+// NewRecipientContacts creates RecipientContacts (all fields optional).
+func NewRecipientContacts(name, phone, email string) RecipientContacts {
+	return RecipientContacts{name: name, phone: phone, email: email}
+}
+
+// GetName returns the recipient name.
+func (r RecipientContacts) GetName() string { return r.name }
+
+// GetPhone returns the recipient phone.
+func (r RecipientContacts) GetPhone() string { return r.phone }
+
+// GetEmail returns the recipient email.
+func (r RecipientContacts) GetEmail() string { return r.email }
+
 // DeliveryInfo represents delivery information for an order.
 // This is a value object that aggregates delivery-related data.
 type DeliveryInfo struct {
@@ -20,6 +41,8 @@ type DeliveryInfo struct {
 	packageId *uuid.UUID
 	// priority indicates the delivery priority level
 	priority DeliveryPriority
+	// recipientContacts is optional contact details for the recipient
+	recipientContacts *RecipientContacts
 }
 
 // DeliveryPriority represents delivery priority level.
@@ -56,19 +79,22 @@ func DeliveryPriorityFromString(s string) DeliveryPriority {
 }
 
 // NewDeliveryInfo creates a new DeliveryInfo value object.
+// recipientContacts is optional (nil allowed).
 func NewDeliveryInfo(
 	pickupAddr address.Address,
 	deliveryAddr address.Address,
 	deliveryPeriod DeliveryPeriod,
 	packageInfo PackageInfo,
 	priority DeliveryPriority,
+	recipientContacts *RecipientContacts,
 ) DeliveryInfo {
 	return DeliveryInfo{
-		pickupAddress:   pickupAddr,
-		deliveryAddress: deliveryAddr,
-		deliveryPeriod:  deliveryPeriod,
-		packageInfo:     packageInfo,
-		priority:        priority,
+		pickupAddress:     pickupAddr,
+		deliveryAddress:   deliveryAddr,
+		deliveryPeriod:    deliveryPeriod,
+		packageInfo:       packageInfo,
+		priority:          priority,
+		recipientContacts: recipientContacts,
 	}
 }
 
@@ -105,6 +131,11 @@ func (d *DeliveryInfo) SetPackageId(packageId uuid.UUID) {
 // GetPriority returns the delivery priority.
 func (d DeliveryInfo) GetPriority() DeliveryPriority {
 	return d.priority
+}
+
+// GetRecipientContacts returns the optional recipient contacts.
+func (d DeliveryInfo) GetRecipientContacts() *RecipientContacts {
+	return d.recipientContacts
 }
 
 // IsValid checks if the delivery info is valid.

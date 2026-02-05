@@ -14,21 +14,10 @@ import (
 
 // WorkflowInput contains all inputs for the order workflow.
 type WorkflowInput struct {
-	OrderID      uuid.UUID
-	CustomerID   uuid.UUID
-	Items        v2.Items
-	DeliveryInfo *DeliveryInfoInput // Optional: if nil, no delivery is requested
-}
-
-// DeliveryInfoInput contains delivery info for the workflow.
-type DeliveryInfoInput struct {
-	PickupAddress   activities.DeliveryAddressDTO
-	DeliveryAddress activities.DeliveryAddressDTO
-	StartTime       time.Time
-	EndTime         time.Time
-	WeightKg        float64
-	Dimensions      string
-	Priority        int32
+	OrderID         uuid.UUID
+	CustomerID      uuid.UUID
+	Items           v2.Items
+	RequestDelivery bool // If true, RequestDelivery activity is called (it loads order and uses domain delivery info)
 }
 
 // Workflow is a Temporal workflow that orchestrates order processing.
@@ -41,12 +30,14 @@ type DeliveryInfoInput struct {
 //
 // On failure, compensation activities are executed to rollback changes.
 // The workflow is deterministic - all side effects go through activities.
-func Workflow(ctx workflow.Context, orderID, customerID uuid.UUID, items v2.Items) error {
+// Workflow is the main entry point for the order workflow (used by the event subscriber).
+// requestDelivery: when true, the RequestDelivery activity is invoked (it loads the order and uses domain delivery info).
+func Workflow(ctx workflow.Context, orderID, customerID uuid.UUID, items v2.Items, requestDelivery bool) error {
 	return WorkflowWithDelivery(ctx, WorkflowInput{
-		OrderID:      orderID,
-		CustomerID:   customerID,
-		Items:        items,
-		DeliveryInfo: nil, // No delivery info in legacy signature
+		OrderID:         orderID,
+		CustomerID:      customerID,
+		Items:           items,
+		RequestDelivery: requestDelivery,
 	})
 }
 
@@ -148,10 +139,10 @@ func WorkflowWithDelivery(ctx workflow.Context, input WorkflowInput) error {
 // Returns error if any step fails (compensation should be handled).
 func executeSaga(ctx workflow.Context, orderID, customerID uuid.UUID, items v2.Items) error {
 	return executeSagaWithDelivery(ctx, WorkflowInput{
-		OrderID:      orderID,
-		CustomerID:   customerID,
-		Items:        items,
-		DeliveryInfo: nil,
+		OrderID:         orderID,
+		CustomerID:      customerID,
+		Items:           items,
+		RequestDelivery: false,
 	})
 }
 
@@ -159,7 +150,7 @@ func executeSaga(ctx workflow.Context, orderID, customerID uuid.UUID, items v2.I
 // Returns error if any step fails (compensation should be handled).
 func executeSagaWithDelivery(ctx workflow.Context, input WorkflowInput) error {
 	logger := workflow.GetLogger(ctx)
-	hasDelivery := input.DeliveryInfo != nil
+	hasDelivery := input.RequestDelivery
 	totalSteps := 4
 	if hasDelivery {
 		totalSteps = 5
@@ -194,21 +185,14 @@ func executeSagaWithDelivery(ctx workflow.Context, input WorkflowInput) error {
 	//     return err
 	// }
 
-	// Step 4: Request delivery (if delivery info provided)
+	// Step 4: Request delivery (activity loads order and uses domain delivery info)
 	if hasDelivery {
 		workflow.SetCurrentDetails(ctx, fmt.Sprintf("**Step 4/%d:** Requesting delivery...", totalSteps))
 
 		var deliveryResp activities.RequestDeliveryResponse
 		err := workflow.ExecuteActivity(ctx, "RequestDelivery", activities.RequestDeliveryRequest{
-			OrderID:         input.OrderID,
-			CustomerID:      input.CustomerID,
-			PickupAddress:   input.DeliveryInfo.PickupAddress,
-			DeliveryAddress: input.DeliveryInfo.DeliveryAddress,
-			StartTime:       input.DeliveryInfo.StartTime,
-			EndTime:         input.DeliveryInfo.EndTime,
-			WeightKg:        input.DeliveryInfo.WeightKg,
-			Dimensions:      input.DeliveryInfo.Dimensions,
-			Priority:        input.DeliveryInfo.Priority,
+			OrderID:    input.OrderID,
+			CustomerID: input.CustomerID,
 		}).Get(ctx, &deliveryResp)
 		if err != nil {
 			workflow.SetCurrentDetails(ctx, "**Failed:** Delivery request failed, compensating...")

@@ -7,7 +7,7 @@
 package v1
 
 import (
-	v1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common/v1"
+	common "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	_ "google.golang.org/protobuf/types/known/timestamppb"
@@ -31,7 +31,7 @@ type CreateOrderCommand struct {
 	// Customer ID
 	CustomerId string `protobuf:"bytes,2,opt,name=customer_id,json=customerId,proto3" json:"customer_id,omitempty"`
 	// Order items
-	Items         []*v1.OrderItem `protobuf:"bytes,3,rep,name=items,proto3" json:"items,omitempty"`
+	Items         []*common.OrderItem `protobuf:"bytes,3,rep,name=items,proto3" json:"items,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -80,7 +80,7 @@ func (x *CreateOrderCommand) GetCustomerId() string {
 	return ""
 }
 
-func (x *CreateOrderCommand) GetItems() []*v1.OrderItem {
+func (x *CreateOrderCommand) GetItems() []*common.OrderItem {
 	if x != nil {
 		return x.Items
 	}
@@ -194,7 +194,7 @@ type UpdateOrderCommand struct {
 	// Order ID
 	OrderId string `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
 	// Updated order items
-	Items         []*v1.OrderItem `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty"`
+	Items         []*common.OrderItem `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -236,7 +236,7 @@ func (x *UpdateOrderCommand) GetOrderId() string {
 	return ""
 }
 
-func (x *UpdateOrderCommand) GetItems() []*v1.OrderItem {
+func (x *UpdateOrderCommand) GetItems() []*common.OrderItem {
 	if x != nil {
 		return x.Items
 	}
@@ -247,7 +247,7 @@ var File_domain_order_v1_commands_v1_commands_proto protoreflect.FileDescriptor
 
 const file_domain_order_v1_commands_v1_commands_proto_rawDesc = "" +
 	"\n" +
-	"*domain/order/v1/commands/v1/commands.proto\x12\x18domain.order.commands.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a&domain/order/v1/common/v1/common.proto\"\x89\x01\n" +
+	"*domain/order/v1/commands/v1/commands.proto\x12\x18domain.order.commands.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a#domain/order/v1/common/common.proto\"\x89\x01\n" +
 	"\x12CreateOrderCommand\x12\x19\n" +
 	"\border_id\x18\x01 \x01(\tR\aorderId\x12\x1f\n" +
 	"\vcustomer_id\x18\x02 \x01(\tR\n" +
@@ -281,7 +281,7 @@ var file_domain_order_v1_commands_v1_commands_proto_goTypes = []any{
 	(*CancelOrderCommand)(nil),   // 1: domain.order.commands.v1.CancelOrderCommand
 	(*CompleteOrderCommand)(nil), // 2: domain.order.commands.v1.CompleteOrderCommand
 	(*UpdateOrderCommand)(nil),   // 3: domain.order.commands.v1.UpdateOrderCommand
-	(*v1.OrderItem)(nil),         // 4: domain.order.common.v1.OrderItem
+	(*common.OrderItem)(nil),     // 4: domain.order.common.v1.OrderItem
 }
 var file_domain_order_v1_commands_v1_commands_proto_depIdxs = []int32{
 	4, // 0: domain.order.commands.v1.CreateOrderCommand.items:type_name -> domain.order.common.v1.OrderItem

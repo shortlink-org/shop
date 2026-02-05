@@ -5,7 +5,7 @@ package domain.order.events.v1;
 option go_package = "github.com/shortlink-org/shop/oms/internal/domain/order/v1/events/v1";
 
 import "google/protobuf/timestamp.proto";
-import "domain/order/v1/common/v1/common.proto";
+import "domain/order/v1/common/common.proto";
 
 // OrderCreated event - canonical name: oms.order.created.v1
 // Published when a new order is created

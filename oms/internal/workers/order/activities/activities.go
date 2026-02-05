@@ -3,7 +3,6 @@ package activities
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/google/uuid"
 
@@ -73,26 +72,10 @@ func (a *Activities) GetOrder(ctx context.Context, req GetOrderRequest) (*GetOrd
 }
 
 // RequestDeliveryRequest represents the request for RequestDelivery activity.
+// The activity loads the order from the repository and uses the domain aggregate's delivery info.
 type RequestDeliveryRequest struct {
-	OrderID         uuid.UUID
-	CustomerID      uuid.UUID
-	PickupAddress   DeliveryAddressDTO
-	DeliveryAddress DeliveryAddressDTO
-	StartTime       time.Time
-	EndTime         time.Time
-	WeightKg        float64
-	Dimensions      string
-	Priority        int32 // 0=unspecified, 1=normal, 2=urgent
-}
-
-// DeliveryAddressDTO represents address data for delivery request.
-type DeliveryAddressDTO struct {
-	Street     string
-	City       string
-	PostalCode string
-	Country    string
-	Latitude   float64
-	Longitude  float64
+	OrderID    uuid.UUID
+	CustomerID uuid.UUID
 }
 
 // RequestDeliveryResponse represents the response from RequestDelivery activity.
@@ -102,40 +85,59 @@ type RequestDeliveryResponse struct {
 }
 
 // RequestDelivery sends the order to the Delivery service for processing.
-// This activity calls the Delivery service's AcceptOrder gRPC endpoint.
+// It loads the order (domain aggregate), maps delivery info to AcceptOrderRequest, and calls the Delivery client.
 func (a *Activities) RequestDelivery(ctx context.Context, req RequestDeliveryRequest) (*RequestDeliveryResponse, error) {
 	if a.deliveryClient == nil {
 		return nil, fmt.Errorf("delivery client not configured")
 	}
 
+	order, err := a.getHandler.Handle(ctx, orderGet.NewQuery(req.OrderID))
+	if err != nil {
+		return nil, fmt.Errorf("failed to load order: %w", err)
+	}
+	if !order.HasDeliveryInfo() {
+		return nil, fmt.Errorf("order has no delivery info")
+	}
+
+	info := order.GetDeliveryInfo()
+	pickup := info.GetPickupAddress()
+	delivery := info.GetDeliveryAddress()
+	period := info.GetDeliveryPeriod()
+	pkg := info.GetPackageInfo()
+
 	deliveryReq := ports.AcceptOrderRequest{
 		OrderID:    req.OrderID,
 		CustomerID: req.CustomerID,
 		PickupAddress: ports.DeliveryAddress{
-			Street:     req.PickupAddress.Street,
-			City:       req.PickupAddress.City,
-			PostalCode: req.PickupAddress.PostalCode,
-			Country:    req.PickupAddress.Country,
-			Latitude:   req.PickupAddress.Latitude,
-			Longitude:  req.PickupAddress.Longitude,
+			Street:     pickup.Street(),
+			City:       pickup.City(),
+			PostalCode: pickup.PostalCode(),
+			Country:    pickup.Country(),
+			Latitude:   pickup.Latitude(),
+			Longitude:  pickup.Longitude(),
 		},
 		DeliveryAddress: ports.DeliveryAddress{
-			Street:     req.DeliveryAddress.Street,
-			City:       req.DeliveryAddress.City,
-			PostalCode: req.DeliveryAddress.PostalCode,
-			Country:    req.DeliveryAddress.Country,
-			Latitude:   req.DeliveryAddress.Latitude,
-			Longitude:  req.DeliveryAddress.Longitude,
+			Street:     delivery.Street(),
+			City:       delivery.City(),
+			PostalCode: delivery.PostalCode(),
+			Country:    delivery.Country(),
+			Latitude:   delivery.Latitude(),
+			Longitude:  delivery.Longitude(),
 		},
 		DeliveryPeriod: ports.DeliveryPeriodDTO{
-			StartTime: req.StartTime,
-			EndTime:   req.EndTime,
+			StartTime: period.GetStartTime(),
+			EndTime:   period.GetEndTime(),
 		},
 		PackageInfo: ports.PackageInfoDTO{
-			WeightKg:   req.WeightKg,
-			Dimensions: req.Dimensions,
+			WeightKg:   pkg.GetWeightKg(),
+			Dimensions: pkg.GetDimensions(),
 		},
-		Priority: ports.DeliveryPriorityDTO(req.Priority),
+		Priority: ports.DeliveryPriorityDTO(info.GetPriority()),
+	}
+	if rc := info.GetRecipientContacts(); rc != nil {
+		deliveryReq.RecipientName = rc.GetName()
+		deliveryReq.RecipientPhone = rc.GetPhone()
+		deliveryReq.RecipientEmail = rc.GetEmail()
 	}
 
 	resp, err := a.deliveryClient.AcceptOrder(ctx, deliveryReq)

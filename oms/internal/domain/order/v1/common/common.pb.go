@@ -2,9 +2,9 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        (unknown)
-// source: domain/order/v1/common/v1/common.proto
+// source: domain/order/v1/common/common.proto
 
-package v1
+package common
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -67,11 +67,11 @@ func (x OrderStatus) String() string {
 }
 
 func (OrderStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_domain_order_v1_common_v1_common_proto_enumTypes[0].Descriptor()
+	return file_domain_order_v1_common_common_proto_enumTypes[0].Descriptor()
 }
 
 func (OrderStatus) Type() protoreflect.EnumType {
-	return &file_domain_order_v1_common_v1_common_proto_enumTypes[0]
+	return &file_domain_order_v1_common_common_proto_enumTypes[0]
 }
 
 func (x OrderStatus) Number() protoreflect.EnumNumber {
@@ -80,7 +80,7 @@ func (x OrderStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use OrderStatus.Descriptor instead.
 func (OrderStatus) EnumDescriptor() ([]byte, []int) {
-	return file_domain_order_v1_common_v1_common_proto_rawDescGZIP(), []int{0}
+	return file_domain_order_v1_common_common_proto_rawDescGZIP(), []int{0}
 }
 
 // DeliveryPriority levels for packages
@@ -120,11 +120,11 @@ func (x DeliveryPriority) String() string {
 }
 
 func (DeliveryPriority) Descriptor() protoreflect.EnumDescriptor {
-	return file_domain_order_v1_common_v1_common_proto_enumTypes[1].Descriptor()
+	return file_domain_order_v1_common_common_proto_enumTypes[1].Descriptor()
 }
 
 func (DeliveryPriority) Type() protoreflect.EnumType {
-	return &file_domain_order_v1_common_v1_common_proto_enumTypes[1]
+	return &file_domain_order_v1_common_common_proto_enumTypes[1]
 }
 
 func (x DeliveryPriority) Number() protoreflect.EnumNumber {
@@ -133,7 +133,7 @@ func (x DeliveryPriority) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use DeliveryPriority.Descriptor instead.
 func (DeliveryPriority) EnumDescriptor() ([]byte, []int) {
-	return file_domain_order_v1_common_v1_common_proto_rawDescGZIP(), []int{1}
+	return file_domain_order_v1_common_common_proto_rawDescGZIP(), []int{1}
 }
 
 // DeliveryStatus represents delivery status
@@ -185,11 +185,11 @@ func (x DeliveryStatus) String() string {
 }
 
 func (DeliveryStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_domain_order_v1_common_v1_common_proto_enumTypes[2].Descriptor()
+	return file_domain_order_v1_common_common_proto_enumTypes[2].Descriptor()
 }
 
 func (DeliveryStatus) Type() protoreflect.EnumType {
-	return &file_domain_order_v1_common_v1_common_proto_enumTypes[2]
+	return &file_domain_order_v1_common_common_proto_enumTypes[2]
 }
 
 func (x DeliveryStatus) Number() protoreflect.EnumNumber {
@@ -198,7 +198,7 @@ func (x DeliveryStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use DeliveryStatus.Descriptor instead.
 func (DeliveryStatus) EnumDescriptor() ([]byte, []int) {
-	return file_domain_order_v1_common_v1_common_proto_rawDescGZIP(), []int{2}
+	return file_domain_order_v1_common_common_proto_rawDescGZIP(), []int{2}
 }
 
 // NotDeliveredReason represents reason for not delivered
@@ -254,11 +254,11 @@ func (x NotDeliveredReason) String() string {
 }
 
 func (NotDeliveredReason) Descriptor() protoreflect.EnumDescriptor {
-	return file_domain_order_v1_common_v1_common_proto_enumTypes[3].Descriptor()
+	return file_domain_order_v1_common_common_proto_enumTypes[3].Descriptor()
 }
 
 func (NotDeliveredReason) Type() protoreflect.EnumType {
-	return &file_domain_order_v1_common_v1_common_proto_enumTypes[3]
+	return &file_domain_order_v1_common_common_proto_enumTypes[3]
 }
 
 func (x NotDeliveredReason) Number() protoreflect.EnumNumber {
@@ -267,7 +267,7 @@ func (x NotDeliveredReason) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use NotDeliveredReason.Descriptor instead.
 func (NotDeliveredReason) EnumDescriptor() ([]byte, []int) {
-	return file_domain_order_v1_common_v1_common_proto_rawDescGZIP(), []int{3}
+	return file_domain_order_v1_common_common_proto_rawDescGZIP(), []int{3}
 }
 
 // OrderItem represents an order item
@@ -285,7 +285,7 @@ type OrderItem struct {
 
 func (x *OrderItem) Reset() {
 	*x = OrderItem{}
-	mi := &file_domain_order_v1_common_v1_common_proto_msgTypes[0]
+	mi := &file_domain_order_v1_common_common_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -297,7 +297,7 @@ func (x *OrderItem) String() string {
 func (*OrderItem) ProtoMessage() {}
 
 func (x *OrderItem) ProtoReflect() protoreflect.Message {
-	mi := &file_domain_order_v1_common_v1_common_proto_msgTypes[0]
+	mi := &file_domain_order_v1_common_common_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -310,7 +310,7 @@ func (x *OrderItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OrderItem.ProtoReflect.Descriptor instead.
 func (*OrderItem) Descriptor() ([]byte, []int) {
-	return file_domain_order_v1_common_v1_common_proto_rawDescGZIP(), []int{0}
+	return file_domain_order_v1_common_common_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *OrderItem) GetGoodId() string {
@@ -355,7 +355,7 @@ type DeliveryAddress struct {
 
 func (x *DeliveryAddress) Reset() {
 	*x = DeliveryAddress{}
-	mi := &file_domain_order_v1_common_v1_common_proto_msgTypes[1]
+	mi := &file_domain_order_v1_common_common_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -367,7 +367,7 @@ func (x *DeliveryAddress) String() string {
 func (*DeliveryAddress) ProtoMessage() {}
 
 func (x *DeliveryAddress) ProtoReflect() protoreflect.Message {
-	mi := &file_domain_order_v1_common_v1_common_proto_msgTypes[1]
+	mi := &file_domain_order_v1_common_common_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -380,7 +380,7 @@ func (x *DeliveryAddress) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeliveryAddress.ProtoReflect.Descriptor instead.
 func (*DeliveryAddress) Descriptor() ([]byte, []int) {
-	return file_domain_order_v1_common_v1_common_proto_rawDescGZIP(), []int{1}
+	return file_domain_order_v1_common_common_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *DeliveryAddress) GetStreet() string {
@@ -438,7 +438,7 @@ type DeliveryPeriod struct {
 
 func (x *DeliveryPeriod) Reset() {
 	*x = DeliveryPeriod{}
-	mi := &file_domain_order_v1_common_v1_common_proto_msgTypes[2]
+	mi := &file_domain_order_v1_common_common_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -450,7 +450,7 @@ func (x *DeliveryPeriod) String() string {
 func (*DeliveryPeriod) ProtoMessage() {}
 
 func (x *DeliveryPeriod) ProtoReflect() protoreflect.Message {
-	mi := &file_domain_order_v1_common_v1_common_proto_msgTypes[2]
+	mi := &file_domain_order_v1_common_common_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -463,7 +463,7 @@ func (x *DeliveryPeriod) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeliveryPeriod.ProtoReflect.Descriptor instead.
 func (*DeliveryPeriod) Descriptor() ([]byte, []int) {
-	return file_domain_order_v1_common_v1_common_proto_rawDescGZIP(), []int{2}
+	return file_domain_order_v1_common_common_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *DeliveryPeriod) GetStartTime() *timestamppb.Timestamp {
@@ -493,7 +493,7 @@ type PackageInfo struct {
 
 func (x *PackageInfo) Reset() {
 	*x = PackageInfo{}
-	mi := &file_domain_order_v1_common_v1_common_proto_msgTypes[3]
+	mi := &file_domain_order_v1_common_common_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -505,7 +505,7 @@ func (x *PackageInfo) String() string {
 func (*PackageInfo) ProtoMessage() {}
 
 func (x *PackageInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_domain_order_v1_common_v1_common_proto_msgTypes[3]
+	mi := &file_domain_order_v1_common_common_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -518,7 +518,7 @@ func (x *PackageInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PackageInfo.ProtoReflect.Descriptor instead.
 func (*PackageInfo) Descriptor() ([]byte, []int) {
-	return file_domain_order_v1_common_v1_common_proto_rawDescGZIP(), []int{3}
+	return file_domain_order_v1_common_common_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *PackageInfo) GetWeightKg() float64 {
@@ -552,7 +552,7 @@ type DeliveryLocation struct {
 
 func (x *DeliveryLocation) Reset() {
 	*x = DeliveryLocation{}
-	mi := &file_domain_order_v1_common_v1_common_proto_msgTypes[4]
+	mi := &file_domain_order_v1_common_common_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -564,7 +564,7 @@ func (x *DeliveryLocation) String() string {
 func (*DeliveryLocation) ProtoMessage() {}
 
 func (x *DeliveryLocation) ProtoReflect() protoreflect.Message {
-	mi := &file_domain_order_v1_common_v1_common_proto_msgTypes[4]
+	mi := &file_domain_order_v1_common_common_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -577,7 +577,7 @@ func (x *DeliveryLocation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeliveryLocation.ProtoReflect.Descriptor instead.
 func (*DeliveryLocation) Descriptor() ([]byte, []int) {
-	return file_domain_order_v1_common_v1_common_proto_rawDescGZIP(), []int{4}
+	return file_domain_order_v1_common_common_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *DeliveryLocation) GetLatitude() float64 {
@@ -608,6 +608,70 @@ func (x *DeliveryLocation) GetTimestamp() *timestamppb.Timestamp {
 	return nil
 }
 
+// RecipientContacts contains contact details for the delivery recipient
+type RecipientContacts struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// recipient_name is the name of the person receiving the delivery
+	RecipientName string `protobuf:"bytes,1,opt,name=recipient_name,json=recipientName,proto3" json:"recipient_name,omitempty"`
+	// recipient_phone is the phone number for delivery contact
+	RecipientPhone string `protobuf:"bytes,2,opt,name=recipient_phone,json=recipientPhone,proto3" json:"recipient_phone,omitempty"`
+	// recipient_email is the email for delivery notifications
+	RecipientEmail string `protobuf:"bytes,3,opt,name=recipient_email,json=recipientEmail,proto3" json:"recipient_email,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *RecipientContacts) Reset() {
+	*x = RecipientContacts{}
+	mi := &file_domain_order_v1_common_common_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RecipientContacts) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RecipientContacts) ProtoMessage() {}
+
+func (x *RecipientContacts) ProtoReflect() protoreflect.Message {
+	mi := &file_domain_order_v1_common_common_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RecipientContacts.ProtoReflect.Descriptor instead.
+func (*RecipientContacts) Descriptor() ([]byte, []int) {
+	return file_domain_order_v1_common_common_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *RecipientContacts) GetRecipientName() string {
+	if x != nil {
+		return x.RecipientName
+	}
+	return ""
+}
+
+func (x *RecipientContacts) GetRecipientPhone() string {
+	if x != nil {
+		return x.RecipientPhone
+	}
+	return ""
+}
+
+func (x *RecipientContacts) GetRecipientEmail() string {
+	if x != nil {
+		return x.RecipientEmail
+	}
+	return ""
+}
+
 // DeliveryInfo represents delivery information
 type DeliveryInfo struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -620,14 +684,16 @@ type DeliveryInfo struct {
 	// Package info
 	PackageInfo *PackageInfo `protobuf:"bytes,4,opt,name=package_info,json=packageInfo,proto3" json:"package_info,omitempty"`
 	// Priority
-	Priority      DeliveryPriority `protobuf:"varint,5,opt,name=priority,proto3,enum=domain.order.common.v1.DeliveryPriority" json:"priority,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Priority DeliveryPriority `protobuf:"varint,5,opt,name=priority,proto3,enum=domain.order.common.v1.DeliveryPriority" json:"priority,omitempty"`
+	// Recipient contacts (optional)
+	RecipientContacts *RecipientContacts `protobuf:"bytes,6,opt,name=recipient_contacts,json=recipientContacts,proto3" json:"recipient_contacts,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *DeliveryInfo) Reset() {
 	*x = DeliveryInfo{}
-	mi := &file_domain_order_v1_common_v1_common_proto_msgTypes[5]
+	mi := &file_domain_order_v1_common_common_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -639,7 +705,7 @@ func (x *DeliveryInfo) String() string {
 func (*DeliveryInfo) ProtoMessage() {}
 
 func (x *DeliveryInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_domain_order_v1_common_v1_common_proto_msgTypes[5]
+	mi := &file_domain_order_v1_common_common_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -652,7 +718,7 @@ func (x *DeliveryInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeliveryInfo.ProtoReflect.Descriptor instead.
 func (*DeliveryInfo) Descriptor() ([]byte, []int) {
-	return file_domain_order_v1_common_v1_common_proto_rawDescGZIP(), []int{5}
+	return file_domain_order_v1_common_common_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *DeliveryInfo) GetPickupAddress() *DeliveryAddress {
@@ -690,11 +756,18 @@ func (x *DeliveryInfo) GetPriority() DeliveryPriority {
 	return DeliveryPriority_DELIVERY_PRIORITY_UNSPECIFIED
 }
 
-var File_domain_order_v1_common_v1_common_proto protoreflect.FileDescriptor
+func (x *DeliveryInfo) GetRecipientContacts() *RecipientContacts {
+	if x != nil {
+		return x.RecipientContacts
+	}
+	return nil
+}
 
-const file_domain_order_v1_common_v1_common_proto_rawDesc = "" +
+var File_domain_order_v1_common_common_proto protoreflect.FileDescriptor
+
+const file_domain_order_v1_common_common_proto_rawDesc = "" +
 	"\n" +
-	"&domain/order/v1/common/v1/common.proto\x12\x16domain.order.common.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"V\n" +
+	"#domain/order/v1/common/common.proto\x12\x16domain.order.common.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"V\n" +
 	"\tOrderItem\x12\x17\n" +
 	"\agood_id\x18\x01 \x01(\tR\x06goodId\x12\x1a\n" +
 	"\bquantity\x18\x02 \x01(\x05R\bquantity\x12\x14\n" +
@@ -720,13 +793,18 @@ const file_domain_order_v1_common_v1_common_proto_rawDesc = "" +
 	"\blatitude\x18\x01 \x01(\x01R\blatitude\x12\x1c\n" +
 	"\tlongitude\x18\x02 \x01(\x01R\tlongitude\x12\x1a\n" +
 	"\baccuracy\x18\x03 \x01(\x01R\baccuracy\x128\n" +
-	"\ttimestamp\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\"\x91\x03\n" +
+	"\ttimestamp\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\"\x8c\x01\n" +
+	"\x11RecipientContacts\x12%\n" +
+	"\x0erecipient_name\x18\x01 \x01(\tR\rrecipientName\x12'\n" +
+	"\x0frecipient_phone\x18\x02 \x01(\tR\x0erecipientPhone\x12'\n" +
+	"\x0frecipient_email\x18\x03 \x01(\tR\x0erecipientEmail\"\xeb\x03\n" +
 	"\fDeliveryInfo\x12N\n" +
 	"\x0epickup_address\x18\x01 \x01(\v2'.domain.order.common.v1.DeliveryAddressR\rpickupAddress\x12R\n" +
 	"\x10delivery_address\x18\x02 \x01(\v2'.domain.order.common.v1.DeliveryAddressR\x0fdeliveryAddress\x12O\n" +
 	"\x0fdelivery_period\x18\x03 \x01(\v2&.domain.order.common.v1.DeliveryPeriodR\x0edeliveryPeriod\x12F\n" +
 	"\fpackage_info\x18\x04 \x01(\v2#.domain.order.common.v1.PackageInfoR\vpackageInfo\x12D\n" +
-	"\bpriority\x18\x05 \x01(\x0e2(.domain.order.common.v1.DeliveryPriorityR\bpriority*\x9a\x01\n" +
+	"\bpriority\x18\x05 \x01(\x0e2(.domain.order.common.v1.DeliveryPriorityR\bpriority\x12X\n" +
+	"\x12recipient_contacts\x18\x06 \x01(\v2).domain.order.common.v1.RecipientContactsR\x11recipientContacts*\x9a\x01\n" +
 	"\vOrderStatus\x12\x1c\n" +
 	"\x18ORDER_STATUS_UNSPECIFIED\x10\x00\x12\x18\n" +
 	"\x14ORDER_STATUS_PENDING\x10\x01\x12\x1b\n" +
@@ -751,24 +829,24 @@ const file_domain_order_v1_common_v1_common_proto_rawDesc = "" +
 	"%NOT_DELIVERED_REASON_CUSTOMER_REFUSED\x10\x03\x12&\n" +
 	"\"NOT_DELIVERED_REASON_ACCESS_DENIED\x10\x04\x12(\n" +
 	"$NOT_DELIVERED_REASON_PACKAGE_DAMAGED\x10\x05\x12\x1e\n" +
-	"\x1aNOT_DELIVERED_REASON_OTHER\x10\x06B\xea\x01\n" +
-	"\x1acom.domain.order.common.v1B\vCommonProtoP\x01ZDgithub.com/shortlink-org/shop/oms/internal/domain/order/v1/common/v1\xa2\x02\x03DOC\xaa\x02\x16Domain.Order.Common.V1\xca\x02\x16Domain\\Order\\Common\\V1\xe2\x02\"Domain\\Order\\Common\\V1\\GPBMetadata\xea\x02\x19Domain::Order::Common::V1b\x06proto3"
+	"\x1aNOT_DELIVERED_REASON_OTHER\x10\x06B\xe7\x01\n" +
+	"\x1acom.domain.order.common.v1B\vCommonProtoP\x01ZAgithub.com/shortlink-org/shop/oms/internal/domain/order/v1/common\xa2\x02\x03DOC\xaa\x02\x16Domain.Order.Common.V1\xca\x02\x16Domain\\Order\\Common\\V1\xe2\x02\"Domain\\Order\\Common\\V1\\GPBMetadata\xea\x02\x19Domain::Order::Common::V1b\x06proto3"
 
 var (
-	file_domain_order_v1_common_v1_common_proto_rawDescOnce sync.Once
-	file_domain_order_v1_common_v1_common_proto_rawDescData []byte
+	file_domain_order_v1_common_common_proto_rawDescOnce sync.Once
+	file_domain_order_v1_common_common_proto_rawDescData []byte
 )
 
-func file_domain_order_v1_common_v1_common_proto_rawDescGZIP() []byte {
-	file_domain_order_v1_common_v1_common_proto_rawDescOnce.Do(func() {
-		file_domain_order_v1_common_v1_common_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_domain_order_v1_common_v1_common_proto_rawDesc), len(file_domain_order_v1_common_v1_common_proto_rawDesc)))
+func file_domain_order_v1_common_common_proto_rawDescGZIP() []byte {
+	file_domain_order_v1_common_common_proto_rawDescOnce.Do(func() {
+		file_domain_order_v1_common_common_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_domain_order_v1_common_common_proto_rawDesc), len(file_domain_order_v1_common_common_proto_rawDesc)))
 	})
-	return file_domain_order_v1_common_v1_common_proto_rawDescData
+	return file_domain_order_v1_common_common_proto_rawDescData
 }
 
-var file_domain_order_v1_common_v1_common_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_domain_order_v1_common_v1_common_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
-var file_domain_order_v1_common_v1_common_proto_goTypes = []any{
+var file_domain_order_v1_common_common_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
+var file_domain_order_v1_common_common_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_domain_order_v1_common_common_proto_goTypes = []any{
 	(OrderStatus)(0),              // 0: domain.order.common.v1.OrderStatus
 	(DeliveryPriority)(0),         // 1: domain.order.common.v1.DeliveryPriority
 	(DeliveryStatus)(0),           // 2: domain.order.common.v1.DeliveryStatus
@@ -778,46 +856,48 @@ var file_domain_order_v1_common_v1_common_proto_goTypes = []any{
 	(*DeliveryPeriod)(nil),        // 6: domain.order.common.v1.DeliveryPeriod
 	(*PackageInfo)(nil),           // 7: domain.order.common.v1.PackageInfo
 	(*DeliveryLocation)(nil),      // 8: domain.order.common.v1.DeliveryLocation
-	(*DeliveryInfo)(nil),          // 9: domain.order.common.v1.DeliveryInfo
-	(*timestamppb.Timestamp)(nil), // 10: google.protobuf.Timestamp
+	(*RecipientContacts)(nil),     // 9: domain.order.common.v1.RecipientContacts
+	(*DeliveryInfo)(nil),          // 10: domain.order.common.v1.DeliveryInfo
+	(*timestamppb.Timestamp)(nil), // 11: google.protobuf.Timestamp
 }
-var file_domain_order_v1_common_v1_common_proto_depIdxs = []int32{
-	10, // 0: domain.order.common.v1.DeliveryPeriod.start_time:type_name -> google.protobuf.Timestamp
-	10, // 1: domain.order.common.v1.DeliveryPeriod.end_time:type_name -> google.protobuf.Timestamp
-	10, // 2: domain.order.common.v1.DeliveryLocation.timestamp:type_name -> google.protobuf.Timestamp
+var file_domain_order_v1_common_common_proto_depIdxs = []int32{
+	11, // 0: domain.order.common.v1.DeliveryPeriod.start_time:type_name -> google.protobuf.Timestamp
+	11, // 1: domain.order.common.v1.DeliveryPeriod.end_time:type_name -> google.protobuf.Timestamp
+	11, // 2: domain.order.common.v1.DeliveryLocation.timestamp:type_name -> google.protobuf.Timestamp
 	5,  // 3: domain.order.common.v1.DeliveryInfo.pickup_address:type_name -> domain.order.common.v1.DeliveryAddress
 	5,  // 4: domain.order.common.v1.DeliveryInfo.delivery_address:type_name -> domain.order.common.v1.DeliveryAddress
 	6,  // 5: domain.order.common.v1.DeliveryInfo.delivery_period:type_name -> domain.order.common.v1.DeliveryPeriod
 	7,  // 6: domain.order.common.v1.DeliveryInfo.package_info:type_name -> domain.order.common.v1.PackageInfo
 	1,  // 7: domain.order.common.v1.DeliveryInfo.priority:type_name -> domain.order.common.v1.DeliveryPriority
-	8,  // [8:8] is the sub-list for method output_type
-	8,  // [8:8] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	9,  // 8: domain.order.common.v1.DeliveryInfo.recipient_contacts:type_name -> domain.order.common.v1.RecipientContacts
+	9,  // [9:9] is the sub-list for method output_type
+	9,  // [9:9] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
-func init() { file_domain_order_v1_common_v1_common_proto_init() }
-func file_domain_order_v1_common_v1_common_proto_init() {
-	if File_domain_order_v1_common_v1_common_proto != nil {
+func init() { file_domain_order_v1_common_common_proto_init() }
+func file_domain_order_v1_common_common_proto_init() {
+	if File_domain_order_v1_common_common_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_domain_order_v1_common_v1_common_proto_rawDesc), len(file_domain_order_v1_common_v1_common_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_domain_order_v1_common_common_proto_rawDesc), len(file_domain_order_v1_common_common_proto_rawDesc)),
 			NumEnums:      4,
-			NumMessages:   6,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_domain_order_v1_common_v1_common_proto_goTypes,
-		DependencyIndexes: file_domain_order_v1_common_v1_common_proto_depIdxs,
-		EnumInfos:         file_domain_order_v1_common_v1_common_proto_enumTypes,
-		MessageInfos:      file_domain_order_v1_common_v1_common_proto_msgTypes,
+		GoTypes:           file_domain_order_v1_common_common_proto_goTypes,
+		DependencyIndexes: file_domain_order_v1_common_common_proto_depIdxs,
+		EnumInfos:         file_domain_order_v1_common_common_proto_enumTypes,
+		MessageInfos:      file_domain_order_v1_common_common_proto_msgTypes,
 	}.Build()
-	File_domain_order_v1_common_v1_common_proto = out.File
-	file_domain_order_v1_common_v1_common_proto_goTypes = nil
-	file_domain_order_v1_common_v1_common_proto_depIdxs = nil
+	File_domain_order_v1_common_common_proto = out.File
+	file_domain_order_v1_common_common_proto_goTypes = nil
+	file_domain_order_v1_common_common_proto_depIdxs = nil
 }

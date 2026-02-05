@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	order "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
-	commonv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common/v1"
+	commonv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/dto"
 	v1 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/model/v1"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/query/list"

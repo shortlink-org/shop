@@ -62,6 +62,9 @@ message AcceptOrderRequest {
   DeliveryPeriod delivery_period = 5;
   PackageInfo package_info = 6;
   Priority priority = 7;
+  string recipient_name = 8;
+  string recipient_phone = 9;
+  string recipient_email = 10;
 }
 
 // AcceptOrderResponse returns the created package data

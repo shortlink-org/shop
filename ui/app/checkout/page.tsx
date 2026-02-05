@@ -54,7 +54,12 @@ export default function CheckoutPage() {
           deliveryAddress: formData.deliveryAddress,
           deliveryPeriod: formData.deliveryPeriod,
           packageInfo: DEFAULT_PACKAGE_INFO,
-          priority: formData.priority
+          priority: formData.priority,
+          recipientContacts: {
+            recipientName: formData.recipientContacts.recipientName || undefined,
+            recipientPhone: formData.recipientContacts.recipientPhone || undefined,
+            recipientEmail: formData.recipientContacts.recipientEmail || undefined
+          }
         }
       });
 

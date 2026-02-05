@@ -9,7 +9,7 @@ import (
 
 	"github.com/shortlink-org/go-sdk/logger"
 
-	common "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common/v1"
+	common "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common"
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/kafka"
 )

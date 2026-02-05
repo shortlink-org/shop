@@ -80,6 +80,17 @@ func toDeliveryInfoDomain(row *queries.OmsOrderDeliveryInfo) *order.DeliveryInfo
 	// Build priority
 	priority := order.DeliveryPriorityFromString(row.Priority)
 
+	// Build optional recipient contacts
+	var recipientContacts *order.RecipientContacts
+	if row.RecipientName.Valid || row.RecipientPhone.Valid || row.RecipientEmail.Valid {
+		rc := order.NewRecipientContacts(
+			row.RecipientName.String,
+			row.RecipientPhone.String,
+			row.RecipientEmail.String,
+		)
+		recipientContacts = &rc
+	}
+
 	// Create delivery info
 	deliveryInfo := order.NewDeliveryInfo(
 		pickupAddr,
@@ -87,6 +98,7 @@ func toDeliveryInfoDomain(row *queries.OmsOrderDeliveryInfo) *order.DeliveryInfo
 		period,
 		pkgInfo,
 		priority,
+		recipientContacts,
 	)
 
 	// Set package ID if present

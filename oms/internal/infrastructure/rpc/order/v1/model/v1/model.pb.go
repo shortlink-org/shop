@@ -7,7 +7,7 @@
 package v1
 
 import (
-	v1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common/v1"
+	common "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	_ "google.golang.org/protobuf/types/known/emptypb"
@@ -35,13 +35,13 @@ type OrderState struct {
 	// List of items in the order
 	Items []*OrderItem `protobuf:"bytes,3,rep,name=items,proto3" json:"items,omitempty"`
 	// Current status of the order
-	Status v1.OrderStatus `protobuf:"varint,4,opt,name=status,proto3,enum=domain.order.common.v1.OrderStatus" json:"status,omitempty"`
+	Status common.OrderStatus `protobuf:"varint,4,opt,name=status,proto3,enum=domain.order.common.v1.OrderStatus" json:"status,omitempty"`
 	// Timestamp for when the order was created
 	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// Timestamp for when the order was last updated
 	UpdatedAt *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	// Delivery information (optional, nil = self-pickup)
-	DeliveryInfo  *v1.DeliveryInfo `protobuf:"bytes,7,opt,name=delivery_info,json=deliveryInfo,proto3" json:"delivery_info,omitempty"`
+	DeliveryInfo  *common.DeliveryInfo `protobuf:"bytes,7,opt,name=delivery_info,json=deliveryInfo,proto3" json:"delivery_info,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -97,11 +97,11 @@ func (x *OrderState) GetItems() []*OrderItem {
 	return nil
 }
 
-func (x *OrderState) GetStatus() v1.OrderStatus {
+func (x *OrderState) GetStatus() common.OrderStatus {
 	if x != nil {
 		return x.Status
 	}
-	return v1.OrderStatus(0)
+	return common.OrderStatus(0)
 }
 
 func (x *OrderState) GetCreatedAt() *timestamppb.Timestamp {
@@ -118,7 +118,7 @@ func (x *OrderState) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-func (x *OrderState) GetDeliveryInfo() *v1.DeliveryInfo {
+func (x *OrderState) GetDeliveryInfo() *common.DeliveryInfo {
 	if x != nil {
 		return x.DeliveryInfo
 	}
@@ -195,7 +195,7 @@ type CreateRequest struct {
 	// Order details
 	Order *OrderState `protobuf:"bytes,1,opt,name=order,proto3" json:"order,omitempty"`
 	// Delivery information (optional, nil = self-pickup)
-	DeliveryInfo  *v1.DeliveryInfo `protobuf:"bytes,2,opt,name=delivery_info,json=deliveryInfo,proto3" json:"delivery_info,omitempty"`
+	DeliveryInfo  *common.DeliveryInfo `protobuf:"bytes,2,opt,name=delivery_info,json=deliveryInfo,proto3" json:"delivery_info,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -237,7 +237,7 @@ func (x *CreateRequest) GetOrder() *OrderState {
 	return nil
 }
 
-func (x *CreateRequest) GetDeliveryInfo() *v1.DeliveryInfo {
+func (x *CreateRequest) GetDeliveryInfo() *common.DeliveryInfo {
 	if x != nil {
 		return x.DeliveryInfo
 	}
@@ -443,7 +443,7 @@ type UpdateDeliveryInfoRequest struct {
 	// ID of the order to update
 	OrderId string `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
 	// New delivery information
-	DeliveryInfo  *v1.DeliveryInfo `protobuf:"bytes,2,opt,name=delivery_info,json=deliveryInfo,proto3" json:"delivery_info,omitempty"`
+	DeliveryInfo  *common.DeliveryInfo `protobuf:"bytes,2,opt,name=delivery_info,json=deliveryInfo,proto3" json:"delivery_info,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -485,7 +485,7 @@ func (x *UpdateDeliveryInfoRequest) GetOrderId() string {
 	return ""
 }
 
-func (x *UpdateDeliveryInfoRequest) GetDeliveryInfo() *v1.DeliveryInfo {
+func (x *UpdateDeliveryInfoRequest) GetDeliveryInfo() *common.DeliveryInfo {
 	if x != nil {
 		return x.DeliveryInfo
 	}
@@ -498,7 +498,7 @@ type CheckoutRequest struct {
 	// ID of the customer whose cart should be converted to order
 	CustomerId string `protobuf:"bytes,1,opt,name=customer_id,json=customerId,proto3" json:"customer_id,omitempty"`
 	// Delivery information (optional, nil = self-pickup)
-	DeliveryInfo  *v1.DeliveryInfo `protobuf:"bytes,2,opt,name=delivery_info,json=deliveryInfo,proto3" json:"delivery_info,omitempty"`
+	DeliveryInfo  *common.DeliveryInfo `protobuf:"bytes,2,opt,name=delivery_info,json=deliveryInfo,proto3" json:"delivery_info,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -540,7 +540,7 @@ func (x *CheckoutRequest) GetCustomerId() string {
 	return ""
 }
 
-func (x *CheckoutRequest) GetDeliveryInfo() *v1.DeliveryInfo {
+func (x *CheckoutRequest) GetDeliveryInfo() *common.DeliveryInfo {
 	if x != nil {
 		return x.DeliveryInfo
 	}
@@ -754,7 +754,7 @@ type ListRequest struct {
 	// Optional filter by customer ID
 	CustomerId string `protobuf:"bytes,1,opt,name=customer_id,json=customerId,proto3" json:"customer_id,omitempty"`
 	// Optional filter by order status
-	StatusFilter []v1.OrderStatus `protobuf:"varint,2,rep,packed,name=status_filter,json=statusFilter,proto3,enum=domain.order.common.v1.OrderStatus" json:"status_filter,omitempty"`
+	StatusFilter []common.OrderStatus `protobuf:"varint,2,rep,packed,name=status_filter,json=statusFilter,proto3,enum=domain.order.common.v1.OrderStatus" json:"status_filter,omitempty"`
 	// Pagination
 	Pagination    *Pagination `protobuf:"bytes,3,opt,name=pagination,proto3" json:"pagination,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -798,7 +798,7 @@ func (x *ListRequest) GetCustomerId() string {
 	return ""
 }
 
-func (x *ListRequest) GetStatusFilter() []v1.OrderStatus {
+func (x *ListRequest) GetStatusFilter() []common.OrderStatus {
 	if x != nil {
 		return x.StatusFilter
 	}
@@ -880,7 +880,7 @@ var File_infrastructure_rpc_order_v1_model_v1_model_proto protoreflect.FileDescr
 
 const file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDesc = "" +
 	"\n" +
-	"0infrastructure/rpc/order/v1/model/v1/model.proto\x12$infrastructure.rpc.order.v1.model.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a google/protobuf/field_mask.proto\x1a&domain/order/v1/common/v1/common.proto\"\x82\x03\n" +
+	"0infrastructure/rpc/order/v1/model/v1/model.proto\x12$infrastructure.rpc.order.v1.model.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a google/protobuf/field_mask.proto\x1a#domain/order/v1/common/common.proto\"\x82\x03\n" +
 	"\n" +
 	"OrderState\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n" +
@@ -979,9 +979,9 @@ var file_infrastructure_rpc_order_v1_model_v1_model_proto_goTypes = []any{
 	(*PaginationResponse)(nil),        // 11: infrastructure.rpc.order.v1.model.v1.PaginationResponse
 	(*ListRequest)(nil),               // 12: infrastructure.rpc.order.v1.model.v1.ListRequest
 	(*ListResponse)(nil),              // 13: infrastructure.rpc.order.v1.model.v1.ListResponse
-	(v1.OrderStatus)(0),               // 14: domain.order.common.v1.OrderStatus
+	(common.OrderStatus)(0),           // 14: domain.order.common.v1.OrderStatus
 	(*timestamppb.Timestamp)(nil),     // 15: google.protobuf.Timestamp
-	(*v1.DeliveryInfo)(nil),           // 16: domain.order.common.v1.DeliveryInfo
+	(*common.DeliveryInfo)(nil),       // 16: domain.order.common.v1.DeliveryInfo
 	(*fieldmaskpb.FieldMask)(nil),     // 17: google.protobuf.FieldMask
 }
 var file_infrastructure_rpc_order_v1_model_v1_model_proto_depIdxs = []int32{

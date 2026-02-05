@@ -325,12 +325,19 @@ export type PackageInfo = {
   dimensions: string;
 };
 
+export type RecipientContacts = {
+  recipientName?: string;
+  recipientPhone?: string;
+  recipientEmail?: string;
+};
+
 export type DeliveryInfo = {
   pickupAddress: DeliveryAddress;
   deliveryAddress: DeliveryAddress;
   deliveryPeriod: DeliveryPeriod;
   packageInfo: PackageInfo;
   priority?: string;
+  recipientContacts?: RecipientContacts;
 };
 
 export type CheckoutInput = {

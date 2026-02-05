@@ -77,7 +77,8 @@ SELECT
     delivery_street, delivery_city, delivery_postal_code, delivery_country, delivery_latitude, delivery_longitude,
     period_start, period_end,
     weight_kg, dimensions,
-    priority, package_id
+    priority, package_id,
+    recipient_name, recipient_phone, recipient_email
 FROM oms.order_delivery_info
 WHERE order_id = $1;
 
@@ -88,14 +89,16 @@ INSERT INTO oms.order_delivery_info (
     delivery_street, delivery_city, delivery_postal_code, delivery_country, delivery_latitude, delivery_longitude,
     period_start, period_end,
     weight_kg, dimensions,
-    priority, package_id
+    priority, package_id,
+    recipient_name, recipient_phone, recipient_email
 ) VALUES (
     $1,
     $2, $3, $4, $5, $6, $7,
     $8, $9, $10, $11, $12, $13,
     $14, $15,
     $16, $17,
-    $18, $19
+    $18, $19,
+    $20, $21, $22
 );
 
 -- name: UpdateOrderDeliveryInfo :exec
@@ -105,7 +108,8 @@ SET
     delivery_street = $8, delivery_city = $9, delivery_postal_code = $10, delivery_country = $11, delivery_latitude = $12, delivery_longitude = $13,
     period_start = $14, period_end = $15,
     weight_kg = $16, dimensions = $17,
-    priority = $18, package_id = $19
+    priority = $18, package_id = $19,
+    recipient_name = $20, recipient_phone = $21, recipient_email = $22
 WHERE order_id = $1;
 
 -- name: DeleteOrderDeliveryInfo :exec

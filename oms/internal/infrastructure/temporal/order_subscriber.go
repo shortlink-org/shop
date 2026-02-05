@@ -11,6 +11,7 @@ import (
 	"go.temporal.io/sdk/client"
 
 	eventsv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/events/v1"
+	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	queuev1 "github.com/shortlink-org/shop/oms/internal/domain/queue/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/events"
 )
@@ -22,13 +23,15 @@ const OrderWorkflowName = "OrderWorkflow"
 type OrderEventSubscriber struct {
 	log            logger.Logger
 	temporalClient client.Client
+	orderRepo      ports.OrderRepository
 }
 
 // NewOrderEventSubscriber creates a new order event subscriber.
-func NewOrderEventSubscriber(log logger.Logger, temporalClient client.Client) *OrderEventSubscriber {
+func NewOrderEventSubscriber(log logger.Logger, temporalClient client.Client, orderRepo ports.OrderRepository) *OrderEventSubscriber {
 	return &OrderEventSubscriber{
 		log:            log,
 		temporalClient: temporalClient,
+		orderRepo:      orderRepo,
 	}
 }
 
@@ -42,6 +45,7 @@ func (s *OrderEventSubscriber) Register(publisher *events.InMemoryPublisher) {
 }
 
 // OnOrderCreated handles OrderCreated events by starting the order workflow.
+// It loads the order to get items and whether delivery was requested, then starts the workflow.
 func (s *OrderEventSubscriber) OnOrderCreated(ctx context.Context, event *eventsv1.OrderCreated) error {
 	orderID, err := uuid.Parse(event.GetOrderId())
 	if err != nil {
@@ -51,34 +55,43 @@ func (s *OrderEventSubscriber) OnOrderCreated(ctx context.Context, event *events
 	if err != nil {
 		return err
 	}
+
+	// Load order to get items (for workflow) and whether delivery was requested
+	order, err := s.orderRepo.Load(ctx, orderID)
+	if err != nil {
+		s.log.Error("Failed to load order for workflow",
+			slog.String("order_id", orderID.String()),
+			slog.Any("error", err))
+		return err
+	}
+
+	items := order.GetItems()
+	requestDelivery := order.HasDeliveryInfo()
+
 	workflowID := fmt.Sprintf("order-%s", orderID.String())
 
 	s.log.Info("Starting order workflow",
 		slog.String("workflow_id", workflowID),
 		slog.String("order_id", orderID.String()),
-		slog.String("customer_id", customerID.String()))
+		slog.String("customer_id", customerID.String()),
+		slog.Bool("request_delivery", requestDelivery))
 
 	_, err = s.temporalClient.ExecuteWorkflow(ctx, client.StartWorkflowOptions{
 		ID:                       workflowID,
 		TaskQueue:                GetQueueName(queuev1.OrderTaskQueue),
 		WorkflowExecutionTimeout: 24 * time.Hour, // Maximum order processing time
-		// UI enrichment for better visibility in Temporal Web UI
-		StaticSummary: fmt.Sprintf("Order %s for customer %s", orderID.String()[:8], customerID.String()[:8]),
+		StaticSummary:            fmt.Sprintf("Order %s for customer %s", orderID.String()[:8], customerID.String()[:8]),
 		StaticDetails: fmt.Sprintf(`**Order Processing Workflow**
 
 - **Order ID:** %s
 - **Customer ID:** %s
 - **Items count:** %d
-
-This workflow orchestrates the order processing saga:
-1. Create order in database
-2. Reserve stock
-3. Process payment
-4. Complete order`,
+- **Request delivery:** %t`,
 			orderID.String(),
 			customerID.String(),
-			len(event.GetItems())),
-	}, OrderWorkflowName, orderID, customerID, event.GetItems())
+			len(items),
+			requestDelivery),
+	}, OrderWorkflowName, orderID, customerID, items, requestDelivery)
 
 	if err != nil {
 		s.log.Error("Failed to start order workflow",

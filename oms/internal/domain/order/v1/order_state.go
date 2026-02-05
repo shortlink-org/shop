@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/shortlink-org/go-sdk/fsm"
-	commonv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common/v1"
+	commonv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common"
 	eventsv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/events/v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

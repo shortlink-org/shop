@@ -1,7 +1,7 @@
 package v1
 
 import (
-	commonv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common/v1"
+	commonv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common"
 )
 
 // Re-export generated proto enums/structs that are part of the ubiquitous

@@ -106,6 +106,14 @@ func (s *Store) saveDeliveryInfo(ctx context.Context, qtx *queries.Queries, orde
 		packageID = pgtype.UUID{Bytes: *pkgID, Valid: true}
 	}
 
+	// Recipient contacts (optional)
+	var recipientName, recipientPhone, recipientEmail pgtype.Text
+	if rc := deliveryInfo.GetRecipientContacts(); rc != nil {
+		recipientName = pgtype.Text{String: rc.GetName(), Valid: rc.GetName() != ""}
+		recipientPhone = pgtype.Text{String: rc.GetPhone(), Valid: rc.GetPhone() != ""}
+		recipientEmail = pgtype.Text{String: rc.GetEmail(), Valid: rc.GetEmail() != ""}
+	}
+
 	params := queries.InsertOrderDeliveryInfoParams{
 		OrderID:            orderID,
 		PickupStreet:       pgtype.Text{String: pickupAddr.Street(), Valid: pickupAddr.Street() != ""},
@@ -126,6 +134,9 @@ func (s *Store) saveDeliveryInfo(ctx context.Context, qtx *queries.Queries, orde
 		Dimensions:         pgtype.Text{String: pkgInfo.GetDimensions(), Valid: pkgInfo.GetDimensions() != ""},
 		Priority:           deliveryInfo.GetPriority().String(),
 		PackageID:          packageID,
+		RecipientName:      recipientName,
+		RecipientPhone:     recipientPhone,
+		RecipientEmail:     recipientEmail,
 	}
 
 	if isNew {

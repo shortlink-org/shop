@@ -49,6 +49,12 @@ type OmsOrderDeliveryInfo struct {
 	Priority string
 	// Package ID assigned by delivery service
 	PackageID pgtype.UUID
+	// Recipient contact name
+	RecipientName pgtype.Text
+	// Recipient contact phone
+	RecipientPhone pgtype.Text
+	// Recipient contact email
+	RecipientEmail pgtype.Text
 }
 
 // Items in orders

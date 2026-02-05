@@ -72,12 +72,19 @@ type PackageInfo {
   dimensions: String
 }
 
+type RecipientContacts {
+  recipientName: String
+  recipientPhone: String
+  recipientEmail: String
+}
+
 type DeliveryInfo {
   pickupAddress: DeliveryAddress
   deliveryAddress: DeliveryAddress
   deliveryPeriod: DeliveryPeriod
   packageInfo: PackageInfo
   priority: String
+  recipientContacts: RecipientContacts
 }
 
 type OrderState {
@@ -153,12 +160,19 @@ input PackageInfoInput {
   dimensions: String!
 }
 
+input RecipientContactsInput {
+  recipientName: String
+  recipientPhone: String
+  recipientEmail: String
+}
+
 input DeliveryInfoInput {
   pickupAddress: DeliveryAddressInput!
   deliveryAddress: DeliveryAddressInput!
   deliveryPeriod: DeliveryPeriodInput!
   packageInfo: PackageInfoInput!
   priority: String
+  recipientContacts: RecipientContactsInput
 }
 
 input OrderItemInput {

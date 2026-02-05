@@ -110,7 +110,8 @@ SELECT
     delivery_street, delivery_city, delivery_postal_code, delivery_country, delivery_latitude, delivery_longitude,
     period_start, period_end,
     weight_kg, dimensions,
-    priority, package_id
+    priority, package_id,
+    recipient_name, recipient_phone, recipient_email
 FROM oms.order_delivery_info
 WHERE order_id = $1
 `
@@ -138,6 +139,9 @@ func (q *Queries) GetOrderDeliveryInfo(ctx context.Context, orderID uuid.UUID) (
 		&i.Dimensions,
 		&i.Priority,
 		&i.PackageID,
+		&i.RecipientName,
+		&i.RecipientPhone,
+		&i.RecipientEmail,
 	)
 	return i, err
 }
@@ -197,14 +201,16 @@ INSERT INTO oms.order_delivery_info (
     delivery_street, delivery_city, delivery_postal_code, delivery_country, delivery_latitude, delivery_longitude,
     period_start, period_end,
     weight_kg, dimensions,
-    priority, package_id
+    priority, package_id,
+    recipient_name, recipient_phone, recipient_email
 ) VALUES (
     $1,
     $2, $3, $4, $5, $6, $7,
     $8, $9, $10, $11, $12, $13,
     $14, $15,
     $16, $17,
-    $18, $19
+    $18, $19,
+    $20, $21, $22
 )
 `
 
@@ -228,6 +234,9 @@ type InsertOrderDeliveryInfoParams struct {
 	Dimensions         pgtype.Text
 	Priority           string
 	PackageID          pgtype.UUID
+	RecipientName      pgtype.Text
+	RecipientPhone     pgtype.Text
+	RecipientEmail     pgtype.Text
 }
 
 func (q *Queries) InsertOrderDeliveryInfo(ctx context.Context, arg InsertOrderDeliveryInfoParams) error {
@@ -251,6 +260,9 @@ func (q *Queries) InsertOrderDeliveryInfo(ctx context.Context, arg InsertOrderDe
 		arg.Dimensions,
 		arg.Priority,
 		arg.PackageID,
+		arg.RecipientName,
+		arg.RecipientPhone,
+		arg.RecipientEmail,
 	)
 	return err
 }
@@ -508,7 +520,8 @@ SET
     delivery_street = $8, delivery_city = $9, delivery_postal_code = $10, delivery_country = $11, delivery_latitude = $12, delivery_longitude = $13,
     period_start = $14, period_end = $15,
     weight_kg = $16, dimensions = $17,
-    priority = $18, package_id = $19
+    priority = $18, package_id = $19,
+    recipient_name = $20, recipient_phone = $21, recipient_email = $22
 WHERE order_id = $1
 `
 
@@ -532,6 +545,9 @@ type UpdateOrderDeliveryInfoParams struct {
 	Dimensions         pgtype.Text
 	Priority           string
 	PackageID          pgtype.UUID
+	RecipientName      pgtype.Text
+	RecipientPhone     pgtype.Text
+	RecipientEmail     pgtype.Text
 }
 
 func (q *Queries) UpdateOrderDeliveryInfo(ctx context.Context, arg UpdateOrderDeliveryInfoParams) error {
@@ -555,6 +571,9 @@ func (q *Queries) UpdateOrderDeliveryInfo(ctx context.Context, arg UpdateOrderDe
 		arg.Dimensions,
 		arg.Priority,
 		arg.PackageID,
+		arg.RecipientName,
+		arg.RecipientPhone,
+		arg.RecipientEmail,
 	)
 	return err
 }

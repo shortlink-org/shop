@@ -7,7 +7,7 @@ option go_package = "github.com/shortlink-org/shop/oms/internal/infrastructure/r
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/field_mask.proto";
-import "domain/order/v1/common/v1/common.proto";
+import "domain/order/v1/common/common.proto";
 
 // Define the Order message
 message OrderState {

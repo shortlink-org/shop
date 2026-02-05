@@ -32,6 +32,12 @@ type AcceptOrderRequest struct {
 	PackageInfo PackageInfoDTO
 	// Priority indicates the delivery priority level
 	Priority DeliveryPriorityDTO
+	// RecipientName is the name of the person receiving the delivery (optional)
+	RecipientName string
+	// RecipientPhone is the phone number for delivery contact (optional)
+	RecipientPhone string
+	// RecipientEmail is the email for delivery notifications (optional)
+	RecipientEmail string
 }
 
 // AcceptOrderResponse contains the response from the Delivery service.
