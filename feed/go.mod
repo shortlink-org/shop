@@ -1,6 +1,6 @@
 module github.com/shortlink-org/shortlink/boundaries/shop/feed
 
-go 1.25.6
+go 1.25.7
 
 require (
 	github.com/google/cel-go v0.27.0
