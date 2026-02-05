@@ -13,6 +13,7 @@ import {
   UserOutlined,
   LogoutOutlined,
   SettingOutlined,
+  SwapOutlined,
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -192,6 +193,11 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
       key: '/couriers',
       icon: <TeamOutlined />,
       label: <Link href="/couriers">Курьеры</Link>,
+    },
+    {
+      key: 'django-admin',
+      icon: <SwapOutlined />,
+      label: <a href="/admin">Django Admin</a>,
     },
   ];
 
