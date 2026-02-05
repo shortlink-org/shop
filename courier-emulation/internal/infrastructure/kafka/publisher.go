@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/ThreeDotsLabs/watermill"
@@ -74,6 +75,71 @@ func (p *LocationPublisher) Close() error {
 	err := p.publisher.Close()
 	if err != nil {
 		return fmt.Errorf("publisher close: %w", err)
+	}
+
+	return nil
+}
+
+// StatusPublisher defines the interface for publishing delivery status events.
+type StatusPublisher interface {
+	PublishPickUp(ctx context.Context, event PickUpOrderEvent) error
+	PublishDelivery(ctx context.Context, event DeliverOrderEvent) error
+	Close() error
+}
+
+// KafkaStatusPublisher publishes delivery status events to Kafka.
+type KafkaStatusPublisher struct {
+	publisher message.Publisher
+}
+
+// NewStatusPublisher creates a new Kafka status publisher.
+func NewStatusPublisher(publisher message.Publisher) *KafkaStatusPublisher {
+	return &KafkaStatusPublisher{
+		publisher: publisher,
+	}
+}
+
+// PublishPickUp publishes an order picked up event.
+func (p *KafkaStatusPublisher) PublishPickUp(ctx context.Context, event PickUpOrderEvent) error {
+	payload, err := json.Marshal(event)
+	if err != nil {
+		return fmt.Errorf("marshal pickup event: %w", err)
+	}
+
+	msg := message.NewMessage(watermill.NewUUID(), payload)
+	// Partition by order so lifecycle order is preserved (handover-safe).
+	msg.Metadata.Set(metadataKeyPartitionKey, event.OrderID)
+
+	if err := p.publisher.Publish(TopicPickUpOrder, msg); err != nil {
+		return fmt.Errorf("publish pickup: %w", err)
+	}
+
+	return nil
+}
+
+// PublishDelivery publishes an order delivered event.
+func (p *KafkaStatusPublisher) PublishDelivery(ctx context.Context, event DeliverOrderEvent) error {
+	payload, err := json.Marshal(event)
+	if err != nil {
+		return fmt.Errorf("marshal delivery event: %w", err)
+	}
+
+	msg := message.NewMessage(watermill.NewUUID(), payload)
+	// Partition by order so lifecycle order is preserved (handover-safe).
+	msg.Metadata.Set(metadataKeyPartitionKey, event.OrderID)
+
+	if err := p.publisher.Publish(TopicDeliverOrder, msg); err != nil {
+		return fmt.Errorf("publish delivery: %w", err)
+	}
+
+	return nil
+}
+
+// Close closes the status publisher.
+func (p *KafkaStatusPublisher) Close() error {
+	err := p.publisher.Close()
+	if err != nil {
+		return fmt.Errorf("status publisher close: %w", err)
 	}
 
 	return nil

@@ -148,7 +148,7 @@ func (s *DeliverySubscriber) processMessages(ctx context.Context, messages <-cha
 				continue
 			}
 
-			err := s.handler.HandleOrderAssigned(ctx, event)
+			err = s.handler.HandleOrderAssigned(ctx, event)
 			if err != nil {
 				s.logger.Error("Failed to handle order assigned event", err, nil)
 				msg.Nack()

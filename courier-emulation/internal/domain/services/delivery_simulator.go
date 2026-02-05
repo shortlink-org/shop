@@ -139,19 +139,31 @@ func (ds *DeliverySimulator) StartDelivery(ctx context.Context, courierID string
 	return nil
 }
 
+// minRouteDistanceMeters and minRouteDuration ensure vo.NewRoute accepts the route
+// when from == to (e.g. start at pickup, route "to pickup" in tests without OSRM).
+const minRouteDistanceMeters = 1.0
+const minRouteDuration = time.Second
+
 // createMinimalRoute creates a minimal route between two points.
 func (ds *DeliverySimulator) createMinimalRoute(from, to vo.Location) (vo.Route, error) {
 	// Create a simple polyline with just two points
 	polyline := vo.MustNewPolyline(encodePolyline([]vo.Location{from, to}))
-	distance := from.DistanceTo(to)
-	duration := time.Duration(distance/ds.config.SpeedKmH*3600) * time.Second
+	distanceKm := from.DistanceTo(to)
+	distanceMeters := distanceKm * 1000
+	if distanceMeters < minRouteDistanceMeters {
+		distanceMeters = minRouteDistanceMeters
+	}
+	duration := time.Duration(distanceKm/ds.config.SpeedKmH*3600) * time.Second
+	if duration < minRouteDuration {
+		duration = minRouteDuration
+	}
 
 	route, err := vo.NewRoute(
 		fmt.Sprintf("minimal_%d", time.Now().UnixNano()),
 		from,
 		to,
 		polyline,
-		distance*1000, // Convert to meters
+		distanceMeters,
 		duration,
 	)
 	if err != nil {
@@ -454,10 +466,10 @@ func (ds *DeliverySimulator) transitionPhase(ctx context.Context, courierID stri
 
 		// Determine if delivery was successful (based on failure rate)
 		delivered := ds.rng.Float64() >= ds.config.FailureRate
-		reason := ""
+		var reason kafka.NotDeliveredReason
 
 		if !delivered {
-			reasons := []string{
+			reasons := []kafka.NotDeliveredReason{
 				kafka.ReasonCustomerNotAvailable,
 				kafka.ReasonWrongAddress,
 				kafka.ReasonCustomerRefused,
@@ -468,8 +480,11 @@ func (ds *DeliverySimulator) transitionPhase(ctx context.Context, courierID stri
 
 		// Publish delivery event
 		if ds.statusPub != nil && order != nil {
-			deliverEvent := kafka.NewDeliverOrderEvent(courierID, *order, state.CurrentLocation, delivered, reason)
-			err := ds.statusPub.PublishDelivery(ctx, deliverEvent)
+			deliverEvent, err := kafka.NewDeliverOrderEvent(courierID, *order, state.CurrentLocation, delivered, reason)
+			if err != nil {
+				return false, fmt.Errorf("build delivery event: %w", err)
+			}
+			err = ds.statusPub.PublishDelivery(ctx, deliverEvent)
 			if err != nil {
 				return false, fmt.Errorf("failed to publish delivery event: %w", err)
 			}

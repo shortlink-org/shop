@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	fullFlowConsumeTimeout   = 60 * time.Second // time for pickup + route + delivery
+	fullFlowConsumeTimeout   = 30 * time.Second // time for pickup + route + delivery
 	fastUpdateInterval       = "100ms"
 	fastPickupWait           = "300ms"
 	fastDeliveryWait         = "300ms"
@@ -42,6 +42,7 @@ func TestDeliveryFlowE2E(t *testing.T) {
 
 	brokersStr := strings.Join(kafkaC.Brokers, ",")
 	env := append(os.Environ(),
+		"OTEL_SDK_DISABLED=true", // avoid shutdown hang waiting for OTLP exporter (no collector in test)
 		"WATERMILL_KAFKA_BROKERS="+brokersStr,
 		"OSRM_URL="+osrmC.BaseURL,
 		"SIMULATION_UPDATE_INTERVAL="+fastUpdateInterval,
@@ -67,7 +68,15 @@ func TestDeliveryFlowE2E(t *testing.T) {
 	defer func() {
 		if cmd.Process != nil {
 			_ = cmd.Process.Signal(os.Interrupt)
-			_ = cmd.Wait()
+			// Limit wait so we don't hang on OTLP exporter shutdown (no collector in test)
+			done := make(chan struct{})
+			go func() { _ = cmd.Wait(); close(done) }()
+			select {
+			case <-done:
+			case <-time.After(5 * time.Second):
+				_ = cmd.Process.Kill()
+				<-done
+			}
 		}
 	}()
 
@@ -173,10 +182,10 @@ func TestDeliveryFlowE2E(t *testing.T) {
 
 	deliver := deliveriesCopy[0]
 	assert.Equal(t, event.CourierID, deliver.CourierID, "deliver_order.courier_id should match")
-	assert.Equal(t, event.PackageID, deliver.PackageID, "deliver_order.package_id should match")
-	assert.Contains(t, []string{kafka.DeliveryStatusDelivered, kafka.DeliveryStatusNotDelivered}, deliver.Status,
+	assert.Equal(t, event.PackageID, deliver.OrderID, "deliver_order.order_id should match assigned package/order")
+	assert.Contains(t, []string{string(kafka.DeliveryStatusDelivered), string(kafka.DeliveryStatusNotDelivered)}, deliver.Status,
 		"deliver_order.status must be DELIVERED or NOT_DELIVERED, got %q", deliver.Status)
-	if deliver.Status == kafka.DeliveryStatusNotDelivered {
+	if deliver.Status == string(kafka.DeliveryStatusNotDelivered) {
 		assert.NotEmpty(t, deliver.Reason, "NOT_DELIVERED should have reason")
 	}
 }
@@ -206,13 +215,13 @@ type locationMsg struct {
 }
 
 type pickUpMsg struct {
-	PackageID  string `json:"package_id"`
+	OrderID    string `json:"order_id"`
 	CourierID  string `json:"courier_id"`
 	PickedUpAt string `json:"picked_up_at"`
 }
 
 type deliverOrderMsg struct {
-	PackageID   string `json:"package_id"`
+	OrderID     string `json:"order_id"`
 	CourierID   string `json:"courier_id"`
 	Status      string `json:"status"`
 	Reason      string `json:"reason,omitempty"`

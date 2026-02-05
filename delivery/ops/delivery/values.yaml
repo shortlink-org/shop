@@ -319,19 +319,19 @@ kafka:
           cleanup.policy: "delete"
 
       # =============================================================
-      # COMMAND TOPICS
+      # EVENT TOPICS (from courier-emulation)
       # =============================================================
 
-      # Topic for pickup order commands (from courier-emulation)
-      delivery.command.pick_up_order.v1:
+      # Topic for order picked up events (from courier-emulation). Format: {domain}.{entity}.{event}.v1
+      delivery.order.order_picked_up.v1:
         partitions: 3
         replicas: 1
         config:
           retention.ms: "604800000"
           cleanup.policy: "delete"
 
-      # Topic for deliver order commands (from courier-emulation)
-      delivery.command.deliver_order.v1:
+      # Topic for order delivered events (from courier-emulation). Format: {domain}.{entity}.{event}.v1
+      delivery.order.order_delivered.v1:
         partitions: 3
         replicas: 1
         config:
