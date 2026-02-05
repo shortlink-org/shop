@@ -13,13 +13,14 @@ ingress:
 
 # ==============================================================================
 # HTTPRoute configuration for Gateway API
+# Served at shop.shortlink.best/admin/* (couriers, etc.)
 httpRoute:
   enabled: true
   gatewayName: external-gateway
   gatewayNamespace: istio-ingress
   hostnames:
-    - admin.shop.shortlink.best
-  path: /
+    - shop.shortlink.best
+  path: /admin
   port: 3001
 
 # ==============================================================================
@@ -59,7 +60,7 @@ deploy:
     initialDelaySeconds: 30
     timeoutSeconds: 10
     httpGet:
-      path: /
+      path: /admin
       port: 3001
 
   # -- define a readiness probe that checks
@@ -68,7 +69,7 @@ deploy:
     initialDelaySeconds: 15
     timeoutSeconds: 5
     httpGet:
-      path: /
+      path: /admin
       port: 3001
 
   securityContext:
