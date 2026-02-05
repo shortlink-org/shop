@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"time"
@@ -11,8 +10,12 @@ import (
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill-kafka/v3/pkg/kafka"
 	"github.com/ThreeDotsLabs/watermill/message"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/shortlink-org/go-sdk/logger"
+	deliverycommon "github.com/shortlink-org/shop/oms/internal/domain/delivery/common/v1"
+	deliveryevents "github.com/shortlink-org/shop/oms/internal/domain/delivery/events/v1"
 )
 
 // DeliveryEventType represents the type of delivery event.
@@ -160,23 +163,29 @@ func (c *DeliveryConsumer) Start(ctx context.Context) error {
 	return nil
 }
 
-// processMessage processes a single message.
+// Kafka header set by Delivery service for event type dispatch.
+const eventTypeHeader = "event_type"
+
+// processMessage processes a single message (protobuf-encoded with event_type header).
 func (c *DeliveryConsumer) processMessage(ctx context.Context, msg *message.Message) {
 	c.log.Debug("Received message",
 		slog.String("uuid", msg.UUID))
 
-	var event DeliveryStatusEvent
-	if err := json.Unmarshal(msg.Payload, &event); err != nil {
-		c.log.Error("Failed to unmarshal delivery event",
-			slog.Any("error", err),
-			slog.String("payload", string(msg.Payload)))
+	eventType := msg.Metadata.Get(eventTypeHeader)
+	if eventType == "" {
+		c.log.Error("Missing event_type header, cannot decode delivery event",
+			slog.String("uuid", msg.UUID))
 		msg.Ack()
 		return
 	}
 
-	// Determine event type from status if not set
-	if event.EventType == "" {
-		event.EventType = statusToEventType(event.Status)
+	event, err := c.unmarshalDeliveryEvent(eventType, msg.Payload)
+	if err != nil {
+		c.log.Error("Failed to unmarshal delivery event",
+			slog.Any("error", err),
+			slog.String("event_type", eventType))
+		msg.Ack()
+		return
 	}
 
 	if err := c.handler.HandleDeliveryStatus(ctx, event); err != nil {
@@ -195,24 +204,82 @@ func (c *DeliveryConsumer) processMessage(ctx context.Context, msg *message.Mess
 		slog.String("status", event.Status))
 }
 
+// unmarshalDeliveryEvent decodes payload by event_type and maps to DeliveryStatusEvent.
+func (c *DeliveryConsumer) unmarshalDeliveryEvent(eventType string, payload []byte) (DeliveryStatusEvent, error) {
+	var event DeliveryStatusEvent
+	switch eventType {
+	case "PackageInTransitEvent":
+		var e deliveryevents.PackageInTransitEvent
+		if err := proto.Unmarshal(payload, &e); err != nil {
+			return event, fmt.Errorf("proto unmarshal PackageInTransitEvent: %w", err)
+		}
+		event = mapInTransitToStatusEvent(&e)
+	case "PackageDeliveredEvent":
+		var e deliveryevents.PackageDeliveredEvent
+		if err := proto.Unmarshal(payload, &e); err != nil {
+			return event, fmt.Errorf("proto unmarshal PackageDeliveredEvent: %w", err)
+		}
+		event = mapDeliveredToStatusEvent(&e)
+	case "PackageNotDeliveredEvent":
+		var e deliveryevents.PackageNotDeliveredEvent
+		if err := proto.Unmarshal(payload, &e); err != nil {
+			return event, fmt.Errorf("proto unmarshal PackageNotDeliveredEvent: %w", err)
+		}
+		event = mapNotDeliveredToStatusEvent(&e)
+	default:
+		// Ignore other event types (PackageAcceptedEvent, PackageAssignedEvent, etc.)
+		return event, fmt.Errorf("unsupported or non-status event_type: %s", eventType)
+	}
+	return event, nil
+}
+
+func mapInTransitToStatusEvent(e *deliveryevents.PackageInTransitEvent) DeliveryStatusEvent {
+	return DeliveryStatusEvent{
+		PackageID:  e.GetPackageId(),
+		OrderID:    e.GetOrderId(),
+		CourierID:  e.GetCourierId(),
+		Status:     deliverycommon.PackageStatus_name[int32(e.GetStatus())],
+		EventType:  EventTypePackageInTransit,
+		OccurredAt: timestampToTime(e.GetOccurredAt()),
+	}
+}
+
+func mapDeliveredToStatusEvent(e *deliveryevents.PackageDeliveredEvent) DeliveryStatusEvent {
+	return DeliveryStatusEvent{
+		PackageID:  e.GetPackageId(),
+		OrderID:    e.GetOrderId(),
+		CourierID:  e.GetCourierId(),
+		Status:     deliverycommon.PackageStatus_name[int32(e.GetStatus())],
+		EventType:  EventTypePackageDelivered,
+		OccurredAt: timestampToTime(e.GetOccurredAt()),
+	}
+}
+
+func mapNotDeliveredToStatusEvent(e *deliveryevents.PackageNotDeliveredEvent) DeliveryStatusEvent {
+	reasonStr := deliverycommon.NotDeliveredReason_name[int32(e.GetReason())]
+	return DeliveryStatusEvent{
+		PackageID:   e.GetPackageId(),
+		OrderID:     e.GetOrderId(),
+		CourierID:   e.GetCourierId(),
+		Status:      deliverycommon.PackageStatus_name[int32(e.GetStatus())],
+		EventType:   EventTypePackageNotDelivered,
+		Reason:      reasonStr,
+		Description: e.GetReasonDescription(),
+		OccurredAt:  timestampToTime(e.GetOccurredAt()),
+	}
+}
+
+func timestampToTime(ts *timestamppb.Timestamp) time.Time {
+	if ts == nil {
+		return time.Time{}
+	}
+	return ts.AsTime()
+}
+
 // Close closes the consumer.
 func (c *DeliveryConsumer) Close() error {
 	if c.cancel != nil {
 		c.cancel()
 	}
 	return c.subscriber.Close()
-}
-
-// statusToEventType converts status string to event type.
-func statusToEventType(status string) DeliveryEventType {
-	switch status {
-	case "IN_TRANSIT":
-		return EventTypePackageInTransit
-	case "DELIVERED":
-		return EventTypePackageDelivered
-	case "NOT_DELIVERED":
-		return EventTypePackageNotDelivered
-	default:
-		return ""
-	}
 }

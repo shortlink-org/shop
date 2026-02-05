@@ -61,20 +61,23 @@ pub struct PackageInTransitEvent {
     /// Package ID
     #[prost(string, tag = "1")]
     pub package_id: ::prost::alloc::string::String,
-    /// Courier ID
+    /// Order ID (from OMS, for consumer lookup)
     #[prost(string, tag = "2")]
+    pub order_id: ::prost::alloc::string::String,
+    /// Courier ID
+    #[prost(string, tag = "3")]
     pub courier_id: ::prost::alloc::string::String,
     /// Package status
-    #[prost(enumeration = "super::super::common::v1::PackageStatus", tag = "3")]
+    #[prost(enumeration = "super::super::common::v1::PackageStatus", tag = "4")]
     pub status: i32,
     /// In transit at timestamp
-    #[prost(message, optional, tag = "4")]
+    #[prost(message, optional, tag = "5")]
     pub in_transit_at: ::core::option::Option<::pbjson_types::Timestamp>,
     /// Courier location
-    #[prost(message, optional, tag = "5")]
+    #[prost(message, optional, tag = "6")]
     pub courier_location: ::core::option::Option<super::super::common::v1::Location>,
     /// OccurredAt is the timestamp when the event occurred
-    #[prost(message, optional, tag = "6")]
+    #[prost(message, optional, tag = "7")]
     pub occurred_at: ::core::option::Option<::pbjson_types::Timestamp>,
 }
 /// PackageDeliveredEvent - canonical name: delivery.package.delivered.v1

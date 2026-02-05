@@ -132,6 +132,9 @@ where
             cmd.order_id,
             cmd.customer_id,
             cmd.customer_phone.clone(),
+            cmd.recipient_name.clone(),
+            cmd.recipient_phone.clone(),
+            cmd.recipient_email.clone(),
             pickup_address,
             delivery_address,
             delivery_period,
@@ -263,6 +266,9 @@ mod tests {
             Uuid::new_v4(),
             Uuid::new_v4(),
             None, // customer_phone
+            None,
+            None,
+            None,
             create_valid_address(),
             create_valid_address(),
             create_valid_period(),
@@ -305,6 +311,9 @@ mod tests {
             order_id, // Same order_id
             Uuid::new_v4(),
             None, // customer_phone
+            None,
+            None,
+            None,
             create_valid_address(),
             create_valid_address(),
             create_valid_period(),
@@ -326,6 +335,9 @@ mod tests {
             Uuid::new_v4(),
             Uuid::new_v4(),
             None, // customer_phone
+            None,
+            None,
+            None,
             create_valid_address(),
             create_valid_address(),
             create_valid_period(),

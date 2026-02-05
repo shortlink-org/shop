@@ -8,6 +8,7 @@ mod m20260131_000001_create_couriers;
 mod m20260131_000002_create_packages;
 mod m20260131_000003_seed_couriers;
 mod m20260131_000004_create_courier_location_history;
+mod m20260205_000005_add_recipient_contacts_to_packages;
 
 pub struct Migrator;
 
@@ -19,6 +20,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20260131_000002_create_packages::Migration),
             Box::new(m20260131_000003_seed_couriers::Migration),
             Box::new(m20260131_000004_create_courier_location_history::Migration),
+            Box::new(m20260205_000005_add_recipient_contacts_to_packages::Migration),
         ]
     }
 }

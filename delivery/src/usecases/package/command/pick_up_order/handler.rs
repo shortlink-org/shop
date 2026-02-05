@@ -140,6 +140,7 @@ where
         let now = Utc::now();
         let event = PackageInTransitEvent {
             package_id: package.id().0.to_string(),
+            order_id: package.order_id().to_string(),
             courier_id: cmd.courier_id.to_string(),
             status: proto_common::PackageStatus::InTransit as i32,
             in_transit_at: Some(pbjson_types::Timestamp {
@@ -321,6 +322,9 @@ mod tests {
             Uuid::new_v4(),
             Uuid::new_v4(),
             None, // customer_phone
+            None,
+            None,
+            None,
             create_test_address(),
             create_test_address(),
             period,
@@ -445,6 +449,9 @@ mod tests {
             Uuid::new_v4(),
             Uuid::new_v4(),
             None, // customer_phone
+            None,
+            None,
+            None,
             create_test_address(),
             create_test_address(),
             period,

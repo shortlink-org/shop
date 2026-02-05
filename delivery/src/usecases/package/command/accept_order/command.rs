@@ -17,6 +17,12 @@ pub struct Command {
     pub customer_id: Uuid,
     /// Customer phone number for delivery
     pub customer_phone: Option<String>,
+    /// Recipient name (from OMS recipient_contacts)
+    pub recipient_name: Option<String>,
+    /// Recipient phone (from OMS recipient_contacts)
+    pub recipient_phone: Option<String>,
+    /// Recipient email (from OMS recipient_contacts)
+    pub recipient_email: Option<String>,
     /// Pickup address
     pub pickup_address: AddressInput,
     /// Delivery address
@@ -140,6 +146,9 @@ impl Command {
         order_id: Uuid,
         customer_id: Uuid,
         customer_phone: Option<String>,
+        recipient_name: Option<String>,
+        recipient_phone: Option<String>,
+        recipient_email: Option<String>,
         pickup_address: AddressInput,
         delivery_address: AddressInput,
         delivery_period: DeliveryPeriodInput,
@@ -151,6 +160,9 @@ impl Command {
             order_id,
             customer_id,
             customer_phone,
+            recipient_name,
+            recipient_phone,
+            recipient_email,
             pickup_address,
             delivery_address,
             delivery_period,
@@ -261,6 +273,9 @@ mod tests {
             Uuid::new_v4(),
             Uuid::new_v4(),
             Some("+49123456789".to_string()),
+            None,
+            None,
+            None,
             create_valid_address(),
             create_valid_address(),
             create_valid_period(),
@@ -277,6 +292,9 @@ mod tests {
             Uuid::new_v4(),
             Uuid::new_v4(),
             None, // No phone
+            None,
+            None,
+            None,
             create_valid_address(),
             create_valid_address(),
             create_valid_period(),

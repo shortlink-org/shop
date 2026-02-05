@@ -82,10 +82,12 @@ func (c *Client) AcceptOrder(ctx context.Context, req ports.AcceptOrderRequest) 
 			WeightKg:   req.PackageInfo.WeightKg,
 			Dimensions: req.PackageInfo.Dimensions,
 		},
-		Priority:       Priority(req.Priority),
-		RecipientName:  req.RecipientName,
-		RecipientPhone: req.RecipientPhone,
-		RecipientEmail: req.RecipientEmail,
+		Priority: Priority(req.Priority),
+		RecipientContacts: &RecipientContacts{
+			RecipientName:  req.RecipientName,
+			RecipientPhone: req.RecipientPhone,
+			RecipientEmail: req.RecipientEmail,
+		},
 	}
 
 	resp, err := c.client.AcceptOrder(ctx, grpcReq)

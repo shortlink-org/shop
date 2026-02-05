@@ -127,13 +127,43 @@ pub async fn accept_order(
         .package_info
         .ok_or_else(|| Status::invalid_argument("package_info is required"))?;
 
-    // Build command
-    // customer_phone could come from req if available in proto, for now pass None
-    let customer_phone: Option<String> = None;
+    // Map recipient contacts from optional nested message
+    let (customer_phone, recipient_name, recipient_phone, recipient_email) =
+        req.recipient_contacts.as_ref().map_or(
+            (None, None, None, None),
+            |c| {
+                (
+                    if c.recipient_phone.is_empty() {
+                        None
+                    } else {
+                        Some(c.recipient_phone.clone())
+                    },
+                    if c.recipient_name.is_empty() {
+                        None
+                    } else {
+                        Some(c.recipient_name.clone())
+                    },
+                    if c.recipient_phone.is_empty() {
+                        None
+                    } else {
+                        Some(c.recipient_phone.clone())
+                    },
+                    if c.recipient_email.is_empty() {
+                        None
+                    } else {
+                        Some(c.recipient_email.clone())
+                    },
+                )
+            },
+        );
+
     let cmd = AcceptCommand::new(
         order_id,
         customer_id,
         customer_phone,
+        recipient_name,
+        recipient_phone,
+        recipient_email,
         pickup_address,
         delivery_address,
         delivery_period,

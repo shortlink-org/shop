@@ -5,6 +5,7 @@
 
 use async_trait::async_trait;
 use prost::Message;
+use rdkafka::message::{Header, OwnedHeaders};
 use rdkafka::producer::{FutureProducer, FutureRecord};
 use rdkafka::ClientConfig;
 use std::time::Duration;
@@ -113,19 +114,24 @@ impl KafkaEventPublisher {
         })
     }
 
-    /// Publish a protobuf message to a topic
+    /// Publish a protobuf message to a topic with an event_type header for consumer dispatch.
     async fn publish<M: Message>(
         &self,
         topic: &str,
         key: &str,
+        event_type: &str,
         message: &M,
     ) -> Result<(), EventPublisherError> {
-        let payload = message
-            .encode_to_vec();
+        let payload = message.encode_to_vec();
+        let headers = OwnedHeaders::new().insert(Header {
+            key: "event_type",
+            value: Some(event_type),
+        });
 
         let record = FutureRecord::to(topic)
             .key(key)
-            .payload(&payload);
+            .payload(&payload)
+            .headers(headers);
 
         match self.producer.send(record, self.timeout).await {
             Ok((partition, offset)) => {
@@ -155,8 +161,13 @@ impl EventPublisher for KafkaEventPublisher {
         &self,
         event: PackageAcceptedEvent,
     ) -> Result<(), EventPublisherError> {
-        self.publish(topics::PACKAGE_STATUS, &event.package_id, &event)
-            .await
+        self.publish(
+            topics::PACKAGE_STATUS,
+            &event.package_id,
+            "PackageAcceptedEvent",
+            &event,
+        )
+        .await
     }
 
     #[instrument(skip(self, event), fields(package_id = %event.package_id, event_type = "in_transit"))]
@@ -164,8 +175,13 @@ impl EventPublisher for KafkaEventPublisher {
         &self,
         event: PackageInTransitEvent,
     ) -> Result<(), EventPublisherError> {
-        self.publish(topics::PACKAGE_STATUS, &event.package_id, &event)
-            .await
+        self.publish(
+            topics::PACKAGE_STATUS,
+            &event.package_id,
+            "PackageInTransitEvent",
+            &event,
+        )
+        .await
     }
 
     #[instrument(skip(self, event), fields(package_id = %event.package_id, event_type = "delivered"))]
@@ -173,8 +189,13 @@ impl EventPublisher for KafkaEventPublisher {
         &self,
         event: PackageDeliveredEvent,
     ) -> Result<(), EventPublisherError> {
-        self.publish(topics::PACKAGE_STATUS, &event.package_id, &event)
-            .await
+        self.publish(
+            topics::PACKAGE_STATUS,
+            &event.package_id,
+            "PackageDeliveredEvent",
+            &event,
+        )
+        .await
     }
 
     #[instrument(skip(self, event), fields(package_id = %event.package_id, event_type = "not_delivered"))]
@@ -182,8 +203,13 @@ impl EventPublisher for KafkaEventPublisher {
         &self,
         event: PackageNotDeliveredEvent,
     ) -> Result<(), EventPublisherError> {
-        self.publish(topics::PACKAGE_STATUS, &event.package_id, &event)
-            .await
+        self.publish(
+            topics::PACKAGE_STATUS,
+            &event.package_id,
+            "PackageNotDeliveredEvent",
+            &event,
+        )
+        .await
     }
 
     #[instrument(skip(self, event), fields(package_id = %event.package_id, event_type = "requires_handling"))]
@@ -191,8 +217,13 @@ impl EventPublisher for KafkaEventPublisher {
         &self,
         event: PackageRequiresHandlingEvent,
     ) -> Result<(), EventPublisherError> {
-        self.publish(topics::PACKAGE_STATUS, &event.package_id, &event)
-            .await
+        self.publish(
+            topics::PACKAGE_STATUS,
+            &event.package_id,
+            "PackageRequiresHandlingEvent",
+            &event,
+        )
+        .await
     }
 
     // ==================== Order Assignment (separate topic) ====================
@@ -202,8 +233,13 @@ impl EventPublisher for KafkaEventPublisher {
         &self,
         event: PackageAssignedEvent,
     ) -> Result<(), EventPublisherError> {
-        self.publish(topics::ORDER_ASSIGNED, &event.package_id, &event)
-            .await
+        self.publish(
+            topics::ORDER_ASSIGNED,
+            &event.package_id,
+            "PackageAssignedEvent",
+            &event,
+        )
+        .await
     }
 
     // ==================== Courier Events (consolidated topic) ====================
@@ -213,8 +249,13 @@ impl EventPublisher for KafkaEventPublisher {
         &self,
         event: CourierRegisteredEvent,
     ) -> Result<(), EventPublisherError> {
-        self.publish(topics::COURIER_EVENTS, &event.courier_id, &event)
-            .await
+        self.publish(
+            topics::COURIER_EVENTS,
+            &event.courier_id,
+            "CourierRegisteredEvent",
+            &event,
+        )
+        .await
     }
 
     #[instrument(skip(self, event), fields(courier_id = %event.courier_id, event_type = "status_changed"))]
@@ -222,8 +263,13 @@ impl EventPublisher for KafkaEventPublisher {
         &self,
         event: CourierStatusChangedEvent,
     ) -> Result<(), EventPublisherError> {
-        self.publish(topics::COURIER_EVENTS, &event.courier_id, &event)
-            .await
+        self.publish(
+            topics::COURIER_EVENTS,
+            &event.courier_id,
+            "CourierStatusChangedEvent",
+            &event,
+        )
+        .await
     }
 
     // ==================== Courier Location (separate high-frequency topic) ====================
@@ -233,8 +279,13 @@ impl EventPublisher for KafkaEventPublisher {
         &self,
         event: CourierLocationUpdatedEvent,
     ) -> Result<(), EventPublisherError> {
-        self.publish(topics::COURIER_LOCATION, &event.courier_id, &event)
-            .await
+        self.publish(
+            topics::COURIER_LOCATION,
+            &event.courier_id,
+            "CourierLocationUpdatedEvent",
+            &event,
+        )
+        .await
     }
 }
 

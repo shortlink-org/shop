@@ -2,8 +2,10 @@ syntax = "proto3";
 
 package domain.delivery.events.v1;
 
+option go_package = "github.com/shortlink-org/shop/oms/internal/domain/delivery/events/v1";
+
 import "google/protobuf/timestamp.proto";
-import "delivery/common/v1/common.proto";
+import "domain/delivery/common/v1/common.proto";
 
 // PackageAcceptedEvent - canonical name: delivery.package.accepted.v1
 // Event when a package is accepted into the pool
@@ -175,4 +177,3 @@ message PackageRequiresHandlingEvent {
   // OccurredAt is the timestamp when the event occurred
   google.protobuf.Timestamp occurred_at = 6;
 }
-

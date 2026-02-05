@@ -697,6 +697,9 @@ mod tests {
             Uuid::new_v4(),
             Uuid::new_v4(),
             None, // customer_phone
+            None,
+            None,
+            None,
             create_test_address(),
             create_test_address(),
             period,
@@ -925,6 +928,9 @@ mod tests {
             Uuid::new_v4(),
             Uuid::new_v4(),
             None, // customer_phone
+            None,
+            None,
+            None,
             create_test_address(),
             create_test_address(),
             period,

@@ -162,6 +162,12 @@ pub struct Package {
     customer_id: Uuid,
     /// Customer phone number for delivery
     customer_phone: Option<String>,
+    /// Recipient name (from OMS)
+    recipient_name: Option<String>,
+    /// Recipient phone (from OMS)
+    recipient_phone: Option<String>,
+    /// Recipient email (from OMS)
+    recipient_email: Option<String>,
     /// Pickup address
     pickup_address: Address,
     /// Delivery address
@@ -199,6 +205,9 @@ impl Package {
         order_id: Uuid,
         customer_id: Uuid,
         customer_phone: Option<String>,
+        recipient_name: Option<String>,
+        recipient_phone: Option<String>,
+        recipient_email: Option<String>,
         pickup_address: Address,
         delivery_address: Address,
         delivery_period: DeliveryPeriod,
@@ -212,6 +221,9 @@ impl Package {
             order_id,
             customer_id,
             customer_phone,
+            recipient_name,
+            recipient_phone,
+            recipient_email,
             pickup_address,
             delivery_address,
             delivery_period,
@@ -236,6 +248,9 @@ impl Package {
         order_id: Uuid,
         customer_id: Uuid,
         customer_phone: Option<String>,
+        recipient_name: Option<String>,
+        recipient_phone: Option<String>,
+        recipient_email: Option<String>,
         pickup_address: Address,
         delivery_address: Address,
         delivery_period: DeliveryPeriod,
@@ -256,6 +271,9 @@ impl Package {
             order_id,
             customer_id,
             customer_phone,
+            recipient_name,
+            recipient_phone,
+            recipient_email,
             pickup_address,
             delivery_address,
             delivery_period,
@@ -289,6 +307,18 @@ impl Package {
 
     pub fn customer_phone(&self) -> Option<&str> {
         self.customer_phone.as_deref()
+    }
+
+    pub fn recipient_name(&self) -> Option<&str> {
+        self.recipient_name.as_deref()
+    }
+
+    pub fn recipient_phone(&self) -> Option<&str> {
+        self.recipient_phone.as_deref()
+    }
+
+    pub fn recipient_email(&self) -> Option<&str> {
+        self.recipient_email.as_deref()
     }
 
     pub fn pickup_address(&self) -> &Address {
@@ -442,6 +472,9 @@ mod tests {
             Uuid::new_v4(),
             Uuid::new_v4(),
             None, // customer_phone
+            None,
+            None,
+            None,
             create_test_address(),
             create_test_address(),
             period,
