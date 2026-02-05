@@ -4,12 +4,12 @@
 
 use async_trait::async_trait;
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder,
-    QuerySelect,
+    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter,
+    QueryOrder, QuerySelect,
 };
 use uuid::Uuid;
 
-use crate::domain::ports::{CourierRepository, RepositoryError};
+use crate::domain::ports::{CourierFilter, CourierRepository, RepositoryError};
 use crate::domain::model::courier::Courier;
 use crate::infrastructure::repository::entities::courier::{
     self, ActiveModel, Entity as CourierEntity,
@@ -218,6 +218,54 @@ impl CourierRepository for CourierPostgresRepository {
         }
 
         Ok(couriers)
+    }
+
+    async fn find_by_filter(
+        &self,
+        filter: CourierFilter,
+        limit: u64,
+        offset: u64,
+    ) -> Result<Vec<Courier>, RepositoryError> {
+        let mut query = CourierEntity::find();
+
+        if let Some(ref zone) = filter.work_zone {
+            query = query.filter(courier::Column::WorkZone.eq(zone.as_str()));
+        }
+
+        // status and archived are not stored in PostgreSQL (status/load in cache);
+        // filter by them when DB columns exist in a future migration
+
+        let results = query
+            .order_by_desc(courier::Column::CreatedAt)
+            .limit(limit)
+            .offset(offset)
+            .all(&self.db)
+            .await
+            .map_err(|e| RepositoryError::QueryError(e.to_string()))?;
+
+        let mut couriers = Vec::with_capacity(results.len());
+        for model in results {
+            let courier =
+                Courier::try_from(model).map_err(RepositoryError::SerializationError)?;
+            couriers.push(courier);
+        }
+
+        Ok(couriers)
+    }
+
+    async fn count_by_filter(&self, filter: CourierFilter) -> Result<u64, RepositoryError> {
+        let mut query = CourierEntity::find();
+
+        if let Some(ref zone) = filter.work_zone {
+            query = query.filter(courier::Column::WorkZone.eq(zone.as_str()));
+        }
+
+        let count = query
+            .count(&self.db)
+            .await
+            .map_err(|e| RepositoryError::QueryError(e.to_string()))?;
+
+        Ok(count as u64)
     }
 }
 

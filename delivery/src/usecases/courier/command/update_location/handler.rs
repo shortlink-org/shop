@@ -248,6 +248,22 @@ mod tests {
         async fn list(&self, _limit: u64, _offset: u64) -> Result<Vec<Courier>, RepositoryError> {
             Ok(vec![])
         }
+
+        async fn find_by_filter(
+            &self,
+            _filter: crate::domain::ports::CourierFilter,
+            _limit: u64,
+            _offset: u64,
+        ) -> Result<Vec<Courier>, RepositoryError> {
+            Ok(vec![])
+        }
+
+        async fn count_by_filter(
+            &self,
+            _filter: crate::domain::ports::CourierFilter,
+        ) -> Result<u64, RepositoryError> {
+            Ok(0)
+        }
     }
 
     fn create_mock_courier(id: Uuid) -> Courier {

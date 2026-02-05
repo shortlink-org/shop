@@ -298,4 +298,22 @@ mod tests {
         let result = AssignmentValidationService::validate(&courier, &package, 12);
         assert!(result.is_err());
     }
+
+    #[test]
+    fn test_working_hours_boundary_inclusive_start_exclusive_end() {
+        let courier = create_valid_courier(); // 9-18
+        let package = create_valid_package();
+
+        // At start hour (9) is valid
+        let result = AssignmentValidationService::validate(&courier, &package, 9);
+        assert!(result.is_ok());
+
+        // At 17 (before end 18) is valid
+        let result = AssignmentValidationService::validate(&courier, &package, 17);
+        assert!(result.is_ok());
+
+        // At end hour (18) is invalid (exclusive end)
+        let result = AssignmentValidationService::validate(&courier, &package, 18);
+        assert!(result.is_err());
+    }
 }

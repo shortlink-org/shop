@@ -26,7 +26,8 @@ use crate::domain::model::domain::delivery::events::v1::PackageAssignedEvent;
 use crate::domain::model::package::{PackageId, PackageStatus};
 use crate::domain::ports::{
     CommandHandlerWithResult, CourierCache, CourierRepository, DomainEvent, EventPublisher,
-    LocationCache, NotificationService, OrderAssignedNotification, PackageRepository, RepositoryError,
+    LocationCache, NotificationService, OrderAssignedNotification, PackageRepository,
+    RepositoryError,
 };
 use crate::domain::services::assignment_validation::{
     AssignmentValidationService, CourierAvailability, PackageForValidation,
@@ -515,6 +516,24 @@ mod tests {
         async fn list(&self, _limit: u64, _offset: u64) -> Result<Vec<Courier>, RepositoryError> {
             let couriers = self.couriers.lock().unwrap();
             Ok(couriers.values().cloned().collect())
+        }
+
+        async fn find_by_filter(
+            &self,
+            _filter: crate::domain::ports::CourierFilter,
+            _limit: u64,
+            _offset: u64,
+        ) -> Result<Vec<Courier>, RepositoryError> {
+            let couriers = self.couriers.lock().unwrap();
+            Ok(couriers.values().cloned().collect())
+        }
+
+        async fn count_by_filter(
+            &self,
+            _filter: crate::domain::ports::CourierFilter,
+        ) -> Result<u64, RepositoryError> {
+            let couriers = self.couriers.lock().unwrap();
+            Ok(couriers.len() as u64)
         }
     }
 

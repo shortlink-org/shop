@@ -206,6 +206,17 @@ mod tests {
     }
 
     #[test]
+    fn test_find_nearest_courier_empty_list_returns_failure() {
+        let couriers: Vec<CourierForDispatch> = vec![];
+        let package = create_test_package(55.7600, 37.6200);
+
+        let result = DispatchService::find_nearest_courier(&couriers, &package);
+        assert!(result.is_err());
+        let failure = result.unwrap_err();
+        assert!(failure.rejections.is_empty());
+    }
+
+    #[test]
     fn test_find_nearest_courier_no_available() {
         let mut courier = create_test_courier("c1", 55.7558, 37.6173, 50.0);
         courier.status = CourierStatus::Busy;

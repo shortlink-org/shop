@@ -15,23 +15,34 @@ Handles stock-related operations for carts.
 **Use case:** When stock for a good is depleted, remove the item from all affected carts.
 
 ```go
-service := services.NewStockCartService(cartRepository)
-results, err := service.HandleStockDepletion(ctx, goodId, affectedCustomerIds)
+service := services.NewStockCartService()
+// Use case: Load cart -> service.ProcessStockDepletion(cart, goodId) -> Save cart
+result := service.ProcessStockDepletion(cartState, goodId)
 ```
 
 ### CartValidationService
 
-Validates cart operations before execution.
+Validates cart operations before execution. **No I/O**: the domain only interprets pre-fetched data. The use case must obtain stock data via a port (e.g. StockChecker) and pass it in.
 
-**Use case:** Before adding items to cart, validate stock availability and quantity limits.
+**Use case:** Before adding items to cart, the use case fetches stock for each item, then calls the pure validation:
 
 ```go
-service := cart_validation.New(stockChecker)
-result := service.ValidateAddItems(ctx, items)
+service := cart_validation.New()
+// Use case: fetch stockByGoodId via StockChecker port, then:
+stockByGoodId := make(map[uuid.UUID]cart_validation.StockAvailabilityInput)
+for _, item := range items {
+    available, qty, err := stockChecker.CheckStockAvailability(ctx, item.GetGoodId(), item.GetQuantity())
+    stockByGoodId[item.GetGoodId()] = cart_validation.StockAvailabilityInput{
+        GoodID: item.GetGoodId(), Available: available, StockQuantity: qty, CheckError: err,
+    }
+}
+result := service.ValidateAddItems(items, stockByGoodId)
 if !result.Valid {
     // Handle validation errors
 }
 ```
+
+Or use the package-level pure function: `cart_validation.ValidateAddItemsWithStock(items, stockByGoodId)`.
 
 ## Domain Services vs Use Cases
 

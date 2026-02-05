@@ -491,6 +491,24 @@ mod tests {
             let couriers = self.couriers.lock().unwrap();
             Ok(couriers.values().cloned().collect())
         }
+
+        async fn find_by_filter(
+            &self,
+            _filter: crate::domain::ports::CourierFilter,
+            _limit: u64,
+            _offset: u64,
+        ) -> Result<Vec<Courier>, RepositoryError> {
+            let couriers = self.couriers.lock().unwrap();
+            Ok(couriers.values().cloned().collect())
+        }
+
+        async fn count_by_filter(
+            &self,
+            _filter: crate::domain::ports::CourierFilter,
+        ) -> Result<u64, RepositoryError> {
+            let couriers = self.couriers.lock().unwrap();
+            Ok(couriers.len() as u64)
+        }
     }
 
     struct MockCourierCache;

@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"context"
 	"errors"
 	"testing"
 
@@ -11,35 +10,6 @@ import (
 	items "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/items/v1"
 )
 
-// MockStockChecker is a mock implementation of StockChecker
-type MockStockChecker struct {
-	stocks map[uuid.UUID]uint32
-	err    error
-}
-
-func NewMockStockChecker() *MockStockChecker {
-	return &MockStockChecker{
-		stocks: make(map[uuid.UUID]uint32),
-	}
-}
-
-func (m *MockStockChecker) CheckStockAvailability(ctx context.Context, goodId uuid.UUID, requestedQuantity int32) (bool, uint32, error) {
-	if m.err != nil {
-		return false, 0, m.err
-	}
-
-	stock, ok := m.stocks[goodId]
-	if !ok {
-		return false, 0, nil
-	}
-
-	return uint32(requestedQuantity) <= stock, stock, nil
-}
-
-func (m *MockStockChecker) SetStock(goodId uuid.UUID, quantity uint32) {
-	m.stocks[goodId] = quantity
-}
-
 func mustNewItem(goodId uuid.UUID, quantity int32) item.Item {
 	i, err := item.NewItem(goodId, quantity)
 	if err != nil {
@@ -48,21 +18,23 @@ func mustNewItem(goodId uuid.UUID, quantity int32) item.Item {
 	return i
 }
 
-func TestService_ValidateAddItems(t *testing.T) {
-	ctx := context.Background()
-
+func TestValidateAddItemsWithStock(t *testing.T) {
 	tests := []struct {
-		name       string
-		setupStock func(*MockStockChecker)
-		items      items.Items
-		wantValid  bool
-		wantErrors int
+		name        string
+		stockByGood map[uuid.UUID]StockAvailabilityInput
+		items       items.Items
+		wantValid   bool
+		wantErrors  int
+		wantErrCode string
 	}{
 		{
 			name: "valid items with sufficient stock",
-			setupStock: func(checker *MockStockChecker) {
-				goodId := uuid.MustParse("11111111-1111-1111-1111-111111111111")
-				checker.SetStock(goodId, 10)
+			stockByGood: map[uuid.UUID]StockAvailabilityInput{
+				uuid.MustParse("11111111-1111-1111-1111-111111111111"): {
+					GoodID:        uuid.MustParse("11111111-1111-1111-1111-111111111111"),
+					Available:     true,
+					StockQuantity: 10,
+				},
 			},
 			items: items.Items{
 				mustNewItem(uuid.MustParse("11111111-1111-1111-1111-111111111111"), 5),
@@ -72,40 +44,56 @@ func TestService_ValidateAddItems(t *testing.T) {
 		},
 		{
 			name: "insufficient stock",
-			setupStock: func(checker *MockStockChecker) {
-				goodId := uuid.MustParse("22222222-2222-2222-2222-222222222222")
-				checker.SetStock(goodId, 2)
+			stockByGood: map[uuid.UUID]StockAvailabilityInput{
+				uuid.MustParse("22222222-2222-2222-2222-222222222222"): {
+					GoodID:        uuid.MustParse("22222222-2222-2222-2222-222222222222"),
+					Available:     true,
+					StockQuantity: 2,
+				},
 			},
 			items: items.Items{
 				mustNewItem(uuid.MustParse("22222222-2222-2222-2222-222222222222"), 5),
 			},
-			wantValid:  false,
-			wantErrors: 1,
+			wantValid:   false,
+			wantErrors:  1,
+			wantErrCode: "QUANTITY_EXCEEDS_STOCK",
 		},
 		{
 			name: "zero stock",
-			setupStock: func(checker *MockStockChecker) {
-				goodId := uuid.MustParse("33333333-3333-3333-3333-333333333333")
-				checker.SetStock(goodId, 0)
+			stockByGood: map[uuid.UUID]StockAvailabilityInput{
+				uuid.MustParse("33333333-3333-3333-3333-333333333333"): {
+					GoodID:        uuid.MustParse("33333333-3333-3333-3333-333333333333"),
+					Available:     true,
+					StockQuantity: 0,
+				},
 			},
 			items: items.Items{
 				mustNewItem(uuid.MustParse("33333333-3333-3333-3333-333333333333"), 1),
 			},
-			wantValid:  false,
-			wantErrors: 1,
+			wantValid:   false,
+			wantErrors:  1,
+			wantErrCode: "QUANTITY_EXCEEDS_STOCK",
 		},
 		{
-			name:       "empty items list",
-			setupStock: func(checker *MockStockChecker) {},
-			items:      items.Items{},
-			wantValid:  true,
-			wantErrors: 0,
+			name:        "empty items list",
+			stockByGood: map[uuid.UUID]StockAvailabilityInput{},
+			items:       items.Items{},
+			wantValid:   true,
+			wantErrors:  0,
 		},
 		{
 			name: "multiple items - all valid",
-			setupStock: func(checker *MockStockChecker) {
-				checker.SetStock(uuid.MustParse("44444444-4444-4444-4444-444444444444"), 10)
-				checker.SetStock(uuid.MustParse("55555555-5555-5555-5555-555555555555"), 20)
+			stockByGood: map[uuid.UUID]StockAvailabilityInput{
+				uuid.MustParse("44444444-4444-4444-4444-444444444444"): {
+					GoodID:        uuid.MustParse("44444444-4444-4444-4444-444444444444"),
+					Available:     true,
+					StockQuantity: 10,
+				},
+				uuid.MustParse("55555555-5555-5555-5555-555555555555"): {
+					GoodID:        uuid.MustParse("55555555-5555-5555-5555-555555555555"),
+					Available:     true,
+					StockQuantity: 20,
+				},
 			},
 			items: items.Items{
 				mustNewItem(uuid.MustParse("44444444-4444-4444-4444-444444444444"), 5),
@@ -116,59 +104,90 @@ func TestService_ValidateAddItems(t *testing.T) {
 		},
 		{
 			name: "multiple items - one invalid",
-			setupStock: func(checker *MockStockChecker) {
-				checker.SetStock(uuid.MustParse("66666666-6666-6666-6666-666666666666"), 10)
-				checker.SetStock(uuid.MustParse("77777777-7777-7777-7777-777777777777"), 2)
+			stockByGood: map[uuid.UUID]StockAvailabilityInput{
+				uuid.MustParse("66666666-6666-6666-6666-666666666666"): {
+					GoodID:        uuid.MustParse("66666666-6666-6666-6666-666666666666"),
+					Available:     true,
+					StockQuantity: 10,
+				},
+				uuid.MustParse("77777777-7777-7777-7777-777777777777"): {
+					GoodID:        uuid.MustParse("77777777-7777-7777-7777-777777777777"),
+					Available:     true,
+					StockQuantity: 2,
+				},
 			},
 			items: items.Items{
 				mustNewItem(uuid.MustParse("66666666-6666-6666-6666-666666666666"), 5),
-				mustNewItem(uuid.MustParse("77777777-7777-7777-7777-777777777777"), 10), // Exceeds stock
+				mustNewItem(uuid.MustParse("77777777-7777-7777-7777-777777777777"), 10),
 			},
-			wantValid:  false,
-			wantErrors: 1,
+			wantValid:   false,
+			wantErrors:  1,
+			wantErrCode: "QUANTITY_EXCEEDS_STOCK",
+		},
+		{
+			name:        "good not in stock map - insufficient",
+			stockByGood: map[uuid.UUID]StockAvailabilityInput{},
+			items: items.Items{
+				mustNewItem(uuid.MustParse("88888888-8888-8888-8888-888888888888"), 1),
+			},
+			wantValid:   false,
+			wantErrors:  1,
+			wantErrCode: "INSUFFICIENT_STOCK",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			checker := NewMockStockChecker()
-			tt.setupStock(checker)
-
-			service := New(checker)
-			result := service.ValidateAddItems(ctx, tt.items)
+			result := ValidateAddItemsWithStock(tt.items, tt.stockByGood)
 
 			if result.Valid != tt.wantValid {
-				t.Errorf("ValidateAddItems() valid = %v, want %v", result.Valid, tt.wantValid)
+				t.Errorf("ValidateAddItemsWithStock() valid = %v, want %v", result.Valid, tt.wantValid)
 			}
 
 			if len(result.Errors) != tt.wantErrors {
-				t.Errorf("ValidateAddItems() errors = %d, want %d", len(result.Errors), tt.wantErrors)
+				t.Errorf("ValidateAddItemsWithStock() errors = %d, want %d", len(result.Errors), tt.wantErrors)
+			}
+
+			if tt.wantErrCode != "" && len(result.Errors) > 0 && result.Errors[0].Code != tt.wantErrCode {
+				t.Errorf("ValidateAddItemsWithStock() error code = %s, want %s", result.Errors[0].Code, tt.wantErrCode)
 			}
 		})
 	}
 }
 
-func TestService_ValidateAddItems_StockCheckError(t *testing.T) {
-	ctx := context.Background()
+func TestValidateAddItemsWithStock_StockCheckError(t *testing.T) {
 	goodId := uuid.New()
+	stockByGood := map[uuid.UUID]StockAvailabilityInput{
+		goodId: {
+			GoodID:     goodId,
+			Available:  false,
+			CheckError: errors.New("stock service unavailable"),
+		},
+	}
 
-	checker := NewMockStockChecker()
-	checker.err = errors.New("stock service unavailable")
-
-	service := New(checker)
-	result := service.ValidateAddItems(ctx, items.Items{
-		mustNewItem(goodId, 1),
-	})
+	result := ValidateAddItemsWithStock(items.Items{mustNewItem(goodId, 1)}, stockByGood)
 
 	if result.Valid {
-		t.Error("ValidateAddItems() should be invalid when stock check fails")
+		t.Error("ValidateAddItemsWithStock() should be invalid when stock check fails")
 	}
 
 	if len(result.Errors) != 1 {
-		t.Errorf("ValidateAddItems() errors = %d, want 1", len(result.Errors))
+		t.Errorf("ValidateAddItemsWithStock() errors = %d, want 1", len(result.Errors))
 	}
 
 	if result.Errors[0].Code != "STOCK_CHECK_ERROR" {
-		t.Errorf("ValidateAddItems() error code = %s, want STOCK_CHECK_ERROR", result.Errors[0].Code)
+		t.Errorf("ValidateAddItemsWithStock() error code = %s, want STOCK_CHECK_ERROR", result.Errors[0].Code)
+	}
+}
+
+func TestService_ValidateAddItems(t *testing.T) {
+	service := New()
+	goodId := uuid.New()
+	stockByGood := map[uuid.UUID]StockAvailabilityInput{
+		goodId: {GoodID: goodId, Available: true, StockQuantity: 5},
+	}
+	result := service.ValidateAddItems(items.Items{mustNewItem(goodId, 2)}, stockByGood)
+	if !result.Valid {
+		t.Errorf("Service.ValidateAddItems() valid = false, want true")
 	}
 }

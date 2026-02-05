@@ -1,20 +1,19 @@
 package v1
 
 import (
-	"context"
 	"fmt"
 
 	itemsv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/items/v1"
+
+	"github.com/google/uuid"
 )
 
-// ValidateAddItems validates if items can be added to a cart.
-// This encapsulates business rules like:
-// - Stock availability checks
-// - Quantity limits
-// - Item restrictions
-func (s *Service) ValidateAddItems(
-	ctx context.Context,
+// ValidateAddItemsWithStock validates if items can be added to a cart using
+// pre-fetched stock data. Pure domain logic: no I/O.
+// The use case must obtain stockByGoodId via a port (e.g. StockChecker) and pass it here.
+func ValidateAddItemsWithStock(
 	items itemsv1.Items,
+	stockByGoodId map[uuid.UUID]StockAvailabilityInput,
 ) Result {
 	result := Result{
 		Valid:    true,
@@ -23,47 +22,46 @@ func (s *Service) ValidateAddItems(
 	}
 
 	for _, item := range items {
-		// Check stock availability
-		available, stockQuantity, err := s.StockChecker.CheckStockAvailability(
-			ctx,
-			item.GetGoodId(),
-			item.GetQuantity(),
-		)
-		if err != nil {
+		goodID := item.GetGoodId()
+		stock, hasStock := stockByGoodId[goodID]
+
+		if hasStock && stock.CheckError != nil {
 			result.Valid = false
 			result.Errors = append(result.Errors, Error{
-				GoodID:  item.GetGoodId(),
-				Message: fmt.Sprintf("Failed to check stock availability: %v", err),
+				GoodID:  goodID,
+				Message: fmt.Sprintf("Failed to check stock availability: %v", stock.CheckError),
 				Code:    "STOCK_CHECK_ERROR",
 			})
 			continue
 		}
 
-		if !available {
+		if !hasStock || !stock.Available {
+			quantity := uint32(0)
+			if hasStock {
+				quantity = stock.StockQuantity
+			}
 			result.Valid = false
 			result.Errors = append(result.Errors, Error{
-				GoodID:  item.GetGoodId(),
-				Message: fmt.Sprintf("Insufficient stock. Available: %d, Requested: %d", stockQuantity, item.GetQuantity()),
+				GoodID:  goodID,
+				Message: fmt.Sprintf("Insufficient stock. Available: %d, Requested: %d", quantity, item.GetQuantity()),
 				Code:    "INSUFFICIENT_STOCK",
 			})
 			continue
 		}
 
-		// Check if requested quantity exceeds available stock
-		if uint32(item.GetQuantity()) > stockQuantity {
+		if uint32(item.GetQuantity()) > stock.StockQuantity {
 			result.Valid = false
 			result.Errors = append(result.Errors, Error{
-				GoodID:  item.GetGoodId(),
-				Message: fmt.Sprintf("Requested quantity (%d) exceeds available stock (%d)", item.GetQuantity(), stockQuantity),
+				GoodID:  goodID,
+				Message: fmt.Sprintf("Requested quantity (%d) exceeds available stock (%d)", item.GetQuantity(), stock.StockQuantity),
 				Code:    "QUANTITY_EXCEEDS_STOCK",
 			})
 		}
 
-		// Validate quantity is positive
 		if item.GetQuantity() <= 0 {
 			result.Valid = false
 			result.Errors = append(result.Errors, Error{
-				GoodID:  item.GetGoodId(),
+				GoodID:  goodID,
 				Message: "Quantity must be greater than zero",
 				Code:    "INVALID_QUANTITY",
 			})
@@ -73,3 +71,11 @@ func (s *Service) ValidateAddItems(
 	return result
 }
 
+// ValidateAddItems validates if items can be added to a cart using pre-fetched stock data.
+// Pure domain: no I/O. Use case must populate stockByGoodId via a port (e.g. StockChecker).
+func (s *Service) ValidateAddItems(
+	items itemsv1.Items,
+	stockByGoodId map[uuid.UUID]StockAvailabilityInput,
+) Result {
+	return ValidateAddItemsWithStock(items, stockByGoodId)
+}
