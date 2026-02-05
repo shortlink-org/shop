@@ -33,7 +33,7 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build \
     ./cmd/courier-emulation
 
 # Final stage
-FROM alpine:3.21
+FROM alpine:3.23
 
 LABEL maintainer=batazor111@gmail.com
 LABEL org.opencontainers.image.title="shortlink-shop-courier-emulation"
