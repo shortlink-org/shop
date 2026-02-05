@@ -42,8 +42,10 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 	if err != nil {
 		return domain.MapInfraErr("uow.Begin", err)
 	}
+
 	defer func() {
-		if err := h.uow.Rollback(ctx); err != nil {
+		err := h.uow.Rollback(ctx)
+		if err != nil {
 			h.log.Warn("transaction rollback failed", slog.Any("error", err))
 		}
 	}()
@@ -54,6 +56,7 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 		if errors.Is(err, domain.ErrNotFound) {
 			return nil
 		}
+
 		return domain.MapInfraErr("cartRepo.Load", err)
 	}
 
@@ -69,10 +72,12 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 
 	// 4. Publish domain events to outbox (same transaction)
 	for _, event := range cart.GetDomainEvents() {
-		if err := h.publisher.Publish(ctx, event); err != nil {
+		err := h.publisher.Publish(ctx, event)
+		if err != nil {
 			return domain.MapInfraErr("eventBus.Publish", err)
 		}
 	}
+
 	cart.ClearDomainEvents()
 
 	// 5. Commit transaction

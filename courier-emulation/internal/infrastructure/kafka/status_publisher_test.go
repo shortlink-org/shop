@@ -6,10 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/domain/vo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/domain/vo"
 )
 
 func TestStatusPublisher_PublishPickUp(t *testing.T) {
@@ -39,6 +38,7 @@ func TestStatusPublisher_PublishPickUp(t *testing.T) {
 
 	// Verify message content
 	var receivedEvent PickUpOrderEvent
+
 	err = json.Unmarshal(messages[0].Payload, &receivedEvent)
 	require.NoError(t, err)
 
@@ -79,6 +79,7 @@ func TestStatusPublisher_PublishDelivery(t *testing.T) {
 
 	// Verify message content
 	var receivedEvent DeliverOrderEvent
+
 	err = json.Unmarshal(messages[0].Payload, &receivedEvent)
 	require.NoError(t, err)
 
@@ -117,6 +118,7 @@ func TestStatusPublisher_PublishDeliveryNotDelivered(t *testing.T) {
 	require.Len(t, messages, 1)
 
 	var receivedEvent DeliverOrderEvent
+
 	err = json.Unmarshal(messages[0].Payload, &receivedEvent)
 	require.NoError(t, err)
 

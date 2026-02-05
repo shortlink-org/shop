@@ -25,6 +25,7 @@ func (m *mockDeliveryClient) AcceptOrder(ctx context.Context, req ports.AcceptOr
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
+
 	return args.Get(0).(*ports.AcceptOrderResponse), args.Error(1)
 }
 
@@ -48,6 +49,7 @@ func (m *mockGetHandler) Handle(ctx context.Context, query orderGet.Query) (orde
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
+
 	return args.Get(0).(*orderv1.OrderState), args.Error(1)
 }
 
@@ -155,7 +157,7 @@ func TestActivities_GetOrder_ContextCancelled(t *testing.T) {
 
 	activities := New(cancelHandler, getHandler, deliveryClient)
 
-	// Create cancelled context
+	// Create canceled context
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 

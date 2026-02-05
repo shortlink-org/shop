@@ -11,5 +11,6 @@ func (s QuantityPositiveSpec) IsSatisfiedBy(item *itemv1.Item) error {
 	if item.GetQuantity() <= 0 {
 		return itemv1.ErrItemQuantityZero
 	}
+
 	return nil
 }

@@ -13,5 +13,6 @@ func (s GoodIdNotEmptySpec) IsSatisfiedBy(item *itemv1.Item) error {
 	if item.GetGoodId() == uuid.Nil {
 		return itemv1.ErrItemGoodIdZero
 	}
+
 	return nil
 }

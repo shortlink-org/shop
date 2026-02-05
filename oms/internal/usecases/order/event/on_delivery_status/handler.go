@@ -6,7 +6,6 @@ import (
 	"log/slog"
 
 	"github.com/google/uuid"
-
 	"github.com/shortlink-org/go-sdk/logger"
 
 	common "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common"
@@ -51,9 +50,11 @@ func (h *Handler) HandleDeliveryStatus(ctx context.Context, event kafka.Delivery
 	if err != nil {
 		return fmt.Errorf("failed to load order: %w", err)
 	}
+
 	if order == nil {
 		h.log.Warn("Order not found for delivery event",
 			slog.String("order_id", event.OrderID))
+
 		return nil // Don't retry for non-existent orders
 	}
 
@@ -72,27 +73,31 @@ func (h *Handler) HandleDeliveryStatus(ctx context.Context, event kafka.Delivery
 	// Update delivery status based on event type
 	switch event.EventType {
 	case kafka.EventTypePackageInTransit:
-		if err := order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_IN_TRANSIT); err != nil {
+		err := order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_IN_TRANSIT)
+		if err != nil {
 			h.log.Warn("Failed to set delivery status to IN_TRANSIT",
 				slog.Any("error", err),
 				slog.String("order_id", event.OrderID))
 		}
 
 	case kafka.EventTypePackageDelivered:
-		if err := order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_DELIVERED); err != nil {
+		err := order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_DELIVERED)
+		if err != nil {
 			h.log.Warn("Failed to set delivery status to DELIVERED",
 				slog.Any("error", err),
 				slog.String("order_id", event.OrderID))
 		}
 		// Mark order as completed
-		if err := order.CompleteOrder(); err != nil {
+		err := order.CompleteOrder()
+		if err != nil {
 			h.log.Warn("Failed to complete order",
 				slog.Any("error", err),
 				slog.String("order_id", event.OrderID))
 		}
 
 	case kafka.EventTypePackageNotDelivered:
-		if err := order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_NOT_DELIVERED); err != nil {
+		err := order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_NOT_DELIVERED)
+		if err != nil {
 			h.log.Warn("Failed to set delivery status to NOT_DELIVERED",
 				slog.Any("error", err),
 				slog.String("order_id", event.OrderID),
@@ -102,6 +107,7 @@ func (h *Handler) HandleDeliveryStatus(ctx context.Context, event kafka.Delivery
 	default:
 		h.log.Debug("Ignoring unknown delivery event type",
 			slog.String("event_type", string(event.EventType)))
+
 		return nil
 	}
 

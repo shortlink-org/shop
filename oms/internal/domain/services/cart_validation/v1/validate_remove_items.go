@@ -6,9 +6,9 @@ import (
 
 	"github.com/google/uuid"
 
+	v1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
 	itemv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/item/v1"
 	itemsv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/items/v1"
-	v1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
 )
 
 // ValidateRemoveItems validates if items can be removed from a cart.
@@ -24,6 +24,7 @@ func (s *Service) ValidateRemoveItems(
 	}
 
 	cartItems := cart.GetItems()
+
 	cartItemMap := make(map[uuid.UUID]itemv1.Item)
 	for _, item := range cartItems {
 		cartItemMap[item.GetGoodId()] = item
@@ -37,6 +38,7 @@ func (s *Service) ValidateRemoveItems(
 				Message: "Item not found in cart",
 				Code:    "ITEM_NOT_IN_CART",
 			})
+
 			continue
 		}
 
@@ -52,4 +54,3 @@ func (s *Service) ValidateRemoveItems(
 
 	return result
 }
-

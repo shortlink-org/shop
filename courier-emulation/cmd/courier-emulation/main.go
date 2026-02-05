@@ -12,9 +12,8 @@ import (
 	"os"
 
 	"github.com/shortlink-org/go-sdk/graceful_shutdown"
-	"github.com/spf13/viper"
-
 	courier_di "github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/di"
+	"github.com/spf13/viper"
 )
 
 func main() {
@@ -34,12 +33,13 @@ func main() {
 		}
 	}()
 
-	// Create context for subscriber that can be cancelled on shutdown
+	// Create context for subscriber that can be canceled on shutdown
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// Start the delivery subscriber to consume order assignment events
 	if service.DeliverySubscriber != nil {
-		if err := service.DeliverySubscriber.Start(ctx); err != nil {
+		err := service.DeliverySubscriber.Start(ctx)
+		if err != nil {
 			service.Log.Error("Failed to start delivery subscriber", slog.String("error", err.Error()))
 		} else {
 			service.Log.Info("Delivery subscriber started, listening for order assignments")

@@ -24,4 +24,3 @@ type Warning struct {
 	Message string
 	Code    string
 }
-

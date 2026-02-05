@@ -1,6 +1,7 @@
 package weight
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -53,9 +54,11 @@ func TestNewWeight(t *testing.T) {
 					t.Errorf("NewWeight() expected error but got none")
 					return
 				}
-				if tt.errType != nil && err != tt.errType {
+
+				if tt.errType != nil && !errors.Is(err, tt.errType) {
 					t.Errorf("NewWeight() error = %v, want %v", err, tt.errType)
 				}
+
 				if !weight.IsZero() {
 					t.Errorf("NewWeight() should return zero weight on error, got %d", weight.Grams())
 				}
@@ -64,6 +67,7 @@ func TestNewWeight(t *testing.T) {
 					t.Errorf("NewWeight() unexpected error: %v", err)
 					return
 				}
+
 				if weight.Grams() != tt.grams {
 					t.Errorf("NewWeight() grams = %d, want %d", weight.Grams(), tt.grams)
 				}
@@ -75,6 +79,7 @@ func TestNewWeight(t *testing.T) {
 func TestWeight_Grams(t *testing.T) {
 	want := 1500
 	weight := MustNewWeight(want)
+
 	got := weight.Grams()
 	if got != want {
 		t.Errorf("Weight.Grams() = %d, want %d", got, want)
@@ -112,6 +117,7 @@ func TestWeight_Kilograms(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			weight := MustNewWeight(tt.grams)
+
 			got := weight.Kilograms()
 			if got != tt.expected {
 				t.Errorf("Weight.Kilograms() = %v, want %v", got, tt.expected)
@@ -162,6 +168,7 @@ func TestWeight_Add(t *testing.T) {
 					t.Errorf("Weight.Add() unexpected error: %v", err)
 					return
 				}
+
 				if got.Grams() != tt.want {
 					t.Errorf("Weight.Add() = %d, want %d", got.Grams(), tt.want)
 				}
@@ -224,6 +231,7 @@ func TestWeight_Multiply(t *testing.T) {
 					t.Errorf("Weight.Multiply() unexpected error: %v", err)
 					return
 				}
+
 				if got.Grams() != tt.want {
 					t.Errorf("Weight.Multiply() = %d, want %d", got.Grams(), tt.want)
 				}
@@ -239,6 +247,7 @@ func TestWeight_IsGreaterThan(t *testing.T) {
 	if !w1.IsGreaterThan(w2) {
 		t.Errorf("Weight.IsGreaterThan() = false, want true")
 	}
+
 	if w2.IsGreaterThan(w1) {
 		t.Errorf("Weight.IsGreaterThan() = true, want false")
 	}
@@ -251,6 +260,7 @@ func TestWeight_IsLessThan(t *testing.T) {
 	if !w1.IsLessThan(w2) {
 		t.Errorf("Weight.IsLessThan() = false, want true")
 	}
+
 	if w2.IsLessThan(w1) {
 		t.Errorf("Weight.IsLessThan() = true, want false")
 	}
@@ -287,6 +297,7 @@ func TestWeight_String(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			weight := MustNewWeight(tt.grams)
+
 			got := weight.String()
 			if got != tt.expected {
 				t.Errorf("Weight.String() = %v, want %v", got, tt.expected)
@@ -318,6 +329,7 @@ func TestMustNewWeight(t *testing.T) {
 				t.Errorf("MustNewWeight() panicked on valid weight: %v", r)
 			}
 		}()
+
 		weight := MustNewWeight(1000)
 		if weight.Grams() != 1000 {
 			t.Errorf("MustNewWeight() = %d, want 1000", weight.Grams())
@@ -330,6 +342,7 @@ func TestMustNewWeight(t *testing.T) {
 				t.Errorf("MustNewWeight() should panic on invalid weight")
 			}
 		}()
+
 		_ = MustNewWeight(-1)
 	})
 }
@@ -340,4 +353,3 @@ func TestWeight_IsZero(t *testing.T) {
 		t.Errorf("Weight.IsZero() = true for non-zero weight")
 	}
 }
-

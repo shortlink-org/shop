@@ -8,10 +8,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/domain/vo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/domain/vo"
 )
 
 func TestRouteGenerator_GenerateRoute(t *testing.T) {
@@ -31,6 +30,7 @@ func TestRouteGenerator_GenerateRoute(t *testing.T) {
 				},
 			},
 		}
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(resp)
 	}))
@@ -43,6 +43,7 @@ func TestRouteGenerator_GenerateRoute(t *testing.T) {
 	}
 	generator, err := NewRouteGenerator(config)
 	require.NoError(t, err)
+
 	defer generator.Close()
 
 	// Test route generation
@@ -65,6 +66,7 @@ func TestRouteGenerator_GenerateRoute_NoRoute(t *testing.T) {
 			Code:   "NoRoute",
 			Routes: nil,
 		}
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(resp)
 	}))
@@ -76,6 +78,7 @@ func TestRouteGenerator_GenerateRoute_NoRoute(t *testing.T) {
 	}
 	generator, err := NewRouteGenerator(config)
 	require.NoError(t, err)
+
 	defer generator.Close()
 
 	origin := vo.MustNewLocation(52.517037, 13.388860)
@@ -92,6 +95,7 @@ func TestRouteGenerator_GenerateRoute_ServiceUnavailable(t *testing.T) {
 	}
 	generator, err := NewRouteGenerator(config)
 	require.NoError(t, err)
+
 	defer generator.Close()
 
 	origin := vo.MustNewLocation(52.517037, 13.388860)
@@ -117,6 +121,7 @@ func TestRouteGenerator_GenerateRandomRoute(t *testing.T) {
 				},
 			},
 		}
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(resp)
 	}))
@@ -128,6 +133,7 @@ func TestRouteGenerator_GenerateRandomRoute(t *testing.T) {
 	}
 	generator, err := NewRouteGenerator(config)
 	require.NoError(t, err)
+
 	defer generator.Close()
 
 	bbox := vo.BerlinBoundingBox()
@@ -140,6 +146,7 @@ func TestRouteGenerator_GenerateRandomRoute(t *testing.T) {
 
 func TestRouteGenerator_GenerateBatch(t *testing.T) {
 	requestCount := 0
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requestCount++
 		resp := OSRMResponse{
@@ -156,6 +163,7 @@ func TestRouteGenerator_GenerateBatch(t *testing.T) {
 				},
 			},
 		}
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(resp)
 	}))
@@ -167,6 +175,7 @@ func TestRouteGenerator_GenerateBatch(t *testing.T) {
 	}
 	generator, err := NewRouteGenerator(config)
 	require.NoError(t, err)
+
 	defer generator.Close()
 
 	bbox := vo.BerlinBoundingBox()
@@ -180,6 +189,7 @@ func TestRouteGenerator_GenerateBatch(t *testing.T) {
 
 func TestRouteGenerator_CacheHit(t *testing.T) {
 	requestCount := 0
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requestCount++
 		resp := OSRMResponse{
@@ -196,6 +206,7 @@ func TestRouteGenerator_CacheHit(t *testing.T) {
 				},
 			},
 		}
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(resp)
 	}))
@@ -207,6 +218,7 @@ func TestRouteGenerator_CacheHit(t *testing.T) {
 	}
 	generator, err := NewRouteGenerator(config)
 	require.NoError(t, err)
+
 	defer generator.Close()
 
 	origin := vo.MustNewLocation(52.517037, 13.388860)

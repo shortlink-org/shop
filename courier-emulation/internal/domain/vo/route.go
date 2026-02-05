@@ -35,6 +35,7 @@ func NewRoute(
 	if distanceMeters <= 0 {
 		return Route{}, fmt.Errorf("%w: %f", ErrInvalidDistance, distanceMeters)
 	}
+
 	if duration <= 0 {
 		return Route{}, fmt.Errorf("%w: %v", ErrInvalidDuration, duration)
 	}

@@ -2,6 +2,7 @@ package v1
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
@@ -13,6 +14,7 @@ import (
 // CartHandler implements CartServiceServer
 type CartHandler struct {
 	UnimplementedCartServiceServer
+
 	calculateTotalHandler *calculate_total.Handler
 }
 
@@ -25,18 +27,23 @@ func NewCartHandler(calculateTotalHandler *calculate_total.Handler) *CartHandler
 
 // CalculateTotal calculates the total price, tax, and discounts for a cart
 func (h *CartHandler) CalculateTotal(ctx context.Context, req *CalculateTotalRequest) (*CalculateTotalResponse, error) {
-	if req == nil || req.Cart == nil {
+	if req == nil || req.GetCart() == nil {
 		return &CalculateTotalResponse{}, nil
 	}
 
-	cart := protoToDomainCart(req.Cart)
+	cart, err := protoToDomainCart(req.GetCart())
+	if err != nil {
+		return nil, fmt.Errorf("invalid cart request: %w", err)
+	}
+
 	discountParams := stringMapToInterface(req.GetDiscountParams())
 	taxParams := stringMapToInterface(req.GetTaxParams())
 
 	cmd := calculate_total.NewCommand(cart, discountParams, taxParams)
+
 	total, err := h.calculateTotalHandler.Handle(ctx, cmd)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("calculate total: %w", err)
 	}
 
 	return &CalculateTotalResponse{
@@ -44,15 +51,23 @@ func (h *CartHandler) CalculateTotal(ctx context.Context, req *CalculateTotalReq
 	}, nil
 }
 
-func protoToDomainCart(p *Cart) *domain.Cart {
+func protoToDomainCart(p *Cart) (*domain.Cart, error) {
 	if p == nil {
-		return nil
+		return nil, nil
 	}
 
 	items := make([]domain.CartItem, 0, len(p.GetItems()))
 	for _, it := range p.GetItems() {
-		goodID, _ := uuid.Parse(it.GetProductId())
-		price, _ := decimal.NewFromString(it.GetPrice())
+		goodID, err := uuid.Parse(it.GetProductId())
+		if err != nil {
+			return nil, fmt.Errorf("item product_id: %w", err)
+		}
+
+		price, err := decimal.NewFromString(it.GetPrice())
+		if err != nil {
+			return nil, fmt.Errorf("item price: %w", err)
+		}
+
 		items = append(items, domain.CartItem{
 			GoodID:   goodID,
 			Quantity: it.GetQuantity(),
@@ -60,12 +75,15 @@ func protoToDomainCart(p *Cart) *domain.Cart {
 		})
 	}
 
-	customerID, _ := uuid.Parse(p.GetCustomerId())
+	customerID, err := uuid.Parse(p.GetCustomerId())
+	if err != nil {
+		return nil, fmt.Errorf("customer_id: %w", err)
+	}
 
 	return &domain.Cart{
 		Items:      items,
 		CustomerID: customerID,
-	}
+	}, nil
 }
 
 func domainToProtoCartTotal(t *domain.CartTotal) *CartTotal {
@@ -81,13 +99,15 @@ func domainToProtoCartTotal(t *domain.CartTotal) *CartTotal {
 	}
 }
 
-func stringMapToInterface(m map[string]string) map[string]interface{} {
+func stringMapToInterface(m map[string]string) map[string]any {
 	if m == nil {
 		return nil
 	}
-	result := make(map[string]interface{}, len(m))
+
+	result := make(map[string]any, len(m))
 	for k, v := range m {
 		result[k] = v
 	}
+
 	return result
 }

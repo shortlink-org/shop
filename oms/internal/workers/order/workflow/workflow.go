@@ -31,7 +31,7 @@ type WorkflowInput struct {
 // On failure, compensation activities are executed to rollback changes.
 // The workflow is deterministic - all side effects go through activities.
 // Workflow is the main entry point for the order workflow (used by the event subscriber).
-// requestDelivery: when true, the RequestDelivery activity is invoked (it loads the order and uses domain delivery info).
+// RequestDelivery: when true, the RequestDelivery activity is invoked (it loads the order and uses domain delivery info).
 func Workflow(ctx workflow.Context, orderID, customerID uuid.UUID, items v2.Items, requestDelivery bool) error {
 	return WorkflowWithDelivery(ctx, WorkflowInput{
 		OrderID:         orderID,
@@ -73,8 +73,10 @@ func WorkflowWithDelivery(ctx workflow.Context, input WorkflowInput) error {
 	ctx = workflow.WithActivityOptions(ctx, ao)
 
 	// Track order status for queries
-	var orderStatus string = "PROCESSING"
-	var orderError error
+	var (
+		orderStatus string = "PROCESSING"
+		orderError  error
+	)
 
 	// Set up query handler for getting order status
 	err := workflow.SetQueryHandler(ctx, v2.WorkflowQueryGet, func() (string, error) {
@@ -101,6 +103,7 @@ func WorkflowWithDelivery(ctx workflow.Context, input WorkflowInput) error {
 		} else {
 			orderStatus = "COMPLETED"
 		}
+
 		sagaDone.Send(ctx, sagaErr)
 	})
 
@@ -111,7 +114,8 @@ func WorkflowWithDelivery(ctx workflow.Context, input WorkflowInput) error {
 		c.Receive(ctx, nil)
 		logger.Info("Order cancellation signal received")
 		cancelSaga()
-		orderStatus = "CANCELLED"
+
+		orderStatus = "CANCELED"
 	})
 
 	selector.AddReceive(completeChannel, func(c workflow.ReceiveChannel, _ bool) {
@@ -122,6 +126,7 @@ func WorkflowWithDelivery(ctx workflow.Context, input WorkflowInput) error {
 	selector.AddReceive(sagaDone, func(c workflow.ReceiveChannel, _ bool) {
 		var err error
 		c.Receive(ctx, &err)
+
 		if err != nil {
 			logger.Error("Saga failed", "error", err)
 		} else {
@@ -151,6 +156,7 @@ func executeSaga(ctx workflow.Context, orderID, customerID uuid.UUID, items v2.I
 func executeSagaWithDelivery(ctx workflow.Context, input WorkflowInput) error {
 	logger := workflow.GetLogger(ctx)
 	hasDelivery := input.RequestDelivery
+
 	totalSteps := 4
 	if hasDelivery {
 		totalSteps = 5
@@ -190,16 +196,18 @@ func executeSagaWithDelivery(ctx workflow.Context, input WorkflowInput) error {
 		workflow.SetCurrentDetails(ctx, fmt.Sprintf("**Step 4/%d:** Requesting delivery...", totalSteps))
 
 		var deliveryResp activities.RequestDeliveryResponse
+
 		err := workflow.ExecuteActivity(ctx, "RequestDelivery", activities.RequestDeliveryRequest{
-			OrderID:    input.OrderID,
-			CustomerID: input.CustomerID,
+			OrderID: input.OrderID,
 		}).Get(ctx, &deliveryResp)
 		if err != nil {
 			workflow.SetCurrentDetails(ctx, "**Failed:** Delivery request failed, compensating...")
 			logger.Error("Failed to request delivery", "error", err, "orderID", input.OrderID)
 			// Compensation: cancel order (stock release would also be needed if implemented)
 			var cancelActivities *activities.Activities
+
 			_ = workflow.ExecuteActivity(ctx, cancelActivities.CancelOrder, activities.CancelOrderRequest{OrderID: input.OrderID}).Get(ctx, nil)
+
 			return err
 		}
 

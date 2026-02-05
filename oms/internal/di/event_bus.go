@@ -2,7 +2,6 @@ package oms_di
 
 import (
 	"github.com/ThreeDotsLabs/watermill"
-
 	"github.com/shortlink-org/go-sdk/cqrs/bus"
 	cqrsmessage "github.com/shortlink-org/go-sdk/cqrs/message"
 	logger "github.com/shortlink-org/go-sdk/logger"
@@ -16,6 +15,7 @@ func newEventBus(log logger.Logger) *bus.EventBus {
 	namer := cqrsmessage.NewShortlinkNamer("oms")
 	marshaler := cqrsmessage.NewJSONMarshaler(namer)
 	wmLogger := watermill.NewStdLogger(false, false)
+
 	return bus.NewEventBus(
 		nil,
 		marshaler,

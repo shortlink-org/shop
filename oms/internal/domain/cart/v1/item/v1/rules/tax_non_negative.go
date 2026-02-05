@@ -11,5 +11,6 @@ func (s TaxNonNegativeSpec) IsSatisfiedBy(item *itemv1.Item) error {
 	if item.GetTax().IsNegative() {
 		return itemv1.ErrItemTaxNegative
 	}
+
 	return nil
 }

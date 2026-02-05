@@ -5,13 +5,11 @@ import (
 	"log/slog"
 
 	"github.com/ThreeDotsLabs/watermill"
-	"github.com/spf13/viper"
-
 	"github.com/shortlink-org/go-sdk/config"
 	"github.com/shortlink-org/go-sdk/logger"
-
 	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/domain/services"
 	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/infrastructure/kafka"
+	"github.com/spf13/viper"
 )
 
 // watermillLoggerAdapter adapts shortlink logger to Watermill logger interface.
@@ -71,7 +69,10 @@ func NewDeliverySubscriber(
 
 	cleanup := func() {
 		if subscriber != nil {
-			_ = subscriber.Stop()
+			err := subscriber.Stop()
+			if err != nil {
+				log.Warn("failed to stop delivery subscriber", slog.String("error", err.Error()))
+			}
 		}
 	}
 

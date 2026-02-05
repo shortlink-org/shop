@@ -2,6 +2,7 @@ package vo
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -48,8 +49,10 @@ func (e CourierLocationEvent) WithRouteID(routeID string) CourierLocationEvent {
 // MarshalJSON implements custom JSON marshaling for Location.
 func (e CourierLocationEvent) MarshalJSON() ([]byte, error) {
 	type Alias CourierLocationEvent
-	return json.Marshal(&struct {
+
+	data, err := json.Marshal(&struct {
 		Alias
+
 		Latitude  float64 `json:"latitude"`
 		Longitude float64 `json:"longitude"`
 	}{
@@ -57,11 +60,21 @@ func (e CourierLocationEvent) MarshalJSON() ([]byte, error) {
 		Latitude:  e.Location.Latitude(),
 		Longitude: e.Location.Longitude(),
 	})
+	if err != nil {
+		return nil, fmt.Errorf("marshal courier location event: %w", err)
+	}
+
+	return data, nil
 }
 
 // ToJSON serializes the event to JSON bytes.
 func (e CourierLocationEvent) ToJSON() ([]byte, error) {
-	return json.Marshal(e)
+	data, err := json.Marshal(e)
+	if err != nil {
+		return nil, fmt.Errorf("marshal courier location event: %w", err)
+	}
+
+	return data, nil
 }
 
 // CourierStatus constants

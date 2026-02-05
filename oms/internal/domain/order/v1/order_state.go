@@ -3,15 +3,16 @@ package v1
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
-
 	"github.com/shortlink-org/go-sdk/fsm"
+	"google.golang.org/protobuf/types/known/timestamppb"
+
 	commonv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common"
 	eventsv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/events/v1"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // OrderState represents the order state.
@@ -43,15 +44,16 @@ func NewOrderState(customerId uuid.UUID) *OrderState {
 
 // NewOrderStateFromPersisted builds an OrderState from persisted data (repository load).
 // Single constructor for both "new order" and "reconstitute"; FSM rules live only here.
-func NewOrderStateFromPersisted(id uuid.UUID, customerId uuid.UUID, items Items, status OrderStatus, version int, deliveryInfo *DeliveryInfo) *OrderState {
+func NewOrderStateFromPersisted(id, customerId uuid.UUID, items Items, status OrderStatus, version int, deliveryInfo *DeliveryInfo) *OrderState {
 	if items == nil {
 		items = make(Items, 0)
 	}
+
 	return newOrderState(id, customerId, items, status, version, deliveryInfo)
 }
 
 // newOrderState is the single place that builds OrderState and configures the FSM.
-func newOrderState(id uuid.UUID, customerId uuid.UUID, items Items, status OrderStatus, version int, deliveryInfo *DeliveryInfo) *OrderState {
+func newOrderState(id, customerId uuid.UUID, items Items, status OrderStatus, version int, deliveryInfo *DeliveryInfo) *OrderState {
 	order := &OrderState{
 		id:           id,
 		items:        items,
@@ -64,6 +66,7 @@ func newOrderState(id uuid.UUID, customerId uuid.UUID, items Items, status Order
 	order.addOrderTransitionRules(order.fsm)
 	order.fsm.SetOnEnterState(order.onEnterState)
 	order.fsm.SetOnExitState(order.onExitState)
+
 	return order
 }
 
@@ -78,12 +81,12 @@ func (o *OrderState) addOrderTransitionRules(f *fsm.FSM) {
 	f.AddTransitionRule(
 		fsm.State(OrderStatus_ORDER_STATUS_PENDING.String()),
 		fsm.Event(commonv1.OrderTransitionEvent_ORDER_TRANSITION_EVENT_CANCEL.String()),
-		fsm.State(OrderStatus_ORDER_STATUS_CANCELLED.String()),
+		fsm.State(OrderStatus_ORDER_STATUS_CANCELED.String()),
 	)
 	f.AddTransitionRule(
 		fsm.State(OrderStatus_ORDER_STATUS_PROCESSING.String()),
 		fsm.Event(commonv1.OrderTransitionEvent_ORDER_TRANSITION_EVENT_CANCEL.String()),
-		fsm.State(OrderStatus_ORDER_STATUS_CANCELLED.String()),
+		fsm.State(OrderStatus_ORDER_STATUS_CANCELED.String()),
 	)
 	f.AddTransitionRule(
 		fsm.State(OrderStatus_ORDER_STATUS_PROCESSING.String()),
@@ -161,8 +164,9 @@ func (o *OrderState) SetDeliveryInfo(info DeliveryInfo) error {
 	// Check OrderStatus - cannot update delivery info in terminal states
 	currentStatus := o.getStatusUnlocked()
 	if currentStatus == OrderStatus_ORDER_STATUS_COMPLETED ||
-		currentStatus == OrderStatus_ORDER_STATUS_CANCELLED {
-		return &ErrOrderTerminalState{Status: currentStatus}
+		currentStatus == OrderStatus_ORDER_STATUS_CANCELED {
+
+		return &OrderTerminalStateError{Status: currentStatus}
 	}
 
 	// Check DeliveryStatus - cannot change after package is assigned to courier or in transit
@@ -170,10 +174,12 @@ func (o *OrderState) SetDeliveryInfo(info DeliveryInfo) error {
 		o.deliveryStatus == commonv1.DeliveryStatus_DELIVERY_STATUS_IN_TRANSIT ||
 		o.deliveryStatus == commonv1.DeliveryStatus_DELIVERY_STATUS_DELIVERED ||
 		o.deliveryStatus == commonv1.DeliveryStatus_DELIVERY_STATUS_NOT_DELIVERED {
-		return &ErrDeliveryAlreadyInProgress{DeliveryStatus: o.deliveryStatus}
+
+		return &DeliveryAlreadyInProgressError{DeliveryStatus: o.deliveryStatus}
 	}
 
 	o.deliveryInfo = &info
+
 	return nil
 }
 
@@ -202,16 +208,18 @@ func (o *OrderState) SetDeliveryStatus(status commonv1.DeliveryStatus) error {
 	// Cannot update delivery status in terminal order states
 	currentOrderStatus := o.getStatusUnlocked()
 	if currentOrderStatus == OrderStatus_ORDER_STATUS_COMPLETED ||
-		currentOrderStatus == OrderStatus_ORDER_STATUS_CANCELLED {
-		return &ErrOrderTerminalState{Status: currentOrderStatus}
+		currentOrderStatus == OrderStatus_ORDER_STATUS_CANCELED {
+
+		return &OrderTerminalStateError{Status: currentOrderStatus}
 	}
 
 	// Validate delivery status transition (only forward transitions allowed)
 	if !o.isValidDeliveryStatusTransition(o.deliveryStatus, status) {
-		return &ErrInvalidDeliveryStatusTransition{From: o.deliveryStatus, To: status}
+		return &InvalidDeliveryStatusTransitionError{From: o.deliveryStatus, To: status}
 	}
 
 	o.deliveryStatus = status
+
 	return nil
 }
 
@@ -242,13 +250,7 @@ func (o *OrderState) isValidDeliveryStatusTransition(from, to commonv1.DeliveryS
 		return false
 	}
 
-	for _, allowed := range allowedTargets {
-		if to == allowed {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(allowedTargets, to)
 }
 
 // GetStatus returns the current status of the order.
@@ -271,6 +273,7 @@ func (o *OrderState) fsmStateToOrderStatus(state fsm.State) OrderStatus {
 			return OrderStatus(k)
 		}
 	}
+
 	return OrderStatus_ORDER_STATUS_UNSPECIFIED
 }
 
@@ -284,6 +287,7 @@ func orderItemsToProto(items Items) []*commonv1.OrderItem {
 			Price:    it.GetPrice().String(),
 		})
 	}
+
 	return out
 }
 
@@ -300,6 +304,7 @@ func (o *OrderState) GetDomainEvents() []any {
 
 	eventsCopy := make([]any, len(o.domainEvents))
 	copy(eventsCopy, o.domainEvents)
+
 	return eventsCopy
 }
 
@@ -308,13 +313,12 @@ func (o *OrderState) GetDomainEvents() []any {
 func (o *OrderState) ClearDomainEvents() {
 	o.mu.Lock()
 	defer o.mu.Unlock()
+
 	o.domainEvents = o.domainEvents[:0]
 }
 
 // CreateOrder initializes the order with the provided items and transitions it to Processing state.
-// Domain layer should not depend on context.Context from application layer.
-// We use context.Background() internally for FSM, keeping domain pure.
-func (o *OrderState) CreateOrder(items Items) error {
+func (o *OrderState) CreateOrder(ctx context.Context, items Items) error {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
@@ -335,7 +339,7 @@ func (o *OrderState) CreateOrder(items Items) error {
 	}
 
 	// Trigger CREATE: PENDING + CREATE => PROCESSING.
-	err := o.fsm.TriggerEvent(context.Background(), fsm.Event(commonv1.OrderTransitionEvent_ORDER_TRANSITION_EVENT_CREATE.String()))
+	err := o.fsm.TriggerEvent(ctx, fsm.Event(commonv1.OrderTransitionEvent_ORDER_TRANSITION_EVENT_CREATE.String()))
 	if err != nil {
 		return err
 	}
@@ -353,6 +357,7 @@ func (o *OrderState) CreateOrder(items Items) error {
 		CreatedAt:  ts,
 		OccurredAt: ts,
 	})
+
 	return nil
 }
 
@@ -364,8 +369,8 @@ func (o *OrderState) UpdateOrder(items Items) error {
 	defer o.mu.Unlock()
 
 	currentStatus := o.getStatusUnlocked()
-	if currentStatus == OrderStatus_ORDER_STATUS_COMPLETED || currentStatus == OrderStatus_ORDER_STATUS_CANCELLED {
-		return &ErrOrderTerminalState{Status: currentStatus}
+	if currentStatus == OrderStatus_ORDER_STATUS_COMPLETED || currentStatus == OrderStatus_ORDER_STATUS_CANCELED {
+		return &OrderTerminalStateError{Status: currentStatus}
 	}
 
 	// Canonical map: goodId -> Item (base = current order, then merged with input)
@@ -382,19 +387,24 @@ func (o *OrderState) UpdateOrder(items Items) error {
 
 	// Merge input: validate and overwrite/add in canonical
 	for _, item := range items {
-		if err := ValidateOrderItem(item); err != nil {
+		err := ValidateOrderItem(item)
+		if err != nil {
 			return fmt.Errorf("cannot update item %s: %w", item.GetGoodId(), err)
 		}
+
 		canonical[item.GetGoodId()] = item
 	}
 
 	// Build slice in stable order: existing (current order) then new (first appearance in items)
 	result := make(Items, 0, len(canonical))
+
 	for _, it := range o.items {
 		gid := it.GetGoodId()
 		result = append(result, canonical[gid])
 	}
+
 	seenNew := make(map[uuid.UUID]bool)
+
 	for _, it := range items {
 		gid := it.GetGoodId()
 		if !originalGoodIds[gid] && !seenNew[gid] {
@@ -403,35 +413,39 @@ func (o *OrderState) UpdateOrder(items Items) error {
 		}
 	}
 
-	if err := ValidateOrderItems(result); err != nil {
+	err := ValidateOrderItems(result)
+	if err != nil {
 		return fmt.Errorf("cannot update order: %w", err)
 	}
+
 	o.items = result
+
 	return nil
 }
 
-// CancelOrder transitions the order to the Cancelled state.
+// CancelOrder transitions the order to the Canceled state.
 // Domain layer should not depend on context.Context from application layer.
 func (o *OrderState) CancelOrder() error {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
-	// Trigger CANCEL: PENDING/PROCESSING + CANCEL => CANCELLED.
+	// Trigger CANCEL: PENDING/PROCESSING + CANCEL => CANCELED.
 	err := o.fsm.TriggerEvent(context.Background(), fsm.Event(commonv1.OrderTransitionEvent_ORDER_TRANSITION_EVENT_CANCEL.String()))
 	if err != nil {
 		return err
 	}
 
-	// Emit domain event: order was cancelled (aggregate generates events in command methods).
+	// Emit domain event: order was canceled (aggregate generates events in command methods).
 	ts := timestamppb.New(time.Now())
 	o.addDomainEvent(&eventsv1.OrderCancelled{
 		OrderId:     o.id.String(),
 		CustomerId:  o.customerId.String(),
-		Status:      OrderStatus_ORDER_STATUS_CANCELLED,
+		Status:      OrderStatus_ORDER_STATUS_CANCELED,
 		Reason:      "",
 		CancelledAt: ts,
 		OccurredAt:  ts,
 	})
+
 	return nil
 }
 
@@ -445,7 +459,7 @@ func (o *OrderState) CompleteOrder() error {
 
 	// Validate state transition (invariant: can only complete orders in PROCESSING state)
 	if currentStatus != OrderStatus_ORDER_STATUS_PROCESSING {
-		return &ErrInvalidOrderTransition{From: currentStatus, To: OrderStatus_ORDER_STATUS_COMPLETED}
+		return &InvalidOrderTransitionError{From: currentStatus, To: OrderStatus_ORDER_STATUS_COMPLETED}
 	}
 
 	// Validate items before completing (invariant: order must have valid items to complete)
@@ -468,5 +482,6 @@ func (o *OrderState) CompleteOrder() error {
 		CompletedAt: ts,
 		OccurredAt:  ts,
 	})
+
 	return nil
 }

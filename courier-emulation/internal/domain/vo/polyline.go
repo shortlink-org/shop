@@ -34,6 +34,7 @@ func MustNewPolyline(encoded string) Polyline {
 	if err != nil {
 		panic(fmt.Sprintf("invalid polyline: %v", err))
 	}
+
 	return p
 }
 
@@ -50,6 +51,7 @@ func (p Polyline) Decode() ([]Location, error) {
 	}
 
 	var locations []Location
+
 	index := 0
 	lat := 0
 	lng := 0
@@ -58,18 +60,19 @@ func (p Polyline) Decode() ([]Location, error) {
 		// Decode latitude
 		shift := 0
 		result := 0
-		for {
-			if index >= len(p.encoded) {
-				break
-			}
+
+		for index < len(p.encoded) {
+
 			b := int(p.encoded[index]) - 63
 			index++
 			result |= (b & 0x1f) << shift
 			shift += 5
+
 			if b < 0x20 {
 				break
 			}
 		}
+
 		if result&1 != 0 {
 			lat += ^(result >> 1)
 		} else {
@@ -79,18 +82,19 @@ func (p Polyline) Decode() ([]Location, error) {
 		// Decode longitude
 		shift = 0
 		result = 0
-		for {
-			if index >= len(p.encoded) {
-				break
-			}
+
+		for index < len(p.encoded) {
+
 			b := int(p.encoded[index]) - 63
 			index++
 			result |= (b & 0x1f) << shift
 			shift += 5
+
 			if b < 0x20 {
 				break
 			}
 		}
+
 		if result&1 != 0 {
 			lng += ^(result >> 1)
 		} else {
@@ -105,6 +109,7 @@ func (p Polyline) Decode() ([]Location, error) {
 		if err != nil {
 			return nil, fmt.Errorf("invalid coordinate in polyline: %w", err)
 		}
+
 		locations = append(locations, loc)
 	}
 

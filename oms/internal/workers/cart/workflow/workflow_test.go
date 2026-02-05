@@ -83,9 +83,9 @@ func (s *CartWorkflowTestSuite) Test_Workflow_AddItemSignal() {
 	s.env.ExecuteWorkflow(Workflow, testCustomerID)
 
 	s.True(s.env.IsWorkflowCompleted())
-	// Workflow was cancelled, so it returns an error
+	// Workflow was canceled, so it returns an error
 	err := s.env.GetWorkflowError()
-	s.NotNil(err)
+	s.Error(err)
 }
 
 // Test_Workflow_RemoveItemSignal tests the remove item signal handling.
@@ -153,6 +153,7 @@ func (s *CartWorkflowTestSuite) Test_Workflow_MultipleSignalsInSequence() {
 		Price:      decimal.NewFromFloat(29.99),
 		Discount:   decimal.Zero,
 	}
+
 	s.env.RegisterDelayedCallback(func() {
 		s.env.SignalWorkflow(v2.Event_EVENT_ADD.String(), addReq)
 	}, time.Millisecond*10)
@@ -163,6 +164,7 @@ func (s *CartWorkflowTestSuite) Test_Workflow_MultipleSignalsInSequence() {
 		GoodID:     testGoodID,
 		Quantity:   1,
 	}
+
 	s.env.RegisterDelayedCallback(func() {
 		s.env.SignalWorkflow(v2.Event_EVENT_REMOVE.String(), removeReq)
 	}, time.Millisecond*50)

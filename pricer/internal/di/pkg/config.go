@@ -16,8 +16,9 @@ func ReadConfig() (*Config, error) {
 	viper.AddConfigPath("..")     // optionally look for config in the parent directory
 	viper.AddConfigPath("./cmd")  // or the cmd directory
 	viper.AutomaticEnv()          // read in environment variables that match
-	err := viper.ReadInConfig()   // Find and read the config file
-	if err != nil {               // Handle errors reading the config file
+
+	err := viper.ReadInConfig() // Find and read the config file
+	if err != nil {             // Handle errors reading the config file
 		return nil, fmt.Errorf("fatal error config file: %w", err)
 	}
 

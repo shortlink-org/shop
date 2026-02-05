@@ -51,6 +51,7 @@ func (s *OrderEventSubscriber) OnOrderCreated(ctx context.Context, event *events
 	if err != nil {
 		return err
 	}
+
 	customerID, err := uuid.Parse(event.GetCustomerId())
 	if err != nil {
 		return err
@@ -62,13 +63,14 @@ func (s *OrderEventSubscriber) OnOrderCreated(ctx context.Context, event *events
 		s.log.Error("Failed to load order for workflow",
 			slog.String("order_id", orderID.String()),
 			slog.Any("error", err))
+
 		return err
 	}
 
 	items := order.GetItems()
 	requestDelivery := order.HasDeliveryInfo()
 
-	workflowID := fmt.Sprintf("order-%s", orderID.String())
+	workflowID := "order-" + orderID.String()
 
 	s.log.Info("Starting order workflow",
 		slog.String("workflow_id", workflowID),
@@ -92,12 +94,12 @@ func (s *OrderEventSubscriber) OnOrderCreated(ctx context.Context, event *events
 			len(items),
 			requestDelivery),
 	}, OrderWorkflowName, orderID, customerID, items, requestDelivery)
-
 	if err != nil {
 		s.log.Error("Failed to start order workflow",
 			slog.String("workflow_id", workflowID),
 			slog.String("order_id", orderID.String()),
 			slog.Any("error", err))
+
 		return err
 	}
 
@@ -106,7 +108,7 @@ func (s *OrderEventSubscriber) OnOrderCreated(ctx context.Context, event *events
 
 // OnOrderCancelled handles OrderCancelled events by signaling the order workflow.
 func (s *OrderEventSubscriber) OnOrderCancelled(ctx context.Context, event *eventsv1.OrderCancelled) error {
-	workflowID := fmt.Sprintf("order-%s", event.GetOrderId())
+	workflowID := "order-" + event.GetOrderId()
 
 	s.log.Info("Signaling order cancellation to workflow",
 		slog.String("workflow_id", workflowID),
@@ -119,6 +121,7 @@ func (s *OrderEventSubscriber) OnOrderCancelled(ctx context.Context, event *even
 			slog.String("workflow_id", workflowID),
 			slog.String("order_id", event.GetOrderId()),
 			slog.Any("error", err))
+
 		return err
 	}
 

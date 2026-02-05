@@ -34,6 +34,7 @@ func ProtoDeliveryInfoToDomain(protoInfo *commonv1.DeliveryInfo) *orderDomain.De
 
 	// Convert optional recipient contacts
 	var recipientContacts *orderDomain.RecipientContacts
+
 	if rc := protoInfo.GetRecipientContacts(); rc != nil {
 		c := orderDomain.NewRecipientContacts(
 			rc.GetRecipientName(),
@@ -61,14 +62,21 @@ func protoAddressToDomain(protoAddr *commonv1.DeliveryAddress) address.Address {
 		return address.Address{}
 	}
 
-	loc, _ := location.NewLocation(protoAddr.GetLatitude(), protoAddr.GetLongitude())
-	addr, _ := address.NewAddressWithLocation(
+	loc, err := location.NewLocation(protoAddr.GetLatitude(), protoAddr.GetLongitude())
+	if err != nil {
+		return address.Address{}
+	}
+
+	addr, err := address.NewAddressWithLocation(
 		protoAddr.GetStreet(),
 		protoAddr.GetCity(),
 		protoAddr.GetPostalCode(),
 		protoAddr.GetCountry(),
 		loc,
 	)
+	if err != nil {
+		return address.Address{}
+	}
 
 	return addr
 }

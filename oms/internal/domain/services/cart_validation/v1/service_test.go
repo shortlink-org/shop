@@ -15,6 +15,7 @@ func mustNewItem(goodId uuid.UUID, quantity int32) item.Item {
 	if err != nil {
 		panic(err)
 	}
+
 	return i
 }
 
@@ -186,6 +187,7 @@ func TestService_ValidateAddItems(t *testing.T) {
 	stockByGood := map[uuid.UUID]StockAvailabilityInput{
 		goodId: {GoodID: goodId, Available: true, StockQuantity: 5},
 	}
+
 	result := service.ValidateAddItems(items.Items{mustNewItem(goodId, 2)}, stockByGood)
 	if !result.Valid {
 		t.Errorf("Service.ValidateAddItems() valid = false, want true")

@@ -2,10 +2,10 @@ package kafka
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
-
 	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/domain/vo"
 )
 
@@ -31,7 +31,7 @@ func NewLocationPublisher(publisher message.Publisher) *LocationPublisher {
 func (p *LocationPublisher) PublishLocation(ctx context.Context, event vo.CourierLocationEvent) error {
 	payload, err := event.ToJSON()
 	if err != nil {
-		return err
+		return fmt.Errorf("event to json: %w", err)
 	}
 
 	msg := message.NewMessage(watermill.NewUUID(), payload)
@@ -39,7 +39,11 @@ func (p *LocationPublisher) PublishLocation(ctx context.Context, event vo.Courie
 	// Set partition key to courier ID for ordered delivery per courier
 	msg.Metadata.Set("partition_key", event.CourierID)
 
-	return p.publisher.Publish(TopicCourierLocation, msg)
+	if err := p.publisher.Publish(TopicCourierLocation, msg); err != nil {
+		return fmt.Errorf("publish location: %w", err)
+	}
+
+	return nil
 }
 
 // PublishLocationBatch publishes multiple courier location events.
@@ -49,7 +53,7 @@ func (p *LocationPublisher) PublishLocationBatch(ctx context.Context, events []v
 	for _, event := range events {
 		payload, err := event.ToJSON()
 		if err != nil {
-			return err
+			return fmt.Errorf("event to json: %w", err)
 		}
 
 		msg := message.NewMessage(watermill.NewUUID(), payload)
@@ -57,10 +61,20 @@ func (p *LocationPublisher) PublishLocationBatch(ctx context.Context, events []v
 		messages = append(messages, msg)
 	}
 
-	return p.publisher.Publish(TopicCourierLocation, messages...)
+	err := p.publisher.Publish(TopicCourierLocation, messages...)
+	if err != nil {
+		return fmt.Errorf("publish location batch: %w", err)
+	}
+
+	return nil
 }
 
 // Close closes the publisher.
 func (p *LocationPublisher) Close() error {
-	return p.publisher.Close()
+	err := p.publisher.Close()
+	if err != nil {
+		return fmt.Errorf("publisher close: %w", err)
+	}
+
+	return nil
 }

@@ -18,7 +18,7 @@ type AddRequestParams struct {
 // AddRequestToDomain converts an AddRequest to domain parameters
 func AddRequestToDomain(r *v2.AddRequest) (*AddRequestParams, error) {
 	// string to uuid
-	customerID, err := uuid.Parse(r.CustomerId)
+	customerID, err := uuid.Parse(r.GetCustomerId())
 	if err != nil {
 		return nil, ErrInvalidCustomerId
 	}
@@ -28,14 +28,14 @@ func AddRequestToDomain(r *v2.AddRequest) (*AddRequestParams, error) {
 	// parse items
 	for i := range r.GetItems() {
 		// string to uuid
-		goodID, errParseItem := uuid.Parse(r.Items[i].GoodId)
+		goodID, errParseItem := uuid.Parse(r.GetItems()[i].GetGoodId())
 		if errParseItem != nil {
-			return nil, ParseItemError{Err: errParseItem, item: r.Items[i].GoodId}
+			return nil, ParseItemError{Err: errParseItem, item: r.GetItems()[i].GetGoodId()}
 		}
 
-		cartItem, err := itemv1.NewItem(goodID, r.Items[i].Quantity)
+		cartItem, err := itemv1.NewItem(goodID, r.GetItems()[i].GetQuantity())
 		if err != nil {
-			return nil, fmt.Errorf("invalid cart item %+v: %w", r.Items[i], err)
+			return nil, fmt.Errorf("invalid cart item %+v: %w", r.GetItems()[i], err)
 		}
 
 		items = append(items, cartItem)

@@ -4,9 +4,9 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/shortlink-org/go-sdk/graceful_shutdown"
 	"github.com/spf13/viper"
 
-	"github.com/shortlink-org/go-sdk/graceful_shutdown"
 	"github.com/shortlink-org/shop/pricer/internal/di"
 )
 
@@ -19,6 +19,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	service.Log.Info("Service initialized")
 
 	defer func() {
@@ -32,14 +33,18 @@ func main() {
 		cartFiles := viper.GetStringSlice("cart_files")
 		discountParams := viper.GetStringMap("params.discount")
 		taxParams := viper.GetStringMap("params.tax")
+
 		if discountParams == nil {
-			discountParams = make(map[string]interface{})
+			discountParams = make(map[string]any)
 		}
+
 		if taxParams == nil {
-			taxParams = make(map[string]interface{})
+			taxParams = make(map[string]any)
 		}
+
 		for _, cartFile := range cartFiles {
-			if err := service.CLIHandler.Run(cartFile, discountParams, taxParams); err != nil {
+			err := service.CLIHandler.Run(cartFile, discountParams, taxParams)
+			if err != nil {
 				service.Log.Error("CLI processing failed", slog.String("cart_file", cartFile), slog.Any("error", err))
 			}
 		}

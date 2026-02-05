@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/domain"
 	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/domain/vo"
 )
 
@@ -98,7 +99,7 @@ func (cs *CourierSimulator) StartCourierWithRoute(ctx context.Context, courierID
 	}
 
 	if len(points) < 2 {
-		return fmt.Errorf("route must have at least 2 points")
+		return domain.ErrRouteTooShort
 	}
 
 	cs.mu.Lock()
@@ -117,6 +118,7 @@ func (cs *CourierSimulator) StartCourierWithRoute(ctx context.Context, courierID
 
 	// Start simulation goroutine
 	cs.wg.Add(1)
+
 	go cs.simulateCourier(ctx, courierID)
 
 	return nil
@@ -136,7 +138,8 @@ func (cs *CourierSimulator) simulateCourier(ctx context.Context, courierID strin
 		case <-cs.stopCh:
 			return
 		case <-ticker.C:
-			if err := cs.updateCourierPosition(ctx, courierID); err != nil {
+			err := cs.updateCourierPosition(ctx, courierID)
+			if err != nil {
 				// Courier finished or error - stop simulation
 				return
 			}
@@ -147,10 +150,11 @@ func (cs *CourierSimulator) simulateCourier(ctx context.Context, courierID strin
 // updateCourierPosition updates the courier's position and publishes the location.
 func (cs *CourierSimulator) updateCourierPosition(ctx context.Context, courierID string) error {
 	cs.mu.Lock()
+
 	courier, exists := cs.couriers[courierID]
 	if !exists {
 		cs.mu.Unlock()
-		return fmt.Errorf("courier %s not found", courierID)
+		return fmt.Errorf("%s: %w", courierID, domain.ErrCourierNotFound)
 	}
 
 	// Calculate distance to travel based on time and speed
@@ -196,17 +200,19 @@ func (cs *CourierSimulator) updateCourierPosition(ctx context.Context, courierID
 		WithRouteID(courier.CurrentRoute.ID())
 
 	isFinished := courier.Status == vo.CourierStatusIdle
+
 	cs.mu.Unlock()
 
 	// Publish location update
 	if cs.publisher != nil {
-		if err := cs.publisher.PublishLocation(ctx, event); err != nil {
+		err := cs.publisher.PublishLocation(ctx, event)
+		if err != nil {
 			return fmt.Errorf("failed to publish location: %w", err)
 		}
 	}
 
 	if isFinished {
-		return fmt.Errorf("route completed")
+		return domain.ErrRouteCompleted
 	}
 
 	return nil
@@ -224,6 +230,7 @@ func (cs *CourierSimulator) GetCourierState(courierID string) (*CourierState, bo
 
 	// Return a copy
 	stateCopy := *state
+
 	return &stateCopy, true
 }
 
@@ -236,6 +243,7 @@ func (cs *CourierSimulator) GetAllCouriers() []string {
 	for id := range cs.couriers {
 		ids = append(ids, id)
 	}
+
 	return ids
 }
 
@@ -260,6 +268,7 @@ func (cs *CourierSimulator) Stop() {
 func interpolateLocation(from, to vo.Location, ratio float64) vo.Location {
 	lat := from.Latitude() + (to.Latitude()-from.Latitude())*ratio
 	lon := from.Longitude() + (to.Longitude()-from.Longitude())*ratio
+
 	return vo.MustNewLocation(lat, lon)
 }
 
@@ -276,5 +285,6 @@ func calculateHeading(from, to vo.Location) float64 {
 	if heading < 0 {
 		heading += 360
 	}
+
 	return heading
 }

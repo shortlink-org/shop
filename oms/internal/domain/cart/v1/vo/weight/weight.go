@@ -7,8 +7,12 @@ import (
 
 // Weight validation errors
 var (
-	ErrWeightZero     = errors.New("weight must be greater than zero")
-	ErrWeightNegative = errors.New("weight cannot be negative")
+	ErrWeightZero                 = errors.New("weight must be greater than zero")
+	ErrWeightNegative             = errors.New("weight cannot be negative")
+	ErrWeightExceedsMax           = errors.New("weight exceeds maximum allowed")
+	ErrWeightCombinedExceedsMax   = errors.New("combined weight exceeds maximum allowed")
+	ErrWeightMultiplierInvalid    = errors.New("multiplication factor must be positive")
+	ErrWeightMultipliedExceedsMax = errors.New("multiplied weight exceeds maximum allowed")
 )
 
 // Constants for weight validation bounds
@@ -48,10 +52,12 @@ func NewWeight(grams int) (Weight, error) {
 		if grams < 0 {
 			return Weight{}, ErrWeightNegative
 		}
+
 		return Weight{}, ErrWeightZero
 	}
+
 	if grams > MaxWeightGrams {
-		return Weight{}, fmt.Errorf("weight %d grams exceeds maximum allowed %d grams", grams, MaxWeightGrams)
+		return Weight{}, fmt.Errorf("weight %d grams exceeds maximum allowed %d grams: %w", grams, MaxWeightGrams, ErrWeightExceedsMax)
 	}
 
 	return Weight{
@@ -66,6 +72,7 @@ func MustNewWeight(grams int) Weight {
 	if err != nil {
 		panic(fmt.Sprintf("invalid weight: %v", err))
 	}
+
 	return w
 }
 
@@ -84,8 +91,9 @@ func (w Weight) Kilograms() float64 {
 func (w Weight) Add(other Weight) (Weight, error) {
 	totalGrams := w.grams + other.grams
 	if totalGrams > MaxWeightGrams {
-		return Weight{}, fmt.Errorf("combined weight %d grams exceeds maximum allowed %d grams", totalGrams, MaxWeightGrams)
+		return Weight{}, fmt.Errorf("combined weight %d grams exceeds maximum allowed %d grams: %w", totalGrams, MaxWeightGrams, ErrWeightCombinedExceedsMax)
 	}
+
 	return Weight{grams: totalGrams}, nil
 }
 
@@ -94,12 +102,14 @@ func (w Weight) Add(other Weight) (Weight, error) {
 // Returns an error if the result exceeds MaxWeightGrams or factor is invalid.
 func (w Weight) Multiply(factor int) (Weight, error) {
 	if factor <= 0 {
-		return Weight{}, errors.New("multiplication factor must be positive")
+		return Weight{}, ErrWeightMultiplierInvalid
 	}
+
 	resultGrams := w.grams * factor
 	if resultGrams > MaxWeightGrams {
-		return Weight{}, fmt.Errorf("multiplied weight %d grams exceeds maximum allowed %d grams", resultGrams, MaxWeightGrams)
+		return Weight{}, fmt.Errorf("multiplied weight %d grams exceeds maximum allowed %d grams: %w", resultGrams, MaxWeightGrams, ErrWeightMultipliedExceedsMax)
 	}
+
 	return Weight{grams: resultGrams}, nil
 }
 
@@ -123,6 +133,6 @@ func (w Weight) String() string {
 	if w.grams >= 1000 {
 		return fmt.Sprintf("%.2f kg", w.Kilograms())
 	}
+
 	return fmt.Sprintf("%d g", w.grams)
 }
-

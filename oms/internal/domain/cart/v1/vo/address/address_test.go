@@ -1,6 +1,7 @@
 package address
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
@@ -9,65 +10,65 @@ import (
 
 func TestNewAddress(t *testing.T) {
 	tests := []struct {
-		name      string
-		street    string
-		city      string
+		name       string
+		street     string
+		city       string
 		postalCode string
-		country   string
-		wantErr   bool
-		errType   error
+		country    string
+		wantErr    bool
+		errType    error
 	}{
 		{
-			name:      "valid address",
-			street:    "123 Main St",
-			city:      "Moscow",
+			name:       "valid address",
+			street:     "123 Main St",
+			city:       "Moscow",
 			postalCode: "101000",
-			country:   "Russia",
-			wantErr:   false,
+			country:    "Russia",
+			wantErr:    false,
 		},
 		{
-			name:      "valid address without postal code",
-			street:    "456 Oak Ave",
-			city:      "St. Petersburg",
+			name:       "valid address without postal code",
+			street:     "456 Oak Ave",
+			city:       "St. Petersburg",
 			postalCode: "",
-			country:   "Russia",
-			wantErr:   false,
+			country:    "Russia",
+			wantErr:    false,
 		},
 		{
-			name:      "empty street",
-			street:    "",
-			city:      "Moscow",
+			name:       "empty street",
+			street:     "",
+			city:       "Moscow",
 			postalCode: "101000",
-			country:   "Russia",
-			wantErr:   true,
-			errType:   ErrAddressStreetEmpty,
+			country:    "Russia",
+			wantErr:    true,
+			errType:    ErrAddressStreetEmpty,
 		},
 		{
-			name:      "empty city",
-			street:    "123 Main St",
-			city:      "",
+			name:       "empty city",
+			street:     "123 Main St",
+			city:       "",
 			postalCode: "101000",
-			country:   "Russia",
-			wantErr:   true,
-			errType:   ErrAddressCityEmpty,
+			country:    "Russia",
+			wantErr:    true,
+			errType:    ErrAddressCityEmpty,
 		},
 		{
-			name:      "empty country",
-			street:    "123 Main St",
-			city:      "Moscow",
+			name:       "empty country",
+			street:     "123 Main St",
+			city:       "Moscow",
 			postalCode: "101000",
-			country:   "",
-			wantErr:   true,
-			errType:   ErrAddressCountryEmpty,
+			country:    "",
+			wantErr:    true,
+			errType:    ErrAddressCountryEmpty,
 		},
 		{
-			name:      "whitespace only street",
-			street:    "   ",
-			city:      "Moscow",
+			name:       "whitespace only street",
+			street:     "   ",
+			city:       "Moscow",
 			postalCode: "101000",
-			country:   "Russia",
-			wantErr:   true,
-			errType:   ErrAddressStreetEmpty,
+			country:    "Russia",
+			wantErr:    true,
+			errType:    ErrAddressStreetEmpty,
 		},
 	}
 
@@ -79,7 +80,8 @@ func TestNewAddress(t *testing.T) {
 					t.Errorf("NewAddress() expected error but got none")
 					return
 				}
-				if tt.errType != nil && err != tt.errType {
+
+				if tt.errType != nil && !errors.Is(err, tt.errType) {
 					t.Errorf("NewAddress() error = %v, want %v", err, tt.errType)
 				}
 			} else {
@@ -87,12 +89,15 @@ func TestNewAddress(t *testing.T) {
 					t.Errorf("NewAddress() unexpected error: %v", err)
 					return
 				}
+
 				if addr.Street() != strings.TrimSpace(tt.street) {
 					t.Errorf("NewAddress() street = %v, want %v", addr.Street(), tt.street)
 				}
+
 				if addr.City() != strings.TrimSpace(tt.city) {
 					t.Errorf("NewAddress() city = %v, want %v", addr.City(), tt.city)
 				}
+
 				if addr.Country() != strings.TrimSpace(tt.country) {
 					t.Errorf("NewAddress() country = %v, want %v", addr.Country(), tt.country)
 				}
@@ -103,31 +108,31 @@ func TestNewAddress(t *testing.T) {
 
 func TestNewAddressWithLocation(t *testing.T) {
 	tests := []struct {
-		name      string
-		street    string
-		city      string
+		name       string
+		street     string
+		city       string
 		postalCode string
-		country   string
-		location  location.Location
-		wantErr   bool
+		country    string
+		location   location.Location
+		wantErr    bool
 	}{
 		{
-			name:      "valid address with location",
-			street:    "123 Main St",
-			city:      "Moscow",
+			name:       "valid address with location",
+			street:     "123 Main St",
+			city:       "Moscow",
 			postalCode: "101000",
-			country:   "Russia",
-			location:  location.MustNewLocation(55.7558, 37.6173),
-			wantErr:   false,
+			country:    "Russia",
+			location:   location.MustNewLocation(55.7558, 37.6173),
+			wantErr:    false,
 		},
 		{
-			name:      "valid address with zero location",
-			street:    "123 Main St",
-			city:      "Moscow",
+			name:       "valid address with zero location",
+			street:     "123 Main St",
+			city:       "Moscow",
 			postalCode: "101000",
-			country:   "Russia",
-			location:  location.MustNewLocation(0, 0),
-			wantErr:   false,
+			country:    "Russia",
+			location:   location.MustNewLocation(0, 0),
+			wantErr:    false,
 		},
 	}
 
@@ -143,12 +148,15 @@ func TestNewAddressWithLocation(t *testing.T) {
 					t.Errorf("NewAddressWithLocation() unexpected error: %v", err)
 					return
 				}
+
 				if addr.Location() != tt.location {
 					t.Errorf("NewAddressWithLocation() location = %v, want %v", addr.Location(), tt.location)
 				}
+
 				if addr.Latitude() != tt.location.Latitude() {
 					t.Errorf("NewAddressWithLocation() latitude = %v, want %v", addr.Latitude(), tt.location.Latitude())
 				}
+
 				if addr.Longitude() != tt.location.Longitude() {
 					t.Errorf("NewAddressWithLocation() longitude = %v, want %v", addr.Longitude(), tt.location.Longitude())
 				}
@@ -171,12 +179,15 @@ func TestAddress_Getters(t *testing.T) {
 	if addr.Street() != street {
 		t.Errorf("Address.Street() = %v, want %v", addr.Street(), street)
 	}
+
 	if addr.City() != city {
 		t.Errorf("Address.City() = %v, want %v", addr.City(), city)
 	}
+
 	if addr.PostalCode() != postalCode {
 		t.Errorf("Address.PostalCode() = %v, want %v", addr.PostalCode(), postalCode)
 	}
+
 	if addr.Country() != country {
 		t.Errorf("Address.Country() = %v, want %v", addr.Country(), country)
 	}
@@ -206,6 +217,7 @@ func TestAddress_HasCoordinates(t *testing.T) {
 			if err != nil {
 				t.Fatalf("NewAddressWithLocation() error = %v", err)
 			}
+
 			if addr.HasCoordinates() != tt.want {
 				t.Errorf("Address.HasCoordinates() = %v, want %v", addr.HasCoordinates(), tt.want)
 			}
@@ -222,28 +234,28 @@ func TestAddress_IsValid(t *testing.T) {
 
 func TestAddress_String(t *testing.T) {
 	tests := []struct {
-		name      string
-		street    string
-		city      string
+		name       string
+		street     string
+		city       string
 		postalCode string
-		country   string
-		want      string
+		country    string
+		want       string
 	}{
 		{
-			name:      "full address",
-			street:    "123 Main St",
-			city:      "Moscow",
+			name:       "full address",
+			street:     "123 Main St",
+			city:       "Moscow",
 			postalCode: "101000",
-			country:   "Russia",
-			want:      "123 Main St, 101000, Moscow, Russia",
+			country:    "Russia",
+			want:       "123 Main St, 101000, Moscow, Russia",
 		},
 		{
-			name:      "address without postal code",
-			street:    "456 Oak Ave",
-			city:      "St. Petersburg",
+			name:       "address without postal code",
+			street:     "456 Oak Ave",
+			city:       "St. Petersburg",
 			postalCode: "",
-			country:   "Russia",
-			want:      "456 Oak Ave, St. Petersburg, Russia",
+			country:    "Russia",
+			want:       "456 Oak Ave, St. Petersburg, Russia",
 		},
 	}
 
@@ -253,6 +265,7 @@ func TestAddress_String(t *testing.T) {
 			if err != nil {
 				t.Fatalf("NewAddress() error = %v", err)
 			}
+
 			got := addr.String()
 			if got != tt.want {
 				t.Errorf("Address.String() = %v, want %v", got, tt.want)
@@ -263,6 +276,7 @@ func TestAddress_String(t *testing.T) {
 
 func TestAddress_FullString(t *testing.T) {
 	loc := location.MustNewLocation(55.7558, 37.6173)
+
 	addr, err := NewAddressWithLocation("123 Main St", "Moscow", "101000", "Russia", loc)
 	if err != nil {
 		t.Fatalf("NewAddressWithLocation() error = %v", err)
@@ -272,9 +286,11 @@ func TestAddress_FullString(t *testing.T) {
 	if !strings.Contains(fullStr, "123 Main St") {
 		t.Errorf("Address.FullString() should contain street")
 	}
+
 	if !strings.Contains(fullStr, "55.7558") {
 		t.Errorf("Address.FullString() should contain latitude")
 	}
+
 	if !strings.Contains(fullStr, "37.6173") {
 		t.Errorf("Address.FullString() should contain longitude")
 	}
@@ -288,6 +304,7 @@ func TestAddress_Equality(t *testing.T) {
 	if addr1 != addr2 {
 		t.Errorf("Addresses with same values should be equal")
 	}
+
 	if addr1 == addr3 {
 		t.Errorf("Addresses with different values should not be equal")
 	}
@@ -302,11 +319,12 @@ func TestAddress_TrimsWhitespace(t *testing.T) {
 	if addr.Street() != "123 Main St" {
 		t.Errorf("Address should trim whitespace from street, got %v", addr.Street())
 	}
+
 	if addr.City() != "Moscow" {
 		t.Errorf("Address should trim whitespace from city, got %v", addr.City())
 	}
+
 	if addr.Country() != "Russia" {
 		t.Errorf("Address should trim whitespace from country, got %v", addr.Country())
 	}
 }
-

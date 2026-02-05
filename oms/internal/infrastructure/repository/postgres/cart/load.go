@@ -37,6 +37,7 @@ func (s *Store) Load(ctx context.Context, customerID uuid.UUID) (*cart.State, er
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ports.ErrNotFound
 		}
+
 		return nil, err
 	}
 

@@ -1,12 +1,12 @@
 package oms_di
 
 import (
+	"log/slog"
 	"time"
-
-	"github.com/spf13/viper"
 
 	"github.com/shortlink-org/go-sdk/config"
 	"github.com/shortlink-org/go-sdk/logger"
+	"github.com/spf13/viper"
 
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	pricer "github.com/shortlink-org/shop/oms/internal/infrastructure/grpc/pricer"
@@ -45,7 +45,10 @@ func NewPricerClient(
 
 	cleanup := func() {
 		if client != nil {
-			_ = client.Close()
+			err := client.Close()
+			if err != nil {
+				log.Warn("failed to close pricer client", slog.String("error", err.Error()))
+			}
 		}
 	}
 

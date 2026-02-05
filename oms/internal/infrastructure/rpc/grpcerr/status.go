@@ -23,8 +23,10 @@ func ToStatus(ctx context.Context, log Logger, op string, err error) error {
 		return nil
 	}
 
-	var code codes.Code
-	var msg string
+	var (
+		code codes.Code
+		msg  string
+	)
 
 	switch {
 	case errors.Is(err, domain.ErrValidation):
@@ -42,6 +44,7 @@ func ToStatus(ctx context.Context, log Logger, op string, err error) error {
 	default:
 		code = codes.Internal
 		msg = "internal error"
+
 		if log != nil {
 			log.Warn("rpc error", slog.String("op", op), slog.Any("error", err), slog.Any("unwrap", errors.Unwrap(err)))
 		}

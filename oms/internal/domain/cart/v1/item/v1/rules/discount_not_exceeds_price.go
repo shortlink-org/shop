@@ -14,5 +14,6 @@ func (s DiscountNotExceedsPriceSpec) IsSatisfiedBy(item *itemv1.Item) error {
 		return fmt.Errorf("%w: discount %s exceeds price %s",
 			itemv1.ErrItemDiscountExceedsPrice, item.GetDiscount().String(), item.GetPrice().String())
 	}
+
 	return nil
 }

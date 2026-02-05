@@ -10,9 +10,9 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/shortlink-org/go-sdk/graceful_shutdown"
 	"github.com/spf13/viper"
 
-	"github.com/shortlink-org/go-sdk/graceful_shutdown"
 	oms_di "github.com/shortlink-org/shop/oms/internal/di"
 )
 
@@ -24,6 +24,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	service.Log.Info("Service initialized")
 
 	defer func() {

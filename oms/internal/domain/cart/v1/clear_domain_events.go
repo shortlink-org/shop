@@ -5,5 +5,6 @@ package v1
 func (s *State) ClearDomainEvents() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
 	s.domainEvents = s.domainEvents[:0]
 }

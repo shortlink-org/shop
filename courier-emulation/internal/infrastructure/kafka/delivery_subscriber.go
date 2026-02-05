@@ -3,13 +3,13 @@ package kafka
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/IBM/sarama"
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill-kafka/v3/pkg/kafka"
 	"github.com/ThreeDotsLabs/watermill/message"
-
 	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/domain/vo"
 )
 
@@ -103,7 +103,7 @@ func NewDeliverySubscriber(
 		logger,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("new kafka subscriber: %w", err)
 	}
 
 	return &DeliverySubscriber{
@@ -118,7 +118,7 @@ func NewDeliverySubscriber(
 func (s *DeliverySubscriber) Start(ctx context.Context) error {
 	messages, err := s.subscriber.Subscribe(ctx, TopicOrderAssigned)
 	if err != nil {
-		return err
+		return fmt.Errorf("subscribe to %s: %w", TopicOrderAssigned, err)
 	}
 
 	go s.processMessages(ctx, messages)
@@ -140,15 +140,19 @@ func (s *DeliverySubscriber) processMessages(ctx context.Context, messages <-cha
 			}
 
 			var event OrderAssignedEvent
-			if err := json.Unmarshal(msg.Payload, &event); err != nil {
+			err := json.Unmarshal(msg.Payload, &event)
+			if err != nil {
 				s.logger.Error("Failed to unmarshal order assigned event", err, nil)
 				msg.Nack()
+
 				continue
 			}
 
-			if err := s.handler.HandleOrderAssigned(ctx, event); err != nil {
+			err := s.handler.HandleOrderAssigned(ctx, event)
+			if err != nil {
 				s.logger.Error("Failed to handle order assigned event", err, nil)
 				msg.Nack()
+
 				continue
 			}
 
@@ -160,7 +164,12 @@ func (s *DeliverySubscriber) processMessages(ctx context.Context, messages <-cha
 // Stop stops the subscriber.
 func (s *DeliverySubscriber) Stop() error {
 	close(s.stopCh)
-	return s.subscriber.Close()
+	err := s.subscriber.Close()
+	if err != nil {
+		return fmt.Errorf("subscriber close: %w", err)
+	}
+
+	return nil
 }
 
 // DeliverySimulatorInterface defines the interface for starting deliveries.
@@ -185,12 +194,12 @@ func (h *CourierEmulationHandler) HandleOrderAssigned(ctx context.Context, event
 	// Extract coordinates from Address objects
 	pickup, err := vo.NewLocation(event.PickupAddress.Latitude, event.PickupAddress.Longitude)
 	if err != nil {
-		return err
+		return fmt.Errorf("pickup location: %w", err)
 	}
 
 	delivery, err := vo.NewLocation(event.DeliveryAddress.Latitude, event.DeliveryAddress.Longitude)
 	if err != nil {
-		return err
+		return fmt.Errorf("delivery location: %w", err)
 	}
 
 	// PackageID is required in the new format
@@ -202,5 +211,9 @@ func (h *CourierEmulationHandler) HandleOrderAssigned(ctx context.Context, event
 		event.AssignedAt,
 	)
 
-	return h.deliverySimulator.StartDelivery(ctx, event.CourierID, order)
+	if err := h.deliverySimulator.StartDelivery(ctx, event.CourierID, order); err != nil {
+		return fmt.Errorf("start delivery: %w", err)
+	}
+
+	return nil
 }

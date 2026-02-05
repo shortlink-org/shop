@@ -19,4 +19,3 @@ func (s *State) Reset() {
 		OccurredAt: time.Now(),
 	})
 }
-

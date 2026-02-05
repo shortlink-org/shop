@@ -38,8 +38,10 @@ func (h *Handler) Handle(ctx context.Context, q Query) (Result, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
+
 	defer func() {
-		if err := h.uow.Rollback(ctx); err != nil {
+		err := h.uow.Rollback(ctx)
+		if err != nil {
 			slog.Default().WarnContext(ctx, "transaction rollback failed", "error", err)
 		}
 	}()
@@ -50,6 +52,7 @@ func (h *Handler) Handle(ctx context.Context, q Query) (Result, error) {
 			// Return empty cart if not found
 			return v1.New(q.CustomerID), nil
 		}
+
 		return nil, err
 	}
 

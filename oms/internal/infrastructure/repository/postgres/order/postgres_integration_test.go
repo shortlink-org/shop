@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	order "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
+	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	orderrepo "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/testhelpers"
 	uowpg "github.com/shortlink-org/shop/oms/pkg/uow/postgres"
@@ -60,7 +60,7 @@ func setupOrderTest(t *testing.T) (*orderrepo.Store, *uowpg.UoW, *testhelpers.Po
 func createOrderWithItems(t *testing.T, customerID uuid.UUID, items order.Items) *order.OrderState {
 	t.Helper()
 	orderState := order.NewOrderState(customerID)
-	err := orderState.CreateOrder(items)
+	err := orderState.CreateOrder(context.Background(), items)
 	require.NoError(t, err)
 	return orderState
 }

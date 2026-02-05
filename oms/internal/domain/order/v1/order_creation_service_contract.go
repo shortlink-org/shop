@@ -9,12 +9,12 @@ type StockCheckerContract struct {
 	// true = SKU exists and can be ordered
 	// false = SKU does not exist or is not available for ordering
 	Available bool
-	
+
 	// StockQuantity is the actual quantity available in stock.
 	// This is the physical quantity on hand.
 	// May be 0 even if Available is true (item exists but out of stock).
 	StockQuantity uint32
-	
+
 	// Error indicates any error that occurred during stock check.
 	Error error
 }
@@ -29,14 +29,14 @@ func InterpretStockResult(
 	available bool,
 	stockQuantity uint32,
 	requestedQuantity int32,
-	goodId interface{},
+	goodId any,
 ) StockDecision {
 	if !available {
 		return StockDecision{
-			Type:           StockDecisionTypeSKUUnavailable,
-			Reason:         "SKU does not exist or is not available for ordering",
-			CanProceed:     false,
-			QuantityToUse:  0,
+			Type:          StockDecisionTypeSKUUnavailable,
+			Reason:        "SKU does not exist or is not available for ordering",
+			CanProceed:    false,
+			QuantityToUse: 0,
 		}
 	}
 
@@ -97,4 +97,3 @@ func (d StockDecision) IsError() bool {
 func (d StockDecision) IsWarning() bool {
 	return d.CanProceed && d.Type == StockDecisionTypePartialAvailability
 }
-

@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -16,6 +17,8 @@ import (
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	pricerv1 "github.com/shortlink-org/shop/oms/internal/infrastructure/grpc/pricer/v1"
 )
+
+var errAppendCA = errors.New("failed to add CA certificate to pool")
 
 // Client implements the ports.PricerClient interface using gRPC.
 type Client struct {
@@ -47,6 +50,7 @@ func NewClient(cfg Config) (*Client, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to load TLS credentials: %w", err)
 		}
+
 		opts = append(opts, grpc.WithTransportCredentials(creds))
 	} else {
 		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -68,6 +72,7 @@ func (c *Client) Close() error {
 	if c.conn != nil {
 		return c.conn.Close()
 	}
+
 	return nil
 }
 
@@ -97,9 +102,20 @@ func (c *Client) CalculateTotal(ctx context.Context, req ports.CalculateTotalReq
 	}
 
 	// Convert proto response to domain
-	totalTax, _ := decimal.NewFromString(resp.Total.GetTotalTax())
-	totalDiscount, _ := decimal.NewFromString(resp.Total.GetTotalDiscount())
-	finalPrice, _ := decimal.NewFromString(resp.Total.GetFinalPrice())
+	totalTax, err := decimal.NewFromString(resp.GetTotal().GetTotalTax())
+	if err != nil {
+		return nil, fmt.Errorf("invalid total tax from pricer: %w", err)
+	}
+
+	totalDiscount, err := decimal.NewFromString(resp.GetTotal().GetTotalDiscount())
+	if err != nil {
+		return nil, fmt.Errorf("invalid total discount from pricer: %w", err)
+	}
+
+	finalPrice, err := decimal.NewFromString(resp.GetTotal().GetFinalPrice())
+	if err != nil {
+		return nil, fmt.Errorf("invalid final price from pricer: %w", err)
+	}
 
 	// Calculate subtotal from items
 	subtotal := decimal.Zero
@@ -112,20 +128,23 @@ func (c *Client) CalculateTotal(ctx context.Context, req ports.CalculateTotalReq
 		TotalDiscount: totalDiscount,
 		FinalPrice:    finalPrice,
 		Subtotal:      subtotal,
-		Policies:      resp.Total.GetPolicies(),
+		Policies:      resp.GetTotal().GetPolicies(),
 	}, nil
 }
 
 // loadTLSCredentials loads TLS credentials from a CA certificate file.
 func loadTLSCredentials(certPath string) (credentials.TransportCredentials, error) {
 	certPool := x509.NewCertPool()
+
 	ca, err := os.ReadFile(certPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read CA certificate: %w", err)
 	}
+
 	if !certPool.AppendCertsFromPEM(ca) {
-		return nil, fmt.Errorf("failed to add CA certificate to pool")
+		return nil, fmt.Errorf("failed to add CA certificate to pool: %w", errAppendCA)
 	}
+
 	return credentials.NewTLS(&tls.Config{
 		RootCAs:    certPool,
 		MinVersion: tls.VersionTLS12,

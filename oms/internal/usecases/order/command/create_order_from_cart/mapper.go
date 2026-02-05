@@ -15,5 +15,6 @@ func cartItemsToLines(cartItems cartItemsv1.Items) []orderDomain.Line {
 			UnitPrice: item.GetPrice(),
 		})
 	}
+
 	return lines
 }

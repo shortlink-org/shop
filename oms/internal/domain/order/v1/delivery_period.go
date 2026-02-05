@@ -38,4 +38,3 @@ func (d DeliveryPeriod) IsValid() bool {
 func (d DeliveryPeriod) Duration() time.Duration {
 	return d.endTime.Sub(d.startTime)
 }
-

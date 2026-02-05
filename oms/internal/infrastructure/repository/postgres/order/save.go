@@ -34,11 +34,12 @@ func (s *Store) Save(ctx context.Context, state *order.OrderState) error {
 
 	if oldVersion == 0 {
 		// New order - insert
-		if err := qtx.InsertOrder(ctx, queries.InsertOrderParams{
+		err := qtx.InsertOrder(ctx, queries.InsertOrderParams{
 			ID:         orderID,
 			CustomerID: customerID,
 			Status:     status,
-		}); err != nil {
+		})
+		if err != nil {
 			return err
 		}
 	} else {
@@ -59,23 +60,26 @@ func (s *Store) Save(ctx context.Context, state *order.OrderState) error {
 	}
 
 	// Delete existing items and insert new ones
-	if err := qtx.DeleteOrderItems(ctx, orderID); err != nil {
+	err := qtx.DeleteOrderItems(ctx, orderID)
+	if err != nil {
 		return err
 	}
 
 	for _, item := range state.GetItems() {
-		if err := qtx.InsertOrderItem(ctx, queries.InsertOrderItemParams{
+		err := qtx.InsertOrderItem(ctx, queries.InsertOrderItemParams{
 			OrderID:  orderID,
 			GoodID:   item.GetGoodId(),
 			Quantity: item.GetQuantity(),
 			Price:    item.GetPrice(),
-		}); err != nil {
+		})
+		if err != nil {
 			return err
 		}
 	}
 
 	// Save delivery info if present
-	if err := s.saveDeliveryInfo(ctx, qtx, orderID, state.GetDeliveryInfo(), oldVersion == 0); err != nil {
+	err := s.saveDeliveryInfo(ctx, qtx, orderID, state.GetDeliveryInfo(), oldVersion == 0)
+	if err != nil {
 		return err
 	}
 
@@ -92,6 +96,7 @@ func (s *Store) saveDeliveryInfo(ctx context.Context, qtx *queries.Queries, orde
 		if !isNew {
 			return qtx.DeleteOrderDeliveryInfo(ctx, orderID)
 		}
+
 		return nil
 	}
 
@@ -130,8 +135,8 @@ func (s *Store) saveDeliveryInfo(ctx context.Context, qtx *queries.Queries, orde
 		DeliveryLongitude:  float64ToNumeric(deliveryAddr.Longitude()),
 		PeriodStart:        pgtype.Timestamptz{Time: period.GetStartTime(), Valid: true},
 		PeriodEnd:          pgtype.Timestamptz{Time: period.GetEndTime(), Valid: true},
-		WeightKg:   float64ToNumeric(pkgInfo.GetWeightKg()),
-		Priority:   deliveryInfo.GetPriority().String(),
+		WeightKg:           float64ToNumeric(pkgInfo.GetWeightKg()),
+		Priority:           deliveryInfo.GetPriority().String(),
 		PackageID:          packageID,
 		RecipientName:      recipientName,
 		RecipientPhone:     recipientPhone,
@@ -143,9 +148,11 @@ func (s *Store) saveDeliveryInfo(ctx context.Context, qtx *queries.Queries, orde
 	}
 
 	// For updates, delete and re-insert (simpler than upsert)
-	if err := qtx.DeleteOrderDeliveryInfo(ctx, orderID); err != nil {
+	err := qtx.DeleteOrderDeliveryInfo(ctx, orderID)
+	if err != nil {
 		return err
 	}
+
 	return qtx.InsertOrderDeliveryInfo(ctx, params)
 }
 
@@ -157,6 +164,10 @@ func (s *Store) invalidateCache(orderID string) {
 // float64ToNumeric converts a float64 to pgtype.Numeric.
 func float64ToNumeric(f float64) pgtype.Numeric {
 	var n pgtype.Numeric
-	_ = n.Scan(f)
+	err := n.Scan(f)
+	if err != nil {
+		return pgtype.Numeric{}
+	}
+
 	return n
 }

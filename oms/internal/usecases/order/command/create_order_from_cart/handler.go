@@ -2,6 +2,7 @@ package create_order_from_cart
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -10,6 +11,12 @@ import (
 
 	orderDomain "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
+)
+
+var (
+	errEmptyCart            = errors.New("cannot create order from empty cart")
+	errInvalidDeliveryInfo  = errors.New("invalid delivery info")
+	errPricerClientRequired = errors.New("pricer client required for checkout")
 )
 
 // Result represents the result of creating an order from a cart.
@@ -58,8 +65,10 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (Result, error) {
 	if err != nil {
 		return Result{}, fmt.Errorf("failed to begin transaction: %w", err)
 	}
+
 	defer func() {
-		if err := h.uow.Rollback(ctx); err != nil {
+		err := h.uow.Rollback(ctx)
+		if err != nil {
 			h.log.Warn("rollback failed", slog.Any("error", err))
 		}
 	}()
@@ -73,19 +82,21 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (Result, error) {
 	// 3. Validate cart is not empty
 	cartItems := cart.GetItems()
 	if len(cartItems) == 0 {
-		return Result{}, fmt.Errorf("cannot create order from empty cart")
+		return Result{}, errEmptyCart
 	}
 
 	// 4. Validate delivery info if provided
 	if cmd.DeliveryInfo != nil && !cmd.DeliveryInfo.IsValid() {
-		return Result{}, fmt.Errorf("invalid delivery info")
+		return Result{}, errInvalidDeliveryInfo
 	}
 
 	// 5. Calculate pricing using Pricer service (required for taxes and correct charge)
 	if h.pricerClient == nil {
-		return Result{}, fmt.Errorf("pricer client required for checkout")
+		return Result{}, errPricerClientRequired
 	}
+
 	builder := NewPricerRequestBuilder(cart.GetCustomerId(), cartItems)
+
 	if cmd.DeliveryInfo != nil {
 		addr := cmd.DeliveryInfo.GetDeliveryAddress()
 		builder = builder.
@@ -93,6 +104,7 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (Result, error) {
 			WithTaxParam("city", addr.City()).
 			WithTaxParam("postalCode", addr.PostalCode())
 	}
+
 	pricingResp, err := h.pricerClient.CalculateTotal(ctx, builder.Build())
 	if err != nil {
 		return Result{}, fmt.Errorf("failed to calculate pricing: %w", err)
@@ -103,13 +115,14 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (Result, error) {
 
 	// 7. Create order from lines (domain keeps invariants)
 	order := orderDomain.NewOrderState(cmd.CustomerID)
-	if err := order.CreateFromLines(lines); err != nil {
+	if err := order.CreateFromLines(ctx, lines); err != nil {
 		return Result{}, fmt.Errorf("failed to create order: %w", err)
 	}
 
 	// 8. Set delivery info if provided
 	if cmd.DeliveryInfo != nil {
-		if err := order.SetDeliveryInfo(*cmd.DeliveryInfo); err != nil {
+		err := order.SetDeliveryInfo(*cmd.DeliveryInfo)
+		if err != nil {
 			return Result{}, fmt.Errorf("failed to set delivery info: %w", err)
 		}
 	}
@@ -130,10 +143,12 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (Result, error) {
 	// 12. Publish domain events to outbox (same transaction).
 	// If outbox write fails, we must not commit — same as failing to save order/cart.
 	for _, event := range order.GetDomainEvents() {
-		if err := h.publisher.Publish(ctx, event); err != nil {
+		err := h.publisher.Publish(ctx, event)
+		if err != nil {
 			return Result{}, fmt.Errorf("failed to publish domain event to outbox: %w", err)
 		}
 	}
+
 	order.ClearDomainEvents()
 
 	// 13. Commit transaction

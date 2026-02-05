@@ -1,12 +1,16 @@
 package v1
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
 	eventsv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/events/v1"
 	itemv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/item/v1"
 )
+
+// ErrInvalidCartItem is returned when a cart item fails validation.
+var ErrInvalidCartItem = errors.New("invalid cart item")
 
 // AddItem adds an item to the cart.
 // If the item already exists, it increments the quantity immutably.
@@ -16,7 +20,7 @@ func (s *State) AddItem(item itemv1.Item) error {
 
 	// Validate item before adding
 	if !item.IsValid() {
-		return fmt.Errorf("invalid cart item: goodId=%s, quantity=%d", item.GetGoodId(), item.GetQuantity())
+		return fmt.Errorf("invalid cart item goodId=%s quantity=%d: %w", item.GetGoodId(), item.GetQuantity(), ErrInvalidCartItem)
 	}
 
 	// Check if the item already exists in the cart
@@ -27,6 +31,7 @@ func (s *State) AddItem(item itemv1.Item) error {
 			if err != nil {
 				return fmt.Errorf("failed to update item quantity: %w", err)
 			}
+
 			s.items[i] = updatedItem
 			// Generate domain event for item added/updated
 			s.addDomainEvent(&eventsv1.ItemAddedEvent{
@@ -34,6 +39,7 @@ func (s *State) AddItem(item itemv1.Item) error {
 				Item:       updatedItem,
 				OccurredAt: time.Now(),
 			})
+
 			return nil
 		}
 	}
@@ -46,5 +52,6 @@ func (s *State) AddItem(item itemv1.Item) error {
 		Item:       item,
 		OccurredAt: time.Now(),
 	})
+
 	return nil
 }

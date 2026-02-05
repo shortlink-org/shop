@@ -11,5 +11,6 @@ func (s DiscountNonNegativeSpec) IsSatisfiedBy(item *itemv1.Item) error {
 	if item.GetDiscount().IsNegative() {
 		return itemv1.ErrItemDiscountNegative
 	}
+
 	return nil
 }

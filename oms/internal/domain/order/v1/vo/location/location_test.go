@@ -76,8 +76,9 @@ func TestNewLocation(t *testing.T) {
 					t.Errorf("NewLocation() expected error but got none")
 					return
 				}
+
 				if tt.errType != nil {
-					if err != tt.errType && !errors.Is(err, tt.errType) {
+					if !errors.Is(err, tt.errType) && !errors.Is(err, tt.errType) {
 						t.Errorf("NewLocation() error = %v, want %v", err, tt.errType)
 					}
 				}
@@ -86,9 +87,11 @@ func TestNewLocation(t *testing.T) {
 					t.Errorf("NewLocation() unexpected error: %v", err)
 					return
 				}
+
 				if loc.Latitude() != tt.latitude {
 					t.Errorf("NewLocation() latitude = %v, want %v", loc.Latitude(), tt.latitude)
 				}
+
 				if loc.Longitude() != tt.longitude {
 					t.Errorf("NewLocation() longitude = %v, want %v", loc.Longitude(), tt.longitude)
 				}
@@ -109,6 +112,7 @@ func TestLocation_Getters(t *testing.T) {
 	if loc.Latitude() != latitude {
 		t.Errorf("Location.Latitude() = %v, want %v", loc.Latitude(), latitude)
 	}
+
 	if loc.Longitude() != longitude {
 		t.Errorf("Location.Longitude() = %v, want %v", loc.Longitude(), longitude)
 	}
@@ -153,6 +157,7 @@ func TestLocation_IsZero(t *testing.T) {
 			if err != nil {
 				t.Fatalf("NewLocation() error = %v", err)
 			}
+
 			if loc.IsZero() != tt.want {
 				t.Errorf("Location.IsZero() = %v, want %v", loc.IsZero(), tt.want)
 			}
@@ -170,6 +175,7 @@ func TestLocation_String(t *testing.T) {
 	if str == "" {
 		t.Errorf("Location.String() should not be empty")
 	}
+
 	if !strings.Contains(str, "55.7558") || !strings.Contains(str, "37.6173") {
 		t.Errorf("Location.String() should contain coordinates")
 	}
@@ -183,6 +189,7 @@ func TestLocation_Equality(t *testing.T) {
 	if loc1 != loc2 {
 		t.Errorf("Locations with same coordinates should be equal")
 	}
+
 	if loc1 == loc3 {
 		t.Errorf("Locations with different coordinates should not be equal")
 	}
@@ -195,6 +202,7 @@ func TestMustNewLocation(t *testing.T) {
 				t.Errorf("MustNewLocation() panicked on valid location: %v", r)
 			}
 		}()
+
 		loc := MustNewLocation(55.7558, 37.6173)
 		if loc.Latitude() != 55.7558 {
 			t.Errorf("MustNewLocation() latitude = %v, want 55.7558", loc.Latitude())
@@ -207,7 +215,7 @@ func TestMustNewLocation(t *testing.T) {
 				t.Errorf("MustNewLocation() should panic on invalid location")
 			}
 		}()
+
 		_ = MustNewLocation(91.0, 37.6173)
 	})
 }
-

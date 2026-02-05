@@ -50,6 +50,7 @@ func (c *Client) Close() error {
 	if c.conn != nil {
 		return c.conn.Close()
 	}
+
 	return nil
 }
 
@@ -95,8 +96,8 @@ func (c *Client) AcceptOrder(ctx context.Context, req ports.AcceptOrderRequest) 
 	}
 
 	return &ports.AcceptOrderResponse{
-		PackageID: resp.PackageId,
-		Status:    packageStatusToString(resp.Status),
+		PackageID: resp.GetPackageId(),
+		Status:    packageStatusToString(resp.GetStatus()),
 	}, nil
 }
 

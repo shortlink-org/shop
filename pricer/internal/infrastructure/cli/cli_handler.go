@@ -26,7 +26,7 @@ func NewCLIHandler(calculateTotalHandler *calculate_total.Handler, outputDir str
 }
 
 // Run processes a single cart file with provided parameters
-func (h *CLIHandler) Run(cartFile string, discountParams, taxParams map[string]interface{}) error {
+func (h *CLIHandler) Run(cartFile string, discountParams, taxParams map[string]any) error {
 	// Load the cart
 	cart, err := loadCart(cartFile)
 	if err != nil {
@@ -35,13 +35,14 @@ func (h *CLIHandler) Run(cartFile string, discountParams, taxParams map[string]i
 
 	// Calculate totals
 	cmd := calculate_total.NewCommand(&cart, discountParams, taxParams)
+
 	total, err := h.calculateTotalHandler.Handle(context.Background(), cmd)
 	if err != nil {
 		return fmt.Errorf("failed to calculate total for cart %s: %w", cartFile, err)
 	}
 
 	// Prepare the result map
-	result := map[string]interface{}{
+	result := map[string]any{
 		"customerId":    cart.CustomerID.String(),
 		"totalTax":      total.TotalTax.StringFixed(2),
 		"totalDiscount": total.TotalDiscount.StringFixed(2),
@@ -56,39 +57,41 @@ func (h *CLIHandler) Run(cartFile string, discountParams, taxParams map[string]i
 	}
 
 	fmt.Printf("Final result saved to %s\n", filepath.Join(h.OutputDir, filename))
+
 	return nil
 }
 
 // loadCart reads and unmarshals the cart JSON file
 func loadCart(filePath string) (domain.Cart, error) {
 	var cart domain.Cart
+
 	file, err := os.ReadFile(filePath)
 	if err != nil {
-		return cart, err
+		return cart, fmt.Errorf("read cart file: %w", err)
 	}
-	err = json.Unmarshal(file, &cart)
-	return cart, err
+
+	if err := json.Unmarshal(file, &cart); err != nil {
+		return cart, fmt.Errorf("unmarshal cart: %w", err)
+	}
+
+	return cart, nil
 }
 
 // saveResultToFile marshals the result to JSON and writes it to a file
-func saveResultToFile(result map[string]interface{}, outDir string, filename string) error {
-	// Ensure the output directory exists
+func saveResultToFile(result map[string]any, outDir, filename string) error {
 	if err := os.MkdirAll(outDir, os.ModePerm); err != nil {
-		return err
+		return fmt.Errorf("create output dir: %w", err)
 	}
 
-	// Create the output file path
 	outputFile := filepath.Join(outDir, filename)
 
-	// Marshal the result into JSON
 	data, err := json.MarshalIndent(result, "", "  ")
 	if err != nil {
-		return err
+		return fmt.Errorf("marshal result: %w", err)
 	}
 
-	// Write the JSON data to the output file
 	if err := os.WriteFile(outputFile, data, 0o644); err != nil {
-		return err
+		return fmt.Errorf("write result file: %w", err)
 	}
 
 	return nil

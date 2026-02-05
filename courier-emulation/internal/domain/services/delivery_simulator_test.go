@@ -6,11 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
 	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/domain/vo"
 	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/infrastructure/kafka"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // mockStatusPublisher is a mock implementation of StatusPublisher.
@@ -30,14 +29,18 @@ func newMockStatusPublisher() *mockStatusPublisher {
 func (m *mockStatusPublisher) PublishPickUp(ctx context.Context, event kafka.PickUpOrderEvent) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
 	m.pickupEvents = append(m.pickupEvents, event)
+
 	return nil
 }
 
 func (m *mockStatusPublisher) PublishDelivery(ctx context.Context, event kafka.DeliverOrderEvent) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
 	m.deliveryEvents = append(m.deliveryEvents, event)
+
 	return nil
 }
 
@@ -48,16 +51,20 @@ func (m *mockStatusPublisher) Close() error {
 func (m *mockStatusPublisher) GetPickupEvents() []kafka.PickUpOrderEvent {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
 	result := make([]kafka.PickUpOrderEvent, len(m.pickupEvents))
 	copy(result, m.pickupEvents)
+
 	return result
 }
 
 func (m *mockStatusPublisher) GetDeliveryEvents() []kafka.DeliverOrderEvent {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
 	result := make([]kafka.DeliverOrderEvent, len(m.deliveryEvents))
 	copy(result, m.deliveryEvents)
+
 	return result
 }
 
@@ -147,6 +154,7 @@ func TestDeliverySimulator_StartDelivery(t *testing.T) {
 		Timeout:     1 * time.Second,
 	})
 	require.NoError(t, err)
+
 	defer routeGen.Close()
 
 	locationPub := newMockLocationPublisher()
@@ -154,8 +162,8 @@ func TestDeliverySimulator_StartDelivery(t *testing.T) {
 
 	config := DeliverySimulatorConfig{
 		UpdateInterval:   100 * time.Millisecond,
-		SpeedKmH:         100.0,          // Fast speed for testing
-		TimeMultiplier:   100.0,          // Speed up time
+		SpeedKmH:         100.0, // Fast speed for testing
+		TimeMultiplier:   100.0, // Speed up time
 		PickupWaitTime:   50 * time.Millisecond,
 		DeliveryWaitTime: 50 * time.Millisecond,
 		FailureRate:      0.0, // Always succeed
@@ -189,12 +197,14 @@ func TestDeliverySimulator_DoubleStartError(t *testing.T) {
 		Timeout:     1 * time.Second,
 	})
 	require.NoError(t, err)
+
 	defer routeGen.Close()
 
 	locationPub := newMockLocationPublisher()
 	statusPub := newMockStatusPublisher()
 
 	config := DefaultDeliverySimulatorConfig()
+
 	simulator := NewDeliverySimulator(config, routeGen, locationPub, statusPub)
 	defer simulator.Stop()
 
@@ -221,12 +231,14 @@ func TestDeliverySimulator_GetAllDeliveries(t *testing.T) {
 		Timeout:     1 * time.Second,
 	})
 	require.NoError(t, err)
+
 	defer routeGen.Close()
 
 	locationPub := newMockLocationPublisher()
 	statusPub := newMockStatusPublisher()
 
 	config := DefaultDeliverySimulatorConfig()
+
 	simulator := NewDeliverySimulator(config, routeGen, locationPub, statusPub)
 	defer simulator.Stop()
 
@@ -253,12 +265,14 @@ func TestDeliverySimulator_StopDelivery(t *testing.T) {
 		Timeout:     1 * time.Second,
 	})
 	require.NoError(t, err)
+
 	defer routeGen.Close()
 
 	locationPub := newMockLocationPublisher()
 	statusPub := newMockStatusPublisher()
 
 	config := DefaultDeliverySimulatorConfig()
+
 	simulator := NewDeliverySimulator(config, routeGen, locationPub, statusPub)
 	defer simulator.Stop()
 

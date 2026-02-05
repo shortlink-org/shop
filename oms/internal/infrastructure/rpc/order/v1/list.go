@@ -15,11 +15,13 @@ import (
 func (o *OrderRPC) List(ctx context.Context, in *v1.ListRequest) (*v1.ListResponse, error) {
 	// Parse optional customer ID
 	var customerID *uuid.UUID
+
 	if in.GetCustomerId() != "" {
 		id, err := uuid.Parse(in.GetCustomerId())
 		if err != nil {
 			return nil, err
 		}
+
 		customerID = &id
 	}
 
@@ -32,10 +34,12 @@ func (o *OrderRPC) List(ctx context.Context, in *v1.ListRequest) (*v1.ListRespon
 	// Get pagination
 	page := int32(1)
 	pageSize := int32(20)
+
 	if in.GetPagination() != nil {
 		if in.GetPagination().GetPage() > 0 {
 			page = in.GetPagination().GetPage()
 		}
+
 		if in.GetPagination().GetPageSize() > 0 {
 			pageSize = in.GetPagination().GetPageSize()
 		}
@@ -43,6 +47,7 @@ func (o *OrderRPC) List(ctx context.Context, in *v1.ListRequest) (*v1.ListRespon
 
 	// Create query and execute handler
 	query := list.NewQuery(customerID, statusFilter)
+
 	orders, err := o.listHandler.Handle(ctx, query)
 	if err != nil {
 		return nil, err
@@ -50,17 +55,14 @@ func (o *OrderRPC) List(ctx context.Context, in *v1.ListRequest) (*v1.ListRespon
 
 	totalCount := int32(len(orders))
 	// Paginate in RPC layer
-	start := (page - 1) * pageSize
-	if start < 0 {
-		start = 0
-	}
+	start := max((page-1)*pageSize, 0)
+
 	if start >= totalCount {
 		start = totalCount
 	}
-	end := start + pageSize
-	if end > totalCount {
-		end = totalCount
-	}
+
+	end := min(start+pageSize, totalCount)
+
 	pageOrders := orders[start:end]
 
 	// Convert domain orders to proto
@@ -69,10 +71,7 @@ func (o *OrderRPC) List(ctx context.Context, in *v1.ListRequest) (*v1.ListRespon
 		protoOrders[i] = dto.DomainToOrderState(o)
 	}
 
-	totalPages := (totalCount + pageSize - 1) / pageSize
-	if totalPages < 1 {
-		totalPages = 1
-	}
+	totalPages := max((totalCount+pageSize-1)/pageSize, 1)
 
 	return &v1.ListResponse{
 		Orders:     protoOrders,

@@ -8,4 +8,3 @@ import (
 func (s *State) GetCustomerId() uuid.UUID {
 	return s.customerId
 }
-

@@ -63,11 +63,13 @@ func Workflow(ctx workflow.Context, customerID uuid.UUID) error {
 		c.Receive(ctx, &req)
 
 		logger.Info("Adding item to cart via activity", "customerID", customerID, "goodID", req.GoodID)
+
 		addItemCtx := workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
 			StartToCloseTimeout: 10 * time.Second,
 			Summary:             "Add item to cart",
 			RetryPolicy:         ao.RetryPolicy,
 		})
+
 		err := workflow.ExecuteActivity(addItemCtx, "AddItem", req).Get(ctx, nil)
 		if err != nil {
 			logger.Error("Failed to add item", "error", err)
@@ -80,11 +82,13 @@ func Workflow(ctx workflow.Context, customerID uuid.UUID) error {
 		c.Receive(ctx, &req)
 
 		logger.Info("Removing item from cart via activity", "customerID", customerID, "goodID", req.GoodID)
+
 		removeItemCtx := workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
 			StartToCloseTimeout: 10 * time.Second,
 			Summary:             "Remove item from cart",
 			RetryPolicy:         ao.RetryPolicy,
 		})
+
 		err := workflow.ExecuteActivity(removeItemCtx, "RemoveItem", req).Get(ctx, nil)
 		if err != nil {
 			logger.Error("Failed to remove item", "error", err)
@@ -96,11 +100,13 @@ func Workflow(ctx workflow.Context, customerID uuid.UUID) error {
 		c.Receive(ctx, nil)
 
 		logger.Info("Resetting cart via activity", "customerID", customerID)
+
 		resetCartCtx := workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
 			StartToCloseTimeout: 10 * time.Second,
 			Summary:             "Reset cart (clear all items)",
 			RetryPolicy:         ao.RetryPolicy,
 		})
+
 		err := workflow.ExecuteActivity(resetCartCtx, "ResetCart", activities.ResetCartRequest{
 			CustomerID: customerID,
 		}).Get(ctx, nil)
@@ -112,6 +118,7 @@ func Workflow(ctx workflow.Context, customerID uuid.UUID) error {
 	// Handle session timeout
 	selector.AddFuture(sessionTimeout, func(f workflow.Future) {
 		logger.Info("Cart session timed out, resetting cart", "customerID", customerID)
+
 		timeoutResetCtx := workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
 			StartToCloseTimeout: 10 * time.Second,
 			Summary:             "Reset cart after session timeout",

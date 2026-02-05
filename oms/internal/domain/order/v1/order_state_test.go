@@ -8,9 +8,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
+	"github.com/shortlink-org/go-sdk/fsm"
 	"github.com/stretchr/testify/require"
 
-	"github.com/shortlink-org/go-sdk/fsm"
 	common "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common"
 	"github.com/shortlink-org/shop/oms/internal/domain/order/v1/vo/address"
 )
@@ -37,7 +37,7 @@ func TestOrderState(t *testing.T) {
 			NewItem(fixedGoodID2, 1, decimal.NewFromFloat(9.99)),
 		}
 
-		err := orderState.CreateOrder(items)
+		err := orderState.CreateOrder(context.Background(), items)
 		require.NoError(t, err, "CreateOrder should not return an error")
 		require.Equal(t, OrderStatus_ORDER_STATUS_PROCESSING, orderState.GetStatus(), "Status should transition to Processing")
 		require.Equal(t, items, orderState.GetItems(), "Items should match the created items")
@@ -49,7 +49,7 @@ func TestOrderState(t *testing.T) {
 		initialItems := Items{
 			NewItem(fixedGoodID1, 2, decimal.NewFromFloat(19.99)),
 		}
-		err := orderState.CreateOrder(initialItems)
+		err := orderState.CreateOrder(context.Background(), initialItems)
 		require.NoError(t, err, "CreateOrder should not return an error")
 
 		updatedItems := Items{
@@ -68,12 +68,12 @@ func TestOrderState(t *testing.T) {
 		items := Items{
 			NewItem(fixedGoodID1, 2, decimal.NewFromFloat(19.99)),
 		}
-		err := orderState.CreateOrder(items)
+		err := orderState.CreateOrder(context.Background(), items)
 		require.NoError(t, err, "CreateOrder should not return an error")
 
 		err = orderState.CancelOrder()
 		require.NoError(t, err, "CancelOrder should not return an error")
-		require.Equal(t, OrderStatus_ORDER_STATUS_CANCELLED, orderState.GetStatus(), "Status should transition to Cancelled")
+		require.Equal(t, OrderStatus_ORDER_STATUS_CANCELED, orderState.GetStatus(), "Status should transition to Canceled")
 	})
 
 	t.Run("CompleteOrder", func(t *testing.T) {
@@ -82,7 +82,7 @@ func TestOrderState(t *testing.T) {
 		items := Items{
 			NewItem(fixedGoodID1, 2, decimal.NewFromFloat(19.99)),
 		}
-		err := orderState.CreateOrder(items)
+		err := orderState.CreateOrder(context.Background(), items)
 		require.NoError(t, err, "CreateOrder should not return an error")
 
 		err = orderState.CompleteOrder()
@@ -98,7 +98,7 @@ func TestOrderState(t *testing.T) {
 			NewItem(fixedGoodID2, 1, decimal.NewFromFloat(9.99)),
 		}
 
-		err := orderState.CreateOrder(items)
+		err := orderState.CreateOrder(context.Background(), items)
 		require.NoError(t, err, "CreateOrder should not return an error")
 
 		updatedItems := Items{
@@ -112,6 +112,7 @@ func TestOrderState(t *testing.T) {
 		// Simulate concurrent operations
 		go func() {
 			defer wg.Done()
+
 			err := orderState.UpdateOrder(updatedItems)
 			// It's possible that UpdateOrder happens before or after CancelOrder.
 			// Depending on the FSM, updating after cancellation might fail or be allowed.
@@ -123,6 +124,7 @@ func TestOrderState(t *testing.T) {
 
 		go func() {
 			defer wg.Done()
+
 			err := orderState.CancelOrder()
 			if err != nil {
 				t.Logf("CancelOrder encountered an error: %v", err)
@@ -131,11 +133,11 @@ func TestOrderState(t *testing.T) {
 
 		wg.Wait()
 
-		// After concurrent operations, the order should either be Cancelled or have updated items.
+		// After concurrent operations, the order should either be Canceled or have updated items.
 		// Depending on the FSM's transition rules, updating after cancellation might not change the state.
 		finalStatus := orderState.GetStatus()
-		require.True(t, finalStatus == OrderStatus_ORDER_STATUS_CANCELLED || finalStatus == OrderStatus_ORDER_STATUS_PROCESSING,
-			"Final status should be either Cancelled or Processing")
+		require.True(t, finalStatus == OrderStatus_ORDER_STATUS_CANCELED || finalStatus == OrderStatus_ORDER_STATUS_PROCESSING,
+			"Final status should be either Canceled or Processing")
 	})
 
 	t.Run("Callbacks", func(t *testing.T) {
@@ -153,6 +155,7 @@ func TestOrderState(t *testing.T) {
 		orderState.fsm.SetOnEnterState(func(ctx context.Context, from, to fsm.State, event fsm.Event) {
 			callbackMu.Lock()
 			defer callbackMu.Unlock()
+
 			enterState = to.String()
 			triggeredEvt = event
 		})
@@ -161,12 +164,13 @@ func TestOrderState(t *testing.T) {
 		orderState.fsm.SetOnExitState(func(ctx context.Context, from, to fsm.State, event fsm.Event) {
 			callbackMu.Lock()
 			defer callbackMu.Unlock()
+
 			exitState = from.String()
 			triggeredEvt = event
 		})
 
 		// Transition: Pending -> Processing
-		err := orderState.CreateOrder(Items{
+		err := orderState.CreateOrder(context.Background(), Items{
 			NewItem(fixedGoodID1, 2, decimal.NewFromFloat(19.99)),
 		})
 		require.NoError(t, err, "CreateOrder should transition state to Processing")
@@ -180,7 +184,9 @@ func TestOrderState(t *testing.T) {
 
 		// Reset callback trackers.
 		callbackMu.Lock()
+
 		enterState, exitState, triggeredEvt = "", "", ""
+
 		callbackMu.Unlock()
 
 		// Transition: Processing -> Completed
@@ -200,12 +206,12 @@ func TestOrderState(t *testing.T) {
 
 		// Attempt to cancel the order while it's in Pending state.
 		err := orderState.CancelOrder()
-		require.NoError(t, err, "CancelOrder should transition state to Cancelled from Pending")
+		require.NoError(t, err, "CancelOrder should transition state to Canceled from Pending")
 
-		// Attempt to complete a Cancelled order.
+		// Attempt to complete a Canceled order.
 		err = orderState.CompleteOrder()
-		require.Error(t, err, "CompleteOrder should return an error when transitioning from Cancelled")
-		require.Equal(t, OrderStatus_ORDER_STATUS_CANCELLED, orderState.GetStatus(), "Status should remain Cancelled after invalid transition")
+		require.Error(t, err, "CompleteOrder should return an error when transitioning from Canceled")
+		require.Equal(t, OrderStatus_ORDER_STATUS_CANCELED, orderState.GetStatus(), "Status should remain Canceled after invalid transition")
 	})
 
 	// ContextCancellation test removed: domain layer no longer depends on context.Context
@@ -248,7 +254,7 @@ func TestSetDeliveryInfo_OrderStatusValidation(t *testing.T) {
 	t.Run("AllowsSettingDeliveryInfoInProcessingState", func(t *testing.T) {
 		order := NewOrderState(fixedCustomerID)
 		items := Items{NewItem(fixedGoodID, 1, decimal.NewFromFloat(10.00))}
-		err := order.CreateOrder(items)
+		err := order.CreateOrder(context.Background(), items)
 		require.NoError(t, err)
 
 		deliveryInfo := createTestDeliveryInfo(t)
@@ -259,7 +265,7 @@ func TestSetDeliveryInfo_OrderStatusValidation(t *testing.T) {
 	t.Run("BlocksSettingDeliveryInfoInCompletedState", func(t *testing.T) {
 		order := NewOrderState(fixedCustomerID)
 		items := Items{NewItem(fixedGoodID, 1, decimal.NewFromFloat(10.00))}
-		err := order.CreateOrder(items)
+		err := order.CreateOrder(context.Background(), items)
 		require.NoError(t, err)
 		err = order.CompleteOrder()
 		require.NoError(t, err)
@@ -277,8 +283,8 @@ func TestSetDeliveryInfo_OrderStatusValidation(t *testing.T) {
 
 		deliveryInfo := createTestDeliveryInfo(t)
 		err = order.SetDeliveryInfo(deliveryInfo)
-		require.Error(t, err, "SetDeliveryInfo should fail in CANCELLED state")
-		require.Contains(t, err.Error(), "ORDER_STATUS_CANCELLED")
+		require.Error(t, err, "SetDeliveryInfo should fail in CANCELED state")
+		require.Contains(t, err.Error(), "ORDER_STATUS_CANCELED")
 	})
 }
 
@@ -289,7 +295,7 @@ func TestSetDeliveryInfo_DeliveryStatusValidation(t *testing.T) {
 	t.Run("AllowsSettingDeliveryInfoWhenDeliveryStatusAccepted", func(t *testing.T) {
 		order := NewOrderState(fixedCustomerID)
 		items := Items{NewItem(fixedGoodID, 1, decimal.NewFromFloat(10.00))}
-		err := order.CreateOrder(items)
+		err := order.CreateOrder(context.Background(), items)
 		require.NoError(t, err)
 
 		// Set delivery status to ACCEPTED
@@ -304,7 +310,7 @@ func TestSetDeliveryInfo_DeliveryStatusValidation(t *testing.T) {
 	t.Run("BlocksSettingDeliveryInfoWhenDeliveryStatusAssigned", func(t *testing.T) {
 		order := NewOrderState(fixedCustomerID)
 		items := Items{NewItem(fixedGoodID, 1, decimal.NewFromFloat(10.00))}
-		err := order.CreateOrder(items)
+		err := order.CreateOrder(context.Background(), items)
 		require.NoError(t, err)
 
 		// Set delivery status to ASSIGNED (courier assigned)
@@ -322,7 +328,7 @@ func TestSetDeliveryInfo_DeliveryStatusValidation(t *testing.T) {
 	t.Run("BlocksSettingDeliveryInfoWhenDeliveryStatusInTransit", func(t *testing.T) {
 		order := NewOrderState(fixedCustomerID)
 		items := Items{NewItem(fixedGoodID, 1, decimal.NewFromFloat(10.00))}
-		err := order.CreateOrder(items)
+		err := order.CreateOrder(context.Background(), items)
 		require.NoError(t, err)
 
 		// Set delivery status to IN_TRANSIT
@@ -342,7 +348,7 @@ func TestSetDeliveryInfo_DeliveryStatusValidation(t *testing.T) {
 	t.Run("BlocksSettingDeliveryInfoWhenDeliveryStatusDelivered", func(t *testing.T) {
 		order := NewOrderState(fixedCustomerID)
 		items := Items{NewItem(fixedGoodID, 1, decimal.NewFromFloat(10.00))}
-		err := order.CreateOrder(items)
+		err := order.CreateOrder(context.Background(), items)
 		require.NoError(t, err)
 
 		// Set delivery status to DELIVERED
@@ -369,7 +375,7 @@ func TestSetDeliveryStatus(t *testing.T) {
 	t.Run("AllowsValidDeliveryStatusTransitions", func(t *testing.T) {
 		order := NewOrderState(fixedCustomerID)
 		items := Items{NewItem(fixedGoodID, 1, decimal.NewFromFloat(10.00))}
-		err := order.CreateOrder(items)
+		err := order.CreateOrder(context.Background(), items)
 		require.NoError(t, err)
 
 		// UNSPECIFIED -> ACCEPTED
@@ -396,7 +402,7 @@ func TestSetDeliveryStatus(t *testing.T) {
 	t.Run("AllowsNotDeliveredFromInTransit", func(t *testing.T) {
 		order := NewOrderState(fixedCustomerID)
 		items := Items{NewItem(fixedGoodID, 1, decimal.NewFromFloat(10.00))}
-		err := order.CreateOrder(items)
+		err := order.CreateOrder(context.Background(), items)
 		require.NoError(t, err)
 
 		err = order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_ACCEPTED)
@@ -415,7 +421,7 @@ func TestSetDeliveryStatus(t *testing.T) {
 	t.Run("BlocksInvalidDeliveryStatusTransition", func(t *testing.T) {
 		order := NewOrderState(fixedCustomerID)
 		items := Items{NewItem(fixedGoodID, 1, decimal.NewFromFloat(10.00))}
-		err := order.CreateOrder(items)
+		err := order.CreateOrder(context.Background(), items)
 		require.NoError(t, err)
 
 		err = order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_ACCEPTED)
@@ -430,7 +436,7 @@ func TestSetDeliveryStatus(t *testing.T) {
 	t.Run("BlocksDeliveryStatusUpdateInCompletedOrder", func(t *testing.T) {
 		order := NewOrderState(fixedCustomerID)
 		items := Items{NewItem(fixedGoodID, 1, decimal.NewFromFloat(10.00))}
-		err := order.CreateOrder(items)
+		err := order.CreateOrder(context.Background(), items)
 		require.NoError(t, err)
 		err = order.CompleteOrder()
 		require.NoError(t, err)
@@ -446,7 +452,7 @@ func TestSetDeliveryStatus(t *testing.T) {
 		require.NoError(t, err)
 
 		err = order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_ACCEPTED)
-		require.Error(t, err, "Should not allow delivery status update in CANCELLED order")
-		require.Contains(t, err.Error(), "ORDER_STATUS_CANCELLED")
+		require.Error(t, err, "Should not allow delivery status update in CANCELED order")
+		require.Contains(t, err.Error(), "ORDER_STATUS_CANCELED")
 	})
 }

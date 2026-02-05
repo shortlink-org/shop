@@ -45,24 +45,27 @@ func (s *Store) Save(ctx context.Context, state *cart.State) error {
 		}
 	} else {
 		// New cart - insert
-		if err := qtx.InsertCart(ctx, customerID); err != nil {
+		err := qtx.InsertCart(ctx, customerID)
+		if err != nil {
 			return err
 		}
 	}
 
 	// Delete existing items and insert new ones
-	if err := qtx.DeleteCartItems(ctx, customerID); err != nil {
+	err := qtx.DeleteCartItems(ctx, customerID)
+	if err != nil {
 		return err
 	}
 
 	for _, item := range state.GetItems() {
-		if err := qtx.InsertCartItem(ctx, queries.InsertCartItemParams{
+		err := qtx.InsertCartItem(ctx, queries.InsertCartItemParams{
 			CartID:   customerID,
 			GoodID:   item.GetGoodId(),
 			Quantity: item.GetQuantity(),
 			Price:    item.GetPrice(),
 			Discount: item.GetDiscount(),
-		}); err != nil {
+		})
+		if err != nil {
 			return err
 		}
 	}

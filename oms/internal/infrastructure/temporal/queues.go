@@ -1,7 +1,7 @@
 package temporal
 
 import (
-	"github.com/shortlink-org/shop/oms/internal/domain/queue/v1"
+	v1 "github.com/shortlink-org/shop/oms/internal/domain/queue/v1"
 )
 
 // TaskQueueNames maps domain task queues to their Temporal queue names.
@@ -19,4 +19,3 @@ func GetQueueName(queue v1.TaskQueue) string {
 	// Fallback to domain string representation if mapping not found
 	return queue.String()
 }
-

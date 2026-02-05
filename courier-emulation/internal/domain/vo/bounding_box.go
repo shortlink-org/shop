@@ -26,6 +26,7 @@ func NewBoundingBox(minLat, maxLat, minLon, maxLon float64) (BoundingBox, error)
 		return BoundingBox{}, fmt.Errorf("%w: minLat (%f) >= maxLat (%f)",
 			ErrInvalidBoundingBox, minLat, maxLat)
 	}
+
 	if minLon >= maxLon {
 		return BoundingBox{}, fmt.Errorf("%w: minLon (%f) >= maxLon (%f)",
 			ErrInvalidBoundingBox, minLon, maxLon)
@@ -35,6 +36,7 @@ func NewBoundingBox(minLat, maxLat, minLon, maxLon float64) (BoundingBox, error)
 	if _, err := NewLocation(minLat, minLon); err != nil {
 		return BoundingBox{}, err
 	}
+
 	if _, err := NewLocation(maxLat, maxLon); err != nil {
 		return BoundingBox{}, err
 	}
@@ -53,6 +55,7 @@ func MustNewBoundingBox(minLat, maxLat, minLon, maxLon float64) BoundingBox {
 	if err != nil {
 		panic(fmt.Sprintf("invalid bounding box: %v", err))
 	}
+
 	return bb
 }
 
@@ -85,6 +88,7 @@ func (bb BoundingBox) MaxLon() float64 {
 func (bb BoundingBox) RandomPoint() Location {
 	lat := rand.Float64()*(bb.maxLat-bb.minLat) + bb.minLat
 	lon := rand.Float64()*(bb.maxLon-bb.minLon) + bb.minLon
+
 	return MustNewLocation(lat, lon)
 }
 

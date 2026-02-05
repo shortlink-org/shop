@@ -39,7 +39,7 @@ func TestBerlinBoundingBox(t *testing.T) {
 func TestBoundingBox_RandomPoint(t *testing.T) {
 	bb := BerlinBoundingBox()
 
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		point := bb.RandomPoint()
 		assert.True(t, bb.Contains(point), "point %v should be within bounding box", point)
 	}
@@ -48,7 +48,7 @@ func TestBoundingBox_RandomPoint(t *testing.T) {
 func TestBoundingBox_RandomPointPair(t *testing.T) {
 	bb := BerlinBoundingBox()
 
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		p1, p2 := bb.RandomPointPair()
 		assert.True(t, bb.Contains(p1))
 		assert.True(t, bb.Contains(p2))

@@ -51,6 +51,7 @@ func (a *Activities) AddItem(ctx context.Context, req AddItemRequest) error {
 	}
 
 	cmd := add_item.NewCommand(req.CustomerID, item)
+
 	return a.addItemHandler.Handle(ctx, cmd)
 }
 
@@ -69,6 +70,7 @@ func (a *Activities) RemoveItem(ctx context.Context, req RemoveItemRequest) erro
 	}
 
 	cmd := remove_item.NewCommand(req.CustomerID, item)
+
 	return a.removeItemHandler.Handle(ctx, cmd)
 }
 

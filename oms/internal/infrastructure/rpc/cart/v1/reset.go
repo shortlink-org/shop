@@ -14,7 +14,7 @@ import (
 
 // Reset resets the cart
 func (c *CartRPC) Reset(ctx context.Context, in *v1.ResetRequest) (*emptypb.Empty, error) {
-	customerId, err := uuid.Parse(in.CustomerId)
+	customerId, err := uuid.Parse(in.GetCustomerId())
 	if err != nil {
 		return nil, grpcerr.ToStatus(ctx, c.log, "Cart.Reset", domain.WrapValidation("customer_id", err))
 	}

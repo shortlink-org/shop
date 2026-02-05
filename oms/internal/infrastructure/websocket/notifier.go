@@ -13,9 +13,9 @@ import (
 
 // Notification represents a notification message to be sent to clients
 type Notification struct {
-	Type    string      `json:"type"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data,omitempty"`
+	Type    string `json:"type"`
+	Message string `json:"message"`
+	Data    any    `json:"data,omitempty"`
 }
 
 // StockDepletedNotification represents a notification when stock is depleted
@@ -53,7 +53,10 @@ func (n *Notifier) RegisterConnection(customerId uuid.UUID, conn *websocket.Conn
 
 	// Close existing connection if any
 	if oldConn, exists := n.connections[customerId]; exists {
-		_ = oldConn.Close()
+		err := oldConn.Close()
+		if err != nil {
+			n.log.Warn("failed to close previous connection", slog.String("error", err.Error()))
+		}
 	}
 
 	n.connections[customerId] = conn
@@ -69,14 +72,18 @@ func (n *Notifier) UnregisterConnection(customerId uuid.UUID) {
 	defer n.mu.Unlock()
 
 	if conn, exists := n.connections[customerId]; exists {
-		_ = conn.Close()
+		err := conn.Close()
+		if err != nil {
+			n.log.Warn("failed to close connection", slog.String("error", err.Error()))
+		}
+
 		delete(n.connections, customerId)
 		n.log.Info("WebSocket connection unregistered", slog.String("customer_id", customerId.String()))
 	}
 }
 
 // NotifyStockDepleted sends a notification to a customer about stock depletion
-func (n *Notifier) NotifyStockDepleted(customerId uuid.UUID, goodId uuid.UUID) error {
+func (n *Notifier) NotifyStockDepleted(customerId, goodId uuid.UUID) error {
 	n.mu.RLock()
 	conn, exists := n.connections[customerId]
 	n.mu.RUnlock()
@@ -103,12 +110,14 @@ func (n *Notifier) NotifyStockDepleted(customerId uuid.UUID, goodId uuid.UUID) e
 	n.mu.Lock()
 	defer n.mu.Unlock()
 
-	if err := conn.WriteMessage(websocket.TextMessage, data); err != nil {
+	err = conn.WriteMessage(websocket.TextMessage, data)
+	if err != nil {
 		n.log.Warn("Failed to send notification",
 			slog.String("customer_id", customerId.String()),
 			slog.String("error", err.Error()))
 		// Remove connection on error
 		delete(n.connections, customerId)
+
 		return err
 	}
 
@@ -134,12 +143,14 @@ func (n *Notifier) handleConnection(customerId uuid.UUID, conn *websocket.Conn) 
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				n.log.Warn("WebSocket error", slog.String("error", err.Error()))
 			}
+
 			break
 		}
 
 		// Handle ping/pong
 		if messageType == websocket.PingMessage {
-			if err := conn.WriteMessage(websocket.PongMessage, nil); err != nil {
+			err := conn.WriteMessage(websocket.PongMessage, nil)
+			if err != nil {
 				break
 			}
 		}

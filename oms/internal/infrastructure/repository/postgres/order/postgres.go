@@ -10,7 +10,6 @@ import (
 	"github.com/dgraph-io/ristretto/v2"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/jackc/pgx/v5/pgxpool"
-
 	"github.com/shortlink-org/go-sdk/db"
 	"github.com/shortlink-org/go-sdk/db/drivers/postgres/migrate"
 
@@ -18,10 +17,8 @@ import (
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order/schema/queries"
 )
 
-var (
-	//go:embed migrations/*.sql
-	migrations embed.FS
-)
+//go:embed migrations/*.sql
+var migrations embed.FS
 
 // New creates a new PostgreSQL order repository with L1 cache.
 func New(ctx context.Context, store db.DB) (*Store, error) {

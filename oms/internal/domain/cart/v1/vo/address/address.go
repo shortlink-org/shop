@@ -148,15 +148,19 @@ func (a Address) String() string {
 	if a.street != "" {
 		parts = append(parts, a.street)
 	}
+
 	if a.postalCode != "" {
 		parts = append(parts, a.postalCode)
 	}
+
 	if a.city != "" {
 		parts = append(parts, a.city)
 	}
+
 	if a.country != "" {
 		parts = append(parts, a.country)
 	}
+
 	return strings.Join(parts, ", ")
 }
 
@@ -166,5 +170,6 @@ func (a Address) FullString() string {
 	if a.HasCoordinates() {
 		return fmt.Sprintf("%s %s", base, a.location.String())
 	}
+
 	return base
 }

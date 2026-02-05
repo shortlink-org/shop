@@ -19,4 +19,3 @@ func (p PackageInfo) GetWeightKg() float64 {
 func (p PackageInfo) IsValid() bool {
 	return p.weightKg > 0
 }
-

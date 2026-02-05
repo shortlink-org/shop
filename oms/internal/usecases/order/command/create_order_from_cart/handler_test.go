@@ -22,6 +22,7 @@ import (
 func TestHandler_Handle_WithPricer(t *testing.T) {
 	log, err := logger.New(logger.Default())
 	require.NoError(t, err)
+
 	defer log.Close()
 
 	ctx := context.Background()
@@ -31,6 +32,7 @@ func TestHandler_Handle_WithPricer(t *testing.T) {
 	// Create cart with item
 	item, err := itemv1.NewItemWithPricing(goodID, 2, decimal.NewFromInt(50), decimal.Zero, decimal.Zero)
 	require.NoError(t, err)
+
 	cart := cartv1.Reconstitute(customerID, itemsv1.Items{item}, 1)
 
 	// Create mocks
@@ -91,6 +93,7 @@ func TestHandler_Handle_WithoutPricer(t *testing.T) {
 	// Pricer is required — nil pricer should fail checkout
 	log, err := logger.New(logger.Default())
 	require.NoError(t, err)
+
 	defer log.Close()
 
 	ctx := context.Background()
@@ -99,6 +102,7 @@ func TestHandler_Handle_WithoutPricer(t *testing.T) {
 
 	item, err := itemv1.NewItemWithPricing(goodID, 2, decimal.NewFromInt(50), decimal.Zero, decimal.Zero)
 	require.NoError(t, err)
+
 	cart := cartv1.Reconstitute(customerID, itemsv1.Items{item}, 1)
 
 	mockUoW := mocks.NewMockUnitOfWork(t)
@@ -132,6 +136,7 @@ func TestHandler_Handle_PricerError(t *testing.T) {
 	// Pricer failure fails checkout (needed for taxes and correct charge)
 	log, err := logger.New(logger.Default())
 	require.NoError(t, err)
+
 	defer log.Close()
 
 	ctx := context.Background()
@@ -140,6 +145,7 @@ func TestHandler_Handle_PricerError(t *testing.T) {
 
 	item, err := itemv1.NewItemWithPricing(goodID, 2, decimal.NewFromInt(50), decimal.Zero, decimal.Zero)
 	require.NoError(t, err)
+
 	cart := cartv1.Reconstitute(customerID, itemsv1.Items{item}, 1)
 
 	mockUoW := mocks.NewMockUnitOfWork(t)
@@ -177,6 +183,7 @@ func TestHandler_Handle_EmptyCart(t *testing.T) {
 	// Test checkout with empty cart
 	log, err := logger.New(logger.Default())
 	require.NoError(t, err)
+
 	defer log.Close()
 
 	ctx := context.Background()
@@ -222,6 +229,7 @@ func TestHandler_Handle_MultipleItems(t *testing.T) {
 	// Test checkout with multiple items
 	log, err := logger.New(logger.Default())
 	require.NoError(t, err)
+
 	defer log.Close()
 
 	ctx := context.Background()

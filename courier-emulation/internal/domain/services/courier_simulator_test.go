@@ -6,10 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/domain/vo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/domain/vo"
 )
 
 // mockLocationPublisher is a mock implementation for testing.
@@ -28,7 +27,9 @@ func newMockLocationPublisher() *mockLocationPublisher {
 func (m *mockLocationPublisher) PublishLocation(ctx context.Context, event vo.CourierLocationEvent) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
 	m.events = append(m.events, event)
+
 	return nil
 }
 
@@ -40,8 +41,10 @@ func (m *mockLocationPublisher) Close() error {
 func (m *mockLocationPublisher) GetEvents() []vo.CourierLocationEvent {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
 	result := make([]vo.CourierLocationEvent, len(m.events))
 	copy(result, m.events)
+
 	return result
 }
 

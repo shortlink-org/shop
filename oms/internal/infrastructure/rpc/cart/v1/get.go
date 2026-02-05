@@ -13,12 +13,13 @@ import (
 )
 
 func (c *CartRPC) Get(ctx context.Context, in *v1.GetRequest) (*v1.GetResponse, error) {
-	customerId, err := uuid.Parse(in.CustomerId)
+	customerId, err := uuid.Parse(in.GetCustomerId())
 	if err != nil {
 		return nil, grpcerr.ToStatus(ctx, c.log, "Cart.Get", domain.WrapValidation("customer_id", err))
 	}
 
 	query := get.NewQuery(customerId)
+
 	response, err := c.getHandler.Handle(ctx, query)
 	if err != nil {
 		return nil, grpcerr.ToStatus(ctx, c.log, "Cart.Get", err)

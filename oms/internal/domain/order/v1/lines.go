@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"context"
+
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 )
@@ -14,10 +16,11 @@ type Line struct {
 }
 
 // CreateFromLines initializes the order with the provided lines and transitions it to Processing state.
-func (o *OrderState) CreateFromLines(lines []Line) error {
+func (o *OrderState) CreateFromLines(ctx context.Context, lines []Line) error {
 	items := make(Items, 0, len(lines))
 	for _, l := range lines {
 		items = append(items, NewItem(l.ProductID, l.Qty, l.UnitPrice))
 	}
-	return o.CreateOrder(items)
+
+	return o.CreateOrder(ctx, items)
 }

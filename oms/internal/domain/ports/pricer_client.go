@@ -1,17 +1,11 @@
 package ports
 
 import (
-	"context"
-
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 )
 
 // PricerClient is the interface for the pricing service client.
-type PricerClient interface {
-	// CalculateTotal calculates the total price, tax, and discounts for a cart.
-	CalculateTotal(ctx context.Context, req CalculateTotalRequest) (*CalculateTotalResponse, error)
-}
 
 // CalculateTotalRequest is the request for calculating cart totals.
 type CalculateTotalRequest struct {

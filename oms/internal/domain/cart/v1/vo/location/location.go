@@ -71,6 +71,7 @@ func MustNewLocation(latitude, longitude float64) Location {
 	if err != nil {
 		panic(fmt.Sprintf("invalid location: %v", err))
 	}
+
 	return loc
 }
 
@@ -93,4 +94,3 @@ func (l Location) IsZero() bool {
 func (l Location) String() string {
 	return fmt.Sprintf("(%.6f, %.6f)", l.latitude, l.longitude)
 }
-

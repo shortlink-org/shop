@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
@@ -10,10 +11,10 @@ import (
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill-kafka/v3/pkg/kafka"
 	"github.com/ThreeDotsLabs/watermill/message"
+	"github.com/shortlink-org/go-sdk/logger"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/shortlink-org/go-sdk/logger"
 	deliverycommon "github.com/shortlink-org/shop/oms/internal/domain/delivery/common/v1"
 	deliveryevents "github.com/shortlink-org/shop/oms/internal/domain/delivery/events/v1"
 )
@@ -32,6 +33,8 @@ const (
 	// TopicDeliveryPackageStatus is the topic for delivery package status events.
 	TopicDeliveryPackageStatus = "delivery.package.status.v1"
 )
+
+var errUnsupportedEventType = errors.New("unsupported or non-status event_type")
 
 // DeliveryStatusEvent represents a delivery status update from the Delivery service.
 type DeliveryStatusEvent struct {
@@ -154,12 +157,14 @@ func (c *DeliveryConsumer) Start(ctx context.Context) error {
 				if msg == nil {
 					continue
 				}
+
 				c.processMessage(ctx, msg)
 			}
 		}
 	}()
 
 	c.log.Info("Delivery consumer started")
+
 	return nil
 }
 
@@ -176,6 +181,7 @@ func (c *DeliveryConsumer) processMessage(ctx context.Context, msg *message.Mess
 		c.log.Error("Missing event_type header, cannot decode delivery event",
 			slog.String("uuid", msg.UUID))
 		msg.Ack()
+
 		return
 	}
 
@@ -185,6 +191,7 @@ func (c *DeliveryConsumer) processMessage(ctx context.Context, msg *message.Mess
 			slog.Any("error", err),
 			slog.String("event_type", eventType))
 		msg.Ack()
+
 		return
 	}
 
@@ -194,6 +201,7 @@ func (c *DeliveryConsumer) processMessage(ctx context.Context, msg *message.Mess
 			slog.String("package_id", event.PackageID),
 			slog.String("order_id", event.OrderID))
 		msg.Nack()
+
 		return
 	}
 
@@ -207,29 +215,37 @@ func (c *DeliveryConsumer) processMessage(ctx context.Context, msg *message.Mess
 // unmarshalDeliveryEvent decodes payload by event_type and maps to DeliveryStatusEvent.
 func (c *DeliveryConsumer) unmarshalDeliveryEvent(eventType string, payload []byte) (DeliveryStatusEvent, error) {
 	var event DeliveryStatusEvent
+
 	switch eventType {
 	case "PackageInTransitEvent":
 		var e deliveryevents.PackageInTransitEvent
-		if err := proto.Unmarshal(payload, &e); err != nil {
+		err := proto.Unmarshal(payload, &e)
+		if err != nil {
 			return event, fmt.Errorf("proto unmarshal PackageInTransitEvent: %w", err)
 		}
+
 		event = mapInTransitToStatusEvent(&e)
 	case "PackageDeliveredEvent":
 		var e deliveryevents.PackageDeliveredEvent
-		if err := proto.Unmarshal(payload, &e); err != nil {
+		err := proto.Unmarshal(payload, &e)
+		if err != nil {
 			return event, fmt.Errorf("proto unmarshal PackageDeliveredEvent: %w", err)
 		}
+
 		event = mapDeliveredToStatusEvent(&e)
 	case "PackageNotDeliveredEvent":
 		var e deliveryevents.PackageNotDeliveredEvent
-		if err := proto.Unmarshal(payload, &e); err != nil {
+		err := proto.Unmarshal(payload, &e)
+		if err != nil {
 			return event, fmt.Errorf("proto unmarshal PackageNotDeliveredEvent: %w", err)
 		}
+
 		event = mapNotDeliveredToStatusEvent(&e)
 	default:
 		// Ignore other event types (PackageAcceptedEvent, PackageAssignedEvent, etc.)
-		return event, fmt.Errorf("unsupported or non-status event_type: %s", eventType)
+		return event, fmt.Errorf("unsupported or non-status event_type %s: %w", eventType, errUnsupportedEventType)
 	}
+
 	return event, nil
 }
 
@@ -261,6 +277,7 @@ func mapNotDeliveredToStatusEvent(e *deliveryevents.PackageNotDeliveredEvent) De
 		reasonStr = deliverycommon.NotDeliveredReason_name[int32(d.GetReason())]
 		desc = d.GetDescription()
 	}
+
 	return DeliveryStatusEvent{
 		PackageID:   e.GetPackageId(),
 		OrderID:     e.GetOrderId(),
@@ -277,6 +294,7 @@ func timestampToTime(ts *timestamppb.Timestamp) time.Time {
 	if ts == nil {
 		return time.Time{}
 	}
+
 	return ts.AsTime()
 }
 
@@ -285,5 +303,6 @@ func (c *DeliveryConsumer) Close() error {
 	if c.cancel != nil {
 		c.cancel()
 	}
+
 	return c.subscriber.Close()
 }

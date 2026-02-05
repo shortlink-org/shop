@@ -4,10 +4,9 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/spf13/viper"
-
 	"github.com/shortlink-org/go-sdk/config"
 	"github.com/shortlink-org/go-sdk/logger"
+	"github.com/spf13/viper"
 
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/kafka"
@@ -56,7 +55,10 @@ func NewDeliveryConsumer(
 
 	cleanup := func() {
 		if consumer != nil {
-			_ = consumer.Close()
+			err := consumer.Close()
+			if err != nil {
+				log.Warn("failed to close delivery consumer", slog.String("error", err.Error()))
+			}
 		}
 	}
 

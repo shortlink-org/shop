@@ -25,8 +25,10 @@ func (r *OrderRow) ToDomain() *order.OrderState {
 	for _, i := range r.Items {
 		domainItems = append(domainItems, order.NewItem(i.GoodID, i.Quantity, i.Price))
 	}
+
 	status := stringToOrderStatus(r.Order.Status)
 	deliveryInfo := toDeliveryInfoDomain(r.Delivery)
+
 	return order.NewOrderStateFromPersisted(
 		r.Order.ID, r.Order.CustomerID, domainItems,
 		status, int(r.Order.Version), deliveryInfo,
@@ -40,30 +42,44 @@ func toDeliveryInfoDomain(row *queries.OmsOrderDeliveryInfo) *order.DeliveryInfo
 	}
 
 	// Build pickup address
-	pickupLoc, _ := location.NewLocation(
+	pickupLoc, err := location.NewLocation(
 		numericToFloat64(row.PickupLatitude),
 		numericToFloat64(row.PickupLongitude),
 	)
-	pickupAddr, _ := address.NewAddressWithLocation(
+	if err != nil {
+		return nil
+	}
+
+	pickupAddr, err := address.NewAddressWithLocation(
 		row.PickupStreet.String,
 		row.PickupCity.String,
 		row.PickupPostalCode.String,
 		row.PickupCountry.String,
 		pickupLoc,
 	)
+	if err != nil {
+		return nil
+	}
 
 	// Build delivery address
-	deliveryLoc, _ := location.NewLocation(
+	deliveryLoc, err := location.NewLocation(
 		numericToFloat64(row.DeliveryLatitude),
 		numericToFloat64(row.DeliveryLongitude),
 	)
-	deliveryAddr, _ := address.NewAddressWithLocation(
+	if err != nil {
+		return nil
+	}
+
+	deliveryAddr, err := address.NewAddressWithLocation(
 		row.DeliveryStreet,
 		row.DeliveryCity,
 		row.DeliveryPostalCode.String,
 		row.DeliveryCountry,
 		deliveryLoc,
 	)
+	if err != nil {
+		return nil
+	}
 
 	// Build delivery period
 	period := order.NewDeliveryPeriod(
@@ -79,6 +95,7 @@ func toDeliveryInfoDomain(row *queries.OmsOrderDeliveryInfo) *order.DeliveryInfo
 
 	// Build optional recipient contacts
 	var recipientContacts *order.RecipientContacts
+
 	if row.RecipientName.Valid || row.RecipientPhone.Valid || row.RecipientEmail.Valid {
 		rc := order.NewRecipientContacts(
 			row.RecipientName.String,
@@ -116,8 +133,8 @@ func stringToOrderStatus(s string) order.OrderStatus {
 		return order.OrderStatus_ORDER_STATUS_PROCESSING
 	case "COMPLETED", "ORDER_STATUS_COMPLETED":
 		return order.OrderStatus_ORDER_STATUS_COMPLETED
-	case "CANCELLED", "ORDER_STATUS_CANCELLED":
-		return order.OrderStatus_ORDER_STATUS_CANCELLED
+	case "CANCELED", "ORDER_STATUS_CANCELED":
+		return order.OrderStatus_ORDER_STATUS_CANCELED
 	default:
 		return order.OrderStatus_ORDER_STATUS_UNSPECIFIED
 	}
@@ -139,6 +156,7 @@ func numericToFloat64(n pgtype.Numeric) float64 {
 		for i := int32(0); i < abs(n.Exp); i++ {
 			exp.Mul(exp, big.NewFloat(10))
 		}
+
 		if n.Exp < 0 {
 			bigFloat.Quo(bigFloat, exp)
 		} else {
@@ -147,6 +165,7 @@ func numericToFloat64(n pgtype.Numeric) float64 {
 	}
 
 	result, _ := bigFloat.Float64()
+
 	return result
 }
 
@@ -155,5 +174,6 @@ func abs(n int32) int32 {
 	if n < 0 {
 		return -n
 	}
+
 	return n
 }

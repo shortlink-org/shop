@@ -13,6 +13,7 @@ func createCartWithItem(customerId, goodId uuid.UUID, quantity int32) *cart.Stat
 	state := cart.New(customerId)
 	i, _ := item.NewItem(goodId, quantity)
 	_ = state.AddItem(i)
+
 	return state
 }
 

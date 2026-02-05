@@ -61,6 +61,7 @@ func (h *Handler) Handle(ctx context.Context, event Event) error {
 		h.log.Warn("Failed to get customers with good from index",
 			slog.String("good_id", event.GoodID.String()),
 			slog.String("error", err.Error()))
+
 		return err
 	}
 
@@ -71,7 +72,8 @@ func (h *Handler) Handle(ctx context.Context, event Event) error {
 
 	// Process each cart
 	for _, customerID := range customerIDs {
-		if err := h.processCart(ctx, customerID, event.GoodID); err != nil {
+		err := h.processCart(ctx, customerID, event.GoodID)
+		if err != nil {
 			h.log.Warn("Failed to process cart",
 				slog.String("customer_id", customerID.String()),
 				slog.String("good_id", event.GoodID.String()),
@@ -90,8 +92,10 @@ func (h *Handler) processCart(ctx context.Context, customerID, goodID uuid.UUID)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
+
 	defer func() {
-		if err := h.uow.Rollback(ctx); err != nil {
+		err := h.uow.Rollback(ctx)
+		if err != nil {
 			h.log.Warn("transaction rollback failed", slog.Any("error", err))
 		}
 	}()
@@ -101,26 +105,38 @@ func (h *Handler) processCart(ctx context.Context, customerID, goodID uuid.UUID)
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) {
 			// Cart doesn't exist, clean up index
-			_ = h.goodsIndex.RemoveGoodFromCart(ctx, goodID, customerID)
+			removeErr := h.goodsIndex.RemoveGoodFromCart(ctx, goodID, customerID)
+			if removeErr != nil {
+				h.log.Warn("failed to remove good from cart index", slog.String("error", removeErr.Error()))
+			}
+
 			return nil
 		}
+
 		return err
 	}
 
 	// Find the item and its quantity
 	var itemQuantity int32
+
 	found := false
+
 	for _, item := range cart.GetItems() {
 		if item.GetGoodId() == goodID {
 			itemQuantity = item.GetQuantity()
 			found = true
+
 			break
 		}
 	}
 
 	if !found {
 		// Item was already removed, clean up index
-		_ = h.goodsIndex.RemoveGoodFromCart(ctx, goodID, customerID)
+		removeErr := h.goodsIndex.RemoveGoodFromCart(ctx, goodID, customerID)
+		if removeErr != nil {
+			h.log.Warn("failed to remove good from cart index", slog.String("error", removeErr.Error()))
+		}
+
 		return nil
 	}
 
@@ -161,7 +177,8 @@ func (h *Handler) processCart(ctx context.Context, customerID, goodID uuid.UUID)
 
 	// Send websocket notification to UI
 	if h.notifier != nil {
-		if err := h.notifier.NotifyStockDepleted(customerID, goodID); err != nil {
+		err := h.notifier.NotifyStockDepleted(customerID, goodID)
+		if err != nil {
 			h.log.Warn("Failed to send websocket notification",
 				slog.String("customer_id", customerID.String()),
 				slog.String("good_id", goodID.String()),

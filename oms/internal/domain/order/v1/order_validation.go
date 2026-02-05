@@ -10,14 +10,14 @@ import (
 
 // Order validation errors
 var (
-	ErrOrderItemsEmpty        = errors.New("order must have at least one item")
-	ErrOrderItemInvalid       = errors.New("order item is invalid")
-	ErrOrderItemQuantityZero  = errors.New("order item quantity must be greater than zero")
-	ErrOrderItemPriceNegative = errors.New("order item price cannot be negative")
-	ErrOrderItemPriceZero     = errors.New("order item price must be greater than zero")
-	ErrOrderTotalWeightExceeded = errors.New("total order weight exceeds maximum allowed")
-	ErrOrderTotalItemsExceeded  = errors.New("total order items count exceeds maximum allowed")
-	ErrOrderItemsDuplicate      = errors.New("order contains duplicate items")
+	ErrOrderItemsEmpty             = errors.New("order must have at least one item")
+	ErrOrderItemInvalid            = errors.New("order item is invalid")
+	ErrOrderItemQuantityZero       = errors.New("order item quantity must be greater than zero")
+	ErrOrderItemPriceNegative      = errors.New("order item price cannot be negative")
+	ErrOrderItemPriceZero          = errors.New("order item price must be greater than zero")
+	ErrOrderTotalWeightExceeded    = errors.New("total order weight exceeds maximum allowed")
+	ErrOrderTotalItemsExceeded     = errors.New("total order items count exceeds maximum allowed")
+	ErrOrderItemsDuplicate         = errors.New("order contains duplicate items")
 	ErrOrderInvalidStateTransition = errors.New("invalid state transition for order")
 )
 
@@ -47,7 +47,8 @@ func ValidateOrderItems(items Items) error {
 
 	for i, item := range items {
 		// Validate individual item
-		if err := ValidateOrderItem(item); err != nil {
+		err := ValidateOrderItem(item)
+		if err != nil {
 			return fmt.Errorf("item %d: %w", i, err)
 		}
 
@@ -56,6 +57,7 @@ func ValidateOrderItems(items Items) error {
 		if seenGoodIds[goodIdStr] {
 			return fmt.Errorf("%w: good ID %s appears multiple times", ErrOrderItemsDuplicate, goodIdStr)
 		}
+
 		seenGoodIds[goodIdStr] = true
 
 		// Note: We don't have weight per item in the current Item model
@@ -90,7 +92,7 @@ func ValidateOrderItem(item Item) error {
 }
 
 // ValidateOrderStateTransition validates that a state transition is allowed given the current order state.
-func ValidateOrderStateTransition(currentStatus OrderStatus, targetStatus OrderStatus, items Items) error {
+func ValidateOrderStateTransition(currentStatus, targetStatus OrderStatus, items Items) error {
 	// Validate items are not empty when transitioning to PROCESSING or COMPLETED
 	if targetStatus == OrderStatus_ORDER_STATUS_PROCESSING || targetStatus == OrderStatus_ORDER_STATUS_COMPLETED {
 		if len(items) == 0 {
@@ -98,7 +100,8 @@ func ValidateOrderStateTransition(currentStatus OrderStatus, targetStatus OrderS
 		}
 
 		// Validate items meet business rules
-		if err := ValidateOrderItems(items); err != nil {
+		err := ValidateOrderItems(items)
+		if err != nil {
 			return fmt.Errorf("%w: %w", ErrOrderInvalidStateTransition, err)
 		}
 	}
@@ -114,19 +117,23 @@ func CalculateTotalWeight(items Items) float64 {
 	// TODO: Add weight field to Item or fetch from product catalog
 	// For now, return 0 as placeholder
 	totalWeight := 0.0
+
 	for range items {
 		// Would need: totalWeight += item.GetWeight() * float64(item.GetQuantity())
 	}
+
 	return totalWeight
 }
 
 // CalculateTotalPrice calculates the total price of all items in the order.
 func CalculateTotalPrice(items Items) decimal.Decimal {
 	total := decimal.Zero
+
 	for _, item := range items {
 		itemTotal := item.GetPrice().Mul(decimal.NewFromInt32(item.GetQuantity()))
 		total = total.Add(itemTotal)
 	}
+
 	return total
 }
 
@@ -135,6 +142,6 @@ func ValidateOrderTotalWeight(totalWeightKg float64) error {
 	if totalWeightKg > MaxOrderWeightKg {
 		return fmt.Errorf("%w: %.2f kg, maximum is %.2f kg", ErrOrderTotalWeightExceeded, totalWeightKg, MaxOrderWeightKg)
 	}
+
 	return nil
 }
-

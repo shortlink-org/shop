@@ -32,6 +32,7 @@ func WrapUnavailable(op string, err error) error {
 	if err == nil {
 		return nil
 	}
+
 	return fmt.Errorf("%w: %s: %w", ErrUnavailable, op, err)
 }
 
@@ -40,6 +41,7 @@ func WrapValidation(op string, err error) error {
 	if err == nil {
 		return nil
 	}
+
 	return fmt.Errorf("%w: %s: %w", ErrValidation, op, err)
 }
 
@@ -49,9 +51,12 @@ func MapInfraErr(op string, err error) error {
 	if err == nil {
 		return nil
 	}
+
 	if errors.Is(err, ErrNotFound) || errors.Is(err, ErrVersionConflict) || errors.Is(err, ErrConflict) ||
 		errors.Is(err, ErrValidation) || errors.Is(err, ErrUnavailable) {
+
 		return err
 	}
+
 	return WrapUnavailable(op, err)
 }

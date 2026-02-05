@@ -15,4 +15,3 @@ func (s *State) GetItems() itemsv1.Items {
 
 	return itemsCopy
 }
-

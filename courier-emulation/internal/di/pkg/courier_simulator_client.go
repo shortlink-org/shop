@@ -3,12 +3,10 @@ package pkg_di
 import (
 	"time"
 
-	"github.com/spf13/viper"
-
 	"github.com/shortlink-org/go-sdk/config"
-
 	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/domain/services"
 	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/infrastructure/kafka"
+	"github.com/spf13/viper"
 )
 
 // NewCourierSimulator creates the courier simulator.

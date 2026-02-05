@@ -27,6 +27,7 @@ func (s *State) RemoveItem(item itemv1.Item) error {
 					Item:       cartItem, // Use original item before removal
 					OccurredAt: time.Now(),
 				})
+
 				return nil
 			}
 
@@ -35,6 +36,7 @@ func (s *State) RemoveItem(item itemv1.Item) error {
 			if err != nil {
 				return fmt.Errorf("failed to update item quantity: %w", err)
 			}
+
 			s.items[i] = updatedItem
 			// Generate domain event for item removed (quantity decreased)
 			s.addDomainEvent(&eventsv1.ItemRemovedEvent{
@@ -42,6 +44,7 @@ func (s *State) RemoveItem(item itemv1.Item) error {
 				Item:       item, // Item being removed
 				OccurredAt: time.Now(),
 			})
+
 			return nil
 		}
 	}
@@ -49,4 +52,3 @@ func (s *State) RemoveItem(item itemv1.Item) error {
 	// Item not found, nothing to remove
 	return nil
 }
-

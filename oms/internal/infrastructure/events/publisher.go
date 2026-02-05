@@ -28,13 +28,15 @@ func (p *InMemoryPublisher) Publish(ctx context.Context, event any) error {
 	if !ok {
 		return nil
 	}
+
 	p.mu.RLock()
 	handlers := p.handlers[e.EventType()]
 	p.mu.RUnlock()
 
 	var firstErr error
 	for _, handler := range handlers {
-		if err := handler(ctx, e); err != nil && firstErr == nil {
+		err := handler(ctx, e)
+		if err != nil && firstErr == nil {
 			firstErr = err
 		}
 	}
@@ -54,6 +56,7 @@ func (p *InMemoryPublisher) Subscribe(eventType string, handler func(ctx context
 // It wraps the typed handler to match the generic signature.
 func SubscribeTyped[E ports.Event](p *InMemoryPublisher, handler func(ctx context.Context, event E) error) {
 	var zero E
+
 	eventType := zero.EventType()
 
 	p.Subscribe(eventType, func(ctx context.Context, event ports.Event) error {
@@ -61,6 +64,7 @@ func SubscribeTyped[E ports.Event](p *InMemoryPublisher, handler func(ctx contex
 		if !ok {
 			return nil // Skip if type doesn't match
 		}
+
 		return handler(ctx, typedEvent)
 	})
 }

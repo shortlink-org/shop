@@ -14,6 +14,6 @@ func (s *State) GetDomainEvents() []eventsv1.DomainEvent {
 	// Return a copy to prevent external modification
 	eventsCopy := make([]eventsv1.DomainEvent, len(s.domainEvents))
 	copy(eventsCopy, s.domainEvents)
+
 	return eventsCopy
 }
-

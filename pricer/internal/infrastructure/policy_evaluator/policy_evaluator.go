@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -15,9 +16,18 @@ import (
 
 	"github.com/dgraph-io/ristretto/v2"
 	"github.com/open-policy-agent/opa/rego"
-
 	logger "github.com/shortlink-org/go-sdk/logger"
+
 	"github.com/shortlink-org/shop/pricer/internal/domain"
+)
+
+// Infrastructure errors for policy evaluation (OPA). Use errors.Is when handling.
+var (
+	ErrPolicyDirNotExist       = errors.New("policy directory does not exist")
+	ErrOPAResultInvalidStr     = errors.New("invalid string format for OPA result")
+	ErrOPAResultInvalidNum     = errors.New("invalid json.Number format for OPA result")
+	ErrOPAResultUnexpectedType = errors.New("unexpected type for OPA result")
+	ErrListRegoFiles           = errors.New("failed to list .rego files")
 )
 
 const (
@@ -43,7 +53,7 @@ type OPAEvaluator struct {
 	cache         *ristretto.Cache[string, float64]
 }
 
-func NewOPAEvaluator(log logger.Logger, policyPath string, query string) (*OPAEvaluator, error) {
+func NewOPAEvaluator(log logger.Logger, policyPath, query string) (*OPAEvaluator, error) {
 	// Log the policy path and query
 	log.Info("Initializing OPA evaluator",
 		slog.String("policy_path", policyPath),
@@ -52,7 +62,7 @@ func NewOPAEvaluator(log logger.Logger, policyPath string, query string) (*OPAEv
 
 	// Check if the policy directory exists
 	if _, err := os.Stat(policyPath); os.IsNotExist(err) {
-		return nil, fmt.Errorf("policy directory does not exist: %s", policyPath)
+		return nil, fmt.Errorf("%s: %w", policyPath, ErrPolicyDirNotExist)
 	}
 
 	// Prepare the query
@@ -116,6 +126,7 @@ func (e *OPAEvaluator) Evaluate(ctx context.Context, cart *domain.Cart, params m
 
 	// Assuming the policy returns a single value
 	expr := rs[0].Expressions[0].Value
+
 	result, err := parseOPAResult(expr)
 	if err != nil {
 		return 0.0, err
@@ -138,7 +149,7 @@ func (e *OPAEvaluator) generateCacheKey(cart *domain.Cart, params map[string]int
 	// Hash cart items in a deterministic order
 	for _, item := range cart.Items {
 		h.Write([]byte(item.GoodID.String()))
-		h.Write([]byte(fmt.Sprintf("%d", item.Quantity)))
+		fmt.Fprintf(h, "%d", item.Quantity)
 		h.Write([]byte(item.Price.String()))
 	}
 
@@ -148,10 +159,12 @@ func (e *OPAEvaluator) generateCacheKey(cart *domain.Cart, params map[string]int
 		for k := range params {
 			keys = append(keys, k)
 		}
+
 		sort.Strings(keys)
+
 		for _, k := range keys {
 			h.Write([]byte(k))
-			h.Write([]byte(fmt.Sprintf("%v", params[k])))
+			fmt.Fprintf(h, "%v", params[k])
 		}
 	}
 
@@ -181,32 +194,35 @@ func parseOPAResult(value interface{}) (float64, error) {
 	case float64:
 		return v, nil
 	case string:
-		// Attempt to parse string to float64
 		parsed, err := strconv.ParseFloat(v, 64)
 		if err != nil {
-			return 0.0, fmt.Errorf("invalid string format for result: %v", err)
+			return 0.0, fmt.Errorf("%w: %w", ErrOPAResultInvalidStr, err)
 		}
+
 		return parsed, nil
 	case json.Number:
 		parsed, err := v.Float64()
 		if err != nil {
-			return 0.0, fmt.Errorf("invalid json.Number format for result: %v", err)
+			return 0.0, fmt.Errorf("%w: %w", ErrOPAResultInvalidNum, err)
 		}
+
 		return parsed, nil
 	default:
-		return 0.0, fmt.Errorf("unexpected type for result: %T", v)
+		return 0.0, fmt.Errorf("%T: %w", v, ErrOPAResultUnexpectedType)
 	}
 }
 
 // GetPolicyNames retrieves the names of all .rego files in the specified directories.
 func GetPolicyNames(dirs ...string) ([]string, error) {
 	var policyNames []string
+
 	for _, dir := range dirs {
 		// Use filepath.Glob to find all .rego files in the directory
 		pattern := filepath.Join(dir, "*.rego")
+
 		files, err := filepath.Glob(pattern)
 		if err != nil {
-			return nil, fmt.Errorf("failed to list .rego files in %s: %v", dir, err)
+			return nil, fmt.Errorf("%s: %w: %w", dir, ErrListRegoFiles, err)
 		}
 
 		for _, file := range files {
@@ -216,5 +232,6 @@ func GetPolicyNames(dirs ...string) ([]string, error) {
 			policyNames = append(policyNames, name)
 		}
 	}
+
 	return policyNames, nil
 }

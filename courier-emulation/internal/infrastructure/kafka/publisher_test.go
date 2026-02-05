@@ -5,10 +5,9 @@ import (
 	"testing"
 
 	"github.com/ThreeDotsLabs/watermill/message"
+	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/domain/vo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/domain/vo"
 )
 
 // mockPublisher is a mock implementation of message.Publisher for testing.

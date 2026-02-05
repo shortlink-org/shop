@@ -6,8 +6,8 @@ import (
 	"log/slog"
 
 	"github.com/shopspring/decimal"
-
 	logger "github.com/shortlink-org/go-sdk/logger"
+
 	"github.com/shortlink-org/shop/pricer/internal/domain"
 	"github.com/shortlink-org/shop/pricer/internal/domain/ports"
 	"github.com/shortlink-org/shop/pricer/internal/domain/pricing"
@@ -46,6 +46,7 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (domain.CartTotal, er
 
 	// Evaluate Discount Policy
 	h.log.InfoWithContext(ctx, "Evaluating discount policy", slog.Any("customer_id", cmd.Cart.CustomerID))
+
 	totalDiscountFloat, err := h.discountPolicy.Evaluate(ctx, cmd.Cart, cmd.DiscountParams)
 	if err != nil {
 		return total, fmt.Errorf("failed to evaluate discount policy: %w", err)
@@ -56,6 +57,7 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (domain.CartTotal, er
 
 	// Evaluate Tax Policy
 	h.log.InfoWithContext(ctx, "Evaluating tax policy", slog.Any("customer_id", cmd.Cart.CustomerID))
+
 	totalTaxFloat, err := h.taxPolicy.Evaluate(ctx, cmd.Cart, cmd.TaxParams)
 	if err != nil {
 		return total, fmt.Errorf("failed to evaluate tax policy: %w", err)
@@ -66,7 +68,9 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (domain.CartTotal, er
 
 	// Calculate subtotal
 	h.log.InfoWithContext(ctx, "Calculating final price", slog.Any("customer_id", cmd.Cart.CustomerID))
+
 	subtotal := decimal.Zero
+
 	for _, item := range cmd.Cart.Items {
 		itemSubtotal := item.Price.Mul(decimal.NewFromInt32(item.Quantity))
 		subtotal = subtotal.Add(itemSubtotal)
@@ -80,6 +84,7 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (domain.CartTotal, er
 	if totalDiscount.GreaterThan(subtotal) {
 		totalDiscount = subtotal
 	}
+
 	finalPrice := subtotal.Sub(totalDiscount).Add(totalTax)
 
 	total = domain.CartTotal{

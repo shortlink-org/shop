@@ -38,6 +38,7 @@ func (s *Store) Load(ctx context.Context, orderID uuid.UUID) (*order.OrderState,
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ports.ErrNotFound
 		}
+
 		return nil, err
 	}
 
@@ -49,6 +50,7 @@ func (s *Store) Load(ctx context.Context, orderID uuid.UUID) (*order.OrderState,
 
 	// Get delivery info (optional)
 	var deliveryInfoRow *queries.OmsOrderDeliveryInfo
+
 	deliveryRow, err := qtx.GetOrderDeliveryInfo(ctx, orderID)
 	if err != nil {
 		if !errors.Is(err, pgx.ErrNoRows) {
@@ -93,6 +95,7 @@ func (s *Store) ListByCustomer(ctx context.Context, customerID uuid.UUID) ([]*or
 
 		// Get delivery info (optional)
 		var deliveryInfoRow *queries.OmsOrderDeliveryInfo
+
 		deliveryRow, err := qtx.GetOrderDeliveryInfo(ctx, row.ID)
 		if err != nil {
 			if !errors.Is(err, pgx.ErrNoRows) {

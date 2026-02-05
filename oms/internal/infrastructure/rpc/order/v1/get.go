@@ -19,6 +19,7 @@ func (o *OrderRPC) Get(ctx context.Context, in *v1.GetRequest) (*v1.GetResponse,
 
 	// Create query and execute handler
 	query := get.NewQuery(orderId)
+
 	orderState, err := o.getHandler.Handle(ctx, query)
 	if err != nil {
 		return nil, err

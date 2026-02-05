@@ -2,6 +2,7 @@ package v1
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -11,6 +12,8 @@ import (
 	v1 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/model/v1"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/update_delivery_info"
 )
+
+var errDeliveryInfoRequired = errors.New("delivery info is required")
 
 func (o *OrderRPC) UpdateDeliveryInfo(ctx context.Context, in *v1.UpdateDeliveryInfoRequest) (*emptypb.Empty, error) {
 	// Parse order ID to UUID
@@ -22,7 +25,7 @@ func (o *OrderRPC) UpdateDeliveryInfo(ctx context.Context, in *v1.UpdateDelivery
 	// Convert proto delivery info to domain
 	deliveryInfo := dto.ProtoDeliveryInfoToDomain(in.GetDeliveryInfo())
 	if deliveryInfo == nil {
-		return nil, fmt.Errorf("delivery info is required")
+		return nil, errDeliveryInfoRequired
 	}
 
 	// Create command and execute handler

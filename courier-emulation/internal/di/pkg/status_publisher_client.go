@@ -1,13 +1,13 @@
 package pkg_di
 
 import (
-	"github.com/spf13/viper"
+	"log/slog"
 
 	"github.com/shortlink-org/go-sdk/config"
 	"github.com/shortlink-org/go-sdk/logger"
 	sdkkafka "github.com/shortlink-org/go-sdk/watermill/backends/kafka"
-
 	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/infrastructure/kafka"
+	"github.com/spf13/viper"
 )
 
 // NewStatusPublisher creates the Kafka status publisher using go-sdk/watermill.
@@ -22,7 +22,10 @@ func NewStatusPublisher(cfg *config.Config, log logger.Logger) (*kafka.KafkaStat
 
 	cleanup := func() {
 		if publisher != nil {
-			_ = publisher.Close()
+			err := publisher.Close()
+			if err != nil {
+				log.Warn("failed to close status publisher", slog.String("error", err.Error()))
+			}
 		}
 	}
 

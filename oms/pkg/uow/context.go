@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5"
-
 	sdkuow "github.com/shortlink-org/go-sdk/uow"
 )
 
@@ -34,5 +33,6 @@ func ContextWithoutTx(ctx context.Context) (context.Context, context.CancelFunc)
 	if deadline, ok := ctx.Deadline(); ok {
 		return context.WithDeadline(ctx2, deadline)
 	}
+
 	return context.WithCancel(ctx2)
 }

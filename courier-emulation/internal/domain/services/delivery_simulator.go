@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/domain"
 	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/domain/vo"
 	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/infrastructure/kafka"
 )
@@ -49,15 +51,15 @@ type DeliveryState struct {
 
 // DeliverySimulator orchestrates the full delivery workflow simulation.
 type DeliverySimulator struct {
-	config          DeliverySimulatorConfig
-	routeGenerator  *RouteGenerator
-	locationPub     LocationPublisher
-	statusPub       kafka.StatusPublisher
-	deliveries      map[string]*DeliveryState
-	mu              sync.RWMutex
-	stopCh          chan struct{}
-	wg              sync.WaitGroup
-	rng             *rand.Rand
+	config         DeliverySimulatorConfig
+	routeGenerator *RouteGenerator
+	locationPub    LocationPublisher
+	statusPub      kafka.StatusPublisher
+	deliveries     map[string]*DeliveryState
+	mu             sync.RWMutex
+	stopCh         chan struct{}
+	wg             sync.WaitGroup
+	rng            *rand.Rand
 }
 
 // NewDeliverySimulator creates a new delivery simulator.
@@ -85,7 +87,7 @@ func (ds *DeliverySimulator) StartDelivery(ctx context.Context, courierID string
 	// Check if courier already has an active delivery
 	if existing, exists := ds.deliveries[courierID]; exists && existing.Phase != vo.PhaseIdle {
 		ds.mu.Unlock()
-		return fmt.Errorf("courier %s already has an active delivery", courierID)
+		return fmt.Errorf("%s: %w", courierID, domain.ErrCourierHasActiveDelivery)
 	}
 
 	ds.mu.Unlock()
@@ -97,8 +99,12 @@ func (ds *DeliverySimulator) StartDelivery(ctx context.Context, courierID string
 
 	route, err := ds.routeGenerator.GenerateRoute(ctx, startLocation, order.PickupLocation())
 	if err != nil {
-		// If same location, create a minimal route
-		route, _ = ds.createMinimalRoute(startLocation, order.PickupLocation())
+		minRoute, createErr := ds.createMinimalRoute(startLocation, order.PickupLocation())
+		if createErr != nil {
+			return fmt.Errorf("create minimal route: %w", createErr)
+		}
+
+		route = minRoute
 	}
 
 	points, err := route.Points()
@@ -127,6 +133,7 @@ func (ds *DeliverySimulator) StartDelivery(ctx context.Context, courierID string
 
 	// Start simulation goroutine
 	ds.wg.Add(1)
+
 	go ds.simulateDelivery(ctx, courierID)
 
 	return nil
@@ -139,7 +146,7 @@ func (ds *DeliverySimulator) createMinimalRoute(from, to vo.Location) (vo.Route,
 	distance := from.DistanceTo(to)
 	duration := time.Duration(distance/ds.config.SpeedKmH*3600) * time.Second
 
-	return vo.NewRoute(
+	route, err := vo.NewRoute(
 		fmt.Sprintf("minimal_%d", time.Now().UnixNano()),
 		from,
 		to,
@@ -147,6 +154,11 @@ func (ds *DeliverySimulator) createMinimalRoute(from, to vo.Location) (vo.Route,
 		distance*1000, // Convert to meters
 		duration,
 	)
+	if err != nil {
+		return vo.Route{}, fmt.Errorf("new route: %w", err)
+	}
+
+	return route, nil
 }
 
 // encodePolyline is a simple polyline encoder for two points.
@@ -159,15 +171,17 @@ func encodePolyline(points []vo.Location) string {
 	result := ""
 	prevLat, prevLon := int64(0), int64(0)
 
+	var resultSb170 strings.Builder
 	for _, p := range points {
 		lat := int64(p.Latitude() * 1e5)
 		lon := int64(p.Longitude() * 1e5)
 
-		result += encodeNumber(lat - prevLat)
-		result += encodeNumber(lon - prevLon)
+		resultSb170.WriteString(encodeNumber(lat - prevLat))
+		resultSb170.WriteString(encodeNumber(lon - prevLon))
 
 		prevLat, prevLon = lat, lon
 	}
+	result += resultSb170.String()
 
 	return result
 }
@@ -180,10 +194,13 @@ func encodeNumber(num int64) string {
 	}
 
 	result := ""
+	var resultSb191 strings.Builder
 	for num >= 0x20 {
-		result += string(rune((0x20 | (num & 0x1f)) + 63))
+		resultSb191.WriteString(string(rune((0x20 | (num & 0x1f)) + 63)))
 		num >>= 5
 	}
+	result += resultSb191.String()
+
 	result += string(rune(num + 63))
 
 	return result
@@ -214,10 +231,11 @@ func (ds *DeliverySimulator) simulateDelivery(ctx context.Context, courierID str
 // updateDelivery updates the delivery state and handles phase transitions.
 func (ds *DeliverySimulator) updateDelivery(ctx context.Context, courierID string) (bool, error) {
 	ds.mu.Lock()
+
 	state, exists := ds.deliveries[courierID]
 	if !exists {
 		ds.mu.Unlock()
-		return true, fmt.Errorf("delivery for courier %s not found", courierID)
+		return true, fmt.Errorf("%s: %w", courierID, domain.ErrDeliveryNotFound)
 	}
 
 	// Handle based on current phase
@@ -237,7 +255,7 @@ func (ds *DeliverySimulator) updateDelivery(ctx context.Context, courierID strin
 
 	default:
 		ds.mu.Unlock()
-		return true, fmt.Errorf("unknown phase: %s", state.Phase)
+		return true, fmt.Errorf("%s: %w", state.Phase, domain.ErrUnknownPhase)
 	}
 }
 
@@ -290,7 +308,8 @@ func (ds *DeliverySimulator) handleMovingPhase(ctx context.Context, state *Deliv
 
 	// Publish location update
 	if ds.locationPub != nil {
-		if err := ds.locationPub.PublishLocation(ctx, event); err != nil {
+		err := ds.locationPub.PublishLocation(ctx, event)
+		if err != nil {
 			return false, fmt.Errorf("failed to publish location: %w", err)
 		}
 	}
@@ -314,7 +333,8 @@ func (ds *DeliverySimulator) handlePickingUpPhase(ctx context.Context, state *De
 	ds.mu.Unlock()
 
 	if ds.locationPub != nil {
-		if err := ds.locationPub.PublishLocation(ctx, event); err != nil {
+		err := ds.locationPub.PublishLocation(ctx, event)
+		if err != nil {
 			return false, fmt.Errorf("failed to publish location: %w", err)
 		}
 	}
@@ -338,7 +358,8 @@ func (ds *DeliverySimulator) handleDeliveringPhase(ctx context.Context, state *D
 	ds.mu.Unlock()
 
 	if ds.locationPub != nil {
-		if err := ds.locationPub.PublishLocation(ctx, event); err != nil {
+		err := ds.locationPub.PublishLocation(ctx, event)
+		if err != nil {
 			return false, fmt.Errorf("failed to publish location: %w", err)
 		}
 	}
@@ -354,10 +375,11 @@ func (ds *DeliverySimulator) handleDeliveringPhase(ctx context.Context, state *D
 // transitionPhase handles phase transitions.
 func (ds *DeliverySimulator) transitionPhase(ctx context.Context, courierID string) (bool, error) {
 	ds.mu.Lock()
+
 	state, exists := ds.deliveries[courierID]
 	if !exists {
 		ds.mu.Unlock()
-		return true, fmt.Errorf("delivery not found")
+		return true, domain.ErrDeliveryNotFound
 	}
 
 	currentPhase := state.Phase
@@ -368,7 +390,9 @@ func (ds *DeliverySimulator) transitionPhase(ctx context.Context, courierID stri
 		// Arrived at pickup -> start picking up
 		state.Phase = vo.PhasePickingUp
 		state.PhaseStartedAt = time.Now()
+
 		ds.mu.Unlock()
+
 		return false, nil
 
 	case vo.PhasePickingUp:
@@ -378,7 +402,8 @@ func (ds *DeliverySimulator) transitionPhase(ctx context.Context, courierID stri
 		// Publish pickup event
 		if ds.statusPub != nil && order != nil {
 			pickupEvent := kafka.NewPickUpOrderEvent(courierID, *order, state.CurrentLocation)
-			if err := ds.statusPub.PublishPickUp(ctx, pickupEvent); err != nil {
+			err := ds.statusPub.PublishPickUp(ctx, pickupEvent)
+			if err != nil {
 				return false, fmt.Errorf("failed to publish pickup event: %w", err)
 			}
 		}
@@ -387,21 +412,28 @@ func (ds *DeliverySimulator) transitionPhase(ctx context.Context, courierID stri
 		if order != nil {
 			route, err := ds.routeGenerator.GenerateRoute(ctx, state.CurrentLocation, order.DeliveryLocation())
 			if err != nil {
-				route, _ = ds.createMinimalRoute(state.CurrentLocation, order.DeliveryLocation())
+				minRoute, createErr := ds.createMinimalRoute(state.CurrentLocation, order.DeliveryLocation())
+				if createErr != nil {
+					return false, fmt.Errorf("create minimal route: %w", createErr)
+				}
+
+				route = minRoute
 			}
 
-			points, _ := route.Points()
-			if len(points) < 2 {
+			points, err := route.Points()
+			if err != nil || len(points) < 2 {
 				points = []vo.Location{state.CurrentLocation, order.DeliveryLocation()}
 			}
 
 			ds.mu.Lock()
+
 			state.CurrentRoute = &route
 			state.RoutePoints = points
 			state.CurrentPointIdx = 0
 			state.Phase = vo.PhaseHeadingToCustomer
 			state.PhaseStartedAt = time.Now()
 			state.LastUpdateAt = time.Now()
+
 			ds.mu.Unlock()
 		}
 
@@ -411,7 +443,9 @@ func (ds *DeliverySimulator) transitionPhase(ctx context.Context, courierID stri
 		// Arrived at customer -> start delivering
 		state.Phase = vo.PhaseDelivering
 		state.PhaseStartedAt = time.Now()
+
 		ds.mu.Unlock()
+
 		return false, nil
 
 	case vo.PhaseDelivering:
@@ -421,6 +455,7 @@ func (ds *DeliverySimulator) transitionPhase(ctx context.Context, courierID stri
 		// Determine if delivery was successful (based on failure rate)
 		delivered := ds.rng.Float64() >= ds.config.FailureRate
 		reason := ""
+
 		if !delivered {
 			reasons := []string{
 				kafka.ReasonCustomerNotAvailable,
@@ -434,18 +469,21 @@ func (ds *DeliverySimulator) transitionPhase(ctx context.Context, courierID stri
 		// Publish delivery event
 		if ds.statusPub != nil && order != nil {
 			deliverEvent := kafka.NewDeliverOrderEvent(courierID, *order, state.CurrentLocation, delivered, reason)
-			if err := ds.statusPub.PublishDelivery(ctx, deliverEvent); err != nil {
+			err := ds.statusPub.PublishDelivery(ctx, deliverEvent)
+			if err != nil {
 				return false, fmt.Errorf("failed to publish delivery event: %w", err)
 			}
 		}
 
 		// Reset state to idle
 		ds.mu.Lock()
+
 		state.Phase = vo.PhaseIdle
 		state.CurrentOrder = nil
 		state.CurrentRoute = nil
 		state.RoutePoints = nil
 		state.CurrentPointIdx = 0
+
 		ds.mu.Unlock()
 
 		return true, nil
@@ -468,6 +506,7 @@ func (ds *DeliverySimulator) GetDeliveryState(courierID string) (*DeliveryState,
 
 	// Return a copy
 	stateCopy := *state
+
 	return &stateCopy, true
 }
 
@@ -482,6 +521,7 @@ func (ds *DeliverySimulator) GetAllDeliveries() []string {
 			ids = append(ids, id)
 		}
 	}
+
 	return ids
 }
 

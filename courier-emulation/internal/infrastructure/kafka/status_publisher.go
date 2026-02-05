@@ -3,11 +3,11 @@ package kafka
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
-
 	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/domain/vo"
 )
 
@@ -63,11 +63,6 @@ const (
 )
 
 // StatusPublisher defines the interface for publishing delivery status events.
-type StatusPublisher interface {
-	PublishPickUp(ctx context.Context, event PickUpOrderEvent) error
-	PublishDelivery(ctx context.Context, event DeliverOrderEvent) error
-	Close() error
-}
 
 // KafkaStatusPublisher publishes delivery status events to Kafka.
 type KafkaStatusPublisher struct {
@@ -85,31 +80,44 @@ func NewStatusPublisher(publisher message.Publisher) *KafkaStatusPublisher {
 func (p *KafkaStatusPublisher) PublishPickUp(ctx context.Context, event PickUpOrderEvent) error {
 	payload, err := json.Marshal(event)
 	if err != nil {
-		return err
+		return fmt.Errorf("marshal pickup event: %w", err)
 	}
 
 	msg := message.NewMessage(watermill.NewUUID(), payload)
 	msg.Metadata.Set("partition_key", event.CourierID)
 
-	return p.publisher.Publish(TopicPickUpOrder, msg)
+	if err := p.publisher.Publish(TopicPickUpOrder, msg); err != nil {
+		return fmt.Errorf("publish pickup: %w", err)
+	}
+
+	return nil
 }
 
 // PublishDelivery publishes a deliver order event.
 func (p *KafkaStatusPublisher) PublishDelivery(ctx context.Context, event DeliverOrderEvent) error {
 	payload, err := json.Marshal(event)
 	if err != nil {
-		return err
+		return fmt.Errorf("marshal delivery event: %w", err)
 	}
 
 	msg := message.NewMessage(watermill.NewUUID(), payload)
 	msg.Metadata.Set("partition_key", event.CourierID)
 
-	return p.publisher.Publish(TopicDeliverOrder, msg)
+	if err := p.publisher.Publish(TopicDeliverOrder, msg); err != nil {
+		return fmt.Errorf("publish delivery: %w", err)
+	}
+
+	return nil
 }
 
 // Close closes the publisher.
 func (p *KafkaStatusPublisher) Close() error {
-	return p.publisher.Close()
+	err := p.publisher.Close()
+	if err != nil {
+		return fmt.Errorf("status publisher close: %w", err)
+	}
+
+	return nil
 }
 
 // NewPickUpOrderEvent creates a pickup order event from domain objects.

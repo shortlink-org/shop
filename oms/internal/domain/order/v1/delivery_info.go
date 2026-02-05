@@ -2,6 +2,7 @@ package v1
 
 import (
 	"github.com/google/uuid"
+
 	"github.com/shortlink-org/shop/oms/internal/domain/order/v1/vo/address"
 )
 
@@ -79,7 +80,7 @@ func DeliveryPriorityFromString(s string) DeliveryPriority {
 }
 
 // NewDeliveryInfo creates a new DeliveryInfo value object.
-// recipientContacts is optional (nil allowed).
+// RecipientContacts is optional (nil allowed).
 func NewDeliveryInfo(
 	pickupAddr address.Address,
 	deliveryAddr address.Address,

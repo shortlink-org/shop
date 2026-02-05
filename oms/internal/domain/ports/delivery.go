@@ -1,7 +1,6 @@
 package ports
 
 import (
-	"context"
 	"time"
 
 	"github.com/google/uuid"
@@ -10,11 +9,6 @@ import (
 // DeliveryClient defines the interface for communicating with the Delivery service.
 // This is a port in the hexagonal architecture that will be implemented
 // by a gRPC adapter in the infrastructure layer.
-type DeliveryClient interface {
-	// AcceptOrder sends an order to the Delivery service for processing.
-	// Returns the package ID assigned by the Delivery service.
-	AcceptOrder(ctx context.Context, req AcceptOrderRequest) (*AcceptOrderResponse, error)
-}
 
 // AcceptOrderRequest contains the data needed to request delivery.
 type AcceptOrderRequest struct {

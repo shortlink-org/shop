@@ -24,6 +24,7 @@ func (o *OrderRPC) Checkout(ctx context.Context, in *v1.CheckoutRequest) (*v1.Ch
 
 	// Create command and execute handler
 	cmd := create_order_from_cart.NewCommand(customerID, deliveryInfo)
+
 	result, err := o.checkoutHandler.Handle(ctx, cmd)
 	if err != nil {
 		return nil, err

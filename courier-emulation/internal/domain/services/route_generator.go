@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/dgraph-io/ristretto/v2"
-
 	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/domain/vo"
 )
 
@@ -119,16 +118,22 @@ func (rg *RouteGenerator) fetchRouteFromOSRM(ctx context.Context, origin, destin
 		destination.ToOSRMFormat(),
 	)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return vo.Route{}, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	resp, err := rg.httpClient.Do(req)
 	if err != nil {
-		return vo.Route{}, fmt.Errorf("%w: %v", ErrOSRMUnavailable, err)
+		return vo.Route{}, fmt.Errorf("%w: %w", ErrOSRMUnavailable, err)
 	}
-	defer resp.Body.Close()
+
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			// Response body close error on defer, non-critical
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return vo.Route{}, fmt.Errorf("%w: status code %d", ErrOSRMUnavailable, resp.StatusCode)
@@ -136,7 +141,7 @@ func (rg *RouteGenerator) fetchRouteFromOSRM(ctx context.Context, origin, destin
 
 	var osrmResp OSRMResponse
 	if err := json.NewDecoder(resp.Body).Decode(&osrmResp); err != nil {
-		return vo.Route{}, fmt.Errorf("%w: %v", ErrInvalidResponse, err)
+		return vo.Route{}, fmt.Errorf("%w: %w", ErrInvalidResponse, err)
 	}
 
 	if osrmResp.Code != "Ok" || len(osrmResp.Routes) == 0 {
@@ -153,7 +158,7 @@ func (rg *RouteGenerator) fetchRouteFromOSRM(ctx context.Context, origin, destin
 	rg.idCounter++
 	routeID := fmt.Sprintf("route_%06d", rg.idCounter)
 
-	return vo.NewRoute(
+	route, err := vo.NewRoute(
 		routeID,
 		origin,
 		destination,
@@ -161,6 +166,11 @@ func (rg *RouteGenerator) fetchRouteFromOSRM(ctx context.Context, origin, destin
 		osrmRoute.Distance,
 		time.Duration(osrmRoute.Duration)*time.Second,
 	)
+	if err != nil {
+		return vo.Route{}, fmt.Errorf("new route: %w", err)
+	}
+
+	return route, nil
 }
 
 // GenerateRandomRoute generates a route between two random points in the bounding box.
@@ -173,10 +183,10 @@ func (rg *RouteGenerator) GenerateRandomRoute(ctx context.Context, bbox vo.Bound
 func (rg *RouteGenerator) GenerateBatch(ctx context.Context, bbox vo.BoundingBox, count int) ([]vo.Route, error) {
 	routes := make([]vo.Route, 0, count)
 
-	for i := 0; i < count; i++ {
+	for range count {
 		select {
 		case <-ctx.Done():
-			return routes, ctx.Err()
+			return routes, fmt.Errorf("context: %w", ctx.Err())
 		default:
 		}
 
@@ -185,6 +195,7 @@ func (rg *RouteGenerator) GenerateBatch(ctx context.Context, bbox vo.BoundingBox
 			// Skip failed routes, continue generating
 			continue
 		}
+
 		routes = append(routes, route)
 	}
 
@@ -198,5 +209,6 @@ func (rg *RouteGenerator) HealthCheck(ctx context.Context) error {
 	destination := vo.MustNewLocation(52.5300, 13.4150)
 
 	_, err := rg.GenerateRoute(ctx, origin, destination)
+
 	return err
 }

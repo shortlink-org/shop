@@ -43,6 +43,7 @@ func (h *StockChangeHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.log.Warn("Failed to decode stock change request", slog.String("error", err.Error()))
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
+
 		return
 	}
 
@@ -50,11 +51,13 @@ func (h *StockChangeHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.log.Warn("Invalid good ID in stock change request", slog.String("good_id", req.GoodID), slog.String("error", err.Error()))
 		http.Error(w, "Invalid good_id", http.StatusBadRequest)
+
 		return
 	}
 
 	// Handle stock change - remove item from carts if stock is zero
 	ctx := r.Context()
+
 	event := on_stock_changed.NewEvent(goodId, req.NewQuantity)
 	if err := h.stockChangedHandler.Handle(ctx, event); err != nil {
 		h.log.Error("Failed to handle stock change", slog.String("error", err.Error()))
@@ -63,5 +66,8 @@ func (h *StockChangeHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte(`{"status":"ok"}`))
+
+	if _, err := w.Write([]byte(`{"status":"ok"}`)); err != nil {
+		h.log.Warn("failed to write response", slog.String("error", err.Error()))
+	}
 }

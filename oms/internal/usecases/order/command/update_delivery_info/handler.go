@@ -42,8 +42,10 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
+
 	defer func() {
-		if err := h.uow.Rollback(ctx); err != nil {
+		err := h.uow.Rollback(ctx)
+		if err != nil {
 			h.log.Warn("transaction rollback failed", slog.Any("error", err))
 		}
 	}()
@@ -55,7 +57,7 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 	}
 
 	// 2. Apply business logic (update delivery info)
-	// This will fail if order is COMPLETED/CANCELLED or if delivery is ASSIGNED/IN_TRANSIT/DELIVERED
+	// This will fail if order is COMPLETED/CANCELED or if delivery is ASSIGNED/IN_TRANSIT/DELIVERED
 	if err := order.SetDeliveryInfo(cmd.DeliveryInfo); err != nil {
 		return fmt.Errorf("cannot update delivery info: %w", err)
 	}
@@ -72,12 +74,14 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 
 	// 4. Publish domain events (if any)
 	for _, event := range order.GetDomainEvents() {
-		if err := h.publisher.Publish(ctx, event); err != nil {
+		err := h.publisher.Publish(ctx, event)
+		if err != nil {
 			h.log.Error("failed to publish domain event",
 				slog.String("order_id", cmd.OrderID.String()),
 				slog.Any("error", err))
 		}
 	}
+
 	order.ClearDomainEvents()
 
 	return nil

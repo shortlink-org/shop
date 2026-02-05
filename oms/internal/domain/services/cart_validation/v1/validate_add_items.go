@@ -3,9 +3,9 @@ package v1
 import (
 	"fmt"
 
-	itemsv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/items/v1"
-
 	"github.com/google/uuid"
+
+	itemsv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/items/v1"
 )
 
 // ValidateAddItemsWithStock validates if items can be added to a cart using
@@ -32,6 +32,7 @@ func ValidateAddItemsWithStock(
 				Message: fmt.Sprintf("Failed to check stock availability: %v", stock.CheckError),
 				Code:    "STOCK_CHECK_ERROR",
 			})
+
 			continue
 		}
 
@@ -40,12 +41,14 @@ func ValidateAddItemsWithStock(
 			if hasStock {
 				quantity = stock.StockQuantity
 			}
+
 			result.Valid = false
 			result.Errors = append(result.Errors, Error{
 				GoodID:  goodID,
 				Message: fmt.Sprintf("Insufficient stock. Available: %d, Requested: %d", quantity, item.GetQuantity()),
 				Code:    "INSUFFICIENT_STOCK",
 			})
+
 			continue
 		}
 

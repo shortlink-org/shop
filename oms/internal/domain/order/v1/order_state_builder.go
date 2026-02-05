@@ -7,7 +7,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
-
 	"github.com/shortlink-org/go-sdk/fsm"
 
 	commonv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common"
@@ -15,9 +14,12 @@ import (
 
 // Error definitions
 var (
-	ErrInvalidOrderID     = errors.New("invalid order id")
-	ErrInvalidGoodID      = errors.New("invalid good id")
-	ErrInvalidOrderStatus = errors.New("invalid order status")
+	ErrInvalidOrderID              = errors.New("invalid order id")
+	ErrInvalidGoodID               = errors.New("invalid good id")
+	ErrInvalidOrderStatus          = errors.New("invalid order status")
+	ErrCannotTransitionToCompleted = errors.New("cannot transition to COMPLETED from current status")
+	ErrUnsupportedTargetStatus     = errors.New("unsupported target status")
+	ErrOrderMustHaveItems          = errors.New("order in state must have at least one item")
 )
 
 // OrderStateBuilder is used to build a new OrderState
@@ -39,6 +41,7 @@ func (b *OrderStateBuilder) SetId(id uuid.UUID) *OrderStateBuilder {
 	}
 
 	b.orderState.id = id
+
 	return b
 }
 
@@ -48,15 +51,18 @@ func (b *OrderStateBuilder) AddItem(goodId uuid.UUID, quantity int32, price deci
 		b.errors = errors.Join(b.errors, ErrInvalidGoodID)
 		return b
 	}
+
 	item := NewItem(goodId, quantity, price)
 
 	// Validate item before adding to maintain invariants
-	if err := ValidateOrderItem(item); err != nil {
+	err := ValidateOrderItem(item)
+	if err != nil {
 		b.errors = errors.Join(b.errors, fmt.Errorf("invalid item %s: %w", goodId, err))
 		return b
 	}
 
 	b.orderState.items = append(b.orderState.items, item)
+
 	return b
 }
 
@@ -90,8 +96,8 @@ func (b *OrderStateBuilder) SetStatus(targetStatus OrderStatus) *OrderStateBuild
 // Domain layer uses context.Background() internally for FSM, keeping domain pure
 func (b *OrderStateBuilder) replayEventsToStatus(currentStatus, targetStatus OrderStatus) error {
 	// Define the transition path
-	switch {
-	case targetStatus == OrderStatus_ORDER_STATUS_PROCESSING:
+	switch targetStatus {
+	case OrderStatus_ORDER_STATUS_PROCESSING:
 		// PENDING + CREATE => PROCESSING
 		if currentStatus == OrderStatus_ORDER_STATUS_PENDING {
 			err := b.orderState.fsm.TriggerEvent(context.Background(), fsm.Event(commonv1.OrderTransitionEvent_ORDER_TRANSITION_EVENT_CREATE.String()))
@@ -100,20 +106,21 @@ func (b *OrderStateBuilder) replayEventsToStatus(currentStatus, targetStatus Ord
 			}
 		}
 
-	case targetStatus == OrderStatus_ORDER_STATUS_CANCELLED:
+	case OrderStatus_ORDER_STATUS_CANCELLED:
 		// PENDING/PROCESSING + CANCEL => CANCELLED
 		err := b.orderState.fsm.TriggerEvent(context.Background(), fsm.Event(commonv1.OrderTransitionEvent_ORDER_TRANSITION_EVENT_CANCEL.String()))
 		if err != nil {
 			return fmt.Errorf("failed to transition to CANCELLED: %w", err)
 		}
 
-	case targetStatus == OrderStatus_ORDER_STATUS_COMPLETED:
+	case OrderStatus_ORDER_STATUS_COMPLETED:
 		// PENDING: first CREATE => PROCESSING, then COMPLETE => COMPLETED
 		if currentStatus == OrderStatus_ORDER_STATUS_PENDING {
 			err := b.orderState.fsm.TriggerEvent(context.Background(), fsm.Event(commonv1.OrderTransitionEvent_ORDER_TRANSITION_EVENT_CREATE.String()))
 			if err != nil {
 				return fmt.Errorf("failed to transition to PROCESSING: %w", err)
 			}
+
 			currentStatus = OrderStatus_ORDER_STATUS_PROCESSING
 		}
 
@@ -123,11 +130,11 @@ func (b *OrderStateBuilder) replayEventsToStatus(currentStatus, targetStatus Ord
 				return fmt.Errorf("failed to transition to COMPLETED: %w", err)
 			}
 		} else {
-			return fmt.Errorf("cannot transition to COMPLETED from status '%s'", currentStatus)
+			return fmt.Errorf("cannot transition to COMPLETED from status %s: %w", currentStatus, ErrCannotTransitionToCompleted)
 		}
 
 	default:
-		return fmt.Errorf("unsupported target status '%s'", targetStatus)
+		return fmt.Errorf("unsupported target status %s: %w", targetStatus, ErrUnsupportedTargetStatus)
 	}
 
 	return nil
@@ -140,7 +147,8 @@ func (b *OrderStateBuilder) Build() (*OrderState, error) {
 	}
 
 	// Validate order invariants before returning
-	if err := ValidateOrderItems(b.orderState.items); err != nil {
+	err := ValidateOrderItems(b.orderState.items)
+	if err != nil {
 		return nil, fmt.Errorf("order validation failed: %w", err)
 	}
 
@@ -148,7 +156,7 @@ func (b *OrderStateBuilder) Build() (*OrderState, error) {
 	currentStatus := b.orderState.GetStatus()
 	if currentStatus == OrderStatus_ORDER_STATUS_PROCESSING || currentStatus == OrderStatus_ORDER_STATUS_COMPLETED {
 		if len(b.orderState.items) == 0 {
-			return nil, fmt.Errorf("order in %s state must have at least one item", currentStatus)
+			return nil, fmt.Errorf("order in %s state must have at least one item: %w", currentStatus, ErrOrderMustHaveItems)
 		}
 	}
 

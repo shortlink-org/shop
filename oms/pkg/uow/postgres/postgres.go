@@ -24,6 +24,7 @@ func (u *UoW) Begin(ctx context.Context) (context.Context, error) {
 	if err != nil {
 		return ctx, err
 	}
+
 	return uow.WithTx(ctx, pgxTx), nil
 }
 
@@ -33,6 +34,7 @@ func (u *UoW) Commit(ctx context.Context) error {
 	if pgxTx == nil {
 		return nil // no-op if no transaction
 	}
+
 	return pgxTx.Commit(ctx)
 }
 
@@ -43,5 +45,6 @@ func (u *UoW) Rollback(ctx context.Context) error {
 	if pgxTx == nil {
 		return nil // no-op if no transaction
 	}
+
 	return pgxTx.Rollback(ctx)
 }

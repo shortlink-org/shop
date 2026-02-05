@@ -22,6 +22,7 @@ func NewPricerRequestBuilder(customerID uuid.UUID, items cartItemsv1.Items) *Pri
 			UnitPrice: item.GetPrice(),
 		})
 	}
+
 	return &PricerRequestBuilder{
 		req: ports.CalculateTotalRequest{
 			Cart: ports.CartData{
@@ -39,7 +40,9 @@ func (b *PricerRequestBuilder) WithDiscountParam(k, v string) *PricerRequestBuil
 	if b.req.DiscountParams == nil {
 		b.req.DiscountParams = make(map[string]string)
 	}
+
 	b.req.DiscountParams[k] = v
+
 	return b
 }
 
@@ -48,7 +51,9 @@ func (b *PricerRequestBuilder) WithTaxParam(k, v string) *PricerRequestBuilder {
 	if b.req.TaxParams == nil {
 		b.req.TaxParams = make(map[string]string)
 	}
+
 	b.req.TaxParams[k] = v
+
 	return b
 }
 

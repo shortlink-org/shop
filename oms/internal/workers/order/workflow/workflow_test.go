@@ -68,6 +68,7 @@ func (s *OrderWorkflowTestSuite) Test_Workflow_QueryStatus() {
 		s.NoError(err)
 
 		var status string
+
 		err = res.Get(&status)
 		s.NoError(err)
 		// Status should be either PROCESSING or COMPLETED at this point
@@ -84,6 +85,7 @@ func (s *OrderWorkflowTestSuite) Test_Workflow_QueryStatus() {
 	s.NoError(err)
 
 	var finalStatus string
+
 	err = res.Get(&finalStatus)
 	s.NoError(err)
 	s.Equal("COMPLETED", finalStatus)
@@ -115,10 +117,11 @@ func (s *OrderWorkflowTestSuite) Test_Workflow_CancelSignal() {
 	s.NoError(err)
 
 	var status string
+
 	err = res.Get(&status)
 	s.NoError(err)
-	// Status can be either CANCELLED or COMPLETED depending on timing
-	s.Contains([]string{"CANCELLED", "COMPLETED"}, status)
+	// Status can be either CANCELED or COMPLETED depending on timing
+	s.Contains([]string{"CANCELED", "COMPLETED"}, status)
 }
 
 // Test_Workflow_CompleteSignal tests the complete signal handling.
@@ -168,6 +171,7 @@ func (s *OrderWorkflowTestSuite) Test_Workflow_SingleItem() {
 	s.NoError(err)
 
 	var status string
+
 	err = res.Get(&status)
 	s.NoError(err)
 	s.Equal("COMPLETED", status)
@@ -194,6 +198,7 @@ func (s *OrderWorkflowTestSuite) Test_Workflow_MultipleSignals() {
 	s.NoError(err)
 
 	var status string
+
 	err = res.Get(&status)
 	s.NoError(err)
 	// Status should be COMPLETED as the saga finishes successfully

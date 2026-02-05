@@ -42,8 +42,10 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
+
 	defer func() {
-		if err := h.uow.Rollback(ctx); err != nil {
+		err := h.uow.Rollback(ctx)
+		if err != nil {
 			h.log.Warn("transaction rollback failed", slog.Any("error", err))
 		}
 	}()
@@ -53,13 +55,14 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 	order.SetID(cmd.OrderID)
 
 	// 2. Apply business logic (create order with items)
-	if err := order.CreateOrder(cmd.Items); err != nil {
+	if err := order.CreateOrder(ctx, cmd.Items); err != nil {
 		return err
 	}
 
 	// 3. Set delivery info if provided
 	if cmd.DeliveryInfo != nil {
-		if err := order.SetDeliveryInfo(*cmd.DeliveryInfo); err != nil {
+		err := order.SetDeliveryInfo(*cmd.DeliveryInfo)
+		if err != nil {
 			return fmt.Errorf("failed to set delivery info: %w", err)
 		}
 	}
@@ -71,7 +74,8 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 
 	// 5. Publish domain events to outbox (same transaction)
 	for _, event := range order.GetDomainEvents() {
-		if err := h.publisher.Publish(ctx, event); err != nil {
+		err := h.publisher.Publish(ctx, event)
+		if err != nil {
 			h.log.Error("failed to publish domain event",
 				slog.String("order_id", cmd.OrderID.String()),
 				slog.Any("error", err))
@@ -81,6 +85,7 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 	if err := h.uow.Commit(ctx); err != nil {
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
+
 	order.ClearDomainEvents()
 
 	return nil

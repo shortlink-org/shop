@@ -9,9 +9,9 @@ import (
 )
 
 const (
-	// keyPrefix is the prefix for all cart goods index keys
+	// KeyPrefix is the prefix for all cart goods index keys
 	keyPrefix = "oms:cart:good"
-	// customerGoodsPrefix is the prefix for reverse index (customer -> goods)
+	// CustomerGoodsPrefix is the prefix for reverse index (customer -> goods)
 	customerGoodsPrefix = "oms:cart:customer"
 )
 
@@ -50,7 +50,8 @@ func (s *Store) AddGoodToCart(ctx context.Context, goodID, customerID uuid.UUID)
 
 	// Execute both commands
 	for _, resp := range s.client.DoMulti(ctx, cmd1, cmd2) {
-		if err := resp.Error(); err != nil {
+		err := resp.Error()
+		if err != nil {
 			return fmt.Errorf("failed to add good to cart index: %w", err)
 		}
 	}
@@ -67,7 +68,8 @@ func (s *Store) RemoveGoodFromCart(ctx context.Context, goodID, customerID uuid.
 
 	// Execute both commands
 	for _, resp := range s.client.DoMulti(ctx, cmd1, cmd2) {
-		if err := resp.Error(); err != nil {
+		err := resp.Error()
+		if err != nil {
 			return fmt.Errorf("failed to remove good from cart index: %w", err)
 		}
 	}
@@ -85,6 +87,7 @@ func (s *Store) GetCustomersWithGood(ctx context.Context, goodID uuid.UUID) ([]u
 		if rueidis.IsRedisNil(err) {
 			return []uuid.UUID{}, nil
 		}
+
 		return nil, fmt.Errorf("failed to get customers with good: %w", err)
 	}
 
@@ -95,6 +98,7 @@ func (s *Store) GetCustomersWithGood(ctx context.Context, goodID uuid.UUID) ([]u
 			// Skip invalid UUIDs (shouldn't happen, but be defensive)
 			continue
 		}
+
 		customers = append(customers, id)
 	}
 
@@ -112,6 +116,7 @@ func (s *Store) ClearCart(ctx context.Context, customerID uuid.UUID) error {
 		if rueidis.IsRedisNil(err) {
 			return nil // No goods to clear
 		}
+
 		return fmt.Errorf("failed to get customer goods: %w", err)
 	}
 
@@ -126,6 +131,7 @@ func (s *Store) ClearCart(ctx context.Context, customerID uuid.UUID) error {
 		if err != nil {
 			continue
 		}
+
 		cmds = append(cmds, s.client.B().Srem().Key(goodCustomersKey(goodID)).Member(customerID.String()).Build())
 	}
 
@@ -134,7 +140,8 @@ func (s *Store) ClearCart(ctx context.Context, customerID uuid.UUID) error {
 
 	// Execute all commands
 	for _, resp := range s.client.DoMulti(ctx, cmds...) {
-		if err := resp.Error(); err != nil {
+		err := resp.Error()
+		if err != nil {
 			return fmt.Errorf("failed to clear cart index: %w", err)
 		}
 	}

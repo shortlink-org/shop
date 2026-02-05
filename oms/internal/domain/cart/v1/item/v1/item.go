@@ -50,6 +50,7 @@ func NewItem(goodId uuid.UUID, quantity int32) (Item, error) {
 	if goodId == uuid.Nil {
 		return Item{}, ErrItemGoodIdZero
 	}
+
 	if quantity <= 0 {
 		return Item{}, ErrItemQuantityZero
 	}
@@ -78,18 +79,23 @@ func NewItemWithPricing(
 	if goodId == uuid.Nil {
 		return Item{}, ErrItemGoodIdZero
 	}
+
 	if quantity <= 0 {
 		return Item{}, ErrItemQuantityZero
 	}
+
 	if price.IsNegative() {
 		return Item{}, ErrItemPriceNegative
 	}
+
 	if discount.IsNegative() {
 		return Item{}, ErrItemDiscountNegative
 	}
+
 	if tax.IsNegative() {
 		return Item{}, ErrItemTaxNegative
 	}
+
 	if discount.GreaterThan(price) {
 		return Item{}, ErrItemDiscountExceedsPrice
 	}
@@ -164,6 +170,7 @@ func (i Item) GetPriceAfterDiscount() decimal.Decimal {
 	if priceAfterDiscount.IsNegative() {
 		return decimal.Zero
 	}
+
 	return priceAfterDiscount
 }
 

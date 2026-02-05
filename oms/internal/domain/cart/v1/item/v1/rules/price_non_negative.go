@@ -11,5 +11,6 @@ func (s PriceNonNegativeSpec) IsSatisfiedBy(item *itemv1.Item) error {
 	if item.GetPrice().IsNegative() {
 		return itemv1.ErrItemPriceNegative
 	}
+
 	return nil
 }

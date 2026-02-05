@@ -38,6 +38,7 @@ func TestAddRequestToDomain(t *testing.T) {
 				_ = state.AddItem(item1)
 				item2, _ := itemv1.NewItem(goodId2, 2)
 				_ = state.AddItem(item2)
+
 				return state
 			}(),
 		},
@@ -72,13 +73,13 @@ func TestAddRequestToDomain(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			actualParams, err := AddRequestToDomain(tt.request)
 			if tt.expectedError != nil {
-				assert.NotNil(t, err)
+				assert.Error(t, err)
 				assert.Equal(t, tt.expectedError.Error(), err.Error())
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, actualParams)
 				assert.Equal(t, tt.expectedState.GetCustomerId(), actualParams.CustomerID)
-				assert.Equal(t, len(tt.expectedState.GetItems()), len(actualParams.Items))
+				assert.Len(t, actualParams.Items, len(tt.expectedState.GetItems()))
 			}
 		})
 	}

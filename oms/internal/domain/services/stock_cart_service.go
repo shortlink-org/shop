@@ -40,13 +40,16 @@ func (s *StockCartService) ProcessStockDepletion(
 	customerID := cartState.GetCustomerId()
 
 	// Find the item in the cart
-	var itemQuantity int32
-	var found bool
+	var (
+		itemQuantity int32
+		found        bool
+	)
 
 	for _, item := range cartState.GetItems() {
 		if item.GetGoodId() == goodID {
 			itemQuantity = item.GetQuantity()
 			found = true
+
 			break
 		}
 	}

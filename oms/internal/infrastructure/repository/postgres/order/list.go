@@ -24,8 +24,11 @@ func (s *Store) List(ctx context.Context, filter ports.ListFilter) ([]*order.Ord
 
 	qtx := s.query.WithTx(pgxTx)
 
-	var rows []queries.OmsOrder
-	var err error
+	var (
+		rows []queries.OmsOrder
+		err  error
+	)
+
 	hasCustomer := filter.CustomerID != nil
 	hasStatus := len(filter.StatusFilter) > 0
 
@@ -56,6 +59,7 @@ func (s *Store) List(ctx context.Context, filter ports.ListFilter) ([]*order.Ord
 			Offset: 0,
 		})
 	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +70,9 @@ func (s *Store) List(ctx context.Context, filter ports.ListFilter) ([]*order.Ord
 		if err != nil {
 			return nil, err
 		}
+
 		var deliveryInfoRow *queries.OmsOrderDeliveryInfo
+
 		deliveryRow, err := qtx.GetOrderDeliveryInfo(ctx, row.ID)
 		if err != nil {
 			if !errors.Is(err, pgx.ErrNoRows) {
@@ -75,6 +81,7 @@ func (s *Store) List(ctx context.Context, filter ports.ListFilter) ([]*order.Ord
 		} else {
 			deliveryInfoRow = &deliveryRow
 		}
+
 		orders = append(orders, (&dto.OrderRow{Order: row, Items: items, Delivery: deliveryInfoRow}).ToDomain())
 	}
 
@@ -87,5 +94,6 @@ func statusesToInts(statuses []order.OrderStatus) []int32 {
 	for i, s := range statuses {
 		result[i] = int32(s)
 	}
+
 	return result
 }

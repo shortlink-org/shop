@@ -28,7 +28,7 @@ func (h *Handler) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	customerIdStr := r.URL.Query().Get("customer_id")
 	if customerIdStr == "" {
 		// Try to get from header
-		customerIdStr = r.Header.Get("X-Customer-ID")
+		customerIdStr = r.Header.Get("X-Customer-Id")
 	}
 
 	if customerIdStr == "" {
