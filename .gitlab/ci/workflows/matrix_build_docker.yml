@@ -38,12 +38,6 @@
         WORKDIR: $APPLICATION
         DOCKERFILE_PATH: ops/dockerfile/Dockerfile
 
-      # Feed Service (Go)
-      - APPLICATION: feed
-        REGISTRY_IMAGE: $CI_REGISTRY_IMAGE/$APPLICATION
-        WORKDIR: $APPLICATION
-        DOCKERFILE_PATH: ops/dockerfile/Dockerfile
-
       # Pricer Service (Go)
       - APPLICATION: pricer
         REGISTRY_IMAGE: $CI_REGISTRY_IMAGE/$APPLICATION

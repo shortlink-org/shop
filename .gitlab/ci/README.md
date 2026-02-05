@@ -26,7 +26,6 @@ This directory contains GitLab CI/CD configuration for the Shop project.
 | oms | Order Management System | Go |
 | admin | Admin Panel | Python/Django |
 | bff | Backend for Frontend | TypeScript |
-| feed | Feed Service | Go |
 | pricer | Pricer Service | Go |
 | delivery | Delivery Service | Rust |
 | ui | Shop Frontend | React/Next.js |

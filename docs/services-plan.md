@@ -638,9 +638,6 @@ end note
 - [ADR-0001: Init project](../oms/docs/ADR/decisions/0001-init.md) - Инициализация OMS
 - [ADR-0002: C4 System](../oms/docs/ADR/decisions/0002-c4-system.md) - Архитектура OMS
 
-**Feed Service:**
-- [ADR-0001: Init Feed Service](../feed/docs/ADR/decisions/0001-init.md) - Инициализация Feed Service для генерации фидов
-
 **OMS-GraphQL:**
 - [ADR-0001: Init project](../oms-graphql/docs/ADR/decisions/0001-init-project.md) - Инициализация OMS GraphQL API Bridge
 

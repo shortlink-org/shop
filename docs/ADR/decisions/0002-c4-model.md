@@ -8,7 +8,7 @@ Accepted
 
 ## Context
 
-The Shop Boundary consists of several critical services (Admin, BFF, OMS, Pricer, Feed, Email Subscription) integral to our system's operations 
+The Shop Boundary consists of several critical services (Admin, BFF, OMS, Pricer, Email Subscription) integral to our system's operations 
 related to goods and services management. Given the complex interactions and processes handled by these services, 
 it is crucial to have a detailed and clear visualization of the architecture. 
 
@@ -66,11 +66,9 @@ System_Boundary(sbs, "Shop Boundary Context") {
     System(oms_graphql, "OMS-GraphQL", "GraphQL API Bridge for orders via GraphQL API.")
     System(oms_temporal, "OMS (Temporal)", "Service for work with carts and orders using Temporal workflows.")
     System(email_subscription_service, "Email Subscription (Temporal)", "Handles email subscriptions and notifications.")
-    System(feed_service, "Feed Service", "Cron job in Go, generates feeds every 24h and saves them to Minio.")
 }
 
 SystemQueue_Ext(kafka, "Kafka", "Message Queue for asynchronous communication and event-driven operations.")
-System_Ext(minio_store, "Minio (S3-like block store)", "Stores generated feeds.")
 System_Ext(temporal, "Temporal", "Workflow orchestration service.")
 
 System_Boundary(bbs, "Billing Boundary") {
@@ -98,8 +96,6 @@ Rel(email_subscription_service, customer, "Sends email notifications to", "SMTP"
 Rel(oms_temporal, billing_service, "Submits order details to", "gRPC/Kafka")
 Rel(oms_temporal, delivery_service, "Sends order info for delivery to", "gRPC/Kafka")
 Rel(delivery_service, oms_temporal, "Sends delivery status updates to", "gRPC/Webhook")
-Rel(feed_service, oms_graphql, "Fetches data via", "GraphQL")
-Rel(feed_service, minio_store, "Saves generated feeds to", "S3 API")
 
 @enduml
 ```
@@ -127,10 +123,8 @@ System_Boundary(sbs, "Shop Boundary Context") {
     Container(oms_graphql, "OMS-GraphQL", "Service", "GraphQL API Bridge for work with orders via GraphQL API.")
     Container(oms_temporal, "OMS (Temporal)", "Service", "Service for work with carts and orders using Temporal workflows and gRPC.")
     Container(email_subscription_service, "Email Subscription Service (Temporal)", "Service", "Manages email subscriptions and notifications using Temporal workflows.")
-    Container(feed_service, "Feed Service", "Service", "Cron job in Go, generates feeds every 24h and saves them to Minio.")
     ContainerDb(shop_db, "Shop Database", "Database", "Central repository for storing all orders, carts, and administrative data.")
     Container(shop_cache, "Shop Cache Server", "Cache", "Improves performance by caching frequently accessed data such as product details and prices.")
-    Container_Ext(minio_store, "Minio (S3-like block store)", "External Storage", "Stores generated feeds.")
 }
 
 System_Boundary(bbs, "Billing Boundary") {
@@ -161,8 +155,6 @@ Rel(oms_temporal, payment_gateway, "Connects for payment processing", "API")
 Rel(admin_service, shop_db, "Reads and writes data", "SQL")
 Rel(email_subscription_service, temporal, "Uses for workflow orchestration", "Temporal API")
 Rel(email_subscription_service, kafka, "Consumes events", "Kafka")
-Rel(feed_service, oms_graphql, "Fetches data via", "GraphQL")
-Rel(feed_service, minio_store, "Saves generated feeds to", "S3 API")
 
 @enduml
 ```
