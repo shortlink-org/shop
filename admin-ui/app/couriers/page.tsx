@@ -42,7 +42,7 @@ export default function CouriersListPage() {
 
   const { query, result } = useList<Courier>({
     resource: 'couriers',
-    pagination: { current: page, pageSize },
+    pagination: { currentPage: page, pageSize },
     filters,
   });
   

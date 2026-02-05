@@ -19,7 +19,7 @@ const (
 	OrderStatus_ORDER_STATUS_PENDING     OrderStatus = commonv1.OrderStatus_ORDER_STATUS_PENDING
 	OrderStatus_ORDER_STATUS_PROCESSING  OrderStatus = commonv1.OrderStatus_ORDER_STATUS_PROCESSING
 	OrderStatus_ORDER_STATUS_COMPLETED   OrderStatus = commonv1.OrderStatus_ORDER_STATUS_COMPLETED
-	OrderStatus_ORDER_STATUS_CANCELED    OrderStatus = commonv1.OrderStatus_ORDER_STATUS_CANCELED
+	OrderStatus_ORDER_STATUS_CANCELLED   OrderStatus = commonv1.OrderStatus_ORDER_STATUS_CANCELLED
 )
 
 var (

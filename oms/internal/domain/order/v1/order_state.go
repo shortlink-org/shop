@@ -81,12 +81,12 @@ func (o *OrderState) addOrderTransitionRules(f *fsm.FSM) {
 	f.AddTransitionRule(
 		fsm.State(OrderStatus_ORDER_STATUS_PENDING.String()),
 		fsm.Event(commonv1.OrderTransitionEvent_ORDER_TRANSITION_EVENT_CANCEL.String()),
-		fsm.State(OrderStatus_ORDER_STATUS_CANCELED.String()),
+		fsm.State(OrderStatus_ORDER_STATUS_CANCELLED.String()),
 	)
 	f.AddTransitionRule(
 		fsm.State(OrderStatus_ORDER_STATUS_PROCESSING.String()),
 		fsm.Event(commonv1.OrderTransitionEvent_ORDER_TRANSITION_EVENT_CANCEL.String()),
-		fsm.State(OrderStatus_ORDER_STATUS_CANCELED.String()),
+		fsm.State(OrderStatus_ORDER_STATUS_CANCELLED.String()),
 	)
 	f.AddTransitionRule(
 		fsm.State(OrderStatus_ORDER_STATUS_PROCESSING.String()),
@@ -164,7 +164,7 @@ func (o *OrderState) SetDeliveryInfo(info DeliveryInfo) error {
 	// Check OrderStatus - cannot update delivery info in terminal states
 	currentStatus := o.getStatusUnlocked()
 	if currentStatus == OrderStatus_ORDER_STATUS_COMPLETED ||
-		currentStatus == OrderStatus_ORDER_STATUS_CANCELED {
+		currentStatus == OrderStatus_ORDER_STATUS_CANCELLED {
 
 		return &OrderTerminalStateError{Status: currentStatus}
 	}
@@ -208,7 +208,7 @@ func (o *OrderState) SetDeliveryStatus(status commonv1.DeliveryStatus) error {
 	// Cannot update delivery status in terminal order states
 	currentOrderStatus := o.getStatusUnlocked()
 	if currentOrderStatus == OrderStatus_ORDER_STATUS_COMPLETED ||
-		currentOrderStatus == OrderStatus_ORDER_STATUS_CANCELED {
+		currentOrderStatus == OrderStatus_ORDER_STATUS_CANCELLED {
 
 		return &OrderTerminalStateError{Status: currentOrderStatus}
 	}
@@ -369,7 +369,7 @@ func (o *OrderState) UpdateOrder(items Items) error {
 	defer o.mu.Unlock()
 
 	currentStatus := o.getStatusUnlocked()
-	if currentStatus == OrderStatus_ORDER_STATUS_COMPLETED || currentStatus == OrderStatus_ORDER_STATUS_CANCELED {
+	if currentStatus == OrderStatus_ORDER_STATUS_COMPLETED || currentStatus == OrderStatus_ORDER_STATUS_CANCELLED {
 		return &OrderTerminalStateError{Status: currentStatus}
 	}
 
@@ -440,7 +440,7 @@ func (o *OrderState) CancelOrder() error {
 	o.addDomainEvent(&eventsv1.OrderCancelled{
 		OrderId:     o.id.String(),
 		CustomerId:  o.customerId.String(),
-		Status:      OrderStatus_ORDER_STATUS_CANCELED,
+		Status:      OrderStatus_ORDER_STATUS_CANCELLED,
 		Reason:      "",
 		CancelledAt: ts,
 		OccurredAt:  ts,

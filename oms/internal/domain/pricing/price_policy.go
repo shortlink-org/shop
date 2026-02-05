@@ -21,6 +21,9 @@ func (q Quote) FinalUnitPrice() decimal.Decimal {
 }
 
 // PricePolicy is responsible for providing pricing information for a good.
+type PricePolicy interface {
+	Quote(goodID uuid.UUID, quantity int32) (Quote, error)
+}
 
 // NoopPricePolicy returns zeroed quotes until the real pricer is integrated.
 type NoopPricePolicy struct{}

@@ -133,8 +133,8 @@ func stringToOrderStatus(s string) order.OrderStatus {
 		return order.OrderStatus_ORDER_STATUS_PROCESSING
 	case "COMPLETED", "ORDER_STATUS_COMPLETED":
 		return order.OrderStatus_ORDER_STATUS_COMPLETED
-	case "CANCELED", "ORDER_STATUS_CANCELED":
-		return order.OrderStatus_ORDER_STATUS_CANCELED
+	case "CANCELED", "CANCELLED", "ORDER_STATUS_CANCELED", "ORDER_STATUS_CANCELLED":
+		return order.OrderStatus_ORDER_STATUS_CANCELLED
 	default:
 		return order.OrderStatus_ORDER_STATUS_UNSPECIFIED
 	}

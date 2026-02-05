@@ -23,7 +23,7 @@ export const graphqlDataProvider: DataProvider = {
       return { data: [], total: 0 };
     }
 
-    const page = pagination?.current ?? 1;
+    const page = pagination?.currentPage ?? 1;
     const pageSize = pagination?.pageSize ?? 20;
 
     const statusFilter = filters
