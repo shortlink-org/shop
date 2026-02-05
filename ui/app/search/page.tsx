@@ -1,5 +1,6 @@
 import Grid from 'components/grid';
 import GoodGridItems from 'components/layout/good-grid-items';
+import { RetryButton } from 'components/retry-button';
 import { defaultSort, sorting } from 'lib/constants';
 import { getGoods, GOODS_UNAVAILABLE } from 'lib/shopify';
 
@@ -24,6 +25,7 @@ export default async function SearchPage(props: {
         <p className="mt-2 text-center text-sm text-neutral-500 dark:text-neutral-400">
           We&apos;ll show them when they&apos;re available again.
         </p>
+        <RetryButton />
       </div>
     );
   }

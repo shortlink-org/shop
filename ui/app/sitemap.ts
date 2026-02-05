@@ -1,4 +1,4 @@
-import { getCollections, getPages, getGoods, GOODS_UNAVAILABLE } from 'lib/shopify';
+import { getCollections, getGoods, GOODS_UNAVAILABLE } from 'lib/shopify';
 import { validateEnvironmentVariables } from 'lib/utils';
 import { MetadataRoute } from 'next';
 
@@ -39,17 +39,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         }))
   );
 
-  const pagesPromise = getPages().then((pages) =>
-    pages.map((page) => ({
-      url: `${baseUrl}/page/${page.id}`,
-      lastModified: page.updatedAt
-    }))
-  );
-
   let fetchedRoutes: Route[] = [];
 
   try {
-    fetchedRoutes = (await Promise.all([collectionsPromise, productsPromise, pagesPromise])).flat();
+    fetchedRoutes = (await Promise.all([collectionsPromise, productsPromise])).flat();
   } catch (error) {
     throw JSON.stringify(error, null, 2);
   }

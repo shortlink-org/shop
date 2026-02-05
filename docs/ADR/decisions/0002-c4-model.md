@@ -13,7 +13,8 @@ related to goods and services management. Given the complex interactions and pro
 it is crucial to have a detailed and clear visualization of the architecture. 
 
 The system uses:
-- **BFF (WunderGraph)** as the API Gateway for frontend requests
+- **Oathkeeper** as authentication proxy: validates JWT/session (Kratos), injects identity headers, forwards to BFF and Admin
+- **BFF (Cosmo Router)** as the GraphQL API gateway for frontend requests (behind Oathkeeper)
 - **Kafka** for asynchronous communication and event-driven operations between services
 - **Temporal** for workflow orchestration (OMS, Email Subscription)
 - **GraphQL** for API communication through BFF and OMS-GraphQL
@@ -27,6 +28,8 @@ making it ideal for our needs to ensure clarity and cohesion across the system.
 We will apply the C4 model to detail the architecture of the Shop Boundary Context. This includes 
 creating System Context, Container, and Component diagrams, and optionally, Class diagrams, 
 for each service within the boundary.
+
+Authentication flow: UI sends API and admin traffic to Oathkeeper; Oathkeeper validates JWT/session and forwards to BFF and Admin (see [ADR-0005](./0005-bff-behind-oathkeeper.md)).
 
 ## Consequences
 
@@ -54,7 +57,8 @@ Person_Ext(customer, "Customer", "A customer using the online shop.")
 
 System_Boundary(sbs, "Shop Boundary Context") {
     System(ui_service, "UI Service (Next.js)", "UI for the shop boundary")
-    System(wundergraph_bff, "BFF (WunderGraph)", "API Gateway - Handles frontend requests via GraphQL and coordinates with backend services.")
+    System(oathkeeper, "Oathkeeper", "Auth proxy: validates JWT/session, injects X-User-ID, forwards to BFF and Admin.")
+    System(wundergraph_bff, "BFF (Cosmo Router)", "GraphQL API Gateway - Handles frontend requests via GraphQL and coordinates with backend services.")
     System(admin_service, "Admin Service", "Administers shop settings and user permissions.")
     System(pricer_service, "Pricer Service", "Calculates taxes and discounts for products.")
     System(oms_graphql, "OMS-GraphQL", "GraphQL API Bridge for orders via GraphQL API.")
@@ -76,7 +80,9 @@ System_Boundary(dbs, "Delivery Boundary") {
 }
 
 Rel(customer, ui_service, "Accesses shop UI through", "HTTP/HTTPS")
-Rel(ui_service, wundergraph_bff, "Communicates with via", "GraphQL")
+Rel(ui_service, oathkeeper, "API and admin requests via", "HTTPS")
+Rel(oathkeeper, wundergraph_bff, "Forwards authenticated requests to", "HTTP")
+Rel(oathkeeper, admin_service, "Forwards authenticated requests to", "HTTP")
 Rel(wundergraph_bff, oms_graphql, "Coordinates shopping cart and checkout via", "GraphQL")
 Rel(wundergraph_bff, admin_service, "Admin service requests via", "GraphQL/REST")
 Rel(wundergraph_bff, pricer_service, "Price calculation requests via", "gRPC")
@@ -111,7 +117,8 @@ Container_Ext(payment_gateway, "Payment Gateway", "External Service", "Securely 
 System_Ext(temporal, "Temporal", "Workflow orchestration service.")
 System_Boundary(sbs, "Shop Boundary Context") {
     Container(ui_service, "UI Service (Next.js)", "Service", "User interface for customers interacting with the shop.")
-    Container(wundergraph_bff, "BFF (WunderGraph)", "Service", "API Gateway - Handles frontend requests via GraphQL and coordinates with backend services.")
+    Container(oathkeeper, "Oathkeeper", "Service", "Auth proxy: validates JWT/session (Kratos), injects X-User-ID, forwards to BFF and Admin.")
+    Container(wundergraph_bff, "BFF (Cosmo Router)", "Service", "GraphQL API Gateway - Handles frontend requests via GraphQL and coordinates with backend services.")
     Container(admin_service, "Admin Service", "Service", "Administers shop settings, manages user roles and permissions, and performs back-end configuration tasks.")
     Container(pricer_service, "Pricer Service", "Service", "Calculates taxes and discounts for products using OPA policies.")
     Container(oms_graphql, "OMS-GraphQL", "Service", "GraphQL API Bridge for work with orders via GraphQL API.")
@@ -132,7 +139,9 @@ System_Boundary(dbs, "Delivery Boundary") {
 }
 
 Rel_Down(customer, ui_service, "Submits requests to", "HTTP/HTTPS")
-Rel(ui_service, wundergraph_bff, "Interacts with for data", "GraphQL")
+Rel(ui_service, oathkeeper, "API and admin requests via", "HTTPS")
+Rel(oathkeeper, wundergraph_bff, "Forwards authenticated requests to", "HTTP")
+Rel(oathkeeper, admin_service, "Forwards authenticated requests to", "HTTP")
 Rel(wundergraph_bff, oms_graphql, "Coordinates order management via", "GraphQL")
 Rel(wundergraph_bff, admin_service, "Routes administrative requests to", "GraphQL/REST")
 Rel(wundergraph_bff, pricer_service, "Price calculation requests", "gRPC")

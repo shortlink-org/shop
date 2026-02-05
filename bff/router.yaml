@@ -77,6 +77,18 @@ cors:
     - "X-Request-ID"
   allow_credentials: true
 
+# Forward auth headers from Oathkeeper/client to subgraphs (JWT, X-User-ID)
+# https://cosmo-docs.wundergraph.com/router/proxy-capabilities/request-headers-operations
+headers:
+  all:
+    request:
+      - op: propagate
+        named: Authorization
+      - op: propagate
+        named: X-User-ID
+      - op: propagate
+        named: Cookie
+
 # Telemetry configuration
 telemetry:
   metrics:

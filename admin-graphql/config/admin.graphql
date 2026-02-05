@@ -1,6 +1,6 @@
 schema
 @server(port: 8080, hostname: "0.0.0.0", enableFederation: true, introspection: true)
-@upstream(allowedHeaders: ["Authorization", "Cookie"])
+@upstream(allowedHeaders: ["Authorization", "Cookie", "X-User-ID"])
 @telemetry(
   export: {
     prometheus: {
@@ -8,7 +8,7 @@ schema
       format: "text"
     }
   }
-  requestHeaders: ["Authorization", "Cookie"]
+  requestHeaders: ["Authorization", "Cookie", "X-User-ID"]
 ) {
   query: Query
 }
@@ -91,6 +91,7 @@ type Query {
       headers: [
         {key: "Authorization", value: "{{.headers.Authorization}}"}
         {key: "Cookie", value: "{{.headers.Cookie}}"}
+        {key: "X-User-ID", value: "{{.headers.X-User-ID}}"}
       ]
     )
 
@@ -103,6 +104,7 @@ type Query {
       headers: [
         {key: "Authorization", value: "{{.headers.Authorization}}"}
         {key: "Cookie", value: "{{.headers.Cookie}}"}
+        {key: "X-User-ID", value: "{{.headers.X-User-ID}}"}
       ]
     )
 
@@ -120,6 +122,7 @@ type Query {
       headers: [
         {key: "Authorization", value: "{{.headers.Authorization}}"}
         {key: "Cookie", value: "{{.headers.Cookie}}"}
+        {key: "X-User-ID", value: "{{.headers.X-User-ID}}"}
       ]
     )
 
@@ -132,6 +135,7 @@ type Query {
       headers: [
         {key: "Authorization", value: "{{.headers.Authorization}}"}
         {key: "Cookie", value: "{{.headers.Cookie}}"}
+        {key: "X-User-ID", value: "{{.headers.X-User-ID}}"}
       ]
     )
 }

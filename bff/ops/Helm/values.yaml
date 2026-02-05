@@ -13,7 +13,9 @@ ingress:
 
 # ==============================================================================
 # HTTPRoute configuration for Gateway API
-# URL rewrite: /api/* → /* (e.g., /api/graphql → /graphql)
+# Traffic goes through Oathkeeper for JWT/session validation, then to BFF.
+# URL rewrite: /api/* → /* so Oathkeeper receives /graphql and forwards to BFF.
+# Oathkeeper access rule for BFF must be added in auth namespace (see ADR 0005 pattern).
 httpRoute:
   enabled: true
   gatewayName: external-gateway
@@ -32,8 +34,9 @@ httpRoute:
               type: ReplacePrefixMatch
               replacePrefixMatch: /
       backendRefs:
-        - name: shortlink-shop-bff
-          port: 9991
+        - name: oathkeeper-proxy
+          namespace: auth
+          port: 4455
 
 # ==============================================================================
 deploy:

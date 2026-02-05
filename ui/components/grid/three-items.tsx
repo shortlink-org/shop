@@ -1,4 +1,5 @@
 import { GridTileImage } from 'components/grid/tile';
+import { RetryButton } from 'components/retry-button';
 import { getCollectionProducts, GOODS_UNAVAILABLE } from 'lib/shopify';
 import type { Good } from 'lib/shopify/types';
 import Link from 'next/link';
@@ -53,6 +54,7 @@ export async function ThreeItemGrid() {
           <p className="mt-2 text-center text-sm text-neutral-500 dark:text-neutral-400">
             We&apos;ll show them when they&apos;re available again.
           </p>
+          <RetryButton />
         </div>
       </section>
     );
