@@ -19,6 +19,10 @@ test-coverage: ## Run tests with coverage
 	go test ./... -coverprofile=coverage.out
 	go tool cover -html=coverage.out -o coverage.html
 
+.PHONY: test-integration
+test-integration: ## Run integration tests (Kafka + OSRM via testcontainers)
+	go test -tags=integration -v -count=1 -timeout=120s ./...
+
 ##@ Code Quality
 
 .PHONY: lint
