@@ -12,7 +12,7 @@ use uuid::Uuid;
 
 use crate::domain::ports::{CourierCache, CourierRepository, QueryHandler};
 use crate::domain::services::dispatch::{
-    CourierForDispatch, DispatchResult, DispatchService, PackageForDispatch,
+    CourierForDispatch, DispatchResult, DispatchFailure, DispatchService, PackageForDispatch,
 };
 use crate::usecases::courier::query::get_pool::{Handler as GetPoolHandler, Query as GetPoolQuery};
 
@@ -100,11 +100,12 @@ where
     /// Note: This activity receives couriers with locations already fetched
     /// from the Geolocation Service. The actual location fetching should be
     /// done in a separate activity.
+    /// Returns `Ok(DispatchResult)` or `Err(DispatchFailure)` with per-courier rejection reasons.
     pub fn find_nearest_courier(
         &self,
         couriers: &[CourierForDispatch],
         package: &PackageForDispatch,
-    ) -> Option<DispatchResult> {
+    ) -> Result<DispatchResult, DispatchFailure> {
         DispatchService::find_nearest_courier(couriers, package)
     }
 

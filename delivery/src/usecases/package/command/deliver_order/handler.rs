@@ -24,8 +24,8 @@ use crate::domain::model::domain::delivery::events::v1::{
 };
 use crate::domain::model::package::{PackageId, PackageStatus};
 use crate::domain::ports::{
-    CommandHandlerWithResult, CourierCache, CourierRepository, EventPublisher, GeolocationService,
-    PackageRepository, RepositoryError,
+    CommandHandlerWithResult, CourierCache, CourierRepository, DomainEvent, EventPublisher,
+    GeolocationService, PackageRepository, RepositoryError,
 };
 
 use super::command::{DeliveryResult, NotDeliveredReason};
@@ -304,7 +304,11 @@ where
                     }),
                 };
 
-                if let Err(e) = self.event_publisher.publish_package_delivered(event).await {
+                if let Err(e) = self
+                    .event_publisher
+                    .publish(DomainEvent::PackageDelivered(event))
+                    .await
+                {
                     warn!(
                         package_id = %cmd.package_id,
                         courier_id = %cmd.courier_id,
@@ -362,7 +366,7 @@ where
 
                 if let Err(e) = self
                     .event_publisher
-                    .publish_package_not_delivered(event)
+                    .publish(DomainEvent::PackageNotDelivered(event))
                     .await
                 {
                     warn!(
@@ -411,17 +415,12 @@ where
 mod tests {
     use super::*;
     use crate::domain::model::courier::{Courier, CourierId, WorkHours};
-    use crate::domain::model::domain::delivery::events::v1::{
-        CourierLocationUpdatedEvent, CourierRegisteredEvent, CourierStatusChangedEvent,
-        PackageAcceptedEvent, PackageAssignedEvent, PackageInTransitEvent,
-        PackageRequiresHandlingEvent,
-    };
     use crate::domain::model::package::{Address, DeliveryPeriod, Package, Priority};
     use crate::domain::model::vo::location::Location;
     use crate::domain::model::vo::TransportType;
     use crate::domain::ports::{
-        CacheError, CachedCourierState, EventPublisherError, GeolocationService,
-        GeolocationServiceError, PackageFilter,
+        CacheError, CachedCourierState, GeolocationService, GeolocationServiceError,
+        MockEventPublisher, PackageFilter,
     };
     use async_trait::async_trait;
     use chrono::{NaiveTime, Utc};
@@ -639,68 +638,6 @@ mod tests {
         }
 
         async fn delete(&self, _id: PackageId) -> Result<(), RepositoryError> {
-            Ok(())
-        }
-    }
-
-    // ==================== Mock Event Publisher ====================
-
-    struct MockEventPublisher;
-
-    #[async_trait]
-    impl EventPublisher for MockEventPublisher {
-        async fn publish_package_accepted(
-            &self,
-            _event: PackageAcceptedEvent,
-        ) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_package_assigned(
-            &self,
-            _event: PackageAssignedEvent,
-        ) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_package_in_transit(
-            &self,
-            _event: PackageInTransitEvent,
-        ) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_package_delivered(
-            &self,
-            _event: PackageDeliveredEvent,
-        ) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_package_not_delivered(
-            &self,
-            _event: PackageNotDeliveredEvent,
-        ) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_package_requires_handling(
-            &self,
-            _event: PackageRequiresHandlingEvent,
-        ) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_courier_registered(
-            &self,
-            _event: CourierRegisteredEvent,
-        ) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_courier_location_updated(
-            &self,
-            _event: CourierLocationUpdatedEvent,
-        ) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_courier_status_changed(
-            &self,
-            _event: CourierStatusChangedEvent,
-        ) -> Result<(), EventPublisherError> {
             Ok(())
         }
     }

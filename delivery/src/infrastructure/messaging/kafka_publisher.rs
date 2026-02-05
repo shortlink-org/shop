@@ -11,12 +11,7 @@ use rdkafka::ClientConfig;
 use std::time::Duration;
 use tracing::{error, info, instrument};
 
-use crate::domain::model::domain::delivery::events::v1::{
-    CourierLocationUpdatedEvent, CourierRegisteredEvent, CourierStatusChangedEvent,
-    PackageAcceptedEvent, PackageAssignedEvent, PackageDeliveredEvent, PackageInTransitEvent,
-    PackageNotDeliveredEvent, PackageRequiresHandlingEvent,
-};
-use crate::domain::ports::{EventPublisher, EventPublisherError};
+use crate::domain::ports::{DomainEvent, EventPublisher, EventPublisherError};
 
 /// Kafka topic names (consolidated)
 /// Format: {domain}.{entity}.{event_group}.v1
@@ -104,7 +99,7 @@ impl KafkaEventPublisher {
             .set("acks", "all")
             .set("enable.idempotence", "true")
             .create()
-            .map_err(|e| EventPublisherError::ConnectionError(e.to_string()))?;
+            .map_err(|e| EventPublisherError::PublishFailed(e.to_string()))?;
 
         info!("Kafka publisher connected to {}", config.brokers);
 
@@ -115,7 +110,7 @@ impl KafkaEventPublisher {
     }
 
     /// Publish a protobuf message to a topic with an event_type header for consumer dispatch.
-    async fn publish<M: Message>(
+    async fn publish_to_topic<M: Message>(
         &self,
         topic: &str,
         key: &str,
@@ -146,7 +141,7 @@ impl KafkaEventPublisher {
             }
             Err((e, _)) => {
                 error!(topic = topic, key = key, error = %e, "Failed to publish event");
-                Err(EventPublisherError::PublishError(e.to_string()))
+                Err(EventPublisherError::PublishFailed(e.to_string()))
             }
         }
     }
@@ -154,138 +149,91 @@ impl KafkaEventPublisher {
 
 #[async_trait]
 impl EventPublisher for KafkaEventPublisher {
-    // ==================== Package Status Events (consolidated topic) ====================
-
-    #[instrument(skip(self, event), fields(package_id = %event.package_id, event_type = "accepted"))]
-    async fn publish_package_accepted(
-        &self,
-        event: PackageAcceptedEvent,
-    ) -> Result<(), EventPublisherError> {
-        self.publish(
-            topics::PACKAGE_STATUS,
-            &event.package_id,
-            "PackageAcceptedEvent",
-            &event,
-        )
-        .await
-    }
-
-    #[instrument(skip(self, event), fields(package_id = %event.package_id, event_type = "in_transit"))]
-    async fn publish_package_in_transit(
-        &self,
-        event: PackageInTransitEvent,
-    ) -> Result<(), EventPublisherError> {
-        self.publish(
-            topics::PACKAGE_STATUS,
-            &event.package_id,
-            "PackageInTransitEvent",
-            &event,
-        )
-        .await
-    }
-
-    #[instrument(skip(self, event), fields(package_id = %event.package_id, event_type = "delivered"))]
-    async fn publish_package_delivered(
-        &self,
-        event: PackageDeliveredEvent,
-    ) -> Result<(), EventPublisherError> {
-        self.publish(
-            topics::PACKAGE_STATUS,
-            &event.package_id,
-            "PackageDeliveredEvent",
-            &event,
-        )
-        .await
-    }
-
-    #[instrument(skip(self, event), fields(package_id = %event.package_id, event_type = "not_delivered"))]
-    async fn publish_package_not_delivered(
-        &self,
-        event: PackageNotDeliveredEvent,
-    ) -> Result<(), EventPublisherError> {
-        self.publish(
-            topics::PACKAGE_STATUS,
-            &event.package_id,
-            "PackageNotDeliveredEvent",
-            &event,
-        )
-        .await
-    }
-
-    #[instrument(skip(self, event), fields(package_id = %event.package_id, event_type = "requires_handling"))]
-    async fn publish_package_requires_handling(
-        &self,
-        event: PackageRequiresHandlingEvent,
-    ) -> Result<(), EventPublisherError> {
-        self.publish(
-            topics::PACKAGE_STATUS,
-            &event.package_id,
-            "PackageRequiresHandlingEvent",
-            &event,
-        )
-        .await
-    }
-
-    // ==================== Order Assignment (separate topic) ====================
-
-    #[instrument(skip(self, event), fields(package_id = %event.package_id, courier_id = %event.courier_id))]
-    async fn publish_package_assigned(
-        &self,
-        event: PackageAssignedEvent,
-    ) -> Result<(), EventPublisherError> {
-        self.publish(
-            topics::ORDER_ASSIGNED,
-            &event.package_id,
-            "PackageAssignedEvent",
-            &event,
-        )
-        .await
-    }
-
-    // ==================== Courier Events (consolidated topic) ====================
-
-    #[instrument(skip(self, event), fields(courier_id = %event.courier_id, event_type = "registered"))]
-    async fn publish_courier_registered(
-        &self,
-        event: CourierRegisteredEvent,
-    ) -> Result<(), EventPublisherError> {
-        self.publish(
-            topics::COURIER_EVENTS,
-            &event.courier_id,
-            "CourierRegisteredEvent",
-            &event,
-        )
-        .await
-    }
-
-    #[instrument(skip(self, event), fields(courier_id = %event.courier_id, event_type = "status_changed"))]
-    async fn publish_courier_status_changed(
-        &self,
-        event: CourierStatusChangedEvent,
-    ) -> Result<(), EventPublisherError> {
-        self.publish(
-            topics::COURIER_EVENTS,
-            &event.courier_id,
-            "CourierStatusChangedEvent",
-            &event,
-        )
-        .await
-    }
-
-    // ==================== Courier Location (separate high-frequency topic) ====================
-
-    #[instrument(skip(self, event), fields(courier_id = %event.courier_id))]
-    async fn publish_courier_location_updated(
-        &self,
-        event: CourierLocationUpdatedEvent,
-    ) -> Result<(), EventPublisherError> {
-        self.publish(
-            topics::COURIER_LOCATION,
-            &event.courier_id,
-            "CourierLocationUpdatedEvent",
-            &event,
-        )
-        .await
+    #[instrument(skip(self, event))]
+    async fn publish(&self, event: DomainEvent) -> Result<(), EventPublisherError> {
+        match event {
+            DomainEvent::PackageAccepted(e) => {
+                self.publish_to_topic(
+                    topics::PACKAGE_STATUS,
+                    &e.package_id,
+                    "PackageAcceptedEvent",
+                    &e,
+                )
+                .await
+            }
+            DomainEvent::PackageInTransit(e) => {
+                self.publish_to_topic(
+                    topics::PACKAGE_STATUS,
+                    &e.package_id,
+                    "PackageInTransitEvent",
+                    &e,
+                )
+                .await
+            }
+            DomainEvent::PackageDelivered(e) => {
+                self.publish_to_topic(
+                    topics::PACKAGE_STATUS,
+                    &e.package_id,
+                    "PackageDeliveredEvent",
+                    &e,
+                )
+                .await
+            }
+            DomainEvent::PackageNotDelivered(e) => {
+                self.publish_to_topic(
+                    topics::PACKAGE_STATUS,
+                    &e.package_id,
+                    "PackageNotDeliveredEvent",
+                    &e,
+                )
+                .await
+            }
+            DomainEvent::PackageRequiresHandling(e) => {
+                self.publish_to_topic(
+                    topics::PACKAGE_STATUS,
+                    &e.package_id,
+                    "PackageRequiresHandlingEvent",
+                    &e,
+                )
+                .await
+            }
+            DomainEvent::PackageAssigned(e) => {
+                self.publish_to_topic(
+                    topics::ORDER_ASSIGNED,
+                    &e.package_id,
+                    "PackageAssignedEvent",
+                    &e,
+                )
+                .await
+            }
+            DomainEvent::CourierRegistered(e) => {
+                self.publish_to_topic(
+                    topics::COURIER_EVENTS,
+                    &e.courier_id,
+                    "CourierRegisteredEvent",
+                    &e,
+                )
+                .await
+            }
+            DomainEvent::CourierStatusChanged(e) => {
+                self.publish_to_topic(
+                    topics::COURIER_EVENTS,
+                    &e.courier_id,
+                    "CourierStatusChangedEvent",
+                    &e,
+                )
+                .await
+            }
+            DomainEvent::CourierLocationUpdated(e) => {
+                self.publish_to_topic(
+                    topics::COURIER_LOCATION,
+                    &e.courier_id,
+                    "CourierLocationUpdatedEvent",
+                    &e,
+                )
+                .await
+            }
+        }
     }
 }
 

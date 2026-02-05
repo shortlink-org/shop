@@ -21,7 +21,9 @@ use uuid::Uuid;
 use crate::domain::model::domain::delivery::common::v1 as proto_common;
 use crate::domain::model::domain::delivery::events::v1::PackageAcceptedEvent;
 use crate::domain::model::package::{Package, PackageStatus};
-use crate::domain::ports::{CommandHandlerWithResult, EventPublisher, PackageRepository, RepositoryError};
+use crate::domain::ports::{
+    CommandHandlerWithResult, DomainEvent, EventPublisher, PackageRepository, RepositoryError,
+};
 
 use super::Command;
 
@@ -182,7 +184,11 @@ where
                 nanos: now.timestamp_subsec_nanos() as i32,
             }),
         };
-        if let Err(e) = self.event_publisher.publish_package_accepted(event).await {
+        if let Err(e) = self
+            .event_publisher
+            .publish(DomainEvent::PackageAccepted(event))
+            .await
+        {
             warn!(
                 package_id = %package_id,
                 order_id = %cmd.order_id,
@@ -209,12 +215,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::domain::model::domain::delivery::events::v1::{
-        PackageAcceptedEvent, PackageAssignedEvent, PackageDeliveredEvent, PackageInTransitEvent,
-        PackageNotDeliveredEvent, PackageRequiresHandlingEvent,
-    };
     use crate::domain::model::package::{PackageId, Priority};
-    use crate::domain::ports::{EventPublisher, EventPublisherError, PackageFilter};
+    use crate::domain::ports::{MockEventPublisher, PackageFilter};
     use crate::usecases::package::command::accept_order::command::{
         AddressInput, DeliveryPeriodInput,
     };
@@ -222,66 +224,6 @@ mod tests {
     use chrono::Utc;
     use std::collections::HashMap;
     use std::sync::Mutex;
-
-    struct MockEventPublisher;
-
-    #[async_trait]
-    impl EventPublisher for MockEventPublisher {
-        async fn publish_package_accepted(
-            &self,
-            _event: PackageAcceptedEvent,
-        ) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_package_assigned(
-            &self,
-            _event: PackageAssignedEvent,
-        ) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_package_in_transit(
-            &self,
-            _event: PackageInTransitEvent,
-        ) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_package_delivered(
-            &self,
-            _event: PackageDeliveredEvent,
-        ) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_package_not_delivered(
-            &self,
-            _event: PackageNotDeliveredEvent,
-        ) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_package_requires_handling(
-            &self,
-            _event: PackageRequiresHandlingEvent,
-        ) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_courier_registered(
-            &self,
-            _event: crate::domain::model::domain::delivery::events::v1::CourierRegisteredEvent,
-        ) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_courier_status_changed(
-            &self,
-            _event: crate::domain::model::domain::delivery::events::v1::CourierStatusChangedEvent,
-        ) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_courier_location_updated(
-            &self,
-            _event: crate::domain::model::domain::delivery::events::v1::CourierLocationUpdatedEvent,
-        ) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-    }
 
     /// Mock PackageRepository for testing
     struct MockPackageRepository {

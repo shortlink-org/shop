@@ -19,7 +19,7 @@ use crate::domain::model::domain::delivery::common::v1 as proto_common;
 use crate::domain::model::domain::delivery::events::v1::CourierLocationUpdatedEvent;
 use crate::domain::model::{CourierLocation, CourierLocationError, LocationHistoryEntry};
 use crate::domain::ports::{
-    CommandHandler, CourierRepository, EventPublisher, LocationCache,
+    CommandHandler, CourierRepository, DomainEvent, EventPublisher, LocationCache,
     LocationCacheError, LocationRepository, LocationRepositoryError, RepositoryError,
 };
 
@@ -152,7 +152,11 @@ where
                 nanos: now.timestamp_subsec_nanos() as i32,
             }),
         };
-        if let Err(e) = self.event_publisher.publish_courier_location_updated(event).await {
+        if let Err(e) = self
+            .event_publisher
+            .publish(DomainEvent::CourierLocationUpdated(event))
+            .await
+        {
             warn!(
                 courier_id = %cmd.courier_id,
                 error = %e,
@@ -172,49 +176,15 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::domain::model::domain::delivery::events::v1::*;
     use crate::domain::model::vo::location::Location;
     use crate::domain::model::courier_location::TimeRange;
     use crate::domain::model::courier::{Courier, CourierStatus};
-    use crate::domain::ports::{EventPublisher, EventPublisherError};
+    use crate::domain::ports::MockEventPublisher;
     use async_trait::async_trait;
     use chrono::Utc;
     use std::collections::HashMap;
     use std::sync::Mutex;
     use uuid::Uuid;
-
-    struct MockEventPublisher;
-
-    #[async_trait]
-    impl EventPublisher for MockEventPublisher {
-        async fn publish_package_accepted(&self, _: PackageAcceptedEvent) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_package_assigned(&self, _: PackageAssignedEvent) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_package_in_transit(&self, _: PackageInTransitEvent) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_package_delivered(&self, _: PackageDeliveredEvent) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_package_not_delivered(&self, _: PackageNotDeliveredEvent) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_package_requires_handling(&self, _: PackageRequiresHandlingEvent) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_courier_registered(&self, _: CourierRegisteredEvent) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_courier_location_updated(&self, _: CourierLocationUpdatedEvent) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_courier_status_changed(&self, _: CourierStatusChangedEvent) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-    }
 
     // Mock CourierRepository
     struct MockCourierRepository {

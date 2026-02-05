@@ -109,6 +109,9 @@ impl Location {
 
     /// Calculates the distance to another location using the Haversine formula.
     ///
+    /// For valid `Location` values (constructed via `new`), the result is always
+    /// finite and not NaN. Callers may use `total_cmp` for stable sorting.
+    ///
     /// # Arguments
     ///
     /// * `other` - The other location to calculate distance to

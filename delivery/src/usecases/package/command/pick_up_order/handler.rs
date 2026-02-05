@@ -22,7 +22,7 @@ use crate::domain::model::domain::delivery::common::v1 as proto_common;
 use crate::domain::model::domain::delivery::events::v1::PackageInTransitEvent;
 use crate::domain::model::package::{PackageId, PackageStatus};
 use crate::domain::ports::{
-    CommandHandlerWithResult, EventPublisher, GeolocationService, PackageRepository,
+    CommandHandlerWithResult, DomainEvent, EventPublisher, GeolocationService, PackageRepository,
     RepositoryError,
 };
 
@@ -173,7 +173,11 @@ where
             }),
         };
 
-        if let Err(e) = self.event_publisher.publish_package_in_transit(event).await {
+        if let Err(e) = self
+            .event_publisher
+            .publish(DomainEvent::PackageInTransit(event))
+            .await
+        {
             warn!(
                 package_id = %cmd.package_id,
                 courier_id = %cmd.courier_id,
@@ -213,55 +217,15 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::domain::model::domain::delivery::events::v1::{
-        CourierLocationUpdatedEvent, CourierRegisteredEvent, CourierStatusChangedEvent,
-        PackageAcceptedEvent, PackageAssignedEvent, PackageDeliveredEvent,
-        PackageNotDeliveredEvent, PackageRequiresHandlingEvent,
-    };
     use crate::domain::model::package::{Address, DeliveryPeriod, Package, Priority};
     use crate::domain::model::vo::location::Location;
     use crate::domain::ports::{
-        EventPublisherError, GeolocationService, GeolocationServiceError, PackageFilter,
+        GeolocationService, GeolocationServiceError, MockEventPublisher, PackageFilter,
     };
     use async_trait::async_trait;
     use chrono::Utc;
     use std::collections::HashMap;
     use std::sync::Mutex;
-
-    // ==================== Mock Event Publisher ====================
-
-    struct MockEventPublisher;
-
-    #[async_trait]
-    impl EventPublisher for MockEventPublisher {
-        async fn publish_package_accepted(&self, _event: PackageAcceptedEvent) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_package_assigned(&self, _event: PackageAssignedEvent) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_package_in_transit(&self, _event: PackageInTransitEvent) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_package_delivered(&self, _event: PackageDeliveredEvent) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_package_not_delivered(&self, _event: PackageNotDeliveredEvent) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_package_requires_handling(&self, _event: PackageRequiresHandlingEvent) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_courier_registered(&self, _event: CourierRegisteredEvent) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_courier_location_updated(&self, _event: CourierLocationUpdatedEvent) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_courier_status_changed(&self, _event: CourierStatusChangedEvent) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-    }
 
     struct MockGeolocationService;
 

@@ -25,7 +25,7 @@ use crate::domain::model::domain::delivery::common::v1 as proto_common;
 use crate::domain::model::domain::delivery::events::v1::PackageAssignedEvent;
 use crate::domain::model::package::{PackageId, PackageStatus};
 use crate::domain::ports::{
-    CommandHandlerWithResult, CourierCache, CourierRepository, EventPublisher,
+    CommandHandlerWithResult, CourierCache, CourierRepository, DomainEvent, EventPublisher,
     LocationCache, NotificationService, OrderAssignedNotification, PackageRepository, RepositoryError,
 };
 use crate::domain::services::assignment_validation::{
@@ -233,9 +233,18 @@ where
                 };
 
                 // Use DispatchService to find nearest courier
-                let dispatch_result =
-                    DispatchService::find_nearest_courier(&couriers_for_dispatch, &package_for_dispatch)
-                        .ok_or_else(|| AssignOrderError::NoAvailableCourier(zone.to_string()))?;
+                let dispatch_result = DispatchService::find_nearest_courier(
+                    &couriers_for_dispatch,
+                    &package_for_dispatch,
+                )
+                .map_err(|failure| {
+                    tracing::debug!(
+                        zone = %zone,
+                        rejections = ?failure.rejections,
+                        "No courier available for dispatch"
+                    );
+                    AssignOrderError::NoAvailableCourier(zone.to_string())
+                })?;
 
                 let courier_uuid = Uuid::parse_str(&dispatch_result.courier_id).map_err(|_| {
                     AssignOrderError::RepositoryError(RepositoryError::QueryError(
@@ -370,7 +379,11 @@ where
             }),
         };
 
-        if let Err(e) = self.event_publisher.publish_package_assigned(event).await {
+        if let Err(e) = self
+            .event_publisher
+            .publish(DomainEvent::PackageAssigned(event))
+            .await
+        {
             warn!(
                 package_id = %cmd.package_id,
                 courier_id = %courier_id,
@@ -426,18 +439,13 @@ where
 mod tests {
     use super::*;
     use crate::domain::model::courier::{Courier, CourierId};
-    use crate::domain::model::domain::delivery::events::v1::{
-        CourierLocationUpdatedEvent, CourierRegisteredEvent, CourierStatusChangedEvent,
-        PackageAcceptedEvent, PackageDeliveredEvent, PackageInTransitEvent,
-        PackageNotDeliveredEvent, PackageRequiresHandlingEvent,
-    };
     use crate::domain::model::package::{Address, DeliveryPeriod, Package, Priority};
     use crate::domain::model::vo::location::Location;
     use crate::domain::model::vo::TransportType;
     use crate::domain::model::CourierLocation;
     use crate::domain::ports::{
-        CacheError, CachedCourierState, DeliveryStatusNotification, EventPublisherError,
-        LocationCacheError, NotificationError, PackageFilter,
+        CacheError, CachedCourierState, DeliveryStatusNotification, LocationCacheError,
+        MockEventPublisher, NotificationError, PackageFilter,
     };
     use async_trait::async_trait;
     use chrono::Utc;
@@ -661,41 +669,6 @@ mod tests {
         }
 
         async fn delete(&self, _id: PackageId) -> Result<(), RepositoryError> {
-            Ok(())
-        }
-    }
-
-    // ==================== Mock Event Publisher ====================
-
-    struct MockEventPublisher;
-
-    #[async_trait]
-    impl EventPublisher for MockEventPublisher {
-        async fn publish_package_accepted(&self, _event: PackageAcceptedEvent) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_package_assigned(&self, _event: PackageAssignedEvent) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_package_in_transit(&self, _event: PackageInTransitEvent) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_package_delivered(&self, _event: PackageDeliveredEvent) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_package_not_delivered(&self, _event: PackageNotDeliveredEvent) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_package_requires_handling(&self, _event: PackageRequiresHandlingEvent) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_courier_registered(&self, _event: CourierRegisteredEvent) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_courier_location_updated(&self, _event: CourierLocationUpdatedEvent) -> Result<(), EventPublisherError> {
-            Ok(())
-        }
-        async fn publish_courier_status_changed(&self, _event: CourierStatusChangedEvent) -> Result<(), EventPublisherError> {
             Ok(())
         }
     }
