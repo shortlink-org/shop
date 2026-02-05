@@ -128,20 +128,19 @@ pub struct PackageNotDeliveredEvent {
     /// Package status
     #[prost(enumeration = "super::super::common::v1::PackageStatus", tag = "4")]
     pub status: i32,
-    /// Not delivered reason
-    #[prost(enumeration = "super::super::common::v1::NotDeliveredReason", tag = "5")]
-    pub reason: i32,
-    /// Additional description if reason is OTHER
-    #[prost(string, tag = "6")]
-    pub reason_description: ::prost::alloc::string::String,
+    /// Not delivered details (reason; description required if reason == OTHER)
+    #[prost(message, optional, tag = "5")]
+    pub not_delivered_details: ::core::option::Option<
+        super::super::common::v1::NotDeliveredDetails,
+    >,
     /// Not delivered at timestamp
-    #[prost(message, optional, tag = "7")]
+    #[prost(message, optional, tag = "6")]
     pub not_delivered_at: ::core::option::Option<::pbjson_types::Timestamp>,
     /// Courier location
-    #[prost(message, optional, tag = "8")]
+    #[prost(message, optional, tag = "7")]
     pub courier_location: ::core::option::Option<super::super::common::v1::Location>,
     /// OccurredAt is the timestamp when the event occurred
-    #[prost(message, optional, tag = "9")]
+    #[prost(message, optional, tag = "8")]
     pub occurred_at: ::core::option::Option<::pbjson_types::Timestamp>,
 }
 /// CourierRegisteredEvent - canonical name: delivery.courier.registered.v1

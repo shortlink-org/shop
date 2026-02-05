@@ -54,6 +54,10 @@ pub enum DeliverOrderError {
     #[error("Reason required for failed delivery")]
     MissingNotDeliveredReason,
 
+    /// OTHER reason requires non-empty description
+    #[error("OTHER requires description")]
+    OtherReasonRequiresDescription,
+
     /// Package already delivered
     #[error("Package already delivered: {0}")]
     AlreadyDelivered(Uuid),
@@ -157,6 +161,12 @@ where
         // 1. Validate reason is provided if result is NotDelivered
         if cmd.result == DeliveryResult::NotDelivered && cmd.not_delivered_reason.is_none() {
             return Err(DeliverOrderError::MissingNotDeliveredReason);
+        }
+        // Domain rule: OTHER requires non-empty description
+        if let Some(NotDeliveredReason::Other(desc)) = &cmd.not_delivered_reason {
+            if desc.trim().is_empty() {
+                return Err(DeliverOrderError::OtherReasonRequiresDescription);
+            }
         }
 
         // 2. Load package from repository
@@ -309,20 +319,23 @@ where
                     .as_ref()
                     .map(Self::reason_to_proto)
                     .unwrap_or(proto_common::NotDeliveredReason::Unspecified);
-
-                let reason_description = cmd
+                let description = cmd
                     .not_delivered_reason
                     .as_ref()
                     .map(Self::get_reason_description)
                     .unwrap_or_default();
+
+                let not_delivered_details = Some(proto_common::NotDeliveredDetails {
+                    reason: reason as i32,
+                    description: description.clone(),
+                });
 
                 let event = PackageNotDeliveredEvent {
                     package_id: package.id().0.to_string(),
                     order_id: package.order_id().to_string(),
                     courier_id: cmd.courier_id.to_string(),
                     status: proto_common::PackageStatus::NotDelivered as i32,
-                    reason: reason as i32,
-                    reason_description,
+                    not_delivered_details,
                     not_delivered_at: Some(pbjson_types::Timestamp {
                         seconds: now.timestamp(),
                         nanos: now.timestamp_subsec_nanos() as i32,
@@ -903,6 +916,28 @@ mod tests {
         assert!(matches!(
             result,
             Err(DeliverOrderError::MissingNotDeliveredReason)
+        ));
+    }
+
+    #[tokio::test]
+    async fn test_other_reason_requires_description() {
+        let courier_repo = Arc::new(MockCourierRepository::new());
+        let courier_cache = Arc::new(MockCourierCache);
+        let package_repo = Arc::new(MockPackageRepository::new());
+        let event_publisher = Arc::new(MockEventPublisher);
+        let handler = Handler::new(courier_repo, courier_cache, package_repo, event_publisher);
+
+        let cmd = Command::not_delivered(
+            Uuid::new_v4(),
+            Uuid::new_v4(),
+            create_test_location(),
+            NotDeliveredReason::Other(String::new()), // empty description
+            None,
+        );
+        let result = handler.handle(cmd).await;
+        assert!(matches!(
+            result,
+            Err(DeliverOrderError::OtherReasonRequiresDescription)
         ));
     }
 

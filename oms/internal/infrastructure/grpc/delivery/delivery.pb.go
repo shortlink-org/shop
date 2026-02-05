@@ -279,7 +279,6 @@ func (x *DeliveryPeriod) GetEndTime() *timestamppb.Timestamp {
 type PackageInfo struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	WeightKg      float64                `protobuf:"fixed64,1,opt,name=weight_kg,json=weightKg,proto3" json:"weight_kg,omitempty"`
-	Dimensions    string                 `protobuf:"bytes,2,opt,name=dimensions,proto3" json:"dimensions,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -319,13 +318,6 @@ func (x *PackageInfo) GetWeightKg() float64 {
 		return x.WeightKg
 	}
 	return 0
-}
-
-func (x *PackageInfo) GetDimensions() string {
-	if x != nil {
-		return x.Dimensions
-	}
-	return ""
 }
 
 // RecipientContacts contains recipient contact details for delivery
@@ -567,12 +559,9 @@ const file_infrastructure_grpc_delivery_delivery_proto_rawDesc = "" +
 	"\x0eDeliveryPeriod\x129\n" +
 	"\n" +
 	"start_time\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\tstartTime\x125\n" +
-	"\bend_time\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\aendTime\"J\n" +
+	"\bend_time\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\aendTime\"*\n" +
 	"\vPackageInfo\x12\x1b\n" +
-	"\tweight_kg\x18\x01 \x01(\x01R\bweightKg\x12\x1e\n" +
-	"\n" +
-	"dimensions\x18\x02 \x01(\tR\n" +
-	"dimensions\"\x8c\x01\n" +
+	"\tweight_kg\x18\x01 \x01(\x01R\bweightKg\"\x8c\x01\n" +
 	"\x11RecipientContacts\x12%\n" +
 	"\x0erecipient_name\x18\x01 \x01(\tR\rrecipientName\x12'\n" +
 	"\x0frecipient_phone\x18\x02 \x01(\tR\x0erecipientPhone\x12'\n" +

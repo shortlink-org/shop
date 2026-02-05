@@ -129,8 +129,7 @@ func (a *Activities) RequestDelivery(ctx context.Context, req RequestDeliveryReq
 			EndTime:   period.GetEndTime(),
 		},
 		PackageInfo: ports.PackageInfoDTO{
-			WeightKg:   pkg.GetWeightKg(),
-			Dimensions: pkg.GetDimensions(),
+			WeightKg: pkg.GetWeightKg(),
 		},
 		Priority: ports.DeliveryPriorityDTO(info.GetPriority()),
 	}

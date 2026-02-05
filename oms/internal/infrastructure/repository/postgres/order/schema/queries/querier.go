@@ -32,3 +32,5 @@ type Querier interface {
 	UpdateOrder(ctx context.Context, arg UpdateOrderParams) (pgconn.CommandTag, error)
 	UpdateOrderDeliveryInfo(ctx context.Context, arg UpdateOrderDeliveryInfoParams) error
 }
+
+var _ Querier = (*Queries)(nil)

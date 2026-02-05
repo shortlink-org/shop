@@ -127,13 +127,11 @@ message OrderDeliveryFailedEvent {
   string package_id = 2;
   // Courier ID
   string courier_id = 3;
-  // Reason for failure
-  domain.order.common.v1.NotDeliveredReason reason = 4;
+  // Not delivered details (reason; description required if reason == OTHER)
+  domain.order.common.v1.NotDeliveredDetails not_delivered_details = 4;
   // Timestamp when delivery failed
   google.protobuf.Timestamp failed_at = 5;
-  // Optional: failure description
-  string description = 6;
   // OccurredAt is the timestamp when the event occurred
-  google.protobuf.Timestamp occurred_at = 7;
+  google.protobuf.Timestamp occurred_at = 6;
 }
 

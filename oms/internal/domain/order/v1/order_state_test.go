@@ -174,7 +174,7 @@ func TestOrderState(t *testing.T) {
 		// Verify callbacks.
 		callbackMu.Lock()
 		require.Equal(t, "ORDER_STATUS_PENDING", exitState, "OnExitState should be called with Pending")
-		require.Equal(t, fsm.Event("ORDER_STATUS_PENDING"), triggeredEvt, "Triggered event should be Pending")
+		require.Equal(t, fsm.Event("ORDER_TRANSITION_EVENT_CREATE"), triggeredEvt, "Triggered event should be ORDER_TRANSITION_EVENT_CREATE")
 		require.Equal(t, "ORDER_STATUS_PROCESSING", enterState, "OnEnterState should be called with Processing")
 		callbackMu.Unlock()
 
@@ -190,7 +190,7 @@ func TestOrderState(t *testing.T) {
 		// Verify callbacks.
 		callbackMu.Lock()
 		require.Equal(t, "ORDER_STATUS_PROCESSING", exitState, "OnExitState should be called with Processing")
-		require.Equal(t, fsm.Event("ORDER_STATUS_COMPLETED"), triggeredEvt, "Triggered event should be Completed")
+		require.Equal(t, fsm.Event("ORDER_TRANSITION_EVENT_COMPLETE"), triggeredEvt, "Triggered event should be ORDER_TRANSITION_EVENT_COMPLETE")
 		require.Equal(t, "ORDER_STATUS_COMPLETED", enterState, "OnEnterState should be called with Completed")
 		callbackMu.Unlock()
 	})
@@ -227,7 +227,7 @@ func createTestDeliveryInfo(t *testing.T) DeliveryInfo {
 	endTime := startTime.Add(2 * time.Hour)
 	period := NewDeliveryPeriod(startTime, endTime)
 
-	packageInfo := NewPackageInfo(2.5, "30x20x15")
+	packageInfo := NewPackageInfo(2.5)
 
 	return NewDeliveryInfo(pickupAddr, deliveryAddr, period, packageInfo, DeliveryPriorityNormal, nil)
 }

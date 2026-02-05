@@ -31,8 +31,6 @@ pub struct Command {
     pub delivery_period: DeliveryPeriodInput,
     /// Package weight in kg
     pub weight_kg: f64,
-    /// Package dimensions (LxWxH format)
-    pub dimensions: String,
     /// Priority level
     pub priority: Priority,
 }
@@ -153,7 +151,6 @@ impl Command {
         delivery_address: AddressInput,
         delivery_period: DeliveryPeriodInput,
         weight_kg: f64,
-        dimensions: String,
         priority: Priority,
     ) -> Self {
         Self {
@@ -167,7 +164,6 @@ impl Command {
             delivery_address,
             delivery_period,
             weight_kg,
-            dimensions,
             priority,
         }
     }
@@ -188,12 +184,6 @@ impl Command {
         // Validate weight (must be positive)
         if self.weight_kg <= 0.0 {
             return Err("Package weight must be positive".to_string());
-        }
-
-        // Validate dimensions (optional but if provided, should not be empty)
-        // Dimensions format: "LxWxH" e.g., "30x20x15"
-        if !self.dimensions.is_empty() && !self.dimensions.contains('x') {
-            return Err("Dimensions must be in LxWxH format".to_string());
         }
 
         Ok(())
@@ -280,7 +270,6 @@ mod tests {
             create_valid_address(),
             create_valid_period(),
             2.5,
-            "30x20x15".to_string(),
             Priority::Normal,
         );
         assert!(cmd.validate().is_ok());
@@ -299,7 +288,6 @@ mod tests {
             create_valid_address(),
             create_valid_period(),
             0.0, // Invalid
-            "30x20x15".to_string(),
             Priority::Normal,
         );
         assert!(cmd.validate().is_err());

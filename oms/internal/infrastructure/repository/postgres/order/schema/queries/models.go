@@ -42,18 +42,17 @@ type OmsOrderDeliveryInfo struct {
 	// Start of desired delivery time window
 	PeriodStart pgtype.Timestamptz
 	// End of desired delivery time window
-	PeriodEnd  pgtype.Timestamptz
-	WeightKg   pgtype.Numeric
-	Dimensions pgtype.Text
+	PeriodEnd pgtype.Timestamptz
+	WeightKg  pgtype.Numeric
 	// Delivery priority: NORMAL, URGENT
 	Priority string
 	// Package ID assigned by delivery service
 	PackageID pgtype.UUID
-	// Recipient contact name
+	// Name of the person receiving the delivery
 	RecipientName pgtype.Text
-	// Recipient contact phone
+	// Phone number for delivery contact
 	RecipientPhone pgtype.Text
-	// Recipient contact email
+	// Email for delivery notifications
 	RecipientEmail pgtype.Text
 }
 

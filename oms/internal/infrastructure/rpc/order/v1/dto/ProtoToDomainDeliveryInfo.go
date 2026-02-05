@@ -27,10 +27,7 @@ func ProtoDeliveryInfoToDomain(protoInfo *commonv1.DeliveryInfo) *orderDomain.De
 	)
 
 	// Convert package info
-	pkgInfo := orderDomain.NewPackageInfo(
-		protoInfo.GetPackageInfo().GetWeightKg(),
-		protoInfo.GetPackageInfo().GetDimensions(),
-	)
+	pkgInfo := orderDomain.NewPackageInfo(protoInfo.GetPackageInfo().GetWeightKg())
 
 	// Convert priority
 	priority := protoPriorityToDomain(protoInfo.GetPriority())

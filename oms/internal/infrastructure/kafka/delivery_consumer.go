@@ -256,7 +256,11 @@ func mapDeliveredToStatusEvent(e *deliveryevents.PackageDeliveredEvent) Delivery
 }
 
 func mapNotDeliveredToStatusEvent(e *deliveryevents.PackageNotDeliveredEvent) DeliveryStatusEvent {
-	reasonStr := deliverycommon.NotDeliveredReason_name[int32(e.GetReason())]
+	var reasonStr, desc string
+	if d := e.GetNotDeliveredDetails(); d != nil {
+		reasonStr = deliverycommon.NotDeliveredReason_name[int32(d.GetReason())]
+		desc = d.GetDescription()
+	}
 	return DeliveryStatusEvent{
 		PackageID:   e.GetPackageId(),
 		OrderID:     e.GetOrderId(),
@@ -264,7 +268,7 @@ func mapNotDeliveredToStatusEvent(e *deliveryevents.PackageNotDeliveredEvent) De
 		Status:      deliverycommon.PackageStatus_name[int32(e.GetStatus())],
 		EventType:   EventTypePackageNotDelivered,
 		Reason:      reasonStr,
-		Description: e.GetReasonDescription(),
+		Description: desc,
 		OccurredAt:  timestampToTime(e.GetOccurredAt()),
 	}
 }

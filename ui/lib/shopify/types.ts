@@ -322,7 +322,6 @@ export type DeliveryPeriod = {
 
 export type PackageInfo = {
   weightKg: number;
-  dimensions: string;
 };
 
 export type RecipientContacts = {

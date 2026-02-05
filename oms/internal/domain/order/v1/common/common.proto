@@ -20,6 +20,18 @@ enum OrderStatus {
   ORDER_STATUS_CANCELLED = 4;
 }
 
+// OrderTransitionEvent represents the FSM action (event) that triggers an order state transition.
+// State = status (PENDING, PROCESSING, ...), Event = action (CREATE, CANCEL, COMPLETE).
+enum OrderTransitionEvent {
+  ORDER_TRANSITION_EVENT_UNSPECIFIED = 0;
+  // Create order (PENDING -> PROCESSING)
+  ORDER_TRANSITION_EVENT_CREATE = 1;
+  // Cancel order (PENDING/PROCESSING -> CANCELLED)
+  ORDER_TRANSITION_EVENT_CANCEL = 2;
+  // Complete order (PROCESSING -> COMPLETED)
+  ORDER_TRANSITION_EVENT_COMPLETE = 3;
+}
+
 // DeliveryPriority levels for packages
 enum DeliveryPriority {
   // Unspecified priority
@@ -64,6 +76,12 @@ enum NotDeliveredReason {
   NOT_DELIVERED_REASON_OTHER = 6;
 }
 
+// NotDeliveredDetails contains reason and optional description (required if reason == OTHER)
+message NotDeliveredDetails {
+  NotDeliveredReason reason = 1;
+  string description = 2; // required if reason == OTHER
+}
+
 // OrderItem represents an order item
 message OrderItem {
   // Good ID
@@ -102,8 +120,6 @@ message DeliveryPeriod {
 message PackageInfo {
   // weight_kg is the weight of the package in kilograms
   double weight_kg = 1;
-  // dimensions is the package dimensions in "LxWxH" format
-  string dimensions = 2;
 }
 
 // DeliveryLocation represents a GPS location

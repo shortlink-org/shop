@@ -168,7 +168,6 @@ pub async fn accept_order(
         delivery_address,
         delivery_period,
         package_info.weight_kg,
-        package_info.dimensions,
         proto_to_domain_priority(req.priority),
     );
 
@@ -386,8 +385,18 @@ pub async fn deliver_order(
             },
         )
     } else {
-        let reason = proto_to_domain_reason(req.not_delivered_reason, req.reason_description.clone())
-            .ok_or_else(|| Status::invalid_argument("not_delivered_reason is required for failed delivery"))?;
+        let details = req
+            .not_delivered_details
+            .as_ref()
+            .ok_or_else(|| Status::invalid_argument("not_delivered_details is required for failed delivery"))?;
+        // OTHER requires non-empty description
+        if ProtoNotDeliveredReason::try_from(details.reason) == Ok(ProtoNotDeliveredReason::Other)
+            && details.description.trim().is_empty()
+        {
+            return Err(Status::invalid_argument("OTHER requires description"));
+        }
+        let reason = proto_to_domain_reason(details.reason, details.description.clone())
+            .ok_or_else(|| Status::invalid_argument("invalid not_delivered_details.reason"))?;
 
         DeliverCommand::not_delivered(
             package_id,
@@ -414,6 +423,7 @@ pub async fn deliver_order(
             DeliverOrderError::CourierNotAssigned(_, _) => Status::permission_denied(e.to_string()),
             DeliverOrderError::InvalidPackageStatus(_) => Status::failed_precondition(e.to_string()),
             DeliverOrderError::MissingNotDeliveredReason => Status::invalid_argument(e.to_string()),
+            DeliverOrderError::OtherReasonRequiresDescription => Status::invalid_argument(e.to_string()),
             DeliverOrderError::AlreadyDelivered(_) => Status::already_exists(e.to_string()),
             DeliverOrderError::RepositoryError(_) => Status::internal(e.to_string()),
         }

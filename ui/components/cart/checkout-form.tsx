@@ -1,163 +1,154 @@
 'use client';
 
-import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import LoadingDots from 'components/loading-dots';
-
-export interface DeliveryAddress {
-  street: string;
-  city: string;
-  postalCode: string;
-  country: string;
-  latitude?: number;
-  longitude?: number;
-}
-
-export interface DeliveryPeriod {
-  startTime: string;
-  endTime: string;
-}
-
-export interface RecipientContacts {
-  recipientName: string;
-  recipientPhone: string;
-  recipientEmail: string;
-}
-
-export interface CheckoutFormData {
-  deliveryAddress: DeliveryAddress;
-  deliveryPeriod: DeliveryPeriod;
-  priority: 'NORMAL' | 'URGENT';
-  recipientContacts: RecipientContacts;
-}
-
-interface CheckoutFormProps {
-  onSubmit: (data: CheckoutFormData) => Promise<void>;
-  isLoading?: boolean;
-}
 
 const TIME_SLOTS = [
   { label: '09:00 - 12:00', start: '09:00', end: '12:00' },
   { label: '12:00 - 15:00', start: '12:00', end: '15:00' },
   { label: '15:00 - 18:00', start: '15:00', end: '18:00' },
   { label: '18:00 - 21:00', start: '18:00', end: '21:00' }
-];
+] as const;
 
-export default function CheckoutForm({ onSubmit, isLoading = false }: CheckoutFormProps) {
-  const [formData, setFormData] = useState<CheckoutFormData>({
-    deliveryAddress: {
-      street: '',
-      city: '',
-      postalCode: '',
-      country: 'Germany'
+const TIME_SLOT_LABELS = TIME_SLOTS.map((s) => s.label);
+const COUNTRY_VALUES = [
+  'Germany',
+  'Austria',
+  'Switzerland',
+  'Netherlands',
+  'Belgium',
+  'France'
+] as const;
+
+function getMinDate(): string {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return tomorrow.toISOString().split('T')[0] ?? '';
+}
+
+function getMaxDate(): string {
+  const maxDate = new Date();
+  maxDate.setDate(maxDate.getDate() + 14);
+  return maxDate.toISOString().split('T')[0] ?? '';
+}
+
+const countrySchema = z.enum(COUNTRY_VALUES);
+const prioritySchema = z.enum(['NORMAL', 'URGENT']);
+const timeSlotLabelSchema = z.enum(TIME_SLOT_LABELS as unknown as [string, ...string[]]);
+
+const checkoutFormInputSchema = z
+  .object({
+    deliveryAddress: z.object({
+      street: z.string().min(1, 'Street address is required').transform((s) => s.trim()),
+      city: z.string().min(1, 'City is required').transform((s) => s.trim()),
+      postalCode: z.string().default(''),
+      country: countrySchema
+    }),
+    recipientContacts: z.object({
+      recipientName: z.string().default(''),
+      recipientPhone: z.string().min(1, 'Phone number is required for delivery').transform((s) => s.trim()),
+      recipientEmail: z
+        .string()
+        .default('')
+        .transform((v) => (v ?? '').trim())
+        .refine((v) => v === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), {
+          message: 'Invalid email address'
+        })
+    }),
+    deliveryDate: z.string().min(1, 'Delivery date is required'),
+    selectedTimeSlot: z
+      .union([z.literal(''), timeSlotLabelSchema])
+      .refine((v) => v !== '', { message: 'Delivery time slot is required' }),
+    priority: prioritySchema
+  })
+  .refine(
+    (data) => {
+      const date = data.deliveryDate ? new Date(data.deliveryDate + 'T12:00:00') : null;
+      if (!date || isNaN(date.getTime())) return true;
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0);
+      const max = new Date();
+      max.setDate(max.getDate() + 14);
+      max.setHours(23, 59, 59, 999);
+      date.setHours(12, 0, 0, 0);
+      return date >= tomorrow && date <= max;
     },
-    deliveryPeriod: {
-      startTime: '',
-      endTime: ''
-    },
-    priority: 'NORMAL',
-    recipientContacts: {
-      recipientName: '',
-      recipientPhone: '',
-      recipientEmail: ''
-    }
+    { message: 'Delivery date must be between tomorrow and 14 days from now', path: ['deliveryDate'] }
+  )
+  .transform((data) => {
+    const slot = TIME_SLOTS.find((s) => s.label === data.selectedTimeSlot);
+    const startTime = slot
+      ? new Date(`${data.deliveryDate}T${slot.start}:00`).toISOString()
+      : '';
+    const endTime = slot
+      ? new Date(`${data.deliveryDate}T${slot.end}:00`).toISOString()
+      : '';
+    return {
+      deliveryAddress: {
+        ...data.deliveryAddress,
+        postalCode: data.deliveryAddress.postalCode ?? ''
+      },
+      recipientContacts: {
+        recipientName: data.recipientContacts.recipientName ?? '',
+        recipientPhone: data.recipientContacts.recipientPhone,
+        recipientEmail: data.recipientContacts.recipientEmail ?? ''
+      },
+      priority: data.priority,
+      deliveryPeriod: { startTime, endTime }
+    };
   });
 
-  const [selectedDate, setSelectedDate] = useState('');
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
+export type CheckoutFormData = z.output<typeof checkoutFormInputSchema>;
+type CheckoutFormInput = z.input<typeof checkoutFormInputSchema>;
 
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
+interface CheckoutFormProps {
+  onSubmit: (data: CheckoutFormData) => Promise<void>;
+  isLoading?: boolean;
+}
 
-    if (!formData.deliveryAddress.street.trim()) {
-      newErrors.street = 'Street address is required';
-    }
-    if (!formData.deliveryAddress.city.trim()) {
-      newErrors.city = 'City is required';
-    }
-    if (!formData.deliveryAddress.country.trim()) {
-      newErrors.country = 'Country is required';
-    }
-    if (!selectedDate) {
-      newErrors.date = 'Delivery date is required';
-    }
-    if (!selectedTimeSlot) {
-      newErrors.timeSlot = 'Delivery time slot is required';
-    }
-    if (!formData.recipientContacts.recipientPhone.trim()) {
-      newErrors.recipientPhone = 'Phone number is required for delivery';
-    }
+const defaultValues: CheckoutFormInput = {
+  deliveryAddress: {
+    street: '',
+    city: '',
+    postalCode: '',
+    country: 'Germany'
+  },
+  recipientContacts: {
+    recipientName: '',
+    recipientPhone: '',
+    recipientEmail: ''
+  },
+  deliveryDate: '',
+  selectedTimeSlot: '',
+  priority: 'NORMAL'
+};
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+export default function CheckoutForm({ onSubmit, isLoading = false }: CheckoutFormProps) {
+  const {
+    register,
+    handleSubmit: rhfHandleSubmit,
+    setValue,
+    watch,
+    formState: { errors }
+  } = useForm<CheckoutFormInput>({
+    resolver: zodResolver(checkoutFormInputSchema) as never,
+    defaultValues
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const selectedTimeSlot = watch('selectedTimeSlot');
 
-    if (!validateForm()) {
-      return;
-    }
-
-    const timeSlot = TIME_SLOTS.find((slot) => slot.label === selectedTimeSlot);
-    if (!timeSlot) return;
-
-    const startTime = new Date(`${selectedDate}T${timeSlot.start}:00`).toISOString();
-    const endTime = new Date(`${selectedDate}T${timeSlot.end}:00`).toISOString();
-
-    const submitData: CheckoutFormData = {
-      ...formData,
-      deliveryPeriod: {
-        startTime,
-        endTime
-      }
-    };
-
-    await onSubmit(submitData);
-  };
-
-  const updateAddress = (field: keyof DeliveryAddress, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      deliveryAddress: {
-        ...prev.deliveryAddress,
-        [field]: value
-      }
-    }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: '' }));
-    }
-  };
-
-  const updateRecipientContacts = (field: keyof RecipientContacts, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      recipientContacts: {
-        ...prev.recipientContacts,
-        [field]: value
-      }
-    }));
-    if (errors.recipientPhone && field === 'recipientPhone') {
-      setErrors((prev) => ({ ...prev, recipientPhone: '' }));
-    }
-  };
-
-  // Get minimum date (tomorrow)
-  const getMinDate = () => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split('T')[0];
-  };
-
-  // Get maximum date (2 weeks from now)
-  const getMaxDate = () => {
-    const maxDate = new Date();
-    maxDate.setDate(maxDate.getDate() + 14);
-    return maxDate.toISOString().split('T')[0];
+  const onValid = async (data: CheckoutFormData) => {
+    await onSubmit(data);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form
+      onSubmit={rhfHandleSubmit((data) => onValid(data as unknown as CheckoutFormData))}
+      className="space-y-6"
+    >
       {/* Delivery Address Section */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-black dark:text-white">Delivery Address</h3>
@@ -172,16 +163,17 @@ export default function CheckoutForm({ onSubmit, isLoading = false }: CheckoutFo
           <input
             type="text"
             id="street"
-            value={formData.deliveryAddress.street}
-            onChange={(e) => updateAddress('street', e.target.value)}
+            {...register('deliveryAddress.street')}
             className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-neutral-800 dark:text-white ${
-              errors.street
+              errors.deliveryAddress?.street
                 ? 'border-red-500'
                 : 'border-neutral-300 dark:border-neutral-600'
             }`}
             placeholder="123 Main Street, Apt 4"
           />
-          {errors.street && <p className="mt-1 text-sm text-red-500">{errors.street}</p>}
+          {errors.deliveryAddress?.street && (
+            <p className="mt-1 text-sm text-red-500">{errors.deliveryAddress.street.message}</p>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -195,16 +187,17 @@ export default function CheckoutForm({ onSubmit, isLoading = false }: CheckoutFo
             <input
               type="text"
               id="city"
-              value={formData.deliveryAddress.city}
-              onChange={(e) => updateAddress('city', e.target.value)}
+              {...register('deliveryAddress.city')}
               className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-neutral-800 dark:text-white ${
-                errors.city
+                errors.deliveryAddress?.city
                   ? 'border-red-500'
                   : 'border-neutral-300 dark:border-neutral-600'
               }`}
               placeholder="Berlin"
             />
-            {errors.city && <p className="mt-1 text-sm text-red-500">{errors.city}</p>}
+            {errors.deliveryAddress?.city && (
+              <p className="mt-1 text-sm text-red-500">{errors.deliveryAddress.city.message}</p>
+            )}
           </div>
 
           <div>
@@ -217,8 +210,7 @@ export default function CheckoutForm({ onSubmit, isLoading = false }: CheckoutFo
             <input
               type="text"
               id="postalCode"
-              value={formData.deliveryAddress.postalCode}
-              onChange={(e) => updateAddress('postalCode', e.target.value)}
+              {...register('deliveryAddress.postalCode')}
               className="mt-1 block w-full rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-800 dark:text-white"
               placeholder="10115"
             />
@@ -234,10 +226,9 @@ export default function CheckoutForm({ onSubmit, isLoading = false }: CheckoutFo
           </label>
           <select
             id="country"
-            value={formData.deliveryAddress.country}
-            onChange={(e) => updateAddress('country', e.target.value)}
+            {...register('deliveryAddress.country')}
             className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-neutral-800 dark:text-white ${
-              errors.country
+              errors.deliveryAddress?.country
                 ? 'border-red-500'
                 : 'border-neutral-300 dark:border-neutral-600'
             }`}
@@ -249,7 +240,9 @@ export default function CheckoutForm({ onSubmit, isLoading = false }: CheckoutFo
             <option value="Belgium">Belgium</option>
             <option value="France">France</option>
           </select>
-          {errors.country && <p className="mt-1 text-sm text-red-500">{errors.country}</p>}
+          {errors.deliveryAddress?.country && (
+            <p className="mt-1 text-sm text-red-500">{errors.deliveryAddress.country.message}</p>
+          )}
         </div>
       </div>
 
@@ -267,8 +260,7 @@ export default function CheckoutForm({ onSubmit, isLoading = false }: CheckoutFo
           <input
             type="text"
             id="recipientName"
-            value={formData.recipientContacts.recipientName}
-            onChange={(e) => updateRecipientContacts('recipientName', e.target.value)}
+            {...register('recipientContacts.recipientName')}
             className="mt-1 block w-full rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-800 dark:text-white"
             placeholder="John Doe"
           />
@@ -284,17 +276,18 @@ export default function CheckoutForm({ onSubmit, isLoading = false }: CheckoutFo
           <input
             type="tel"
             id="recipientPhone"
-            value={formData.recipientContacts.recipientPhone}
-            onChange={(e) => updateRecipientContacts('recipientPhone', e.target.value)}
+            {...register('recipientContacts.recipientPhone')}
             className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-neutral-800 dark:text-white ${
-              errors.recipientPhone
+              errors.recipientContacts?.recipientPhone
                 ? 'border-red-500'
                 : 'border-neutral-300 dark:border-neutral-600'
             }`}
             placeholder="+49 123 456 7890"
           />
-          {errors.recipientPhone && (
-            <p className="mt-1 text-sm text-red-500">{errors.recipientPhone}</p>
+          {errors.recipientContacts?.recipientPhone && (
+            <p className="mt-1 text-sm text-red-500">
+              {errors.recipientContacts.recipientPhone.message}
+            </p>
           )}
         </div>
 
@@ -308,11 +301,19 @@ export default function CheckoutForm({ onSubmit, isLoading = false }: CheckoutFo
           <input
             type="email"
             id="recipientEmail"
-            value={formData.recipientContacts.recipientEmail}
-            onChange={(e) => updateRecipientContacts('recipientEmail', e.target.value)}
-            className="mt-1 block w-full rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-800 dark:text-white"
+            {...register('recipientContacts.recipientEmail')}
+            className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-neutral-800 dark:text-white ${
+              errors.recipientContacts?.recipientEmail
+                ? 'border-red-500'
+                : 'border-neutral-300 dark:border-neutral-600'
+            }`}
             placeholder="recipient@example.com"
           />
+          {errors.recipientContacts?.recipientEmail && (
+            <p className="mt-1 text-sm text-red-500">
+              {errors.recipientContacts.recipientEmail.message}
+            </p>
+          )}
         </div>
       </div>
 
@@ -330,20 +331,18 @@ export default function CheckoutForm({ onSubmit, isLoading = false }: CheckoutFo
           <input
             type="date"
             id="deliveryDate"
-            value={selectedDate}
-            onChange={(e) => {
-              setSelectedDate(e.target.value);
-              if (errors.date) setErrors((prev) => ({ ...prev, date: '' }));
-            }}
+            {...register('deliveryDate')}
             min={getMinDate()}
             max={getMaxDate()}
             className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-neutral-800 dark:text-white ${
-              errors.date
+              errors.deliveryDate
                 ? 'border-red-500'
                 : 'border-neutral-300 dark:border-neutral-600'
             }`}
           />
-          {errors.date && <p className="mt-1 text-sm text-red-500">{errors.date}</p>}
+          {errors.deliveryDate && (
+            <p className="mt-1 text-sm text-red-500">{errors.deliveryDate.message}</p>
+          )}
         </div>
 
         <div>
@@ -355,10 +354,7 @@ export default function CheckoutForm({ onSubmit, isLoading = false }: CheckoutFo
               <button
                 key={slot.label}
                 type="button"
-                onClick={() => {
-                  setSelectedTimeSlot(slot.label);
-                  if (errors.timeSlot) setErrors((prev) => ({ ...prev, timeSlot: '' }));
-                }}
+                onClick={() => setValue('selectedTimeSlot', slot.label, { shouldValidate: true })}
                 className={`rounded-md border px-4 py-2 text-sm font-medium transition-colors ${
                   selectedTimeSlot === slot.label
                     ? 'border-blue-500 bg-blue-500 text-white'
@@ -369,7 +365,9 @@ export default function CheckoutForm({ onSubmit, isLoading = false }: CheckoutFo
               </button>
             ))}
           </div>
-          {errors.timeSlot && <p className="mt-1 text-sm text-red-500">{errors.timeSlot}</p>}
+          {errors.selectedTimeSlot && (
+            <p className="mt-1 text-sm text-red-500">{errors.selectedTimeSlot.message}</p>
+          )}
         </div>
       </div>
 
@@ -380,10 +378,8 @@ export default function CheckoutForm({ onSubmit, isLoading = false }: CheckoutFo
           <label className="flex cursor-pointer items-center">
             <input
               type="radio"
-              name="priority"
               value="NORMAL"
-              checked={formData.priority === 'NORMAL'}
-              onChange={() => setFormData((prev) => ({ ...prev, priority: 'NORMAL' }))}
+              {...register('priority')}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500"
             />
             <span className="ml-2 text-sm text-neutral-700 dark:text-neutral-300">
@@ -393,10 +389,8 @@ export default function CheckoutForm({ onSubmit, isLoading = false }: CheckoutFo
           <label className="flex cursor-pointer items-center">
             <input
               type="radio"
-              name="priority"
               value="URGENT"
-              checked={formData.priority === 'URGENT'}
-              onChange={() => setFormData((prev) => ({ ...prev, priority: 'URGENT' }))}
+              {...register('priority')}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500"
             />
             <span className="ml-2 text-sm text-neutral-700 dark:text-neutral-300">

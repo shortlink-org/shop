@@ -45,13 +45,10 @@ pub struct DeliveryPeriod {
     pub end_time: ::core::option::Option<::pbjson_types::Timestamp>,
 }
 /// PackageInfo contains package physical characteristics
-#[derive(Clone, PartialEq, ::prost::Message)]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct PackageInfo {
     #[prost(double, tag = "1")]
     pub weight_kg: f64,
-    /// "LxWxH" format
-    #[prost(string, tag = "2")]
-    pub dimensions: ::prost::alloc::string::String,
 }
 /// WorkHours represents courier working hours
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
@@ -65,6 +62,15 @@ pub struct WorkHours {
     /// \[1,2,3,4,5\] - Monday to Friday
     #[prost(int32, repeated, tag = "3")]
     pub work_days: ::prost::alloc::vec::Vec<i32>,
+}
+/// NotDeliveredDetails contains reason and optional description (required if reason == OTHER)
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct NotDeliveredDetails {
+    #[prost(enumeration = "NotDeliveredReason", tag = "1")]
+    pub reason: i32,
+    /// required if reason == OTHER
+    #[prost(string, tag = "2")]
+    pub description: ::prost::alloc::string::String,
 }
 /// Priority levels for packages
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]

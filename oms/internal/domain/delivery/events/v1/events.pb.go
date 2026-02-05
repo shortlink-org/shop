@@ -464,16 +464,14 @@ type PackageNotDeliveredEvent struct {
 	CourierId string `protobuf:"bytes,3,opt,name=courier_id,json=courierId,proto3" json:"courier_id,omitempty"`
 	// Package status
 	Status v1.PackageStatus `protobuf:"varint,4,opt,name=status,proto3,enum=domain.delivery.common.v1.PackageStatus" json:"status,omitempty"`
-	// Not delivered reason
-	Reason v1.NotDeliveredReason `protobuf:"varint,5,opt,name=reason,proto3,enum=domain.delivery.common.v1.NotDeliveredReason" json:"reason,omitempty"`
-	// Additional description if reason is OTHER
-	ReasonDescription string `protobuf:"bytes,6,opt,name=reason_description,json=reasonDescription,proto3" json:"reason_description,omitempty"`
+	// Not delivered details (reason; description required if reason == OTHER)
+	NotDeliveredDetails *v1.NotDeliveredDetails `protobuf:"bytes,5,opt,name=not_delivered_details,json=notDeliveredDetails,proto3" json:"not_delivered_details,omitempty"`
 	// Not delivered at timestamp
-	NotDeliveredAt *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=not_delivered_at,json=notDeliveredAt,proto3" json:"not_delivered_at,omitempty"`
+	NotDeliveredAt *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=not_delivered_at,json=notDeliveredAt,proto3" json:"not_delivered_at,omitempty"`
 	// Courier location
-	CourierLocation *v1.Location `protobuf:"bytes,8,opt,name=courier_location,json=courierLocation,proto3" json:"courier_location,omitempty"`
+	CourierLocation *v1.Location `protobuf:"bytes,7,opt,name=courier_location,json=courierLocation,proto3" json:"courier_location,omitempty"`
 	// OccurredAt is the timestamp when the event occurred
-	OccurredAt    *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
+	OccurredAt    *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -536,18 +534,11 @@ func (x *PackageNotDeliveredEvent) GetStatus() v1.PackageStatus {
 	return v1.PackageStatus(0)
 }
 
-func (x *PackageNotDeliveredEvent) GetReason() v1.NotDeliveredReason {
+func (x *PackageNotDeliveredEvent) GetNotDeliveredDetails() *v1.NotDeliveredDetails {
 	if x != nil {
-		return x.Reason
+		return x.NotDeliveredDetails
 	}
-	return v1.NotDeliveredReason(0)
-}
-
-func (x *PackageNotDeliveredEvent) GetReasonDescription() string {
-	if x != nil {
-		return x.ReasonDescription
-	}
-	return ""
+	return nil
 }
 
 func (x *PackageNotDeliveredEvent) GetNotDeliveredAt() *timestamppb.Timestamp {
@@ -992,19 +983,18 @@ const file_domain_delivery_events_v1_events_proto_rawDesc = "" +
 	"\x05photo\x18\a \x01(\fR\x05photo\x12-\n" +
 	"\x12customer_signature\x18\b \x01(\fR\x11customerSignature\x12;\n" +
 	"\voccurred_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"occurredAt\"\xfe\x03\n" +
+	"occurredAt\"\xec\x03\n" +
 	"\x18PackageNotDeliveredEvent\x12\x1d\n" +
 	"\n" +
 	"package_id\x18\x01 \x01(\tR\tpackageId\x12\x19\n" +
 	"\border_id\x18\x02 \x01(\tR\aorderId\x12\x1d\n" +
 	"\n" +
 	"courier_id\x18\x03 \x01(\tR\tcourierId\x12@\n" +
-	"\x06status\x18\x04 \x01(\x0e2(.domain.delivery.common.v1.PackageStatusR\x06status\x12E\n" +
-	"\x06reason\x18\x05 \x01(\x0e2-.domain.delivery.common.v1.NotDeliveredReasonR\x06reason\x12-\n" +
-	"\x12reason_description\x18\x06 \x01(\tR\x11reasonDescription\x12D\n" +
-	"\x10not_delivered_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\x0enotDeliveredAt\x12N\n" +
-	"\x10courier_location\x18\b \x01(\v2#.domain.delivery.common.v1.LocationR\x0fcourierLocation\x12;\n" +
-	"\voccurred_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"\x06status\x18\x04 \x01(\x0e2(.domain.delivery.common.v1.PackageStatusR\x06status\x12b\n" +
+	"\x15not_delivered_details\x18\x05 \x01(\v2..domain.delivery.common.v1.NotDeliveredDetailsR\x13notDeliveredDetails\x12D\n" +
+	"\x10not_delivered_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\x0enotDeliveredAt\x12N\n" +
+	"\x10courier_location\x18\a \x01(\v2#.domain.delivery.common.v1.LocationR\x0fcourierLocation\x12;\n" +
+	"\voccurred_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"occurredAt\"\x88\x03\n" +
 	"\x16CourierRegisteredEvent\x12\x1d\n" +
 	"\n" +
@@ -1076,7 +1066,7 @@ var file_domain_delivery_events_v1_events_proto_goTypes = []any{
 	(*v1.Address)(nil),                   // 11: domain.delivery.common.v1.Address
 	(*v1.DeliveryPeriod)(nil),            // 12: domain.delivery.common.v1.DeliveryPeriod
 	(*v1.Location)(nil),                  // 13: domain.delivery.common.v1.Location
-	(v1.NotDeliveredReason)(0),           // 14: domain.delivery.common.v1.NotDeliveredReason
+	(*v1.NotDeliveredDetails)(nil),       // 14: domain.delivery.common.v1.NotDeliveredDetails
 	(v1.TransportType)(0),                // 15: domain.delivery.common.v1.TransportType
 	(v1.CourierStatus)(0),                // 16: domain.delivery.common.v1.CourierStatus
 }
@@ -1099,7 +1089,7 @@ var file_domain_delivery_events_v1_events_proto_depIdxs = []int32{
 	13, // 15: domain.delivery.events.v1.PackageDeliveredEvent.delivery_location:type_name -> domain.delivery.common.v1.Location
 	10, // 16: domain.delivery.events.v1.PackageDeliveredEvent.occurred_at:type_name -> google.protobuf.Timestamp
 	9,  // 17: domain.delivery.events.v1.PackageNotDeliveredEvent.status:type_name -> domain.delivery.common.v1.PackageStatus
-	14, // 18: domain.delivery.events.v1.PackageNotDeliveredEvent.reason:type_name -> domain.delivery.common.v1.NotDeliveredReason
+	14, // 18: domain.delivery.events.v1.PackageNotDeliveredEvent.not_delivered_details:type_name -> domain.delivery.common.v1.NotDeliveredDetails
 	10, // 19: domain.delivery.events.v1.PackageNotDeliveredEvent.not_delivered_at:type_name -> google.protobuf.Timestamp
 	13, // 20: domain.delivery.events.v1.PackageNotDeliveredEvent.courier_location:type_name -> domain.delivery.common.v1.Location
 	10, // 21: domain.delivery.events.v1.PackageNotDeliveredEvent.occurred_at:type_name -> google.protobuf.Timestamp

@@ -6,6 +6,7 @@ import CheckoutForm, { CheckoutFormData } from 'components/cart/checkout-form';
 import Price from 'components/price';
 import { useCart } from 'components/cart/cart-context';
 import { checkout } from 'lib/shopify';
+import type { PackageInfo } from 'lib/shopify/types';
 import { ArrowLeftIcon, ShoppingCartIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -21,9 +22,8 @@ const PICKUP_ADDRESS = {
 };
 
 // Default package info (can be calculated from cart items later)
-const DEFAULT_PACKAGE_INFO = {
-  weightKg: 1.0,
-  dimensions: '30x20x15'
+const DEFAULT_PACKAGE_INFO: PackageInfo = {
+  weightKg: 1.0
 };
 
 export default function CheckoutPage() {

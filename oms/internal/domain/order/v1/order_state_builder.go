@@ -9,6 +9,8 @@ import (
 	"github.com/shopspring/decimal"
 
 	"github.com/shortlink-org/go-sdk/fsm"
+
+	commonv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common"
 )
 
 // Error definitions
@@ -90,36 +92,33 @@ func (b *OrderStateBuilder) replayEventsToStatus(currentStatus, targetStatus Ord
 	// Define the transition path
 	switch {
 	case targetStatus == OrderStatus_ORDER_STATUS_PROCESSING:
-		// To reach Processing, trigger PENDING event (if not already processing)
+		// PENDING + CREATE => PROCESSING
 		if currentStatus == OrderStatus_ORDER_STATUS_PENDING {
-			err := b.orderState.fsm.TriggerEvent(context.Background(), fsm.Event(OrderStatus_ORDER_STATUS_PENDING.String()))
+			err := b.orderState.fsm.TriggerEvent(context.Background(), fsm.Event(commonv1.OrderTransitionEvent_ORDER_TRANSITION_EVENT_CREATE.String()))
 			if err != nil {
 				return fmt.Errorf("failed to transition to PROCESSING: %w", err)
 			}
 		}
 
 	case targetStatus == OrderStatus_ORDER_STATUS_CANCELLED:
-		// To reach Cancelled, trigger CANCELLED event from any state
-		err := b.orderState.fsm.TriggerEvent(context.Background(), fsm.Event(OrderStatus_ORDER_STATUS_CANCELLED.String()))
+		// PENDING/PROCESSING + CANCEL => CANCELLED
+		err := b.orderState.fsm.TriggerEvent(context.Background(), fsm.Event(commonv1.OrderTransitionEvent_ORDER_TRANSITION_EVENT_CANCEL.String()))
 		if err != nil {
 			return fmt.Errorf("failed to transition to CANCELLED: %w", err)
 		}
 
 	case targetStatus == OrderStatus_ORDER_STATUS_COMPLETED:
-		// To reach Completed, we need to be in PROCESSING first
-		// If we're in PENDING, first transition to PROCESSING
+		// PENDING: first CREATE => PROCESSING, then COMPLETE => COMPLETED
 		if currentStatus == OrderStatus_ORDER_STATUS_PENDING {
-			err := b.orderState.fsm.TriggerEvent(context.Background(), fsm.Event(OrderStatus_ORDER_STATUS_PENDING.String()))
+			err := b.orderState.fsm.TriggerEvent(context.Background(), fsm.Event(commonv1.OrderTransitionEvent_ORDER_TRANSITION_EVENT_CREATE.String()))
 			if err != nil {
 				return fmt.Errorf("failed to transition to PROCESSING: %w", err)
 			}
-			// Update current status after transition
 			currentStatus = OrderStatus_ORDER_STATUS_PROCESSING
 		}
 
-		// Now transition from PROCESSING to COMPLETED
 		if currentStatus == OrderStatus_ORDER_STATUS_PROCESSING {
-			err := b.orderState.fsm.TriggerEvent(context.Background(), fsm.Event(OrderStatus_ORDER_STATUS_COMPLETED.String()))
+			err := b.orderState.fsm.TriggerEvent(context.Background(), fsm.Event(commonv1.OrderTransitionEvent_ORDER_TRANSITION_EVENT_COMPLETE.String()))
 			if err != nil {
 				return fmt.Errorf("failed to transition to COMPLETED: %w", err)
 			}

@@ -608,14 +608,12 @@ type OrderDeliveryFailedEvent struct {
 	PackageId string `protobuf:"bytes,2,opt,name=package_id,json=packageId,proto3" json:"package_id,omitempty"`
 	// Courier ID
 	CourierId string `protobuf:"bytes,3,opt,name=courier_id,json=courierId,proto3" json:"courier_id,omitempty"`
-	// Reason for failure
-	Reason common.NotDeliveredReason `protobuf:"varint,4,opt,name=reason,proto3,enum=domain.order.common.v1.NotDeliveredReason" json:"reason,omitempty"`
+	// Not delivered details (reason; description required if reason == OTHER)
+	NotDeliveredDetails *common.NotDeliveredDetails `protobuf:"bytes,4,opt,name=not_delivered_details,json=notDeliveredDetails,proto3" json:"not_delivered_details,omitempty"`
 	// Timestamp when delivery failed
 	FailedAt *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=failed_at,json=failedAt,proto3" json:"failed_at,omitempty"`
-	// Optional: failure description
-	Description string `protobuf:"bytes,6,opt,name=description,proto3" json:"description,omitempty"`
 	// OccurredAt is the timestamp when the event occurred
-	OccurredAt    *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
+	OccurredAt    *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -671,11 +669,11 @@ func (x *OrderDeliveryFailedEvent) GetCourierId() string {
 	return ""
 }
 
-func (x *OrderDeliveryFailedEvent) GetReason() common.NotDeliveredReason {
+func (x *OrderDeliveryFailedEvent) GetNotDeliveredDetails() *common.NotDeliveredDetails {
 	if x != nil {
-		return x.Reason
+		return x.NotDeliveredDetails
 	}
-	return common.NotDeliveredReason(0)
+	return nil
 }
 
 func (x *OrderDeliveryFailedEvent) GetFailedAt() *timestamppb.Timestamp {
@@ -683,13 +681,6 @@ func (x *OrderDeliveryFailedEvent) GetFailedAt() *timestamppb.Timestamp {
 		return x.FailedAt
 	}
 	return nil
-}
-
-func (x *OrderDeliveryFailedEvent) GetDescription() string {
-	if x != nil {
-		return x.Description
-	}
-	return ""
 }
 
 func (x *OrderDeliveryFailedEvent) GetOccurredAt() *timestamppb.Timestamp {
@@ -764,17 +755,16 @@ const file_domain_order_v1_events_v1_events_proto_rawDesc = "" +
 	"\fdelivered_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\vdeliveredAt\x12U\n" +
 	"\x11delivery_location\x18\x05 \x01(\v2(.domain.order.common.v1.DeliveryLocationR\x10deliveryLocation\x12;\n" +
 	"\voccurred_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"occurredAt\"\xcf\x02\n" +
+	"occurredAt\"\xca\x02\n" +
 	"\x18OrderDeliveryFailedEvent\x12\x19\n" +
 	"\border_id\x18\x01 \x01(\tR\aorderId\x12\x1d\n" +
 	"\n" +
 	"package_id\x18\x02 \x01(\tR\tpackageId\x12\x1d\n" +
 	"\n" +
-	"courier_id\x18\x03 \x01(\tR\tcourierId\x12B\n" +
-	"\x06reason\x18\x04 \x01(\x0e2*.domain.order.common.v1.NotDeliveredReasonR\x06reason\x127\n" +
-	"\tfailed_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\bfailedAt\x12 \n" +
-	"\vdescription\x18\x06 \x01(\tR\vdescription\x12;\n" +
-	"\voccurred_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"courier_id\x18\x03 \x01(\tR\tcourierId\x12_\n" +
+	"\x15not_delivered_details\x18\x04 \x01(\v2+.domain.order.common.v1.NotDeliveredDetailsR\x13notDeliveredDetails\x127\n" +
+	"\tfailed_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\bfailedAt\x12;\n" +
+	"\voccurred_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"occurredAtB\xea\x01\n" +
 	"\x1acom.domain.order.events.v1B\vEventsProtoP\x01ZDgithub.com/shortlink-org/shop/oms/internal/domain/order/v1/events/v1\xa2\x02\x03DOE\xaa\x02\x16Domain.Order.Events.V1\xca\x02\x16Domain\\Order\\Events\\V1\xe2\x02\"Domain\\Order\\Events\\V1\\GPBMetadata\xea\x02\x19Domain::Order::Events::V1b\x06proto3"
 
@@ -808,7 +798,7 @@ var file_domain_order_v1_events_v1_events_proto_goTypes = []any{
 	(common.DeliveryPriority)(0),            // 13: domain.order.common.v1.DeliveryPriority
 	(common.DeliveryStatus)(0),              // 14: domain.order.common.v1.DeliveryStatus
 	(*common.DeliveryLocation)(nil),         // 15: domain.order.common.v1.DeliveryLocation
-	(common.NotDeliveredReason)(0),          // 16: domain.order.common.v1.NotDeliveredReason
+	(*common.NotDeliveredDetails)(nil),      // 16: domain.order.common.v1.NotDeliveredDetails
 }
 var file_domain_order_v1_events_v1_events_proto_depIdxs = []int32{
 	7,  // 0: domain.order.events.v1.OrderCreated.items:type_name -> domain.order.common.v1.OrderItem
@@ -834,7 +824,7 @@ var file_domain_order_v1_events_v1_events_proto_depIdxs = []int32{
 	9,  // 20: domain.order.events.v1.OrderDeliveryCompletedEvent.delivered_at:type_name -> google.protobuf.Timestamp
 	15, // 21: domain.order.events.v1.OrderDeliveryCompletedEvent.delivery_location:type_name -> domain.order.common.v1.DeliveryLocation
 	9,  // 22: domain.order.events.v1.OrderDeliveryCompletedEvent.occurred_at:type_name -> google.protobuf.Timestamp
-	16, // 23: domain.order.events.v1.OrderDeliveryFailedEvent.reason:type_name -> domain.order.common.v1.NotDeliveredReason
+	16, // 23: domain.order.events.v1.OrderDeliveryFailedEvent.not_delivered_details:type_name -> domain.order.common.v1.NotDeliveredDetails
 	9,  // 24: domain.order.events.v1.OrderDeliveryFailedEvent.failed_at:type_name -> google.protobuf.Timestamp
 	9,  // 25: domain.order.events.v1.OrderDeliveryFailedEvent.occurred_at:type_name -> google.protobuf.Timestamp
 	26, // [26:26] is the sub-list for method output_type

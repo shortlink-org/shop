@@ -588,7 +588,6 @@ func (x *DeliveryPeriod) GetEndTime() *timestamppb.Timestamp {
 type PackageInfo struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	WeightKg      float64                `protobuf:"fixed64,1,opt,name=weight_kg,json=weightKg,proto3" json:"weight_kg,omitempty"`
-	Dimensions    string                 `protobuf:"bytes,2,opt,name=dimensions,proto3" json:"dimensions,omitempty"` // "LxWxH" format
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -628,13 +627,6 @@ func (x *PackageInfo) GetWeightKg() float64 {
 		return x.WeightKg
 	}
 	return 0
-}
-
-func (x *PackageInfo) GetDimensions() string {
-	if x != nil {
-		return x.Dimensions
-	}
-	return ""
 }
 
 // WorkHours represents courier working hours
@@ -698,6 +690,59 @@ func (x *WorkHours) GetWorkDays() []int32 {
 	return nil
 }
 
+// NotDeliveredDetails contains reason and optional description (required if reason == OTHER)
+type NotDeliveredDetails struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Reason        NotDeliveredReason     `protobuf:"varint,1,opt,name=reason,proto3,enum=domain.delivery.common.v1.NotDeliveredReason" json:"reason,omitempty"`
+	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"` // required if reason == OTHER
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *NotDeliveredDetails) Reset() {
+	*x = NotDeliveredDetails{}
+	mi := &file_domain_delivery_common_v1_common_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *NotDeliveredDetails) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NotDeliveredDetails) ProtoMessage() {}
+
+func (x *NotDeliveredDetails) ProtoReflect() protoreflect.Message {
+	mi := &file_domain_delivery_common_v1_common_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NotDeliveredDetails.ProtoReflect.Descriptor instead.
+func (*NotDeliveredDetails) Descriptor() ([]byte, []int) {
+	return file_domain_delivery_common_v1_common_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *NotDeliveredDetails) GetReason() NotDeliveredReason {
+	if x != nil {
+		return x.Reason
+	}
+	return NotDeliveredReason_NOT_DELIVERED_REASON_UNSPECIFIED
+}
+
+func (x *NotDeliveredDetails) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
 var File_domain_delivery_common_v1_common_proto protoreflect.FileDescriptor
 
 const file_domain_delivery_common_v1_common_proto_rawDesc = "" +
@@ -724,17 +769,17 @@ const file_domain_delivery_common_v1_common_proto_rawDesc = "" +
 	"\x0eDeliveryPeriod\x129\n" +
 	"\n" +
 	"start_time\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\tstartTime\x125\n" +
-	"\bend_time\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\aendTime\"J\n" +
+	"\bend_time\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\aendTime\"*\n" +
 	"\vPackageInfo\x12\x1b\n" +
-	"\tweight_kg\x18\x01 \x01(\x01R\bweightKg\x12\x1e\n" +
-	"\n" +
-	"dimensions\x18\x02 \x01(\tR\n" +
-	"dimensions\"b\n" +
+	"\tweight_kg\x18\x01 \x01(\x01R\bweightKg\"b\n" +
 	"\tWorkHours\x12\x1d\n" +
 	"\n" +
 	"start_time\x18\x01 \x01(\tR\tstartTime\x12\x19\n" +
 	"\bend_time\x18\x02 \x01(\tR\aendTime\x12\x1b\n" +
-	"\twork_days\x18\x03 \x03(\x05R\bworkDays*N\n" +
+	"\twork_days\x18\x03 \x03(\x05R\bworkDays\"~\n" +
+	"\x13NotDeliveredDetails\x12E\n" +
+	"\x06reason\x18\x01 \x01(\x0e2-.domain.delivery.common.v1.NotDeliveredReasonR\x06reason\x12 \n" +
+	"\vdescription\x18\x02 \x01(\tR\vdescription*N\n" +
 	"\bPriority\x12\x18\n" +
 	"\x14PRIORITY_UNSPECIFIED\x10\x00\x12\x13\n" +
 	"\x0fPRIORITY_NORMAL\x10\x01\x12\x13\n" +
@@ -787,7 +832,7 @@ func file_domain_delivery_common_v1_common_proto_rawDescGZIP() []byte {
 }
 
 var file_domain_delivery_common_v1_common_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
-var file_domain_delivery_common_v1_common_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_domain_delivery_common_v1_common_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_domain_delivery_common_v1_common_proto_goTypes = []any{
 	(Priority)(0),                 // 0: domain.delivery.common.v1.Priority
 	(PackageStatus)(0),            // 1: domain.delivery.common.v1.PackageStatus
@@ -800,17 +845,19 @@ var file_domain_delivery_common_v1_common_proto_goTypes = []any{
 	(*DeliveryPeriod)(nil),        // 8: domain.delivery.common.v1.DeliveryPeriod
 	(*PackageInfo)(nil),           // 9: domain.delivery.common.v1.PackageInfo
 	(*WorkHours)(nil),             // 10: domain.delivery.common.v1.WorkHours
-	(*timestamppb.Timestamp)(nil), // 11: google.protobuf.Timestamp
+	(*NotDeliveredDetails)(nil),   // 11: domain.delivery.common.v1.NotDeliveredDetails
+	(*timestamppb.Timestamp)(nil), // 12: google.protobuf.Timestamp
 }
 var file_domain_delivery_common_v1_common_proto_depIdxs = []int32{
-	11, // 0: domain.delivery.common.v1.Location.timestamp:type_name -> google.protobuf.Timestamp
-	11, // 1: domain.delivery.common.v1.DeliveryPeriod.start_time:type_name -> google.protobuf.Timestamp
-	11, // 2: domain.delivery.common.v1.DeliveryPeriod.end_time:type_name -> google.protobuf.Timestamp
-	3,  // [3:3] is the sub-list for method output_type
-	3,  // [3:3] is the sub-list for method input_type
-	3,  // [3:3] is the sub-list for extension type_name
-	3,  // [3:3] is the sub-list for extension extendee
-	0,  // [0:3] is the sub-list for field type_name
+	12, // 0: domain.delivery.common.v1.Location.timestamp:type_name -> google.protobuf.Timestamp
+	12, // 1: domain.delivery.common.v1.DeliveryPeriod.start_time:type_name -> google.protobuf.Timestamp
+	12, // 2: domain.delivery.common.v1.DeliveryPeriod.end_time:type_name -> google.protobuf.Timestamp
+	5,  // 3: domain.delivery.common.v1.NotDeliveredDetails.reason:type_name -> domain.delivery.common.v1.NotDeliveredReason
+	4,  // [4:4] is the sub-list for method output_type
+	4,  // [4:4] is the sub-list for method input_type
+	4,  // [4:4] is the sub-list for extension type_name
+	4,  // [4:4] is the sub-list for extension extendee
+	0,  // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_domain_delivery_common_v1_common_proto_init() }
@@ -825,7 +872,7 @@ func file_domain_delivery_common_v1_common_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_domain_delivery_common_v1_common_proto_rawDesc), len(file_domain_delivery_common_v1_common_proto_rawDesc)),
 			NumEnums:      6,
-			NumMessages:   5,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

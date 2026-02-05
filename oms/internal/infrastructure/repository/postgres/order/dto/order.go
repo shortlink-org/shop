@@ -72,10 +72,7 @@ func toDeliveryInfoDomain(row *queries.OmsOrderDeliveryInfo) *order.DeliveryInfo
 	)
 
 	// Build package info
-	pkgInfo := order.NewPackageInfo(
-		numericToFloat64(row.WeightKg),
-		row.Dimensions.String,
-	)
+	pkgInfo := order.NewPackageInfo(numericToFloat64(row.WeightKg))
 
 	// Build priority
 	priority := order.DeliveryPriorityFromString(row.Priority)

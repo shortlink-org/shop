@@ -20,7 +20,6 @@ domain/
 │   ├── order_state.go          # Aggregate root
 │   ├── workflow_operations.go  # Aggregate methods
 │   ├── vo/                     # Value Objects
-│   ├── commands/v1/            # Commands (proto)
 │   └── events/v1/              # Domain Events (proto)
 │
 ├── services/                   # Domain Services

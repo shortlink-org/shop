@@ -31,7 +31,6 @@ message DeliveryPeriod {
 // PackageInfo contains physical characteristics of the package
 message PackageInfo {
   double weight_kg = 1;
-  string dimensions = 2;
 }
 
 // Priority level for delivery

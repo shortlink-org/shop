@@ -20,6 +20,8 @@ The system uses:
 - **GraphQL** for API communication through BFF and OMS-GraphQL
 - **gRPC** for inter-service communication
 
+**Pricer** is called by OMS (and optionally BFF) for cart/order totals (taxes, discounts). **Delivery Service** (Delivery Boundary) receives orders from OMS and sends delivery status updates back.
+
 The C4 model is renowned for its ability to effectively map and document software architecture, 
 making it ideal for our needs to ensure clarity and cohesion across the system.
 
@@ -60,7 +62,7 @@ System_Boundary(sbs, "Shop Boundary Context") {
     System(oathkeeper, "Oathkeeper", "Auth proxy: validates JWT/session, injects X-User-ID, forwards to BFF and Admin.")
     System(wundergraph_bff, "BFF (Cosmo Router)", "GraphQL API Gateway - Handles frontend requests via GraphQL and coordinates with backend services.")
     System(admin_service, "Admin Service", "Administers shop settings and user permissions.")
-    System(pricer_service, "Pricer Service", "Calculates taxes and discounts for products.")
+    System(pricer_service, "Pricer Service", "Calculates taxes and discounts for cart/order using OPA (Rego) policies.")
     System(oms_graphql, "OMS-GraphQL", "GraphQL API Bridge for orders via GraphQL API.")
     System(oms_temporal, "OMS (Temporal)", "Service for work with carts and orders using Temporal workflows.")
     System(email_subscription_service, "Email Subscription (Temporal)", "Handles email subscriptions and notifications.")
@@ -76,7 +78,7 @@ System_Boundary(bbs, "Billing Boundary") {
 }
 
 System_Boundary(dbs, "Delivery Boundary") {
-    System_Ext(delivery_service, "Delivery Service", "Handles logistics and delivery of orders.")
+    System_Ext(delivery_service, "Delivery Service", "Handles logistics: package/courier pools, dispatch, delivery status; receives orders from OMS, sends status updates back.")
 }
 
 Rel(customer, ui_service, "Accesses shop UI through", "HTTP/HTTPS")
@@ -89,12 +91,13 @@ Rel(wundergraph_bff, pricer_service, "Price calculation requests via", "gRPC")
 Rel(oms_graphql, oms_temporal, "Communicates with OMS via", "gRPC")
 Rel(oms_temporal, temporal, "Uses for workflow orchestration", "Temporal API")
 Rel(oms_temporal, kafka, "Publishes/Consumes events via", "Kafka")
-Rel(pricer_service, kafka, "Publishes/Consumes events via", "Kafka")
+Rel(oms_temporal, pricer_service, "Gets cart/order totals from", "gRPC")
 Rel(email_subscription_service, temporal, "Uses for workflow orchestration", "Temporal API")
 Rel(email_subscription_service, kafka, "Consumes events via", "Kafka")
 Rel(email_subscription_service, customer, "Sends email notifications to", "SMTP")
 Rel(oms_temporal, billing_service, "Submits order details to", "gRPC/Kafka")
 Rel(oms_temporal, delivery_service, "Sends order info for delivery to", "gRPC/Kafka")
+Rel(delivery_service, oms_temporal, "Sends delivery status updates to", "gRPC/Webhook")
 Rel(feed_service, oms_graphql, "Fetches data via", "GraphQL")
 Rel(feed_service, minio_store, "Saves generated feeds to", "S3 API")
 
@@ -120,7 +123,7 @@ System_Boundary(sbs, "Shop Boundary Context") {
     Container(oathkeeper, "Oathkeeper", "Service", "Auth proxy: validates JWT/session (Kratos), injects X-User-ID, forwards to BFF and Admin.")
     Container(wundergraph_bff, "BFF (Cosmo Router)", "Service", "GraphQL API Gateway - Handles frontend requests via GraphQL and coordinates with backend services.")
     Container(admin_service, "Admin Service", "Service", "Administers shop settings, manages user roles and permissions, and performs back-end configuration tasks.")
-    Container(pricer_service, "Pricer Service", "Service", "Calculates taxes and discounts for products using OPA policies.")
+    Container(pricer_service, "Pricer Service", "Service", "Calculates taxes and discounts for cart/order using OPA (Rego) policies; called by OMS and optionally BFF.")
     Container(oms_graphql, "OMS-GraphQL", "Service", "GraphQL API Bridge for work with orders via GraphQL API.")
     Container(oms_temporal, "OMS (Temporal)", "Service", "Service for work with carts and orders using Temporal workflows and gRPC.")
     Container(email_subscription_service, "Email Subscription Service (Temporal)", "Service", "Manages email subscriptions and notifications using Temporal workflows.")
@@ -135,7 +138,7 @@ System_Boundary(bbs, "Billing Boundary") {
 }
 
 System_Boundary(dbs, "Delivery Boundary") {
-    Container_Ext(delivery_service, "Delivery Service", "Service", "Handles logistics and delivery of orders.")
+    Container_Ext(delivery_service, "Delivery Service", "Service", "Handles logistics: package/courier pools, dispatch, delivery status; receives orders from OMS, sends status updates back.")
 }
 
 Rel_Down(customer, ui_service, "Submits requests to", "HTTP/HTTPS")
@@ -152,9 +155,10 @@ Rel(oms_temporal, shop_cache, "Utilizes for faster data retrieval", "Redis")
 Rel(oms_temporal, kafka, "Publishes/Consumes events", "Kafka")
 Rel(oms_temporal, billing_service, "Submits order details to", "gRPC/Kafka")
 Rel(oms_temporal, delivery_service, "Sends order info for delivery to", "gRPC/Kafka")
+Rel(delivery_service, oms_temporal, "Sends delivery status updates to", "gRPC/Webhook")
+Rel(oms_temporal, pricer_service, "Gets cart/order totals from", "gRPC")
 Rel(oms_temporal, payment_gateway, "Connects for payment processing", "API")
 Rel(admin_service, shop_db, "Reads and writes data", "SQL")
-Rel(pricer_service, kafka, "Publishes/Consumes events", "Kafka")
 Rel(email_subscription_service, temporal, "Uses for workflow orchestration", "Temporal API")
 Rel(email_subscription_service, kafka, "Consumes events", "Kafka")
 Rel(feed_service, oms_graphql, "Fetches data via", "GraphQL")

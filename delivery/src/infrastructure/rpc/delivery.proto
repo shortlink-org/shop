@@ -195,7 +195,6 @@ message DeliveryPeriod {
 // PackageInfo contains physical characteristics of the package
 message PackageInfo {
   double weight_kg = 1;
-  string dimensions = 2; // "LxWxH" format
 }
 
 // Priority level for delivery
@@ -426,17 +425,22 @@ enum NotDeliveredReason {
   NOT_DELIVERED_REASON_OTHER = 5;
 }
 
+// NotDeliveredDetails contains reason and optional description (required if reason == OTHER)
+message NotDeliveredDetails {
+  NotDeliveredReason reason = 1;
+  string description = 2; // required if reason == OTHER
+}
+
 // DeliverOrderRequest contains data for confirming delivery
 message DeliverOrderRequest {
   string package_id = 1;
   string courier_id = 2;
   bool is_delivered = 3;
-  NotDeliveredReason not_delivered_reason = 4;
-  string reason_description = 5;
-  Location confirmation_location = 6;
-  bytes photo_proof = 7;
-  bytes signature = 8;
-  string notes = 9;
+  NotDeliveredDetails not_delivered_details = 4; // required if is_delivered == false
+  Location confirmation_location = 5;
+  bytes photo_proof = 6;
+  bytes signature = 7;
+  string notes = 8;
 }
 
 // DeliverOrderResponse returns delivery confirmation result

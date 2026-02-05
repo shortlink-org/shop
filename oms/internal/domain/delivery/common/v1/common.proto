@@ -35,7 +35,6 @@ message DeliveryPeriod {
 // PackageInfo contains package physical characteristics
 message PackageInfo {
   double weight_kg = 1;
-  string dimensions = 2; // "LxWxH" format
 }
 
 // WorkHours represents courier working hours
@@ -98,4 +97,10 @@ enum NotDeliveredReason {
   NOT_DELIVERED_REASON_ACCESS_DENIED = 4;
   NOT_DELIVERED_REASON_PACKAGE_DAMAGED = 5;
   NOT_DELIVERED_REASON_OTHER = 6;
+}
+
+// NotDeliveredDetails contains reason and optional description (required if reason == OTHER)
+message NotDeliveredDetails {
+  NotDeliveredReason reason = 1;
+  string description = 2; // required if reason == OTHER
 }

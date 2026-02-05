@@ -273,7 +273,6 @@ mod tests {
             create_valid_address(),
             create_valid_period(),
             2.5,
-            "30x20x15".to_string(),
             Priority::Normal,
         )
     }
@@ -318,7 +317,6 @@ mod tests {
             create_valid_address(),
             create_valid_period(),
             2.5,
-            "30x20x15".to_string(),
             Priority::Normal,
         );
 
@@ -342,7 +340,6 @@ mod tests {
             create_valid_address(),
             create_valid_period(),
             0.0, // Invalid weight
-            "30x20x15".to_string(),
             Priority::Normal,
         );
 

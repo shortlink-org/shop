@@ -109,7 +109,7 @@ SELECT
     pickup_street, pickup_city, pickup_postal_code, pickup_country, pickup_latitude, pickup_longitude,
     delivery_street, delivery_city, delivery_postal_code, delivery_country, delivery_latitude, delivery_longitude,
     period_start, period_end,
-    weight_kg, dimensions,
+    weight_kg,
     priority, package_id,
     recipient_name, recipient_phone, recipient_email
 FROM oms.order_delivery_info
@@ -136,7 +136,6 @@ func (q *Queries) GetOrderDeliveryInfo(ctx context.Context, orderID uuid.UUID) (
 		&i.PeriodStart,
 		&i.PeriodEnd,
 		&i.WeightKg,
-		&i.Dimensions,
 		&i.Priority,
 		&i.PackageID,
 		&i.RecipientName,
@@ -200,7 +199,7 @@ INSERT INTO oms.order_delivery_info (
     pickup_street, pickup_city, pickup_postal_code, pickup_country, pickup_latitude, pickup_longitude,
     delivery_street, delivery_city, delivery_postal_code, delivery_country, delivery_latitude, delivery_longitude,
     period_start, period_end,
-    weight_kg, dimensions,
+    weight_kg,
     priority, package_id,
     recipient_name, recipient_phone, recipient_email
 ) VALUES (
@@ -208,9 +207,9 @@ INSERT INTO oms.order_delivery_info (
     $2, $3, $4, $5, $6, $7,
     $8, $9, $10, $11, $12, $13,
     $14, $15,
-    $16, $17,
-    $18, $19,
-    $20, $21, $22
+    $16,
+    $17, $18,
+    $19, $20, $21
 )
 `
 
@@ -231,7 +230,6 @@ type InsertOrderDeliveryInfoParams struct {
 	PeriodStart        pgtype.Timestamptz
 	PeriodEnd          pgtype.Timestamptz
 	WeightKg           pgtype.Numeric
-	Dimensions         pgtype.Text
 	Priority           string
 	PackageID          pgtype.UUID
 	RecipientName      pgtype.Text
@@ -257,7 +255,6 @@ func (q *Queries) InsertOrderDeliveryInfo(ctx context.Context, arg InsertOrderDe
 		arg.PeriodStart,
 		arg.PeriodEnd,
 		arg.WeightKg,
-		arg.Dimensions,
 		arg.Priority,
 		arg.PackageID,
 		arg.RecipientName,
@@ -519,9 +516,9 @@ SET
     pickup_street = $2, pickup_city = $3, pickup_postal_code = $4, pickup_country = $5, pickup_latitude = $6, pickup_longitude = $7,
     delivery_street = $8, delivery_city = $9, delivery_postal_code = $10, delivery_country = $11, delivery_latitude = $12, delivery_longitude = $13,
     period_start = $14, period_end = $15,
-    weight_kg = $16, dimensions = $17,
-    priority = $18, package_id = $19,
-    recipient_name = $20, recipient_phone = $21, recipient_email = $22
+    weight_kg = $16,
+    priority = $17, package_id = $18,
+    recipient_name = $19, recipient_phone = $20, recipient_email = $21
 WHERE order_id = $1
 `
 
@@ -542,7 +539,6 @@ type UpdateOrderDeliveryInfoParams struct {
 	PeriodStart        pgtype.Timestamptz
 	PeriodEnd          pgtype.Timestamptz
 	WeightKg           pgtype.Numeric
-	Dimensions         pgtype.Text
 	Priority           string
 	PackageID          pgtype.UUID
 	RecipientName      pgtype.Text
@@ -568,7 +564,6 @@ func (q *Queries) UpdateOrderDeliveryInfo(ctx context.Context, arg UpdateOrderDe
 		arg.PeriodStart,
 		arg.PeriodEnd,
 		arg.WeightKg,
-		arg.Dimensions,
 		arg.Priority,
 		arg.PackageID,
 		arg.RecipientName,

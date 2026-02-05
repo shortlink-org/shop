@@ -96,16 +96,14 @@ message PackageNotDeliveredEvent {
   string courier_id = 3;
   // Package status
   domain.delivery.common.v1.PackageStatus status = 4;
-  // Not delivered reason
-  domain.delivery.common.v1.NotDeliveredReason reason = 5;
-  // Additional description if reason is OTHER
-  string reason_description = 6;
+  // Not delivered details (reason; description required if reason == OTHER)
+  domain.delivery.common.v1.NotDeliveredDetails not_delivered_details = 5;
   // Not delivered at timestamp
-  google.protobuf.Timestamp not_delivered_at = 7;
+  google.protobuf.Timestamp not_delivered_at = 6;
   // Courier location
-  domain.delivery.common.v1.Location courier_location = 8;
+  domain.delivery.common.v1.Location courier_location = 7;
   // OccurredAt is the timestamp when the event occurred
-  google.protobuf.Timestamp occurred_at = 9;
+  google.protobuf.Timestamp occurred_at = 8;
 }
 
 // CourierRegisteredEvent - canonical name: delivery.courier.registered.v1

@@ -79,8 +79,7 @@ func (c *Client) AcceptOrder(ctx context.Context, req ports.AcceptOrderRequest) 
 			EndTime:   timestamppb.New(req.DeliveryPeriod.EndTime),
 		},
 		PackageInfo: &PackageInfo{
-			WeightKg:   req.PackageInfo.WeightKg,
-			Dimensions: req.PackageInfo.Dimensions,
+			WeightKg: req.PackageInfo.WeightKg,
 		},
 		Priority: Priority(req.Priority),
 		RecipientContacts: &RecipientContacts{

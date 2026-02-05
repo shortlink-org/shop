@@ -66,8 +66,7 @@ type DeliveryPeriodDTO struct {
 
 // PackageInfoDTO contains physical characteristics of the package.
 type PackageInfoDTO struct {
-	WeightKg   float64
-	Dimensions string
+	WeightKg float64
 }
 
 // DeliveryPriorityDTO represents delivery priority level.
