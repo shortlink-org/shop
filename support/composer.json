@@ -22,7 +22,7 @@
         "open-telemetry/api": "^1.2.3",
         "open-telemetry/sdk": "^1.12.0",
         "symfony/http-client": "^6.3.5",
-        "guzzlehttp/promises": "^2.0.4",
+        "guzzlehttp/promises": "^2.3.0",
         "php-http/message-factory": "^1.1.0",
         "nyholm/psr7": "^1.8.2",
         "open-telemetry/sdk-contrib": "^0.0.17"
