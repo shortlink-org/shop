@@ -32,7 +32,7 @@ sea-orm-migration = "1.1.19"
 migration = { path = "migration" }
 
 # Redis
-redis = { version = "0.27", features = ["tokio-comp", "connection-manager"] }
+redis = { version = "1.0.4", features = ["tokio-comp", "connection-manager"] }
 
 # Kafka (dynamic linking to system librdkafka for faster builds)
 rdkafka = { version = "0.36", features = ["tokio", "dynamic-linking"] }
