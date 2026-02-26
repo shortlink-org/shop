@@ -109,14 +109,14 @@ wheels = [
 
 [[package]]
 name = "deprecated"
-version = "1.2.18"
+version = "1.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "wrapt" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/98/97/06afe62762c9a8a86af0cfb7bfdab22a43ad17138b07af5b1a58442690a2/deprecated-1.2.18.tar.gz", hash = "sha256:422b6f6d859da6f2ef57857761bfb392480502a64c3028ca9bbe86085d72115d", size = 2928744, upload-time = "2025-01-27T10:46:25.7Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/49/85/12f0a49a7c4ffb70572b6c2ef13c90c88fd190debda93b23f026b25f9634/deprecated-1.3.1.tar.gz", hash = "sha256:b1b50e0ff0c1fddaa5708a2c6b0a6588bb09b892825ab2b214ac9ea9d92a5223", size = 2932523, upload-time = "2025-10-30T08:19:02.757Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6e/c6/ac0b6c1e2d138f1002bcf799d330bd6d85084fece321e662a14223794041/Deprecated-1.2.18-py2.py3-none-any.whl", hash = "sha256:bd5011788200372a32418f888e326a09ff80d0214bd961147cfed01b5c018eec", size = 9998, upload-time = "2025-01-27T10:46:09.186Z" },
+    { url = "https://files.pythonhosted.org/packages/84/d0/205d54408c08b13550c733c4b85429e7ead111c7f0014309637425520a9a/deprecated-1.3.1-py2.py3-none-any.whl", hash = "sha256:597bfef186b6f60181535a29fbe44865ce137a5079f295b479886c82729d5f3f", size = 11298, upload-time = "2025-10-30T08:19:00.758Z" },
 ]
 
 [[package]]
@@ -295,14 +295,14 @@ wheels = [
 
 [[package]]
 name = "django-unfold"
-version = "0.77.1"
+version = "0.81.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/10/61/242b2b4b325951fded9497b0e058fb97f6c30e0b08b72cf8e70fd3e0b9d9/django_unfold-0.77.1.tar.gz", hash = "sha256:c8611a74cc1a944787c89e950bfbe29a8b8351078a79269f80fd974dc578dbd5", size = 1108615, upload-time = "2026-01-26T13:40:55.62Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/42/96/54e3852a562fb5da3a626ae7992f2427945cadf7d45325b8dff42c418a3d/django_unfold-0.81.0.tar.gz", hash = "sha256:4746a2e78210d174c556b8dcf6cbc87642b86282a37406d820d6c1b4f6c160be", size = 1111379, upload-time = "2026-02-25T09:48:42.197Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8a/d4/c0004a8d5369060c92a1419623de2866375a73180f16732e7cc4c9ad3e32/django_unfold-0.77.1-py3-none-any.whl", hash = "sha256:9a4305d4c65eff4de37800f60c176e242f6cb4fa2c5e96b69a5d300390c86d11", size = 1223570, upload-time = "2026-01-26T13:40:53.706Z" },
+    { url = "https://files.pythonhosted.org/packages/63/03/f3b11452636bcb8f8fb4b2daa3301781eca7ea1b2ee5781fdc888e315b43/django_unfold-0.81.0-py3-none-any.whl", hash = "sha256:7a800fcf7ac438ae473ffa51cdfbb22ef0e6e8455dad84ce1e1846ddd21deac9", size = 1226399, upload-time = "2026-02-25T09:48:40.646Z" },
 ]
 
 [[package]]
@@ -1143,7 +1143,7 @@ requires-dist = [
     { name = "attrs", specifier = "==25.4.0" },
     { name = "certifi", specifier = "==2026.1.4" },
     { name = "charset-normalizer", specifier = "==3.4.4" },
-    { name = "deprecated", specifier = "==1.2.18" },
+    { name = "deprecated", specifier = "==1.3.1" },
     { name = "django", specifier = "==6.0.2" },
     { name = "django-crispy-forms", specifier = ">=2.3" },
     { name = "django-debug-toolbar", specifier = "==6.2.0" },
@@ -1158,7 +1158,7 @@ requires-dist = [
     { name = "django-redis" },
     { name = "django-request-logging", specifier = "==0.7.5" },
     { name = "django-simple-history", specifier = ">=3.11.0" },
-    { name = "django-unfold", specifier = ">=0.49.0" },
+    { name = "django-unfold", specifier = ">=0.81.0" },
     { name = "djangorestframework", specifier = "==3.16.1" },
     { name = "drf-spectacular", specifier = "==0.29.0" },
     { name = "drf-yasg", specifier = "==1.21.14" },
@@ -1215,7 +1215,7 @@ requires-dist = [
     { name = "urllib3", specifier = "==2.6.3" },
     { name = "uv", specifier = "==0.9.28" },
     { name = "whitenoise", specifier = ">=6.8.0" },
-    { name = "wrapt", specifier = ">=1.17.3,<2" },
+    { name = "wrapt", specifier = ">=1.17.3,<3" },
     { name = "zipp", specifier = "==3.23.0" },
 ]
 provides-extras = ["dev", "test"]
