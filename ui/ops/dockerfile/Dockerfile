@@ -9,7 +9,7 @@ ARG BUILDKIT_SBOM_SCAN_CONTEXT=true
 # =============================================================================
 # Stage 1: Builder
 # =============================================================================
-FROM node:24.13.0-alpine AS builder
+FROM node:24.14.0-alpine AS builder
 
 WORKDIR /app
 
@@ -41,7 +41,7 @@ RUN pnpm build
 # =============================================================================
 # Stage 2: Runner
 # =============================================================================
-FROM node:24.13.0-alpine AS runner
+FROM node:24.14.0-alpine AS runner
 
 LABEL maintainer=batazor111@gmail.com
 LABEL org.opencontainers.image.title="shortlink-shop-ui"
