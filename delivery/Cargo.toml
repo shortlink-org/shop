@@ -42,7 +42,7 @@ uuid = { version = "1.21.0", features = ["v4", "serde"] }
 chrono = { version = "0.4.43", features = ["serde"] }
 async-trait = "0.1.89"
 thiserror = "2.0.18"
-rust_decimal = { version = "1", features = ["db-postgres"] }
+rust_decimal = { version = "1.40.0", features = ["db-postgres"] }
 
 # Configuration
 dotenvy = "0.15.7"
