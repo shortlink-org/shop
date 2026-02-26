@@ -6,7 +6,7 @@ description = "Pricer service: tax and discount calculation for cart/order (Rust
 
 [dependencies]
 # Async runtime
-tokio = { version = "1", features = ["full"] }
+tokio = { version = "1.49.0", features = ["full"] }
 
 # Serialization
 serde = { version = "1", features = ["derive"] }
@@ -31,7 +31,7 @@ uuid = { version = "1.21.0", features = ["v4", "serde"] }
 async-trait = "0.1.89"
 
 [dev-dependencies]
-tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1.49.0", features = ["macros", "rt-multi-thread"] }
 
 [profile.release]
 strip = true
