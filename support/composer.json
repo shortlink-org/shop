@@ -16,7 +16,7 @@
     ],
     "require-dev": {
         "behat/behat": "^3.29.0",
-        "rector/rector": "^2.3.5"
+        "rector/rector": "^2.3.8"
     },
     "require": {
         "open-telemetry/api": "^1.2.3",
