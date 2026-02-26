@@ -23,7 +23,7 @@
     "@refinedev/cli": "^2.16.36",
     "@refinedev/core": "^5.0.8",
     "@refinedev/simple-rest": "^6.0.1",
-    "urql": "^4.2.0",
+    "urql": "^5.0.1",
     "@urql/core": "^6.0.1",
     "@refinedev/nextjs-router": "^7.0.4",
     "@refinedev/kbar": "^2.0.0",
