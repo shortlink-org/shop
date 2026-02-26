@@ -27,7 +27,7 @@ tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 
 # Common
-uuid = { version = "1", features = ["v4", "serde"] }
+uuid = { version = "1.21.0", features = ["v4", "serde"] }
 async-trait = "0.1.89"
 
 [dev-dependencies]
