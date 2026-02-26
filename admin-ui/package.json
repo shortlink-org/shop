@@ -29,7 +29,7 @@
     "@refinedev/kbar": "^2.0.0",
     "@ant-design/icons": "^5.6.1",
     "@apollo/client": "^3.12.5",
-    "antd": "^5.23.4",
+    "antd": "^5.29.3",
     "dayjs": "^1.11.13",
     "graphql": "^16.10.0",
     "graphql-tag": "^2.12.6",
