@@ -35,6 +35,7 @@ export async function getCollectionProducts({
 }): Promise<Good[] | typeof GOODS_UNAVAILABLE> {
   try {
     const res = await shopifyFetch<ShopifyCollectionProductsOperation>({
+      cache: 'no-store',
       query: getCollectionProductsQuery,
     });
 

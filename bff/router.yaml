@@ -59,8 +59,9 @@ access_logs:
           context_field: "request_error"
 
 # Enable GraphQL Playground
-playground_enabled: true
-playground_path: "/"
+playground:
+  enabled: true
+  path: "/"
 
 # Enable GraphQL introspection
 introspection:

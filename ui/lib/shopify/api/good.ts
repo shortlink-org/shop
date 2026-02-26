@@ -53,6 +53,7 @@ export async function getGoods({
 }): Promise<Good[] | typeof GOODS_UNAVAILABLE> {
   try {
     const res = await shopifyFetch<ShopifyProductsOperation>({
+      cache: 'no-store',
       query: getGoodsQuery,
       tags: [TAGS.goods],
       variables: {
