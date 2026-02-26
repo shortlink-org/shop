@@ -36,8 +36,8 @@ importers:
         specifier: ^5.0.8
         version: 5.0.11(@refinedev/core@5.0.8(@tanstack/react-query@5.90.20(react@19.2.4))(@types/react-dom@19.2.3(@types/react@19.2.10))(@types/react@19.2.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))
       '@urql/core':
-        specifier: ^5.1.1
-        version: 5.2.0(graphql@16.12.0)
+        specifier: ^6.0.1
+        version: 6.0.1(graphql@16.12.0)
       antd:
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -61,7 +61,7 @@ importers:
         version: 19.2.4(react@19.2.4)
       urql:
         specifier: ^4.2.0
-        version: 4.2.2(@urql/core@5.2.0(graphql@16.12.0))(react@19.2.4)
+        version: 4.2.2(@urql/core@6.0.1(graphql@16.12.0))(react@19.2.4)
     devDependencies:
       '@graphql-codegen/cli':
         specifier: ^5.0.3
@@ -2106,8 +2106,8 @@ packages:
     peerDependencies:
       react: '*'
 
-  '@urql/core@5.2.0':
-    resolution: {integrity: sha512-/n0ieD0mvvDnVAXEQgX/7qJiVcvYvNkOHeBvkwtylfjydar123caCXcl58PXFY11oU1oquJocVXHxLAbtv4x1A==}
+  '@urql/core@6.0.1':
+    resolution: {integrity: sha512-FZDiQk6jxbj5hixf2rEPv0jI+IZz0EqqGW8mJBEug68/zHTtT+f34guZDmyjJZyiWbj0vL165LoMr/TkeDHaug==}
 
   '@vitejs/plugin-react@5.1.4':
     resolution: {integrity: sha512-VIcFLdRi/VYRU8OL/puL7QXMYafHmqOnwTZY50U1JPlCNj30PxCMx65c494b1K9be9hX83KVt0+gTEwTWLqToA==}
@@ -7284,7 +7284,7 @@ snapshots:
     dependencies:
       react: 19.2.4
 
-  '@urql/core@5.2.0(graphql@16.12.0)':
+  '@urql/core@6.0.1(graphql@16.12.0)':
     dependencies:
       '@0no-co/graphql.web': 1.2.0(graphql@16.12.0)
       wonka: 6.3.5
@@ -10090,9 +10090,9 @@ snapshots:
 
   urlpattern-polyfill@10.1.0: {}
 
-  urql@4.2.2(@urql/core@5.2.0(graphql@16.12.0))(react@19.2.4):
+  urql@4.2.2(@urql/core@6.0.1(graphql@16.12.0))(react@19.2.4):
     dependencies:
-      '@urql/core': 5.2.0(graphql@16.12.0)
+      '@urql/core': 6.0.1(graphql@16.12.0)
       react: 19.2.4
       wonka: 6.3.5
 
