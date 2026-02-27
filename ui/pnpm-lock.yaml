@@ -18,8 +18,8 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2(react-hook-form@7.71.1(react@19.2.4))
       '@ory/client':
-        specifier: ^1.22.22
-        version: 1.22.22
+        specifier: ^1.22.26
+        version: 1.22.26
       '@tanstack/react-query':
         specifier: ^5.90.20
         version: 5.90.20(react@19.2.4)
@@ -913,8 +913,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@ory/client@1.22.22':
-    resolution: {integrity: sha512-XwWP9Zg95oTnNM/pwzgDPJx5ZgMdWccJodXgQdB0ZoAy4rPU9UuaNjdb8ER/fBgAxohlUKa/YxGFroyk8pm/Ag==}
+  '@ory/client@1.22.26':
+    resolution: {integrity: sha512-Y8f9RU8Z9Cpx91IbDUV4zu8PvTaHbuUrY7KjBp4/Ql79gZc8vp76FLfJaR3dVV9dJEMxDG/kVzre7i9zDZpo1g==}
 
   '@popperjs/core@2.11.8':
     resolution: {integrity: sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==}
@@ -3536,7 +3536,7 @@ snapshots:
   '@next/swc-win32-x64-msvc@16.1.6':
     optional: true
 
-  '@ory/client@1.22.22':
+  '@ory/client@1.22.26':
     dependencies:
       axios: 1.13.5
     transitivePeerDependencies:

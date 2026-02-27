@@ -18,7 +18,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@ory/client": "^1.22.22",
+    "@ory/client": "^1.22.26",
     "@refinedev/antd": "^6.0.3",
     "@refinedev/cli": "^2.16.36",
     "@refinedev/core": "^5.0.8",
