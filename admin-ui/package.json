@@ -28,7 +28,7 @@
     "@refinedev/nextjs-router": "^7.0.4",
     "@refinedev/kbar": "^2.0.0",
     "@ant-design/icons": "^5.6.1",
-    "@apollo/client": "^3.14.0",
+    "@apollo/client": "^4.1.6",
     "antd": "^6.3.1",
     "dayjs": "^1.11.13",
     "graphql": "^16.10.0",
