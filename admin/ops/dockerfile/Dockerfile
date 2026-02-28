@@ -39,12 +39,13 @@ RUN addgroup --system --gid 1000 shop && adduser --system --uid 1000 --gid 1000 
 WORKDIR /app
 
 RUN chown shop:shop /app && \
-    mkdir -p /home/shop/.cache/uv && \
-    chown -R shop:shop /home/shop/.cache
+    mkdir -p /home/shop/.cache/uv /home/shop/.local/share/uv && \
+    chown -R shop:shop /home/shop
 
 COPY --chown=shop:shop pyproject.toml uv.lock ./
 
 USER shop
+ENV HOME=/home/shop
 
 RUN uv sync --frozen --no-install-project
 

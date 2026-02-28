@@ -49,14 +49,14 @@ RUN apk add --no-cache \
     zlib-static \
     librdkafka-dev
 
-# Copy recipe and build dependencies (cached layer)
+# Copy recipe and Cargo manifests (needed for cargo chef cook to resolve deps)
 COPY --from=planner /app/recipe.json recipe.json
+COPY Cargo.toml Cargo.lock* ./
 COPY .cargo ./.cargo
 COPY migration ./migration
 RUN cargo chef cook --release --recipe-path recipe.json
 
 # Copy source and build application
-COPY Cargo.toml Cargo.lock* ./
 COPY migration ./migration
 COPY src ./src
 COPY build.rs ./

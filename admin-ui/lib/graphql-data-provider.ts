@@ -28,10 +28,10 @@ export const graphqlDataProvider: DataProvider = {
 
     const statusFilter = filters
       ?.filter((f) => f.field === 'status' && f.value)
-      .flatMap((f) => (Array.isArray(f.value) ? f.value : [f.value]));
+      ?.flatMap((f) => (Array.isArray(f.value) ? f.value : [f.value])) ?? [];
     const transportTypeFilter = filters
       ?.filter((f) => f.field === 'transportType' && f.value)
-      .flatMap((f) => (Array.isArray(f.value) ? f.value : [f.value]));
+      ?.flatMap((f) => (Array.isArray(f.value) ? f.value : [f.value])) ?? [];
     const zoneFilter = filters?.find((f) => f.field === 'workZone' && f.value)?.value as string | undefined;
 
     const { data } = await apolloClient.query({
