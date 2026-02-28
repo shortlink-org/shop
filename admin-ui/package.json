@@ -5,7 +5,7 @@
   "description": "Admin UI for Delivery management - Refine + Next.js",
   "engines": {
     "node": ">=24.14.0",
-    "pnpm": ">=10.0.0"
+    "pnpm": ">=10.30.3"
   },
   "scripts": {
     "dev": "next dev --port 3001",
