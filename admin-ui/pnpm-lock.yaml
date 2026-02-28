@@ -21,8 +21,8 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3(@refinedev/core@5.0.8(@tanstack/react-query@5.90.20(react@19.2.4))(@types/react-dom@19.2.3(@types/react@19.2.10))(@types/react@19.2.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@types/react-dom@19.2.3(@types/react@19.2.10))(@types/react@19.2.10)(antd@6.3.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(dayjs@1.11.19)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@refinedev/cli':
-        specifier: ^2.16.36
-        version: 2.16.50(@types/node@24.10.15)(@types/react-dom@19.2.3(@types/react@19.2.10))(@types/react@19.2.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        specifier: ^2.16.51
+        version: 2.16.51(@types/node@24.10.15)(@types/react-dom@19.2.3(@types/react@19.2.10))(@types/react@19.2.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@refinedev/core':
         specifier: ^5.0.8
         version: 5.0.8(@tanstack/react-query@5.90.20(react@19.2.4))(@types/react-dom@19.2.3(@types/react@19.2.10))(@types/react@19.2.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -1686,8 +1686,8 @@ packages:
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
 
-  '@refinedev/cli@2.16.50':
-    resolution: {integrity: sha512-cPxCUB6vjYKbBbEQqY2JLENmPE9fneqTB7ZQRv7Hy1teF+hn4Q0iNH24C07JHZ5LSXnH98SXhgnUeUvNLRXPFQ==}
+  '@refinedev/cli@2.16.51':
+    resolution: {integrity: sha512-Hxm1fZP9wkXN+DIj/zzeOcANhMh/veljYXOkVbv5pLwap4olzlNhbRT3CPc4KyMgSf17YftqMmlmKKEdMXjqGQ==}
     engines: {node: '>=20'}
     hasBin: true
 
@@ -1710,8 +1710,8 @@ packages:
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
 
-  '@refinedev/devtools-server@2.0.1':
-    resolution: {integrity: sha512-BgP0A+Ag4njZ5I2GKCEYaLbYZ5AvDBBaL5xhlDnYxSwVQI7yMi5tH5vFsr2cveW5MyuLZBn7KDTyKYUVO3EnAQ==}
+  '@refinedev/devtools-server@2.0.2':
+    resolution: {integrity: sha512-xiS9ROvwws/iqDykGps4hliPROYkgJMTZTHEt4llwJ7rlXxRpXyF316n2wWZUakWSBXRYxgIkIvdDeAE7Uu1Tg==}
     engines: {node: '>=20'}
     hasBin: true
     peerDependencies:
@@ -1722,6 +1722,15 @@ packages:
 
   '@refinedev/devtools-shared@2.0.1':
     resolution: {integrity: sha512-x9Eg7wdwx8AB9LgN9Gg/bW4icpdIYCoJLCXZA2kOoY77+CHmUY6Uv78RgimvkIGEHZucbchJLCFoLdZkvx5ceQ==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@types/react': ^18.0.0 || ^19.0.0
+      '@types/react-dom': ^18.0.0 || ^19.0.0
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+
+  '@refinedev/devtools-shared@2.0.2':
+    resolution: {integrity: sha512-3cTjR1mEWn0tHFZBfPD5aVpBGLUhpAkfjqYCwKrijIicr1Utp/j0BqiPRnNqTf+W71HTng3znBpUhnR83u+tuA==}
     engines: {node: '>=20'}
     peerDependencies:
       '@types/react': ^18.0.0 || ^19.0.0
@@ -6857,10 +6866,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@refinedev/cli@2.16.50(@types/node@24.10.15)(@types/react-dom@19.2.3(@types/react@19.2.10))(@types/react@19.2.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+  '@refinedev/cli@2.16.51(@types/node@24.10.15)(@types/react-dom@19.2.3(@types/react@19.2.10))(@types/react@19.2.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
       '@npmcli/package-json': 5.2.1
-      '@refinedev/devtools-server': 2.0.1(@types/react-dom@19.2.3(@types/react@19.2.10))(@types/react@19.2.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@refinedev/devtools-server': 2.0.2(@types/react-dom@19.2.3(@types/react@19.2.10))(@types/react@19.2.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       boxen: 5.1.2
       camelcase: 6.3.0
       cardinal: 2.1.1
@@ -6934,9 +6943,9 @@ snapshots:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
 
-  '@refinedev/devtools-server@2.0.1(@types/react-dom@19.2.3(@types/react@19.2.10))(@types/react@19.2.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+  '@refinedev/devtools-server@2.0.2(@types/react-dom@19.2.3(@types/react@19.2.10))(@types/react@19.2.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
-      '@refinedev/devtools-shared': 2.0.1(@types/react-dom@19.2.3(@types/react@19.2.10))(@types/react@19.2.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@refinedev/devtools-shared': 2.0.2(@types/react-dom@19.2.3(@types/react@19.2.10))(@types/react@19.2.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@types/react': 19.2.10
       '@types/react-dom': 19.2.3(@types/react@19.2.10)
       body-parser: 1.20.4
@@ -6969,6 +6978,15 @@ snapshots:
       - utf-8-validate
 
   '@refinedev/devtools-shared@2.0.1(@types/react-dom@19.2.3(@types/react@19.2.10))(@types/react@19.2.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@tanstack/react-query': 5.90.20(react@19.2.4)
+      '@types/react': 19.2.10
+      '@types/react-dom': 19.2.3(@types/react@19.2.10)
+      error-stack-parser: 2.1.4
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
+
+  '@refinedev/devtools-shared@2.0.2(@types/react-dom@19.2.3(@types/react@19.2.10))(@types/react@19.2.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
       '@tanstack/react-query': 5.90.20(react@19.2.4)
       '@types/react': 19.2.10

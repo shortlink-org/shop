@@ -20,7 +20,7 @@
   "dependencies": {
     "@ory/client": "^1.22.26",
     "@refinedev/antd": "^6.0.3",
-    "@refinedev/cli": "^2.16.36",
+    "@refinedev/cli": "^2.16.51",
     "@refinedev/core": "^5.0.8",
     "@refinedev/simple-rest": "^6.0.1",
     "urql": "^4.2.0",
