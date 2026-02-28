@@ -30,7 +30,7 @@
     "@ant-design/icons": "^5.6.1",
     "@apollo/client": "^4.1.6",
     "antd": "^6.3.1",
-    "dayjs": "^1.11.13",
+    "dayjs": "^1.11.19",
     "graphql": "^16.10.0",
     "graphql-tag": "^2.12.6",
     "next": "^16.1.6",
