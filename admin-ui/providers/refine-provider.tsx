@@ -1,6 +1,6 @@
 'use client';
 
-import { ApolloProvider } from '@apollo/client';
+import { ApolloProvider } from '@apollo/client/react';
 import { Refine } from '@refinedev/core';
 import { RefineKbar, RefineKbarProvider } from '@refinedev/kbar';
 import { useNotificationProvider } from '@refinedev/antd';

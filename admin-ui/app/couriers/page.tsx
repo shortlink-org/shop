@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useList } from '@refinedev/core';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { 
   Table, 
   Card, 

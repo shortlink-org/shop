@@ -1,6 +1,6 @@
 'use client';
 
-import type { DataProvider } from '@refinedev/core';
+import type { CrudFilter, DataProvider, LogicalFilter } from '@refinedev/core';
 import { apolloClient } from '@/lib/apollo-client';
 import { GET_COURIERS, GET_COURIER } from '@/graphql/queries/couriers';
 import {
@@ -17,24 +17,44 @@ function withId<T extends { courierId: string }>(item: T): T & { id: string } {
   return { ...item, id: item.courierId };
 }
 
+type CourierRecord = { courierId: string } & Record<string, unknown>;
+type GetCouriersQueryResult = {
+  couriers?: {
+    couriers?: CourierRecord[];
+    totalCount?: number;
+  };
+};
+type GetCourierQueryResult = {
+  courier?: CourierRecord | null;
+};
+type RegisterCourierMutationResult = {
+  registerCourier?: {
+    courierId: string;
+    status?: string | null;
+  } | null;
+};
+
 export const graphqlDataProvider: DataProvider = {
   getList: async ({ resource, pagination, filters }) => {
     if (resource !== 'couriers') {
-      return { data: [], total: 0 };
+      return { data: [], total: 0 } as any;
     }
 
     const page = pagination?.currentPage ?? 1;
     const pageSize = pagination?.pageSize ?? 20;
 
-    const statusFilter = filters
-      ?.filter((f) => f.field === 'status' && f.value)
-      ?.flatMap((f) => (Array.isArray(f.value) ? f.value : [f.value])) ?? [];
-    const transportTypeFilter = filters
-      ?.filter((f) => f.field === 'transportType' && f.value)
-      ?.flatMap((f) => (Array.isArray(f.value) ? f.value : [f.value])) ?? [];
-    const zoneFilter = filters?.find((f) => f.field === 'workZone' && f.value)?.value as string | undefined;
+    const isFieldFilter = (filter: CrudFilter): filter is LogicalFilter =>
+      filter.operator !== 'and' && filter.operator !== 'or';
+    const fieldFilters = (filters ?? []).filter(isFieldFilter);
+    const statusFilter = fieldFilters
+      .filter((f) => f.field === 'status' && f.value)
+      .flatMap((f) => (Array.isArray(f.value) ? f.value : [f.value]));
+    const transportTypeFilter = fieldFilters
+      .filter((f) => f.field === 'transportType' && f.value)
+      .flatMap((f) => (Array.isArray(f.value) ? f.value : [f.value]));
+    const zoneFilter = fieldFilters.find((f) => f.field === 'workZone' && f.value)?.value as string | undefined;
 
-    const { data } = await apolloClient.query({
+    const { data } = await apolloClient.query<GetCouriersQueryResult>({
       query: GET_COURIERS,
       variables: {
         filter: {
@@ -48,36 +68,36 @@ export const graphqlDataProvider: DataProvider = {
 
     const list = data?.couriers;
     if (!list) {
-      return { data: [], total: 0 };
+      return { data: [], total: 0 } as any;
     }
 
     const couriers = (list.couriers ?? []).map(withId);
     const total = list.totalCount ?? 0;
 
-    return { data: couriers, total };
+    return { data: couriers, total } as any;
   },
 
   getOne: async ({ resource, id }) => {
     if (resource !== 'couriers') {
-      return { data: {} };
+      return { data: {} } as any;
     }
 
-    const { data } = await apolloClient.query({
+    const { data } = await apolloClient.query<GetCourierQueryResult>({
       query: GET_COURIER,
       variables: { id, includeLocation: true },
     });
 
     const courier = data?.courier;
     if (!courier) {
-      return { data: {} };
+      return { data: {} } as any;
     }
 
-    return { data: withId(courier) };
+    return { data: withId(courier) } as any;
   },
 
-  create: async ({ resource, variables }) => {
+  create: async ({ resource, variables }: any) => {
     if (resource !== 'couriers') {
-      return { data: {} };
+      return { data: {} } as any;
     }
 
     const workHours = variables?.workHours as { startTime: string; endTime: string; workDays: number[] } | undefined;
@@ -85,7 +105,7 @@ export const graphqlDataProvider: DataProvider = {
       throw new Error('workHours (startTime, endTime, workDays) are required');
     }
 
-    const { data } = await apolloClient.mutate({
+    const { data } = await apolloClient.mutate<RegisterCourierMutationResult>({
       mutation: REGISTER_COURIER,
       variables: {
         input: {
@@ -126,12 +146,12 @@ export const graphqlDataProvider: DataProvider = {
         successfulDeliveries: 0,
         failedDeliveries: 0,
       }),
-    };
+    } as any;
   },
 
-  update: async ({ resource, id, variables }) => {
+  update: async ({ resource, id, variables }: any) => {
     if (resource !== 'couriers') {
-      return { data: {} };
+      return { data: {} } as any;
     }
 
     if (variables?.phone !== undefined || variables?.email !== undefined) {
@@ -173,22 +193,22 @@ export const graphqlDataProvider: DataProvider = {
       });
     }
 
-    const { data } = await apolloClient.query({
+    const { data } = await apolloClient.query<GetCourierQueryResult>({
       query: GET_COURIER,
       variables: { id, includeLocation: true },
     });
 
     const courier = data?.courier;
     if (!courier) {
-      return { data: { id, courierId: id, ...variables } };
+      return { data: { id, courierId: id, ...variables } } as any;
     }
 
-    return { data: withId({ ...courier, ...variables }) };
+    return { data: withId({ ...courier, ...variables }) } as any;
   },
 
   deleteOne: async ({ resource, id }) => {
     if (resource !== 'couriers') {
-      return { data: {} };
+      return { data: {} } as any;
     }
 
     await apolloClient.mutate({
@@ -196,7 +216,7 @@ export const graphqlDataProvider: DataProvider = {
       variables: { id, reason: 'Archived from admin' },
     });
 
-    return { data: { id, courierId: id } };
+    return { data: { id, courierId: id } } as any;
   },
 
   getApiUrl: () => process.env.NEXT_PUBLIC_GRAPHQL_URL || 'http://localhost:9991/graphql',

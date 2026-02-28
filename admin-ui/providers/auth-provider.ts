@@ -5,9 +5,9 @@
 import { AuthProvider } from '@refinedev/core';
 import { Session } from '@ory/client';
 
-import { 
-  fetchSession, 
-  fetchSessionOptional, 
+import { RATE_LIMIT_MESSAGE } from '@/lib/constants';
+import {
+  fetchSessionOptional,
   logout as oryLogout,
   getLoginUrl,
   getUserName,
@@ -79,12 +79,19 @@ export const authProvider: AuthProvider = {
    */
   onError: async (error) => {
     const status = (error as any)?.response?.status;
-    
+    const statusCode = (error as any)?.statusCode;
+
     if (status === 401 || status === 403) {
       return {
         logout: true,
         redirectTo: getLoginUrl(),
         error,
+      };
+    }
+
+    if (statusCode === 429 || status === 429) {
+      return {
+        error: new Error(RATE_LIMIT_MESSAGE),
       };
     }
 

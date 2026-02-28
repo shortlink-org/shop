@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import CheckoutForm, { CheckoutFormData } from 'components/cart/checkout-form';
 import Price from 'components/price';
 import { useCart } from 'components/cart/cart-context';
+import { RATE_LIMIT_MESSAGE } from 'lib/constants';
 import { checkout } from 'lib/shopify';
 import type { PackageInfo } from 'lib/shopify/types';
 import { ArrowLeftIcon, ShoppingCartIcon } from '@heroicons/react/24/outline';
@@ -70,7 +71,13 @@ export default function CheckoutPage() {
       }
     } catch (err) {
       console.error('Checkout error:', err);
-      setError('An error occurred during checkout. Please try again.');
+      const status = err && typeof err === 'object' && 'status' in err ? (err as { status: number }).status : undefined;
+      const message = err && typeof err === 'object' && 'message' in err ? (err as { message: string }).message : undefined;
+      setError(
+        status === 429 || message === RATE_LIMIT_MESSAGE
+          ? RATE_LIMIT_MESSAGE
+          : 'An error occurred during checkout. Please try again.'
+      );
     } finally {
       setIsLoading(false);
     }

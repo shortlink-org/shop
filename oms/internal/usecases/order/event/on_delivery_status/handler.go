@@ -88,7 +88,7 @@ func (h *Handler) HandleDeliveryStatus(ctx context.Context, event kafka.Delivery
 				slog.String("order_id", event.OrderID))
 		}
 		// Mark order as completed
-		err := order.CompleteOrder()
+		err = order.CompleteOrder()
 		if err != nil {
 			h.log.Warn("Failed to complete order",
 				slog.Any("error", err),

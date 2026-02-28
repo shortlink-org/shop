@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { useOne } from '@refinedev/core';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { 
   Card, 
   Descriptions, 
