@@ -15,8 +15,8 @@ importers:
         specifier: ^3.14.0
         version: 3.14.0(@types/react@19.2.10)(graphql-ws@6.0.7(graphql@16.12.0)(ws@8.19.0))(graphql@16.12.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@ory/client':
-        specifier: ^1.22.22
-        version: 1.22.22
+        specifier: ^1.22.26
+        version: 1.22.26
       '@refinedev/antd':
         specifier: ^6.0.3
         version: 6.0.3(@refinedev/core@5.0.8(@tanstack/react-query@5.90.20(react@19.2.4))(@types/react-dom@19.2.3(@types/react@19.2.10))(@types/react@19.2.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@types/react-dom@19.2.3(@types/react@19.2.10))(@types/react@19.2.10)(antd@6.3.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(dayjs@1.11.19)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -1328,8 +1328,8 @@ packages:
     resolution: {integrity: sha512-xhfYPXoV5Dy4UkY0D+v2KkwvnDfiA/8Mt3sWCGI/hM03NsYIH8ZaG6QzS9x7pje5vHZBZJ2v6VRFVTWACnqcmQ==}
     engines: {node: ^16.14.0 || >=18.0.0}
 
-  '@ory/client@1.22.22':
-    resolution: {integrity: sha512-XwWP9Zg95oTnNM/pwzgDPJx5ZgMdWccJodXgQdB0ZoAy4rPU9UuaNjdb8ER/fBgAxohlUKa/YxGFroyk8pm/Ag==}
+  '@ory/client@1.22.26':
+    resolution: {integrity: sha512-Y8f9RU8Z9Cpx91IbDUV4zu8PvTaHbuUrY7KjBp4/Ql79gZc8vp76FLfJaR3dVV9dJEMxDG/kVzre7i9zDZpo1g==}
 
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
@@ -6442,7 +6442,7 @@ snapshots:
     dependencies:
       which: 4.0.0
 
-  '@ory/client@1.22.22':
+  '@ory/client@1.22.26':
     dependencies:
       axios: 1.13.5
     transitivePeerDependencies:
