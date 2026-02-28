@@ -68,7 +68,7 @@ prost-build = "0.14.3"
 tonic-prost-build = "0.14.3"
 
 [dev-dependencies]
-testcontainers = "0.23"
+testcontainers = "0.27.1"
 testcontainers-modules = { version = "0.15.0", features = ["postgres", "redis"] }
 migration = { path = "migration" }
 mockall = "0.14.0"
