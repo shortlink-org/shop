@@ -19,7 +19,7 @@
         "rector/rector": "^2.3.8"
     },
     "require": {
-        "open-telemetry/api": "^1.2.3",
+        "open-telemetry/api": "^1.8.0",
         "open-telemetry/sdk": "^1.13.0",
         "symfony/http-client": "^6.3.5",
         "guzzlehttp/promises": "^2.3.0",
