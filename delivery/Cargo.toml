@@ -8,9 +8,9 @@ edition = "2021"
 prost = "0.14.3"
 prost-types = "0.14.3"
 pbjson-types = "0.9.0"
-tonic = "0.14.3"
-tonic-prost = "0.14.3"
-tonic-health = "0.14.3"
+tonic = "0.14.5"
+tonic-prost = "0.14.5"
+tonic-health = "0.14.5"
 
 # Async runtime
 tokio = { version = "1.49.0", features = ["full"] }
@@ -65,7 +65,7 @@ url = "2"
 
 [build-dependencies]
 prost-build = "0.14.3"
-tonic-prost-build = "0.14.3"
+tonic-prost-build = "0.14.5"
 
 [dev-dependencies]
 testcontainers = "0.27.1"
