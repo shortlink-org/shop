@@ -18,7 +18,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@ant-design/icons": "^5.6.1",
+    "@ant-design/icons": "^6.1.0",
     "@apollo/client": "^4.1.6",
     "@ory/client": "^1.22.26",
     "@refinedev/antd": "^6.0.3",
