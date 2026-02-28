@@ -77,10 +77,7 @@ INSTALLED_APPS = [
     "debug_toolbar",
     # django_ory_auth removed - using Oathkeeper header-based auth instead
     # See ADR: docs/ADR/decisions/0005-oathkeeper-auth.md
-    "health_check",
-    "health_check.db",
-    "health_check.cache",
-    "health_check.contrib.migrations",
+    "health_check",  # v4: only base app; checks (DB, cache, etc.) are configured on the view
     "rest_framework",
     "crispy_forms",  # Django Crispy Forms
     "mapwidgets",  # Django Map Widgets for GeoDjango

@@ -8,18 +8,13 @@ helm-lint: ## Check Helm chart by linter
 	@ops/Makefile/k8s/scripts/helm_lint.sh
 
 # HELM TASKS ===========================================================================================================
-helm-docs: ### Generate HELM docs
-	@find . -name "Chart.yaml" -print0 | while IFS= read -r -d '' chart; do \
-		dir="$$(dirname "$$chart")"; \
-		echo "[docs] $$dir"; \
-		docker run --rm \
-			-v "$$(pwd)/$$dir":/helm-docs \
-			-v "$$(pwd)/ops/Makefile/k8s/conf/Helm/README.md.gotmpl":/helm-docs/README.md.gotmpl \
-			--workdir=/helm-docs \
-			-u "$$(id -u)" \
-			jnorwood/helm-docs:v1.14.2 --template-files=/helm-docs/README.md.gotmpl; \
-		rm -f "$$dir/README.md.gotmpl"; \
-	done
+helm-docs: ### Generate HELM docs (helm-docs finds Chart.yaml recursively)
+	@docker run --rm \
+		-v "$$(pwd)":/helm-docs \
+		--workdir=/helm-docs \
+		-u "$$(id -u)" \
+		jnorwood/helm-docs:v1.14.2 \
+		--template-files=ops/Makefile/k8s/conf/Helm/README.md.gotmpl
 
 P ?= 8
 FORCE_DEPS ?= 0

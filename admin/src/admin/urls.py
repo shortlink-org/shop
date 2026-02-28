@@ -19,6 +19,7 @@ from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import TemplateView
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+from health_check.views import HealthCheckView
 
 from . import admin as user_admin  # noqa: F401 - Register User/Group with Unfold styling
 from . import views
@@ -29,7 +30,16 @@ urlpatterns = [
     path("admin/orders/", include("domain.orders.urls", namespace="orders")),
     path("admin/", admin.site.urls),
     path("hello/", views.hello, name="hello"),
-    path("healthz/", include("health_check.urls")),
+    path(
+        "healthz/",
+        HealthCheckView.as_view(
+            checks=[
+                "health_check.Database",
+                "health_check.Cache",
+                "health_check.contrib.migrations.Migrations",
+            ],
+        ),
+    ),
     path("", TemplateView.as_view(template_name="base.html"), name="home"),
     # REST API:
     path("goods/", include("domain.goods.urls")),
