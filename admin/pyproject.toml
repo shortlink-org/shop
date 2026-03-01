@@ -24,7 +24,7 @@ dependencies = [
   'markdown',
   'django-filter',
   'drf-spectacular==0.29.0',
-  'drf-yasg==1.21.14',
+  'drf-yasg==1.21.15',
   'googleapis-common-protos==1.72.0',
   'grpcio==1.78.0',
   'idna==3.11',

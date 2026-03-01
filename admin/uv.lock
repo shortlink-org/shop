@@ -345,7 +345,7 @@ wheels = [
 
 [[package]]
 name = "drf-yasg"
-version = "1.21.14"
+version = "1.21.15"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django" },
@@ -356,9 +356,9 @@ dependencies = [
     { name = "pyyaml" },
     { name = "uritemplate" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/78/1b/2305804c1efbc2da1890fb2a34155ef298565eb152e1c00bd35546be42fa/drf_yasg-1.21.14.tar.gz", hash = "sha256:68d62d5f7505611ba9577115c83b36211cc20d9748a50ce95a44abe411727d10", size = 5153307, upload-time = "2026-01-15T11:37:07.086Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4a/88/345135459b9cbaff0e8ee3270819e89ca92064a35a0a94a1cfce41c084db/drf_yasg-1.21.15.tar.gz", hash = "sha256:ef86838c4ef10dcd3ac1ebf2be601cbe02978b999671caa43667f7c9db961468", size = 5153419, upload-time = "2026-02-24T18:09:21.072Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bb/de/61880040534036044572225c485b0a4adc99b4c92e3eed3e5741b31674fd/drf_yasg-1.21.14-py3-none-any.whl", hash = "sha256:725ddda28aec7efc4cab985290fe790c8565e665017f7c80211d288a35821c70", size = 4856031, upload-time = "2026-01-15T11:37:04.753Z" },
+    { url = "https://files.pythonhosted.org/packages/f9/a4/400b0565cf25395f1d5e1a24e5d18dab8f4199e4212174341fea6f05747c/drf_yasg-1.21.15-py3-none-any.whl", hash = "sha256:7c7a7ab9feb0e13cdd6e25147d99adb0500a68bd96509ffd8f8cf7efd4bdc77e", size = 4856209, upload-time = "2026-02-24T18:09:18.982Z" },
 ]
 
 [[package]]
@@ -1148,7 +1148,7 @@ requires-dist = [
     { name = "django-unfold", specifier = ">=0.81.0" },
     { name = "djangorestframework", specifier = "==3.16.1" },
     { name = "drf-spectacular", specifier = "==0.29.0" },
-    { name = "drf-yasg", specifier = "==1.21.14" },
+    { name = "drf-yasg", specifier = "==1.21.15" },
     { name = "googleapis-common-protos", specifier = "==1.72.0" },
     { name = "grpcio", specifier = "==1.78.0" },
     { name = "grpcio-tools", specifier = ">=1.78.0" },
