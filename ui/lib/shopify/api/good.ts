@@ -5,8 +5,11 @@ import { GOODS_UNAVAILABLE } from '../sentinels';
 import type { Good, ShopifyProductOperation, ShopifyProductRecommendationsOperation, ShopifyProductsOperation } from '../types';
 import { getGoodQuery, getGoodRecommendationsQuery, getGoodsQuery } from '../queries/good';
 
+export type RequestOptions = { authorization?: string };
+
 export async function getGood(
-  id: number
+  id: number,
+  options?: RequestOptions
 ): Promise<Good | undefined | typeof GOODS_UNAVAILABLE> {
   try {
     const res = await shopifyFetch<ShopifyProductOperation>({
@@ -14,6 +17,7 @@ export async function getGood(
       variables: {
         id: id,
       },
+      headers: options?.authorization ? { Authorization: options.authorization } : {}
     });
 
     return res.body.data.good ? normalizeGood(res.body.data.good) : undefined;
@@ -24,14 +28,16 @@ export async function getGood(
 }
 
 export async function getGoodRecommendations(
-  id: number
+  id: number,
+  options?: RequestOptions
 ): Promise<Good[] | typeof GOODS_UNAVAILABLE> {
   try {
     const res = await shopifyFetch<ShopifyProductRecommendationsOperation>({
       query: getGoodRecommendationsQuery,
       variables: {
         page: 1,
-      }
+      },
+      headers: options?.authorization ? { Authorization: options.authorization } : {}
     });
 
     const recommendations = res.body.data.goods?.results ?? [];
@@ -42,15 +48,18 @@ export async function getGoodRecommendations(
   }
 }
 
-export async function getGoods({
-  query,
-  reverse,
-  sortKey
-}: {
-  query?: string;
-  reverse?: boolean;
-  sortKey?: string;
-}): Promise<Good[] | typeof GOODS_UNAVAILABLE> {
+export async function getGoods(
+  {
+    query,
+    reverse,
+    sortKey
+  }: {
+    query?: string;
+    reverse?: boolean;
+    sortKey?: string;
+  },
+  options?: RequestOptions
+): Promise<Good[] | typeof GOODS_UNAVAILABLE> {
   try {
     const res = await shopifyFetch<ShopifyProductsOperation>({
       cache: 'no-store',
@@ -60,7 +69,8 @@ export async function getGoods({
         query,
         reverse,
         sortKey
-      }
+      },
+      headers: options?.authorization ? { Authorization: options.authorization } : {}
     });
 
     const goods = res.body.data.goods?.results ?? [];

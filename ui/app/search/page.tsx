@@ -3,6 +3,7 @@ import GoodGridItems from 'components/layout/good-grid-items';
 import { RetryButton } from 'components/retry-button';
 import { defaultSort, sorting } from 'lib/constants';
 import { getGoods, GOODS_UNAVAILABLE } from 'lib/shopify';
+import { headers } from 'next/headers';
 
 export const metadata = {
   title: 'Search',
@@ -15,8 +16,12 @@ export default async function SearchPage(props: {
   const searchParams = await props.searchParams;
   const { sort, q: searchValue } = (searchParams ?? {}) as { [key: string]: string };
   const { sortKey, reverse } = sorting.find((item) => item.slug === sort) || defaultSort;
+  const authHeader = (await headers()).get('authorization') ?? undefined;
 
-  const goods = await getGoods({ sortKey, reverse, query: searchValue });
+  const goods = await getGoods(
+    { sortKey, reverse, query: searchValue },
+    { authorization: authHeader }
+  );
 
   if (goods === GOODS_UNAVAILABLE) {
     return (

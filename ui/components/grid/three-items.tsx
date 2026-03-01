@@ -3,6 +3,7 @@ import { RetryButton } from 'components/retry-button';
 import { getCollectionProducts, GOODS_UNAVAILABLE } from 'lib/shopify';
 import type { Good } from 'lib/shopify/types';
 import Link from 'next/link';
+import { headers } from 'next/headers';
 
 function ThreeItemGridItem({
                              item,
@@ -43,8 +44,12 @@ function ThreeItemGridItem({
 }
 
 export async function ThreeItemGrid() {
+  const authHeader = (await headers()).get('authorization') ?? undefined;
   // Collections that start with `hidden-*` are hidden from the search page.
-  const homepageItems = await getCollectionProducts({});
+  const homepageItems = await getCollectionProducts(
+    {},
+    { authorization: authHeader }
+  );
 
   if (homepageItems === GOODS_UNAVAILABLE) {
     return (

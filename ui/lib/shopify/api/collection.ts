@@ -9,8 +9,11 @@ import {
   getCollectionsQuery
 } from '../queries/collection';
 
+export type RequestOptions = { authorization?: string };
+
 export async function getCollection(
-  id: number
+  id: number,
+  options?: RequestOptions
 ): Promise<Collection | undefined | typeof GOODS_UNAVAILABLE> {
   try {
     const res = await shopifyFetch<ShopifyCollectionOperation>({
@@ -18,7 +21,8 @@ export async function getCollection(
       tags: [TAGS.collections],
       variables: {
         id
-      }
+      },
+      headers: options?.authorization ? { Authorization: options.authorization } : {}
     });
 
     return reshapeCollection(res.body.data.collection);
@@ -28,15 +32,19 @@ export async function getCollection(
   }
 }
 
-export async function getCollectionProducts({
-  page
-}: {
-  page?: number;
-}): Promise<Good[] | typeof GOODS_UNAVAILABLE> {
+export async function getCollectionProducts(
+  {
+    page
+  }: {
+    page?: number;
+  } = {},
+  options?: RequestOptions
+): Promise<Good[] | typeof GOODS_UNAVAILABLE> {
   try {
     const res = await shopifyFetch<ShopifyCollectionProductsOperation>({
       cache: 'no-store',
       query: getCollectionProductsQuery,
+      headers: options?.authorization ? { Authorization: options.authorization } : {}
     });
 
     if (!res.body.data?.goods) {
@@ -51,11 +59,14 @@ export async function getCollectionProducts({
   }
 }
 
-export async function getCollections(): Promise<Collection[] | typeof GOODS_UNAVAILABLE> {
+export async function getCollections(
+  options?: RequestOptions
+): Promise<Collection[] | typeof GOODS_UNAVAILABLE> {
   try {
     const res = await shopifyFetch<ShopifyCollectionsOperation>({
       query: getCollectionsQuery,
       tags: [TAGS.collections],
+      headers: options?.authorization ? { Authorization: options.authorization } : {}
     });
 
     const shopifyCollections = res.body?.data?.collections

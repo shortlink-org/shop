@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
 import { GridTileImage } from 'components/grid/tile';
@@ -18,10 +19,11 @@ export async function generateMetadata(props: {
 }): Promise<Metadata> {
   const params = await props.params;
   const id = Number(params.id);
+  const authHeader = (await headers()).get('authorization') ?? undefined;
 
   if (!Number.isFinite(id)) return notFound();
 
-  const good = await getGood(id);
+  const good = await getGood(id, { authorization: authHeader });
 
   if (good === GOODS_UNAVAILABLE) {
     return { title: 'Product unavailable' };
@@ -37,10 +39,11 @@ export async function generateMetadata(props: {
 export default async function GoodPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   const id = Number(params.id);
+  const authHeader = (await headers()).get('authorization') ?? undefined;
 
   if (!Number.isFinite(id)) return notFound();
 
-  const good = await getGood(id);
+  const good = await getGood(id, { authorization: authHeader });
 
   if (good === GOODS_UNAVAILABLE) {
     return (
@@ -116,7 +119,10 @@ export default async function GoodPage(props: { params: Promise<{ id: string }> 
 }
 
 async function RelatedGoods({ id }: { id: number }) {
-  const relatedGoods = await getGoodRecommendations(id);
+  const authHeader = (await headers()).get('authorization') ?? undefined;
+  const relatedGoods = await getGoodRecommendations(id, {
+    authorization: authHeader
+  });
 
   if (relatedGoods === GOODS_UNAVAILABLE || !relatedGoods.length) return null;
 

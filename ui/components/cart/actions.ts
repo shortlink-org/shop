@@ -3,7 +3,7 @@
 import { TAGS } from 'lib/constants';
 import { addToCart, createCart, updateCart } from 'lib/shopify';
 import { revalidateTag } from 'next/cache';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 async function getOrCreateCartId() {
@@ -32,8 +32,12 @@ export async function addItem(prevState: any, selectedVariantId: string | undefi
     return 'Missing cart ID';
   }
 
+  const authHeader = (await headers()).get('authorization') ?? undefined;
+
   try {
-    await addToCart(cartId, [{ goodId: selectedVariantId, quantity: 1 }]);
+    await addToCart(cartId, [{ goodId: selectedVariantId, quantity: 1 }], {
+      authorization: authHeader
+    });
     revalidateTag(TAGS.cart, 'max');
   } catch (e) {
     return 'Error adding item to cart';
@@ -47,8 +51,14 @@ export async function removeItem(prevState: any, merchandiseId: string) {
     return 'Missing cart ID';
   }
 
+  const authHeader = (await headers()).get('authorization') ?? undefined;
+
   try {
-    await updateCart(cartId, [{ id: merchandiseId, merchandiseId, quantity: 0 }]);
+    await updateCart(
+      cartId,
+      [{ id: merchandiseId, merchandiseId, quantity: 0 }],
+      { authorization: authHeader }
+    );
     revalidateTag(TAGS.cart, 'max');
   } catch (e) {
     return 'Error removing item from cart';
@@ -69,9 +79,12 @@ export async function updateItemQuantity(
   }
 
   const { merchandiseId, quantity } = payload;
+  const authHeader = (await headers()).get('authorization') ?? undefined;
 
   try {
-    await updateCart(cartId, [{ id: merchandiseId, merchandiseId, quantity }]);
+    await updateCart(cartId, [{ id: merchandiseId, merchandiseId, quantity }], {
+      authorization: authHeader
+    });
     revalidateTag(TAGS.cart, 'max');
   } catch (e) {
     console.error(e);

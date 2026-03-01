@@ -12,7 +12,7 @@ ingress:
   enabled: false
 
 # ==============================================================================
-# HTTPRoute configuration for Gateway API
+# HTTPRoute: all shop traffic → Oathkeeper → Next.js (see plan UI via Oathkeeper to Next.js)
 httpRoute:
   enabled: true
   gatewayName: external-gateway
@@ -21,6 +21,10 @@ httpRoute:
     - shop.shortlink.best
   path: /
   port: 3000
+  backendRefs:
+    - name: oathkeeper-proxy
+      namespace: auth
+      port: 4455
 
 # ==============================================================================
 deploy:
@@ -29,8 +33,10 @@ deploy:
   imagePullSecrets: []
 
   env:
-    # GraphQL BFF URL
-    API_URI: http://shortlink-shop-bff.shortlink-shop:9991
+    # Same-origin /api/graphql (Oathkeeper → Next.js → this route → internal BFF)
+    API_URI: ""
+    NEXT_PUBLIC_API_URI: ""
+    BFF_GRAPHQL_URL: http://shortlink-shop-bff.shortlink-shop.svc.cluster.local:9991/graphql
 
   resources:
     limits:

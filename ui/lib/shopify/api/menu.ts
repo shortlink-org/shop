@@ -4,13 +4,16 @@ import { shopifyFetch } from '../fetch';
 import type { Menu, ShopifyMenuOperation } from '../types';
 import { getMenuQuery } from '../queries/menu';
 
-export async function getMenu(id: number): Promise<Menu[]> {
+export type RequestOptions = { authorization?: string };
+
+export async function getMenu(id: number, options?: RequestOptions): Promise<Menu[]> {
   const res = await shopifyFetch<ShopifyMenuOperation>({
     query: getMenuQuery,
     tags: [TAGS.collections],
     variables: {
       id
-    }
+    },
+    headers: options?.authorization ? { Authorization: options.authorization } : {}
   });
 
   return (

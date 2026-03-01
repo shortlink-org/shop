@@ -1,5 +1,6 @@
 import { getCollection, GOODS_UNAVAILABLE } from 'lib/shopify';
 import { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
 import Grid from 'components/grid';
@@ -10,7 +11,10 @@ export async function generateMetadata(props: {
   params: Promise<{ collection: string }>;
 }): Promise<Metadata> {
   const params = await props.params;
-  const collection = await getCollection(Number(params.collection));
+  const authHeader = (await headers()).get('authorization') ?? undefined;
+  const collection = await getCollection(Number(params.collection), {
+    authorization: authHeader
+  });
 
   if (collection === GOODS_UNAVAILABLE) {
     return { title: 'Collection unavailable' };
@@ -29,7 +33,10 @@ export default async function CategoryPage(props: {
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const params = await props.params;
-  const collection = await getCollection(Number(params.collection));
+  const authHeader = (await headers()).get('authorization') ?? undefined;
+  const collection = await getCollection(Number(params.collection), {
+    authorization: authHeader
+  });
 
   if (collection === GOODS_UNAVAILABLE) {
     return (

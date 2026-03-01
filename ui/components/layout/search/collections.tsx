@@ -1,11 +1,13 @@
 import clsx from 'clsx';
+import { headers } from 'next/headers';
 import { Suspense } from 'react';
 
 import { getCollections, GOODS_UNAVAILABLE } from 'lib/shopify';
 import FilterList from './filter';
 
 async function CollectionList() {
-  const collections = await getCollections();
+  const authHeader = (await headers()).get('authorization') ?? undefined;
+  const collections = await getCollections({ authorization: authHeader });
   if (collections === GOODS_UNAVAILABLE) {
     return (
       <div className="py-2 text-sm text-neutral-500 dark:text-neutral-400">

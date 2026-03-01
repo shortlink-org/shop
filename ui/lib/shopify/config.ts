@@ -1,3 +1,7 @@
-export const domain = process.env.API_URI ?? '';
+export const domain =
+  (typeof process.env.NEXT_PUBLIC_API_URI !== 'undefined'
+    ? process.env.NEXT_PUBLIC_API_URI
+    : process.env.API_URI) ?? '';
 
-export const getGraphqlEndpoint = (): string => `${domain}/graphql`;
+export const getGraphqlEndpoint = (): string =>
+  domain ? `${domain}/graphql` : '/api/graphql';

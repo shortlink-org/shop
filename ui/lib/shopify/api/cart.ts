@@ -23,7 +23,8 @@ import { GOODS_UNAVAILABLE as GOODS_UNAVAILABLE_SENTINEL } from '../sentinels';
 
 function buildCartFromState(
   state: CartState | undefined | null,
-  fallbackId?: string
+  fallbackId?: string,
+  options?: RequestOptions
 ): Promise<Cart> {
   const items = state?.items ?? [];
 
@@ -41,7 +42,9 @@ function buildCartFromState(
       }
 
       const numericGoodId = Number(goodId);
-      const rawGood = Number.isFinite(numericGoodId) ? await getGood(numericGoodId) : undefined;
+      const rawGood = Number.isFinite(numericGoodId)
+        ? await getGood(numericGoodId, options)
+        : undefined;
       const good = rawGood === GOODS_UNAVAILABLE_SENTINEL ? undefined : rawGood;
       const price = good?.price ?? 0;
       const title = good?.name ?? 'Unknown item';
@@ -92,9 +95,12 @@ export async function createCart(): Promise<Cart> {
   return createEmptyCart(cartId);
 }
 
+export type RequestOptions = { authorization?: string };
+
 export async function addToCart(
   customerId: string,
-  items: { goodId: string; quantity: number }[]
+  items: { goodId: string; quantity: number }[],
+  options?: RequestOptions
 ): Promise<void> {
   await shopifyFetch<ShopifyAddToCartOperation>({
     query: addToCartMutation,
@@ -104,13 +110,15 @@ export async function addToCart(
         items
       }
     },
-    cache: 'no-store'
+    cache: 'no-store',
+    headers: options?.authorization ? { Authorization: options.authorization } : {}
   });
 }
 
 export async function removeFromCart(
   customerId: string,
-  items: { goodId: string; quantity: number }[]
+  items: { goodId: string; quantity: number }[],
+  options?: RequestOptions
 ): Promise<void> {
   await shopifyFetch<ShopifyRemoveFromCartOperation>({
     query: removeFromCartMutation,
@@ -120,20 +128,23 @@ export async function removeFromCart(
         items
       }
     },
-    cache: 'no-store'
+    cache: 'no-store',
+    headers: options?.authorization ? { Authorization: options.authorization } : {}
   });
 }
 
 export async function updateCart(
   customerId: string,
-  lines: { id: string; merchandiseId: string; quantity: number }[]
+  lines: { id: string; merchandiseId: string; quantity: number }[],
+  options?: RequestOptions
 ): Promise<void> {
   const res = await shopifyFetch<ShopifyCartOperation>({
     query: getCartQuery,
     variables: {
       customerId
     },
-    cache: 'no-store'
+    cache: 'no-store',
+    headers: options?.authorization ? { Authorization: options.authorization } : {}
   });
 
   const currentQuantities = new Map(
@@ -158,15 +169,18 @@ export async function updateCart(
   }
 
   if (itemsToAdd.length > 0) {
-    await addToCart(customerId, itemsToAdd);
+    await addToCart(customerId, itemsToAdd, options);
   }
 
   if (itemsToRemove.length > 0) {
-    await removeFromCart(customerId, itemsToRemove);
+    await removeFromCart(customerId, itemsToRemove, options);
   }
 }
 
-export async function getCart(cartId: string | undefined): Promise<CartLoadResult> {
+export async function getCart(
+  cartId: string | undefined,
+  options?: RequestOptions
+): Promise<CartLoadResult> {
   if (!cartId) {
     return undefined;
   }
@@ -177,22 +191,27 @@ export async function getCart(cartId: string | undefined): Promise<CartLoadResul
       variables: {
         customerId: cartId
       },
-      cache: 'no-store'
+      cache: 'no-store',
+      headers: options?.authorization ? { Authorization: options.authorization } : {}
     });
 
-    return buildCartFromState(res.body.data.getCart?.state, cartId);
+    return buildCartFromState(res.body.data.getCart?.state, cartId, options);
   } catch {
     return CART_UNAVAILABLE;
   }
 }
 
-export async function checkout(input: CheckoutInput): Promise<CheckoutResult> {
+export async function checkout(
+  input: CheckoutInput,
+  options?: RequestOptions
+): Promise<CheckoutResult> {
   const res = await shopifyFetch<ShopifyCheckoutOperation>({
     query: checkoutMutation,
     variables: {
       input
     },
-    cache: 'no-store'
+    cache: 'no-store',
+    headers: options?.authorization ? { Authorization: options.authorization } : {}
   });
 
   return res.body.data.checkout;

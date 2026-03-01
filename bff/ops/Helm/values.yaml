@@ -12,12 +12,10 @@ ingress:
   enabled: false
 
 # ==============================================================================
-# HTTPRoute configuration for Gateway API
-# Traffic goes through Oathkeeper for JWT/session validation, then to BFF.
-# URL rewrite: /api/* → /* so Oathkeeper receives /graphql and forwards to BFF.
-# Oathkeeper access rule for BFF must be added in auth namespace (see ADR 0005 pattern).
+# HTTPRoute: disabled for shop; all shop traffic goes UI → Oathkeeper → Next.js (see plan).
+# Next.js proxies /api/graphql to BFF internally.
 httpRoute:
-  enabled: true
+  enabled: false
   gatewayName: external-gateway
   gatewayNamespace: istio-ingress
   hostnames:
