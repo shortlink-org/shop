@@ -129,12 +129,12 @@ impl KafkaEventPublisher {
             .headers(headers);
 
         match self.producer.send(record, self.timeout).await {
-            Ok((partition, offset)) => {
+            Ok(delivery) => {
                 info!(
                     topic = topic,
                     key = key,
-                    partition = partition,
-                    offset = offset,
+                    partition = delivery.partition,
+                    offset = delivery.offset,
                     "Event published successfully"
                 );
                 Ok(())
