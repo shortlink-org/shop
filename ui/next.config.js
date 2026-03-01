@@ -34,5 +34,6 @@ module.exports = {
   },
   experimental: {
     webVitalsAttribution: ['CLS', 'FCP', 'FID', 'INP', 'LCP', 'TTFB'],
+    viewTransition: true,
   },
 };

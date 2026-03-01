@@ -6,7 +6,7 @@ import { GeistSans } from 'geist/font/sans';
 import { CART_UNAVAILABLE, getCart, type CartLoadResult } from 'lib/shopify';
 import { ensureStartsWith } from 'lib/utils';
 import { cookies, headers } from 'next/headers';
-import { ReactNode } from 'react';
+import { ReactNode, ViewTransition } from 'react';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from 'next-themes';
 import './globals.css';
@@ -59,7 +59,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             <CartProvider cartPromise={cartPromise}>
               <Navbar />
               <main className="min-h-screen">
-                {children}
+                <ViewTransition>{children}</ViewTransition>
                 <Toaster closeButton />
               </main>
               <Footer />
