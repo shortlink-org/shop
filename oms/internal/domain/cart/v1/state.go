@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 
-	eventsv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/events/v1"
 	itemsv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/items/v1"
+	domainevents "github.com/shortlink-org/shop/oms/internal/domain/events"
 )
 
 // State represents the cart state.
@@ -20,7 +20,7 @@ type State struct {
 	// version is used for optimistic concurrency control
 	version int
 	// domainEvents stores domain events that occurred during aggregate operations
-	domainEvents []eventsv1.DomainEvent
+	domainEvents []domainevents.Event
 }
 
 // New creates a new cart state.
@@ -29,7 +29,7 @@ func New(customerId uuid.UUID) *State {
 		items:        make(itemsv1.Items, 0),
 		customerId:   customerId,
 		version:      0,
-		domainEvents: make([]eventsv1.DomainEvent, 0),
+		domainEvents: make([]domainevents.Event, 0),
 	}
 }
 
@@ -41,7 +41,7 @@ func Reconstitute(customerId uuid.UUID, items itemsv1.Items, version int) *State
 		items:        items,
 		customerId:   customerId,
 		version:      version,
-		domainEvents: make([]eventsv1.DomainEvent, 0),
+		domainEvents: make([]domainevents.Event, 0),
 	}
 }
 

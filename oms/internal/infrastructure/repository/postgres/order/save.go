@@ -78,7 +78,7 @@ func (s *Store) Save(ctx context.Context, state *order.OrderState) error {
 	}
 
 	// Save delivery info if present
-	err := s.saveDeliveryInfo(ctx, qtx, orderID, state.GetDeliveryInfo(), oldVersion == 0)
+	err = s.saveDeliveryInfo(ctx, qtx, orderID, state.GetDeliveryInfo(), oldVersion == 0)
 	if err != nil {
 		return err
 	}

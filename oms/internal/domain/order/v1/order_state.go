@@ -11,6 +11,7 @@ import (
 	"github.com/shortlink-org/go-sdk/fsm"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	domainevents "github.com/shortlink-org/shop/oms/internal/domain/events"
 	commonv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common"
 	eventsv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/events/v1"
 )
@@ -30,7 +31,7 @@ type OrderState struct {
 	// fsm is the finite state machine for the order status
 	fsm *fsm.FSM
 	// domainEvents stores domain events (proto) that occurred during aggregate operations
-	domainEvents []any
+	domainEvents []domainevents.Event
 	// deliveryInfo contains delivery information for the order (nil = self-pickup)
 	deliveryInfo *DeliveryInfo
 	// deliveryStatus tracks the delivery status (ACCEPTED, ASSIGNED, IN_TRANSIT, etc.)
@@ -59,7 +60,7 @@ func newOrderState(id, customerId uuid.UUID, items Items, status OrderStatus, ve
 		items:        items,
 		customerId:   customerId,
 		version:      version,
-		domainEvents: make([]any, 0),
+		domainEvents: make([]domainevents.Event, 0),
 		deliveryInfo: deliveryInfo,
 	}
 	order.fsm = fsm.New(fsm.State(status.String()))
@@ -292,17 +293,17 @@ func orderItemsToProto(items Items) []*commonv1.OrderItem {
 }
 
 // addDomainEvent adds a domain event (proto) to the aggregate's event list.
-func (o *OrderState) addDomainEvent(event any) {
+func (o *OrderState) addDomainEvent(event domainevents.Event) {
 	o.domainEvents = append(o.domainEvents, event)
 }
 
 // GetDomainEvents returns all domain events that occurred during aggregate operations.
 // Application layer should publish them (e.g. to outbox) then call ClearDomainEvents().
-func (o *OrderState) GetDomainEvents() []any {
+func (o *OrderState) GetDomainEvents() []domainevents.Event {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
-	eventsCopy := make([]any, len(o.domainEvents))
+	eventsCopy := make([]domainevents.Event, len(o.domainEvents))
 	copy(eventsCopy, o.domainEvents)
 
 	return eventsCopy

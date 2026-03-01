@@ -1,12 +1,13 @@
 package ports
 
-import "context"
+import (
+	"context"
 
-// Event is a marker interface for domain events.
-// Uses EventType() to align with existing domain event pattern.
-type Event interface {
-	EventType() string
-}
+	domainevents "github.com/shortlink-org/shop/oms/internal/domain/events"
+)
+
+// Event is an alias to the canonical domain event contract.
+type Event = domainevents.Event
 
 // EventPublisher publishes domain events (e.g. to outbox/Kafka via go-sdk/cqrs EventBus).
 type EventPublisher interface {
@@ -14,3 +15,6 @@ type EventPublisher interface {
 }
 
 // EventSubscriber subscribes to domain events.
+type EventSubscriber interface {
+	Subscribe(eventType string, handler func(ctx context.Context, event Event) error)
+}
