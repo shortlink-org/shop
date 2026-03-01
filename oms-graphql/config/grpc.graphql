@@ -125,6 +125,7 @@ type Query {
     method: "infrastructure.rpc.cart.v1.CartService.Get"
     body: "{{.args.customerId}}"
     headers: [
+      {key: "Authorization", value: "{{.headers.Authorization}}"},
       {key: "user-id", value: "3e173751-8840-4b0d-8065-fbea88357cc5"}
     ]
   )
@@ -136,6 +137,7 @@ type Query {
     method: "infrastructure.rpc.order.v1.OrderService.Get"
     body: "{\"id\": \"{{.args.id}}\"}"
     headers: [
+      {key: "Authorization", value: "{{.headers.Authorization}}"},
       {key: "user-id", value: "3e173751-8840-4b0d-8065-fbea88357cc5"}
     ]
   )
@@ -225,6 +227,7 @@ type Mutation {
     method: "infrastructure.rpc.cart.v1.CartService.Add"
     body: "{{.args.addRequest}}"
     headers: [
+      {key: "Authorization", value: "{{.headers.Authorization}}"},
       {key: "user-id", value: "3e173751-8840-4b0d-8065-fbea88357cc5"}
     ]
   )
@@ -235,6 +238,7 @@ type Mutation {
     method: "infrastructure.rpc.cart.v1.CartService.Remove"
     body: "{{.args.removeRequest}}"
     headers: [
+      {key: "Authorization", value: "{{.headers.Authorization}}"},
       {key: "user-id", value: "3e173751-8840-4b0d-8065-fbea88357cc5"}
     ]
   )
@@ -245,6 +249,7 @@ type Mutation {
     method: "infrastructure.rpc.cart.v1.CartService.Reset"
     body: "{{.args.customerId}}"
     headers: [
+      {key: "Authorization", value: "{{.headers.Authorization}}"},
       {key: "user-id", value: "3e173751-8840-4b0d-8065-fbea88357cc5"}
     ]
   )
@@ -256,6 +261,7 @@ type Mutation {
     method: "infrastructure.rpc.order.v1.OrderService.Create"
     body: "{{.args.input}}"
     headers: [
+      {key: "Authorization", value: "{{.headers.Authorization}}"},
       {key: "user-id", value: "3e173751-8840-4b0d-8065-fbea88357cc5"}
     ]
   )
@@ -266,6 +272,7 @@ type Mutation {
     method: "infrastructure.rpc.order.v1.OrderService.Cancel"
     body: "{\"id\": \"{{.args.orderId}}\"}"
     headers: [
+      {key: "Authorization", value: "{{.headers.Authorization}}"},
       {key: "user-id", value: "3e173751-8840-4b0d-8065-fbea88357cc5"}
     ]
   )
@@ -276,6 +283,7 @@ type Mutation {
     method: "infrastructure.rpc.order.v1.OrderService.UpdateDeliveryInfo"
     body: "{\"order_id\": \"{{.args.input.orderId}}\", \"delivery_info\": {{.args.input.deliveryInfo}}}"
     headers: [
+      {key: "Authorization", value: "{{.headers.Authorization}}"},
       {key: "user-id", value: "3e173751-8840-4b0d-8065-fbea88357cc5"}
     ]
   )
@@ -286,6 +294,7 @@ type Mutation {
     method: "infrastructure.rpc.order.v1.OrderService.Checkout"
     body: "{\"customer_id\": \"{{.args.input.customerId}}\", \"delivery_info\": {{.args.input.deliveryInfo}}}"
     headers: [
+      {key: "Authorization", value: "{{.headers.Authorization}}"},
       {key: "user-id", value: "{{.args.input.customerId}}"}
     ]
   )
