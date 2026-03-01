@@ -8,6 +8,8 @@ console.info('API_URI', API_URI)
 /** @type {import('next').NextConfig} */
 module.exports = {
   output: 'standalone',
+  cacheHandler: require.resolve('./cache-handler.js'),
+  cacheMaxMemorySize: 0,
   reactStrictMode: true,
   env: {
     // ShortLink API

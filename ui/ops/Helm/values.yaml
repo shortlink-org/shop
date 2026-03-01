@@ -37,6 +37,8 @@ deploy:
     API_URI: http://shortlink-shop-ui.shortlink-shop.svc.cluster.local:3000
     NEXT_PUBLIC_API_URI: ""
     BFF_GRAPHQL_URL: http://shortlink-shop-bff.shortlink-shop.svc.cluster.local:9991/graphql
+    # Redis for Next.js ISR/route cache (cacheHandler). Optional: fallback to in-memory if unset.
+    REDIS_URI: redis://redis-master.shortlink-shop.svc.cluster.local:6379
 
   resources:
     limits:
