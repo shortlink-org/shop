@@ -2,7 +2,7 @@ apiVersion: v2
 appVersion: "1.0.0"
 name: common
 description: ShortLink common services
-version: 0.3.1
+version: 0.3.2
 kubeVersion: ">= 1.30.0 || >= v1.30.0-0"
 keywords:
   - shortlink
@@ -18,7 +18,7 @@ type: application
 deprecated: false
 dependencies:
   - name: shortlink-template
-    version: 0.12.2
+    version: 0.12.3
     repository: oci://ghcr.io/shortlink-org/charts
   - name: redis
     version: 25.3.2

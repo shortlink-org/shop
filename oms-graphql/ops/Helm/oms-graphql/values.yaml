@@ -4,8 +4,10 @@
 
 # -- Pods Service Account
 # @ignored ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+# Name must match OMS authorizationPolicy.proxyServiceAccount so Istio RBAC allows gRPC to CartService/OrderService.
 serviceAccount:
   create: true
+  name: shortlink-shop-oms-graphql
 
 # ==============================================================================
 ingress:

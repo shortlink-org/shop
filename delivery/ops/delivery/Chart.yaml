@@ -2,7 +2,7 @@ apiVersion: v2
 appVersion: "1.0.0"
 name: delivery
 description: ShortLink Delivery Service - courier management and order delivery
-version: 0.1.1
+version: 0.1.2
 kubeVersion: ">= 1.30.0 || >= v1.30.0-0"
 keywords:
   - delivery
@@ -21,5 +21,5 @@ type: application
 deprecated: false
 dependencies:
   - name: shortlink-template
-    version: 0.12.2
+    version: 0.12.3
     repository: oci://ghcr.io/shortlink-org/charts
