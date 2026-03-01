@@ -52,10 +52,10 @@ tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 
 # Temporal SDK (pre-alpha, Git dependency)
-temporalio-sdk = { git = "https://github.com/temporalio/sdk-core", package = "temporalio-sdk" }
-temporalio-sdk-core = { git = "https://github.com/temporalio/sdk-core", package = "temporalio-sdk-core" }
-temporalio-common = { git = "https://github.com/temporalio/sdk-core", package = "temporalio-common" }
-temporalio-client = { git = "https://github.com/temporalio/sdk-core", package = "temporalio-client" }
+temporalio-sdk = { git = "https://github.com/temporalio/sdk-core", rev = "f837d73ec1908679573ced8734e9a778f89956aa", package = "temporalio-sdk" }
+temporalio-sdk-core = { git = "https://github.com/temporalio/sdk-core", rev = "f837d73ec1908679573ced8734e9a778f89956aa", package = "temporalio-sdk-core" }
+temporalio-common = { git = "https://github.com/temporalio/sdk-core", rev = "f837d73ec1908679573ced8734e9a778f89956aa", package = "temporalio-common" }
+temporalio-client = { git = "https://github.com/temporalio/sdk-core", rev = "f837d73ec1908679573ced8734e9a778f89956aa", package = "temporalio-client" }
 
 # Additional dependencies for Temporal
 futures-util = { version = "0.3", default-features = false }
@@ -76,4 +76,3 @@ mockall = "0.14.0"
 [profile.release]
 # lto = "thin"  # Enable for smaller binary & better perf, but 2-3x slower build
 strip = true
-

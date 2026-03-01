@@ -1,0 +1,21 @@
+{{- if and .Values.authorizationPolicy.enabled .Values.authorizationPolicy.proxyServiceAccount }}
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: {{ include "helpers.fullname" . }}-allow-grpc-proxy
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "helpers.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "shortlink-common.matchLabels" . | nindent 6 }}
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals: ["cluster.local/ns/{{ .Release.Namespace }}/sa/{{ .Values.authorizationPolicy.proxyServiceAccount }}"]
+      to:
+        - operation:
+            ports: ["50051"]
+{{- end }}

@@ -21,6 +21,8 @@ requestAuthentication:
 # ref: https://istio.io/latest/docs/reference/config/security/authorization-policy/
 authorizationPolicy:
   enabled: true
+  # Allow internal Delivery GraphQL bridge (Tailcall) to call gRPC without JWT
+  proxyServiceAccount: shortlink-shop-delivery-graphql
 
 # ==============================================================================
 # GRPCRoute configuration

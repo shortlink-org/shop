@@ -3,7 +3,6 @@
 import { Menu, Transition } from '@headlessui/react';
 import { AxiosError } from 'axios';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useState, useEffect, Fragment } from 'react';
 import { UserIcon, ArrowRightOnRectangleIcon, ShoppingBagIcon } from '@heroicons/react/24/outline';
 
@@ -13,8 +12,8 @@ import clsx from 'clsx';
 
 export default function ProfileWidget() {
   const [logoutToken, setLogoutToken] = useState<string>('');
-  const router = useRouter();
   const { session, hasSession, isLoading } = useSession();
+  const loginUrl = process.env.NEXT_PUBLIC_LOGIN_URL || '/auth/login';
 
   const traits: Record<string, unknown> = (session?.identity?.traits as Record<string, unknown>) ?? {};
   const nameTraits = traits?.name as Record<string, string> | undefined;
@@ -45,12 +44,12 @@ export default function ProfileWidget() {
 
   if (!hasSession) {
     return (
-      <Link
-        href="/auth/login"
+      <a
+        href={loginUrl}
         className="rounded-md px-4 py-2 text-sm font-medium text-neutral-900 transition-opacity hover:opacity-80 dark:text-white"
       >
         Sign in
-      </Link>
+      </a>
     );
   }
 
@@ -72,8 +71,7 @@ export default function ProfileWidget() {
       onClick: () => {
         ory
           .updateLogoutFlow({ token: logoutToken })
-          .then(() => router.push('/auth/login'))
-          .then(() => window.location.reload());
+          .then(() => window.location.assign(loginUrl));
       },
     },
   ];

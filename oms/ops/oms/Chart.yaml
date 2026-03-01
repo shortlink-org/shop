@@ -2,7 +2,7 @@ apiVersion: v2
 appVersion: "1.0.0"
 name: oms
 description: ShortLink Order Management System (OMS) service
-version: 0.1.0
+version: 0.1.1
 kubeVersion: ">= 1.30.0 || >= v1.30.0-0"
 keywords:
   - oms
