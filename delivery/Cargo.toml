@@ -61,7 +61,7 @@ temporalio-client = { git = "https://github.com/temporalio/sdk-core", package = 
 futures-util = { version = "0.3", default-features = false }
 anyhow = "1.0"
 parking_lot = "0.12"
-url = "2"
+url = "2.5.8"
 
 [build-dependencies]
 prost-build = "0.14.3"
