@@ -33,8 +33,8 @@ deploy:
   imagePullSecrets: []
 
   env:
-    # Same-origin /api/graphql (Oathkeeper → Next.js → this route → internal BFF)
-    API_URI: ""
+    # Server: internal DNS only. Client uses relative /api/graphql (NEXT_PUBLIC_API_URI empty).
+    API_URI: http://shortlink-shop-ui.shortlink-shop.svc.cluster.local:3000
     NEXT_PUBLIC_API_URI: ""
     BFF_GRAPHQL_URL: http://shortlink-shop-bff.shortlink-shop.svc.cluster.local:9991/graphql
 

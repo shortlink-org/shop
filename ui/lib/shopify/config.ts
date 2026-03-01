@@ -4,4 +4,4 @@ export const domain =
     : process.env.API_URI) ?? '';
 
 export const getGraphqlEndpoint = (): string =>
-  domain ? `${domain}/graphql` : '/api/graphql';
+  domain ? `${domain}/api/graphql` : '/api/graphql';
