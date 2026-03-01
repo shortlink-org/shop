@@ -63,13 +63,12 @@ type DeliveryAddress {
 }
 
 type DeliveryPeriod {
-  startTime: String
-  endTime: String
+  startTime: Timestamp
+  endTime: Timestamp
 }
 
 type PackageInfo {
   weightKg: Float
-  dimensions: String
 }
 
 type RecipientContacts {
@@ -83,7 +82,7 @@ type DeliveryInfo {
   deliveryAddress: DeliveryAddress
   deliveryPeriod: DeliveryPeriod
   packageInfo: PackageInfo
-  priority: String
+  priority: DeliveryPriority
   recipientContacts: RecipientContacts
 }
 
@@ -91,12 +90,31 @@ type OrderState {
   id: String
   customerId: String
   items: [OrderItem]
-  status: String
+  status: OrderStatus
   deliveryInfo: DeliveryInfo
 }
 
 type GetOrderResponse {
   order: OrderState
+}
+
+type Timestamp {
+  seconds: Float
+  nanos: Int
+}
+
+enum DeliveryPriority {
+  DELIVERY_PRIORITY_UNSPECIFIED
+  DELIVERY_PRIORITY_NORMAL
+  DELIVERY_PRIORITY_URGENT
+}
+
+enum OrderStatus {
+  ORDER_STATUS_UNSPECIFIED
+  ORDER_STATUS_PENDING
+  ORDER_STATUS_PROCESSING
+  ORDER_STATUS_COMPLETED
+  ORDER_STATUS_CANCELLED
 }
 
 type Query {
@@ -157,7 +175,6 @@ input DeliveryPeriodInput {
 
 input PackageInfoInput {
   weightKg: Float!
-  dimensions: String!
 }
 
 input RecipientContactsInput {
@@ -198,7 +215,7 @@ input CheckoutInput {
 }
 
 type CheckoutResult {
-  orderId: String!
+  orderId: String
 }
 
 type Mutation {

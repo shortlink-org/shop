@@ -61,7 +61,9 @@ temporal:
   fullnameOverride: temporal
 
   serviceAccount:
-    create: true
+    # Managed by wrapper chart template to avoid Helm hook side-effects
+    create: false
+    name: temporal
 
   server:
     replicaCount: 1
@@ -193,7 +195,7 @@ namespaceSetup:
   temporalAddress: "temporal-frontend:7233"
 
   # Service account (uses default if not specified)
-  serviceAccountName: ""
+  serviceAccountName: "temporal"
 
   # Namespaces to create
   namespaces:

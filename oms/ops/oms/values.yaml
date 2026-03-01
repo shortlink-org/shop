@@ -29,6 +29,8 @@ requestAuthentication:
 # ref: https://istio.io/latest/docs/reference/config/security/authorization-policy/
 authorizationPolicy:
   enabled: true
+  # Allow internal OMS GraphQL bridge (Tailcall) to call gRPC reflection without JWT.
+  proxyServiceAccount: shortlink-shop-oms-graphql
 
 # ==============================================================================
 # GRPCRoute configuration
