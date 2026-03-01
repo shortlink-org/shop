@@ -419,14 +419,14 @@ wheels = [
 
 [[package]]
 name = "gunicorn"
-version = "25.0.0"
+version = "25.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "packaging" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/46/4d/74e685d22a7d8dcc920e4e84da2842c057141236757143e1c167e7bd64df/gunicorn-25.0.0.tar.gz", hash = "sha256:4b1ab820ffc316352da7146005a9e66044a131434b17a7d2a9fb0604f1268864", size = 9618408, upload-time = "2026-02-01T13:34:59.463Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/66/13/ef67f59f6a7896fdc2c1d62b5665c5219d6b0a9a1784938eb9a28e55e128/gunicorn-25.1.0.tar.gz", hash = "sha256:1426611d959fa77e7de89f8c0f32eed6aa03ee735f98c01efba3e281b1c47616", size = 594377, upload-time = "2026-02-13T11:09:58.989Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bf/9e/1be849edbea786424848e206e38a8b6025d140b7b9430037c5dc91e8a83f/gunicorn-25.0.0-py3-none-any.whl", hash = "sha256:b9b88f0ebc5a0fcd1e9e29a1f045f56f5402c6423ee3e3f675f679d0db5345d1", size = 169675, upload-time = "2026-02-01T13:34:54.617Z" },
+    { url = "https://files.pythonhosted.org/packages/da/73/4ad5b1f6a2e21cf1e85afdaad2b7b1a933985e2f5d679147a1953aaa192c/gunicorn-25.1.0-py3-none-any.whl", hash = "sha256:d0b1236ccf27f72cfe14bce7caadf467186f19e865094ca84221424e839b8b8b", size = 197067, upload-time = "2026-02-13T11:09:57.146Z" },
 ]
 
 [[package]]
@@ -1152,7 +1152,7 @@ requires-dist = [
     { name = "googleapis-common-protos", specifier = "==1.72.0" },
     { name = "grpcio", specifier = "==1.78.0" },
     { name = "grpcio-tools", specifier = ">=1.78.0" },
-    { name = "gunicorn", specifier = ">=23.0.0" },
+    { name = "gunicorn", specifier = ">=25.1.0" },
     { name = "idna", specifier = "==3.11" },
     { name = "importlib-metadata", specifier = "==8.7.1" },
     { name = "inflection", specifier = "==0.5.1" },
