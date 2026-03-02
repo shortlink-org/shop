@@ -3,10 +3,6 @@ import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
-import Grid from 'components/grid';
-import GoodGridItems from 'components/layout/good-grid-items';
-import { defaultSort, sorting } from 'lib/constants';
-
 export async function generateMetadata(props: {
   params: Promise<{ collection: string }>;
 }): Promise<Metadata> {

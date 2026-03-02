@@ -35,3 +35,33 @@
     clip-path: inset(0.6px);
   }
 }
+
+/* Shop product description block */
+.shop-productdescription__content p {
+  @apply text-base leading-relaxed text-neutral-700 dark:text-neutral-300;
+}
+
+.shop-productdescription__content h2,
+.shop-productdescription__content h3 {
+  @apply font-medium text-neutral-900 dark:text-neutral-100;
+}
+
+.shop-productdescription__content ul {
+  @apply list-disc space-y-1 pl-4 text-sm text-neutral-600 dark:text-neutral-400;
+}
+
+.shop-productdescription__content ul li span {
+  @apply text-neutral-600 dark:text-neutral-300;
+}
+
+/* Shop product page — fashion-ecommerce: hide empty color/size selectors */
+.shop-productpage--fashion-ecommerce form > div:first-child,
+.shop-productpage--fashion-ecommerce form > div:nth-child(2) {
+  display: none;
+}
+
+/* Shop product quick view — high-rating: hide empty color/size selectors */
+.shop-productquickview--high-rating form > div:first-child,
+.shop-productquickview--high-rating form > div:nth-child(2) {
+  display: none;
+}

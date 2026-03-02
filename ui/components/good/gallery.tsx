@@ -24,7 +24,7 @@ export function Gallery({ images }: { images: { src: string; altText: string }[]
     'h-full px-6 transition-all ease-in-out hover:scale-110 hover:text-black dark:hover:text-white flex items-center justify-center';
 
   return (
-    <form>
+    <form className="shop-productimagegallery shop-productimagegallery--card-stack">
       <div className="relative aspect-square h-full max-h-[550px] w-full overflow-hidden">
         {images[imageIndex] && (
           <Image

@@ -1,5 +1,4 @@
-import Grid from 'components/grid';
-import GoodGridItems from 'components/layout/good-grid-items';
+import { ShopProductGrid } from 'components/layout/shop-product-grid';
 import { RetryButton } from 'components/retry-button';
 import { defaultSort, sorting } from 'lib/constants';
 import { getGoods, GOODS_UNAVAILABLE } from 'lib/shopify';
@@ -48,9 +47,7 @@ export default async function SearchPage(props: {
         </p>
       ) : null}
       {goods.length > 0 ? (
-        <Grid className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          <GoodGridItems goods={goods} />
-        </Grid>
+        <ShopProductGrid goods={goods} />
       ) : null}
     </>
   );
