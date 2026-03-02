@@ -60,7 +60,7 @@ temporalio-client = { git = "https://github.com/temporalio/sdk-core", rev = "f83
 # Additional dependencies for Temporal
 futures-util = { version = "0.3.32", default-features = false }
 anyhow = "1.0.102"
-parking_lot = "0.12"
+parking_lot = "0.12.5"
 url = "2"
 
 [build-dependencies]
