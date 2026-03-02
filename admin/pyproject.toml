@@ -3,7 +3,7 @@ name = "shop_admin"
 version = "0.1.0"
 description = "This service is responsible for the administration of the shop."
 readme = "README.md"
-requires-python = ">=3.14.3"
+requires-python = ">=3.12"
 
 dependencies = [
   "django-ory-auth @ git+https://github.com/micro-company/django_ory_auth@master",
@@ -52,7 +52,7 @@ dependencies = [
   'packaging==26.0',
   'pip==26.0.1',
   'prometheus-client==0.24.1',
-  'protobuf==7.34.0', # TODO: depencies of opentelemetry-proto
+  'protobuf>=6.33.5,<7.0.0', # Compatible with opentelemetry-proto and gRPC stubs (shortlink-org-shop-*)
   'pytz==2025.2',
   'pyyaml==6.0.3',
   'referencing==0.37.0',
