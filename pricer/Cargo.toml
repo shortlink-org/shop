@@ -17,7 +17,7 @@ rust_decimal = { version = "1.40.0", features = ["serde"] }
 
 # Errors
 thiserror = "2.0.18"
-anyhow = "1"
+anyhow = "1.0.102"
 
 # Configuration
 dotenvy = "0.15.7"
