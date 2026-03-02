@@ -10,9 +10,7 @@ export async function getMenu(id: number, options?: RequestOptions): Promise<Men
   const res = await shopifyFetch<ShopifyMenuOperation>({
     query: getMenuQuery,
     tags: [TAGS.collections],
-    variables: {
-      id
-    },
+    variables: { handle: String(id) },
     headers: options?.authorization ? { Authorization: options.authorization } : {}
   });
 

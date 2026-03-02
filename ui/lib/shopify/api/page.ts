@@ -8,7 +8,7 @@ export async function getPage(id: number, options?: RequestOptions): Promise<Pag
   const res = await shopifyFetch<ShopifyPageOperation>({
     query: getPageQuery,
     cache: 'no-store',
-    variables: { id },
+    variables: { handle: String(id) },
     headers: options?.authorization ? { Authorization: options.authorization } : {}
   });
 

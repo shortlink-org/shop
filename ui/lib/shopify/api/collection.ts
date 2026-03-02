@@ -19,9 +19,7 @@ export async function getCollection(
     const res = await shopifyFetch<ShopifyCollectionOperation>({
       query: getCollectionQuery,
       tags: [TAGS.collections],
-      variables: {
-        id
-      },
+      variables: { handle: String(id) },
       headers: options?.authorization ? { Authorization: options.authorization } : {}
     });
 
