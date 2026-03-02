@@ -2,31 +2,41 @@ import cartFragment from '../fragments/cart';
 
 export const addToCartMutation = /* GraphQL */ `
   mutation AddToCart($addRequest: ItemRequest!) {
-    addItem(addRequest: $addRequest)
+    addItem(addRequest: $addRequest) {
+      _
+    }
   }
 `;
 
 export const createCartMutation = /* GraphQL */ `
   mutation AddToCart($addRequest: ItemRequest!) {
-    addItem(addRequest: $addRequest)
+    addItem(addRequest: $addRequest) {
+      _
+    }
   }
 `;
 
 export const editCartItemsMutation = /* GraphQL */ `
   mutation AddToCart($addRequest: ItemRequest!) {
-    addItem(addRequest: $addRequest)
+    addItem(addRequest: $addRequest) {
+      _
+    }
   }
 `;
 
 export const removeFromCartMutation = /* GraphQL */ `
   mutation RemoveFromCart($removeRequest: ItemRequest!) {
-    removeItem(removeRequest: $removeRequest)
+    removeItem(removeRequest: $removeRequest) {
+      _
+    }
   }
 `;
 
 export const resetCartMutation = /* GraphQL */ `
   mutation ResetCart($customerId: CartRequest!) {
-    resetCart(customerId: $customerId)
+    resetCart(customerId: $customerId) {
+      _
+    }
   }
 `;
 

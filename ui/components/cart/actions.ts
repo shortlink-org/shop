@@ -24,11 +24,13 @@ async function getOrCreateCartId() {
 
 export async function addItem(prevState: any, selectedVariantId: string | undefined) {
   if (!selectedVariantId) {
+    console.error('[addItem] missing selectedVariantId');
     return 'Error adding item to cart';
   }
 
   const cartId = await getOrCreateCartId();
   if (!cartId) {
+    console.error('[addItem] getOrCreateCartId returned empty');
     return 'Missing cart ID';
   }
 
@@ -40,6 +42,14 @@ export async function addItem(prevState: any, selectedVariantId: string | undefi
     });
     revalidateTag(TAGS.cart, 'max');
   } catch (e) {
+    const err = e as { message?: string; status?: number; cause?: unknown };
+    console.error('[addItem] addToCart failed', {
+      cartId,
+      selectedVariantId,
+      message: err?.message ?? String(e),
+      status: err?.status,
+      cause: err?.cause
+    });
     return 'Error adding item to cart';
   }
 }

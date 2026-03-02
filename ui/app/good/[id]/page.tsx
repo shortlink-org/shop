@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { Breadcrumbs } from '@shortlink-org/ui-kit';
 
 import { GridTileImage } from 'components/grid/tile';
+import { AddToCartBlock } from 'components/good/add-to-cart-block';
 import { BackButton } from 'components/good/back-button';
 import { Gallery } from 'components/good/gallery';
 import { GoodProvider } from 'components/good/good-context';
@@ -90,39 +91,52 @@ export default async function GoodPage(props: { params: Promise<{ id: string }> 
           __html: JSON.stringify(goodJsonLd)
         }}
       />
-      <div className="mx-auto max-w-screen-2xl px-4">
+      <div className="mx-auto max-w-screen-2xl px-4 pb-16">
         <Suspense fallback={null}>
-          <div className="mb-4 flex flex-col gap-2">
-            <Breadcrumbs
-              breadcrumbs={[
-                { id: 'home', name: 'Home', href: '/' },
-                { id: 'search', name: 'Search', href: '/search' },
-                { id: 'product', name: good.name, href: `/good/${good.id}` },
-              ]}
-            />
-            <BackButton goodId={good.id} />
-          </div>
-        </Suspense>
-        <div
-          className='flex flex-col rounded-lg border border-neutral-200 bg-white p-8 md:p-12 lg:flex-row lg:gap-8 dark:border-neutral-800 dark:bg-black'>
-          <div className='basis-full lg:basis-2/6'>
-            <Suspense fallback={null}>
-              <GoodDescription good={good} />
-            </Suspense>
-          </div>
-
-          <div className='h-full w-full basis-full lg:basis-4/6'>
-            <Suspense
-              fallback={
-                <div className='relative aspect-square h-full max-h-[550px] w-full overflow-hidden' />
-              }
-            >
-              <Gallery
-                images={images.slice(0, 5).map((image: Image) => ({
-                  src: image.url,
-                  altText: image.altText,
-                }))}
+          <nav
+            className="mb-4 flex flex-row flex-wrap items-center gap-2 sm:gap-4"
+            aria-label="Breadcrumb and back"
+          >
+            <BackButton goodId={good.id} className="shrink-0" />
+            <span className="hidden shrink-0 sm:inline" aria-hidden>
+              <span className="text-neutral-400 dark:text-neutral-500">|</span>
+            </span>
+            <div className="min-w-0 flex-1">
+              <Breadcrumbs
+                breadcrumbs={[
+                  { id: 'home', name: 'Home', href: '/' },
+                  { id: 'search', name: 'Search', href: '/search' },
+                  { id: 'product', name: good.name, href: `/good/${good.id}` },
+                ]}
               />
+            </div>
+          </nav>
+        </Suspense>
+        <div className='flex flex-col rounded-lg border border-neutral-200 bg-white p-8 md:p-12 dark:border-neutral-800 dark:bg-black'>
+          <div className='flex flex-col lg:flex-row lg:gap-8'>
+            <div className='basis-full lg:basis-2/6'>
+              <Suspense fallback={null}>
+                <GoodDescription good={good} />
+              </Suspense>
+            </div>
+            <div className='h-full w-full basis-full lg:basis-4/6'>
+              <Suspense
+                fallback={
+                  <div className='relative aspect-square h-full max-h-[550px] w-full overflow-hidden' />
+                }
+              >
+                <Gallery
+                  images={images.slice(0, 5).map((image: Image) => ({
+                    src: image.url,
+                    altText: image.altText,
+                  }))}
+                />
+              </Suspense>
+            </div>
+          </div>
+          <div className='mt-8 border-t border-neutral-200 pt-8 dark:border-neutral-800'>
+            <Suspense fallback={null}>
+              <AddToCartBlock good={good} />
             </Suspense>
           </div>
         </div>
