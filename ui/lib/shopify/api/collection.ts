@@ -44,6 +44,7 @@ export async function getCollectionProducts(
     const res = await shopifyFetch<ShopifyCollectionProductsOperation>({
       cache: 'no-store',
       query: getCollectionProductsQuery,
+      variables: { page: page ?? 1 },
       headers: options?.authorization ? { Authorization: options.authorization } : {}
     });
 

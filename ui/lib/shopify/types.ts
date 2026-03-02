@@ -232,6 +232,9 @@ export type ShopifyCollectionProductsOperation = {
       results: ShopifyProduct[];
     };
   };
+  variables?: {
+    page?: number;
+  };
 };
 
 export type ShopifyCollectionsOperation = {
