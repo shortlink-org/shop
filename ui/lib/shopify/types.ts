@@ -219,7 +219,7 @@ export type ShopifyCollectionOperation = {
     collection: ShopifyCollection;
   };
   variables: {
-    id: number;
+    handle: string;
   };
 };
 
@@ -253,13 +253,13 @@ export type ShopifyMenuOperation = {
     };
   };
   variables: {
-    id: number;
+    handle: string;
   };
 };
 
 export type ShopifyPageOperation = {
   data: { pageByHandle: Page };
-  variables: { id: number };
+  variables: { handle: string };
 };
 
 export type ShopifyPagesOperation = {
