@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
+import { Breadcrumbs } from '@shortlink-org/ui-kit';
 
 import { GridTileImage } from 'components/grid/tile';
 import { BackButton } from 'components/good/back-button';
@@ -91,7 +92,14 @@ export default async function GoodPage(props: { params: Promise<{ id: string }> 
       />
       <div className="mx-auto max-w-screen-2xl px-4">
         <Suspense fallback={null}>
-          <div className="mb-4">
+          <div className="mb-4 flex flex-col gap-2">
+            <Breadcrumbs
+              breadcrumbs={[
+                { id: 'home', name: 'Home', href: '/' },
+                { id: 'search', name: 'Search', href: '/search' },
+                { id: 'product', name: good.name, href: `/good/${good.id}` },
+              ]}
+            />
             <BackButton goodId={good.id} />
           </div>
         </Suspense>
