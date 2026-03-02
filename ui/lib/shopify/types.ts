@@ -232,7 +232,7 @@ export type ShopifyCollectionProductsOperation = {
       results: ShopifyProduct[];
     };
   };
-  variables?: {
+  variables: {
     page?: number;
   };
 };
