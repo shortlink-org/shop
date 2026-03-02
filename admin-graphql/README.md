@@ -56,7 +56,7 @@ The Tailcall configuration is in `config/admin.graphql`.
 
 #### Goods
 - `goods(page: Int): GoodsList` - Get paginated list of goods
-- `good(id: Int!): Good` - Get a single good by ID
+- `good(id: String!): Good` - Get a single good by ID (UUID)
 
 #### Offices
 - `offices`: [Office!]!` - Get all offices
@@ -106,9 +106,9 @@ query {
   }
 }
 
-# Get single good
+# Get single good (id is UUID string)
 query {
-  good(id: 1) {
+  good(id: "550e8400-e29b-41d4-a716-446655440000") {
     id
     name
     price
