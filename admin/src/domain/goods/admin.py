@@ -144,8 +144,8 @@ class GoodAdmin(SimpleHistoryAdmin, ModelAdmin, ImportExportModelAdmin):
         permissions=["duplicate"],
         url_path="duplicate",
     )
-    def duplicate_good(self, request: HttpRequest, object_id: int):
-        """Create a copy of the selected good."""
+    def duplicate_good(self, request: HttpRequest, object_id):
+        """Create a copy of the selected good (object_id is UUID)."""
         original = Good.objects.get(pk=object_id)
         Good.objects.create(
             name=f"{original.name} (Copy)",

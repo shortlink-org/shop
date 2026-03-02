@@ -1,5 +1,5 @@
 export const getGoodQuery = /* GraphQL */ `
-  query GetGood($id: Int!) {
+  query GetGood($id: String!) {
     good(id: $id) {
       id
       name

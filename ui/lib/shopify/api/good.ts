@@ -8,14 +8,14 @@ import { getGoodQuery, getGoodRecommendationsQuery, getGoodsQuery } from '../que
 export type RequestOptions = { authorization?: string };
 
 export async function getGood(
-  id: number,
+  id: string,
   options?: RequestOptions
 ): Promise<Good | undefined | typeof GOODS_UNAVAILABLE> {
   try {
     const res = await shopifyFetch<ShopifyProductOperation>({
       query: getGoodQuery,
       variables: {
-        id: id,
+        id,
       },
       headers: options?.authorization ? { Authorization: options.authorization } : {}
     });
@@ -28,7 +28,7 @@ export async function getGood(
 }
 
 export async function getGoodRecommendations(
-  id: number,
+  id: string,
   options?: RequestOptions
 ): Promise<Good[] | typeof GOODS_UNAVAILABLE> {
   try {

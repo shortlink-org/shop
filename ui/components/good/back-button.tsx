@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
 type BackButtonProps = {
-  goodId: number;
+  goodId: string;
   className?: string;
 };
 

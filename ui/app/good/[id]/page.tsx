@@ -21,10 +21,10 @@ export async function generateMetadata(props: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const params = await props.params;
-  const id = Number(params.id);
+  const id = params.id?.trim() ?? '';
   const authHeader = (await headers()).get('authorization') ?? undefined;
 
-  if (!Number.isFinite(id)) return notFound();
+  if (!id) return notFound();
 
   const good = await getGood(id, { authorization: authHeader });
 
@@ -41,10 +41,10 @@ export async function generateMetadata(props: {
 
 export default async function GoodPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
-  const id = Number(params.id);
+  const id = params.id?.trim() ?? '';
   const authHeader = (await headers()).get('authorization') ?? undefined;
 
-  if (!Number.isFinite(id)) return notFound();
+  if (!id) return notFound();
 
   const good = await getGood(id, { authorization: authHeader });
 
@@ -146,7 +146,7 @@ export default async function GoodPage(props: { params: Promise<{ id: string }> 
   );
 }
 
-async function RelatedGoods({ id }: { id: number }) {
+async function RelatedGoods({ id }: { id: string }) {
   const authHeader = (await headers()).get('authorization') ?? undefined;
   const relatedGoods = await getGoodRecommendations(id, {
     authorization: authHeader

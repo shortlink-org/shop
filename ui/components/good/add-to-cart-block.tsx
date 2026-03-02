@@ -8,7 +8,7 @@ import { Good, GoodVariant } from 'lib/shopify/types';
 export function AddToCartBlock({ good }: { good: Good }) {
   const { addCartItem } = useCart();
   const optimisticVariant: GoodVariant = {
-    id: String(good.id),
+    id: good.id,
     title: good.name,
     availableForSale: true,
     selectedOptions: [],
@@ -17,7 +17,7 @@ export function AddToCartBlock({ good }: { good: Good }) {
 
   const handleAddToCart = async () => {
     addCartItem(optimisticVariant, good);
-    await addItem(null, String(good.id));
+    await addItem(null, good.id);
   };
 
   return (

@@ -1,5 +1,6 @@
 """Define the Good model."""
 
+import uuid as uuid_lib
 from typing import ClassVar
 
 from django.contrib.postgres.fields import ArrayField
@@ -13,6 +14,12 @@ from simple_history.models import HistoricalRecords
 class Good(ExportModelOperationsMixin("goods"), models.Model):
     """Define the Good model."""
 
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid_lib.uuid4,
+        editable=False,
+        verbose_name=_("ID"),
+    )
     name = models.CharField(max_length=255)
     price = MoneyField(
         max_digits=10,
@@ -37,6 +44,7 @@ class Good(ExportModelOperationsMixin("goods"), models.Model):
     class Meta:
         verbose_name = _("Good")
         verbose_name_plural = _("Goods")
+        ordering = ["id"]
 
     def __str__(self):
         """Return the name of the good."""

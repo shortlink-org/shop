@@ -12,7 +12,7 @@ function SubmitButton({
   selectedVariantId
 }: {
   availableForSale: boolean;
-  selectedVariantId: number | undefined;
+  selectedVariantId: string | undefined;
 }) {
   const buttonClasses =
     'relative flex w-full items-center justify-center rounded-full bg-blue-600 p-4 tracking-wide text-white';
@@ -59,9 +59,9 @@ function SubmitButton({
 export function AddToCart({ good }: { good: Good }) {
   const { addCartItem } = useCart();
   const [message, formAction] = useFormState(addItem, null);
-  const actionWithVariant = formAction.bind(null, String(good.id));
+  const actionWithVariant = formAction.bind(null, good.id);
   const optimisticVariant: GoodVariant = {
-    id: String(good.id),
+    id: good.id,
     title: good.name,
     availableForSale: true,
     selectedOptions: [],

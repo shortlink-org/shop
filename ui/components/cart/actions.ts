@@ -42,13 +42,26 @@ export async function addItem(prevState: any, selectedVariantId: string | undefi
     });
     revalidateTag(TAGS.cart, 'max');
   } catch (e) {
-    const err = e as { message?: string; status?: number; cause?: unknown };
+    const err = e as Record<string, unknown>;
+    const msgRaw = err?.message ?? (e instanceof Error ? e.message : null);
+    const message =
+      typeof msgRaw === 'string'
+        ? msgRaw
+        : msgRaw != null
+          ? JSON.stringify(msgRaw)
+          : (err?.error != null && typeof (err.error as Record<string, unknown>)?.message === 'string')
+            ? (err.error as { message: string }).message
+            : null;
+    const serialized =
+      typeof e === 'object' && e !== null
+        ? JSON.stringify(e, (_, v) => (v instanceof Error ? { name: v.name, message: v.message } : v), 2)
+        : String(e);
     console.error('[addItem] addToCart failed', {
       cartId,
       selectedVariantId,
-      message: err?.message ?? String(e),
+      message: message ?? '(no message)',
       status: err?.status,
-      cause: err?.cause
+      serialized
     });
     return 'Error adding item to cart';
   }

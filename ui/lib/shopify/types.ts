@@ -13,7 +13,7 @@ export type Cart = Omit<ShopifyCart, 'lines'> & {
 };
 
 export type CartProduct = {
-  id: number;
+  id: string;
   handle: string;
   title: string;
   featuredImage?: Image;
@@ -127,7 +127,7 @@ export type ShopifyCollection = {
 };
 
 export type ShopifyProduct = {
-  id: number;
+  id: string;
   name: string;
   price: number;
   description: string;
@@ -269,11 +269,11 @@ export type ShopifyPagesOperation = {
 };
 
 export type ShopifyProductOperation = {
-  data: { 
+  data: {
     good: ShopifyProduct;
   };
   variables: {
-    id: number;
+    id: string;
   };
 };
 

@@ -41,10 +41,7 @@ function buildCartFromState(
         return null;
       }
 
-      const numericGoodId = Number(goodId);
-      const rawGood = Number.isFinite(numericGoodId)
-        ? await getGood(numericGoodId, options)
-        : undefined;
+      const rawGood = await getGood(goodId, options);
       const good = rawGood === GOODS_UNAVAILABLE_SENTINEL ? undefined : rawGood;
       const price = good?.price ?? 0;
       const title = good?.name ?? 'Unknown item';
@@ -63,7 +60,7 @@ function buildCartFromState(
           title,
           selectedOptions: [],
           product: {
-            id: good?.id ?? 0,
+            id: good?.id ?? goodId,
             handle: good?.name ?? goodId,
             title
           }

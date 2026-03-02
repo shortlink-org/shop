@@ -5,7 +5,7 @@
 Good entity representing a product in the shop.
 """
 type Good {
-  id: Int!
+  id: String!
   name: String!
   price: String!
   description: String!
@@ -61,7 +61,7 @@ type Query {
   """
   Get a single good by ID.
   """
-  good(id: Int!): Good
+  good(id: String!): Good
 
   """
   Get a paginated list of offices.
