@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
 import { GridTileImage } from 'components/grid/tile';
+import { BackButton } from 'components/good/back-button';
 import { Gallery } from 'components/good/gallery';
 import { GoodProvider } from 'components/good/good-context';
 import { GoodDescription } from 'components/good/good-description';
@@ -89,8 +90,19 @@ export default async function GoodPage(props: { params: Promise<{ id: string }> 
         }}
       />
       <div className="mx-auto max-w-screen-2xl px-4">
+        <Suspense fallback={null}>
+          <div className="mb-4">
+            <BackButton goodId={good.id} />
+          </div>
+        </Suspense>
         <div
           className='flex flex-col rounded-lg border border-neutral-200 bg-white p-8 md:p-12 lg:flex-row lg:gap-8 dark:border-neutral-800 dark:bg-black'>
+          <div className='basis-full lg:basis-2/6'>
+            <Suspense fallback={null}>
+              <GoodDescription good={good} />
+            </Suspense>
+          </div>
+
           <div className='h-full w-full basis-full lg:basis-4/6'>
             <Suspense
               fallback={
@@ -103,12 +115,6 @@ export default async function GoodPage(props: { params: Promise<{ id: string }> 
                   altText: image.altText,
                 }))}
               />
-            </Suspense>
-          </div>
-
-          <div className='basis-full lg:basis-2/6'>
-            <Suspense fallback={null}>
-              <GoodDescription good={good} />
             </Suspense>
           </div>
         </div>

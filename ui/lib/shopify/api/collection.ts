@@ -1,13 +1,24 @@
 import { TAGS } from 'lib/constants';
 import { shopifyFetch } from '../fetch';
-import { normalizeGood, reshapeCollection, reshapeCollections } from '../mappers';
+import { normalizeGood, reshapeCollection } from '../mappers';
 import { GOODS_UNAVAILABLE } from '../sentinels';
-import type { Collection, Good, ShopifyCollectionOperation, ShopifyCollectionProductsOperation, ShopifyCollectionsOperation } from '../types';
+import type { Collection, Good, ShopifyCollectionOperation, ShopifyCollectionProductsOperation } from '../types';
 import {
   getCollectionProductsQuery,
-  getCollectionQuery,
-  getCollectionsQuery
+  getCollectionQuery
 } from '../queries/collection';
+
+/** Default "All" collection — BFF has no Collection type / collections query. */
+const DEFAULT_COLLECTIONS: Collection[] = [
+  {
+    handle: '',
+    title: 'All',
+    description: 'All products',
+    seo: { title: 'All', description: 'All products' },
+    path: '/search',
+    updatedAt: new Date().toISOString(),
+  },
+];
 
 export type RequestOptions = { authorization?: string };
 
@@ -59,39 +70,8 @@ export async function getCollectionProducts(
 }
 
 export async function getCollections(
-  options?: RequestOptions
+  _options?: RequestOptions
 ): Promise<Collection[] | typeof GOODS_UNAVAILABLE> {
-  try {
-    const res = await shopifyFetch<ShopifyCollectionsOperation>({
-      query: getCollectionsQuery,
-      tags: [TAGS.collections],
-      headers: options?.authorization ? { Authorization: options.authorization } : {}
-    });
-
-    const shopifyCollections = res.body?.data?.collections
-      ? res.body.data.collections.edges.map((edge) => edge.node)
-      : [];
-
-    const collections = [
-      {
-        handle: '',
-        title: 'All',
-        description: 'All products',
-        seo: {
-          title: 'All',
-          description: 'All products',
-        },
-        path: '/search',
-        updatedAt: new Date().toISOString(),
-      },
-      ...reshapeCollections(shopifyCollections).filter(
-        (collection) => !collection.handle.startsWith('hidden')
-      ),
-    ];
-
-    return collections;
-  } catch (err) {
-    console.error('[getCollections] Failed to load collections', { err });
-    return GOODS_UNAVAILABLE;
-  }
+  // BFF has no Collection type / collections query; return default "All" only.
+  return DEFAULT_COLLECTIONS;
 }

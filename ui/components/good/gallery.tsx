@@ -4,11 +4,18 @@ import { ArrowLeftIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 import { GridTileImage } from 'components/grid/tile';
 import { useGood, useUpdateURL } from 'components/good/good-context';
 import Image from 'next/image';
+import { useSearchParams } from 'next/navigation';
 
 export function Gallery({ images }: { images: { src: string; altText: string }[] }) {
-  const { state, updateImage } = useGood();
+  const searchParams = useSearchParams();
+  const { updateImage } = useGood();
   const updateURL = useUpdateURL();
-  const imageIndex = state.image ? parseInt(state.image) : 0;
+
+  // Derive index from URL so big image and thumbnails always match (context can lag on hydration)
+  const param = searchParams.get('image');
+  const parsed = param !== null && param !== '' ? parseInt(param, 10) : 0;
+  const imageIndex =
+    Number.isFinite(parsed) && parsed >= 0 && parsed < images.length ? parsed : 0;
 
   const nextImageIndex = imageIndex + 1 < images.length ? imageIndex + 1 : 0;
   const previousImageIndex = imageIndex === 0 ? images.length - 1 : imageIndex - 1;
