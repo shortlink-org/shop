@@ -34,11 +34,11 @@ wheels = [
 
 [[package]]
 name = "certifi"
-version = "2026.1.4"
+version = "2026.2.25"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/e0/2d/a891ca51311197f6ad14a7ef42e2399f36cf2f9bd44752b3dc4eab60fdc5/certifi-2026.1.4.tar.gz", hash = "sha256:ac726dd470482006e014ad384921ed6438c457018f4b3d204aea4281258b2120", size = 154268 }
+sdist = { url = "https://files.pythonhosted.org/packages/af/2d/7bf41579a8986e348fa033a31cdd0e4121114f6bce2457e8876010b092dd/certifi-2026.2.25.tar.gz", hash = "sha256:e887ab5cee78ea814d3472169153c2d12cd43b14bd03329a39a9c6e2e80bfba7", size = 155029 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e6/ad/3cc14f097111b4de0040c83a525973216457bbeeb63739ef1ed275c1c021/certifi-2026.1.4-py3-none-any.whl", hash = "sha256:9943707519e4add1115f44c2bc244f782c0249876bf51b6599fee1ffbedd685c", size = 152900 },
+    { url = "https://files.pythonhosted.org/packages/9a/3c/c17fb3ca2d9c3acff52e30b309f538586f9f5b9c9cf454f3845fc9af4881/certifi-2026.2.25-py3-none-any.whl", hash = "sha256:027692e4402ad994f1c42e52a4997a9763c646b73e4096e4d5d6db8af1d6f0fa", size = 153684 },
 ]
 
 [[package]]
@@ -264,15 +264,15 @@ wheels = [
 
 [[package]]
 name = "django-health-check"
-version = "4.0.6"
+version = "4.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django" },
     { name = "dnspython" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/92/fe/718725c58fd177cff0cfb8abe3010f2cad582713f2bc52eaf7120b750dec/django_health_check-4.0.6.tar.gz", hash = "sha256:03837041ba8a235e810e16218f2ef3feb372c4af72776fa3676c16435c72171c", size = 20763 }
+sdist = { url = "https://files.pythonhosted.org/packages/f8/e6/37aefb657a522c410844d7fe617c997036ef570157905518c2bf03abfb8d/django_health_check-4.1.0.tar.gz", hash = "sha256:7c9ea01edad40b3ea1d9b5780fcec3fdc1e263f9d0c8503af3b043e6a4b38964", size = 21124 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3a/44/2fa6ec47c1c18159c094f7d00397a208b6311e8b26d603dd22ba6e79b99d/django_health_check-4.0.6-py3-none-any.whl", hash = "sha256:efba106bc4f92b1b084f3af751e9eeb0b5c1af77d0af212e432ede2ba8f1e94f", size = 25813 },
+    { url = "https://files.pythonhosted.org/packages/a2/01/a2a8e5250c0bf352660208bf62dd6bdc67d3c52c16a412da9c382b0bfd12/django_health_check-4.1.0-py3-none-any.whl", hash = "sha256:a823ec81aa108909855159fa1fdb84d443d0c25057de4cc98bfe230ae52d0751", size = 26173 },
 ]
 
 [[package]]
@@ -323,11 +323,14 @@ dependencies = [
 
 [[package]]
 name = "django-prometheus"
-version = "2.5.0.dev0"
-source = { git = "https://github.com/django-commons/django-prometheus?rev=master#ea2d559476675a688f82cc37fac22b796ec7bcba" }
+version = "2.4.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "django" },
     { name = "prometheus-client" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e8/b9/c758675671d71a1800feaad5c5fbcdecbd8d34296b63f9dc5662db39abda/django_prometheus-2.4.0.tar.gz", hash = "sha256:67da5c73d8e859aa73f6e11f52341c482691b17f8bd9844157cff6cdf51ce9bc", size = 24393 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/38/05/d980950fb8c3f6f96c644599b1a025fb50e827477b1acf36daef72aa7e76/django_prometheus-2.4.0-py2.py3-none-any.whl", hash = "sha256:5b46b5f07b02ba8dd7abdb03a3c39073e8fd9120e2293a1ecb949bbb865378ac", size = 29528 },
 ]
 
 [[package]]
@@ -1051,11 +1054,11 @@ wheels = [
 
 [[package]]
 name = "pytz"
-version = "2025.2"
+version = "2026.1.post1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/f8/bf/abbd3cdfb8fbc7fb3d4d38d320f2441b1e7cbe29be4f23797b4a2b5d8aac/pytz-2025.2.tar.gz", hash = "sha256:360b9e3dbb49a209c21ad61809c7fb453643e048b38924c765813546746e81c3", size = 320884 }
+sdist = { url = "https://files.pythonhosted.org/packages/56/db/b8721d71d945e6a8ac63c0fc900b2067181dbb50805958d4d4661cf7d277/pytz-2026.1.post1.tar.gz", hash = "sha256:3378dde6a0c3d26719182142c56e60c7f9af7e968076f31aae569d72a0358ee1", size = 321088 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/81/c4/34e93fe5f5429d7570ec1fa436f1986fb1f00c3e0f43a589fe2bbcd22c3f/pytz-2025.2-py2.py3-none-any.whl", hash = "sha256:5ddf76296dd8c44c26eb8f4b6f35488f3ccbf6fbbd7adee0b7262d43f0ec2f00", size = 509225 },
+    { url = "https://files.pythonhosted.org/packages/10/99/781fe0c827be2742bcc775efefccb3b048a3a9c6ce9aec0cbf4a101677e5/pytz-2026.1.post1-py2.py3-none-any.whl", hash = "sha256:f2fd16142fda348286a75e1a524be810bb05d444e5a081f37f7affc635035f7a", size = 510489 },
 ]
 
 [[package]]
@@ -1369,7 +1372,7 @@ test = [
 requires-dist = [
     { name = "asgiref", specifier = "==3.11.1" },
     { name = "attrs", specifier = "==25.4.0" },
-    { name = "certifi", specifier = "==2026.1.4" },
+    { name = "certifi", specifier = "==2026.2.25" },
     { name = "charset-normalizer", specifier = "==3.4.4" },
     { name = "deprecated", specifier = "==1.3.1" },
     { name = "django", specifier = "==6.0.2" },
@@ -1377,12 +1380,12 @@ requires-dist = [
     { name = "django-debug-toolbar", specifier = "==6.2.0" },
     { name = "django-environ", specifier = "==0.13.0" },
     { name = "django-filter" },
-    { name = "django-health-check", specifier = "==4.0.6" },
+    { name = "django-health-check", specifier = "==4.1.0" },
     { name = "django-import-export", specifier = ">=4.4.0" },
     { name = "django-map-widgets", specifier = ">=0.5.1" },
     { name = "django-money", specifier = ">=3.6.0" },
     { name = "django-ory-auth", git = "https://github.com/micro-company/django_ory_auth?rev=master" },
-    { name = "django-prometheus", git = "https://github.com/django-commons/django-prometheus?rev=master" },
+    { name = "django-prometheus", specifier = ">=2.3.1" },
     { name = "django-redis" },
     { name = "django-request-logging", specifier = "==0.7.5" },
     { name = "django-simple-history", specifier = ">=3.11.0" },
@@ -1427,7 +1430,7 @@ requires-dist = [
     { name = "pytest-cov", marker = "extra == 'test'", specifier = ">=7.0.0" },
     { name = "pytest-django", marker = "extra == 'test'", specifier = ">=4.12.0" },
     { name = "pytest-mock", marker = "extra == 'test'", specifier = ">=3.15.1" },
-    { name = "pytz", specifier = "==2025.2" },
+    { name = "pytz", specifier = "==2026.1.post1" },
     { name = "pyyaml", specifier = "==6.0.3" },
     { name = "redis" },
     { name = "referencing", specifier = "==0.37.0" },
@@ -1443,7 +1446,7 @@ requires-dist = [
     { name = "uritemplate", specifier = "==4.2.0" },
     { name = "urllib3", specifier = "==2.6.3" },
     { name = "uv", specifier = "==0.10.7" },
-    { name = "whitenoise", specifier = ">=6.8.0" },
+    { name = "whitenoise", specifier = ">=6.12.0" },
     { name = "wrapt", specifier = ">=1.17.3,<3" },
     { name = "zipp", specifier = "==3.23.0" },
 ]
@@ -1626,11 +1629,11 @@ wheels = [
 
 [[package]]
 name = "whitenoise"
-version = "6.11.0"
+version = "6.12.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/15/95/8c81ec6b6ebcbf8aca2de7603070ccf37dbb873b03f20708e0f7c1664bc6/whitenoise-6.11.0.tar.gz", hash = "sha256:0f5bfce6061ae6611cd9396a8231e088722e4fc67bc13a111be74c738d99375f", size = 26432 }
+sdist = { url = "https://files.pythonhosted.org/packages/cb/2a/55b3f3a4ec326cd077c1c3defeee656b9298372a69229134d930151acd01/whitenoise-6.12.0.tar.gz", hash = "sha256:f723ebb76a112e98816ff80fcea0a6c9b8ecde835f8ddda25df7a30a3c2db6ad", size = 26841 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6c/e9/4366332f9295fe0647d7d3251ce18f5615fbcb12d02c79a26f8dba9221b3/whitenoise-6.11.0-py3-none-any.whl", hash = "sha256:b2aeb45950597236f53b5342b3121c5de69c8da0109362aee506ce88e022d258", size = 20197 },
+    { url = "https://files.pythonhosted.org/packages/db/eb/d5583a11486211f3ebd4b385545ae787f32363d453c19fffd81106c9c138/whitenoise-6.12.0-py3-none-any.whl", hash = "sha256:fc5e8c572e33ebf24795b47b6a7da8da3c00cff2349f5b04c02f28d0cc5a3cc2", size = 20302 },
 ]
 
 [[package]]
