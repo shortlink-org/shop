@@ -91,26 +91,30 @@ deploy:
     # Ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
     pullPolicy: Always
 
-  # -- define a liveness probe that checks every 5 seconds, starting after 5 seconds
+  # -- Startup probe gives Django time to boot; failureThreshold * periodSeconds = max startup time
   startupProbe:
-    enabled: false
-    initialDelaySeconds: 30
+    enabled: true
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    failureThreshold: 24
     httpGet:
       path: /healthz/
       port: 8000
 
   # -- define a liveness probe that checks every 5 seconds, starting after 5 seconds
   livenessProbe:
-    enabled: false
-    initialDelaySeconds: 30
+    enabled: true
+    initialDelaySeconds: 5
+    periodSeconds: 10
     httpGet:
       path: /healthz/
       port: 8000
 
-  # -- define a readiness probe that checks every 5 seconds, starting after 5 seconds
+  # -- Readiness keeps pod out of Service until Django is up; avoids Envoy "no healthy upstream" 503s
   readinessProbe:
-    enabled: false
-    initialDelaySeconds: 30
+    enabled: true
+    initialDelaySeconds: 5
+    periodSeconds: 5
     httpGet:
       path: /healthz/
       port: 8000
