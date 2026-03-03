@@ -113,7 +113,7 @@ class Migration(migrations.Migration):
             reverse_sql=migrations.RunSQL.noop,
         ),
         migrations.RunSQL(
-            "ALTER TABLE goods_good DROP CONSTRAINT goods_good_pkey",
+            "ALTER TABLE goods_good DROP CONSTRAINT goods_good_pkey CASCADE",
             reverse_sql=migrations.RunSQL.noop,
         ),
         migrations.RunSQL(
