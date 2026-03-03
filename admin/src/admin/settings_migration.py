@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.auth",
     "django.contrib.gis",  # Required for PostGIS models
+    "django.contrib.postgres",  # Required for ArrayField (goods.Good.tags)
     # Domain apps with migrations
     "domain.goods",
     "domain.offices",

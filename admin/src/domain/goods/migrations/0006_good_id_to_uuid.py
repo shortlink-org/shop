@@ -34,36 +34,82 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name="good",
-            name="id_new",
-            field=models.UUIDField(db_index=True, null=True, unique=True),
+        # Add columns via RunSQL using PostgreSQL native UUID type (not varchar/char).
+        # Schema_editor does not defer indexes so we rename before __exit__ runs deferred_sql.
+        migrations.RunSQL(
+            "ALTER TABLE goods_good ADD COLUMN id_new UUID NULL",
+            reverse_sql=migrations.RunSQL.noop,
         ),
-        migrations.AddField(
-            model_name="goodimage",
-            name="good_new",
-            field=models.ForeignKey(
-                null=True,
-                on_delete=models.deletion.CASCADE,
-                related_name="+",
-                to="goods.good",
-                to_field="id_new",
-                db_column="good_new_id",
-            ),
+        migrations.SeparateDatabaseAndState(
+            state_operations=[
+                migrations.AddField(
+                    model_name="good",
+                    name="id_new",
+                    field=models.UUIDField(db_index=True, null=True, unique=True),
+                ),
+            ],
         ),
-        migrations.AddField(
-            model_name="historicalgood",
-            name="id_new",
-            field=models.UUIDField(db_index=True, null=True),
+        migrations.RunSQL(
+            "ALTER TABLE goods_goodimage ADD COLUMN good_new_id UUID NULL",
+            reverse_sql=migrations.RunSQL.noop,
+        ),
+        migrations.SeparateDatabaseAndState(
+            state_operations=[
+                migrations.AddField(
+                    model_name="goodimage",
+                    name="good_new",
+                    field=models.ForeignKey(
+                        null=True,
+                        on_delete=models.deletion.CASCADE,
+                        related_name="+",
+                        to="goods.good",
+                        to_field="id_new",
+                        db_column="good_new_id",
+                    ),
+                ),
+            ],
+        ),
+        migrations.RunSQL(
+            "ALTER TABLE goods_historicalgood ADD COLUMN id_new UUID NULL",
+            reverse_sql=migrations.RunSQL.noop,
+        ),
+        migrations.SeparateDatabaseAndState(
+            state_operations=[
+                migrations.AddField(
+                    model_name="historicalgood",
+                    name="id_new",
+                    field=models.UUIDField(db_index=True, null=True),
+                ),
+            ],
         ),
         migrations.RunPython(backfill_uuids, migrations.RunPython.noop),
         migrations.RunSQL(
             "ALTER TABLE goods_good ALTER COLUMN id_new SET NOT NULL",
             reverse_sql=migrations.RunSQL.noop,
         ),
-        # Drop PK; CASCADE automatically drops dependent FK (goods_goodimage.good_id -> goods_good.id)
+        # Drop only the FK on good_id (not good_new_id): PostgreSQL does not CASCADE from PK drop.
         migrations.RunSQL(
-            "ALTER TABLE goods_good DROP CONSTRAINT goods_good_pkey CASCADE",
+            """
+            DO $$
+            DECLARE
+                conname text;
+            BEGIN
+                SELECT c.conname INTO conname
+                FROM pg_constraint c
+                JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey) AND a.attnum > 0
+                WHERE c.conrelid = 'goods_goodimage'::regclass
+                  AND c.contype = 'f'
+                  AND c.confrelid = 'goods_good'::regclass
+                  AND a.attname = 'good_id';
+                IF conname IS NOT NULL THEN
+                    EXECUTE format('ALTER TABLE goods_goodimage DROP CONSTRAINT %I', conname);
+                END IF;
+            END $$;
+            """,
+            reverse_sql=migrations.RunSQL.noop,
+        ),
+        migrations.RunSQL(
+            "ALTER TABLE goods_good DROP CONSTRAINT goods_good_pkey",
             reverse_sql=migrations.RunSQL.noop,
         ),
         migrations.RunSQL(
