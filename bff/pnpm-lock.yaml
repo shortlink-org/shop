@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       wgc:
-        specifier: ^0.105.5
-        version: 0.105.5(@tanstack/react-query@5.90.21(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^0.105.7
+        version: 0.105.7(@tanstack/react-query@5.90.21(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
 
 packages:
 
@@ -324,17 +324,17 @@ packages:
     resolution: {integrity: sha512-Nst5JdK47VIl9UcGwtv2Rcgyn5lWtZ0/mhRQ4G8NN2isxpq2TO30iqHzmwoJycjWuyUfg3GFXqP/gFHXeV57IA==}
     engines: {node: '>=16.0.0'}
 
-  '@wundergraph/composition@0.51.1':
-    resolution: {integrity: sha512-mBOWdhPAok0xRtj7omBb5jjFsb0F+m5Y5ImT60s7R8sWPP4K3ucROwcmLUBbCW4PvmzLEsLVKuMnJsVtUdtVIQ==}
+  '@wundergraph/composition@0.51.2':
+    resolution: {integrity: sha512-f28IFsU6zdxQ1Ra7lLpTIFgIDk9+6QJBKu4vCc9MXahfzNMac70dWLJ0p8zNFdZJllPJbr0F0PVidrGjLIRHwQ==}
 
-  '@wundergraph/cosmo-connect@0.131.0':
-    resolution: {integrity: sha512-Uv5srr/Jz3XOiNikHVbFZ4zoZ0nFzNM3dCFslDGltQCczMMP40LDVqfFBSLotYHg6K9QpPyUQceKyHuvl1uRYQ==}
+  '@wundergraph/cosmo-connect@0.132.0':
+    resolution: {integrity: sha512-KHkUFEf3RSaPU217QktMac1qVWDTERC1UVM4w3f7EZyz0QzVEGibuH+dQhE80H/pnHw/hHo47RefsFZ1OAlH2g==}
 
-  '@wundergraph/cosmo-shared@0.43.4':
-    resolution: {integrity: sha512-XwNbGhkvS5XmnXiQx4SZL0YuOnX1N/XXCejvoI3atfr5A+TdLU5UDpEXr6TfibXKoCktnGD6Y8nVdhMP4Iw3aw==}
+  '@wundergraph/cosmo-shared@0.43.6':
+    resolution: {integrity: sha512-XlcGlYC9mNRDLzijcVm/zNdjikCR3d17ZjSIVE+4XGEhE9p86+KmOPQ6xDTXfnEiLvZVHXpxvg1YObuZxh1BOA==}
 
-  '@wundergraph/protographic@0.16.0':
-    resolution: {integrity: sha512-yFvAuY0YUYDEYyom/o6VWFHYY6UAYCNgVitficKegHL3t8Kj4/5OEU65FSEy92ikVKpb8JhgtpbuDcgSHjyXCg==}
+  '@wundergraph/protographic@0.16.2':
+    resolution: {integrity: sha512-bQz7b/RjjCC0ep2KOxq9g6F69KedTsM74QlQIm7OeYbpjVo4K7SV9LTPOwM8A6iXxMjS+HFvLVoDIM2sn4BKew==}
 
   abort-controller@3.0.0:
     resolution: {integrity: sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==}
@@ -1625,8 +1625,8 @@ packages:
   wcwidth@1.0.1:
     resolution: {integrity: sha512-XHPEwS0q6TaxcvG85+8EYkbiCux2XtWG2mkc47Ng2A77BQu9+DqIOJldST4HgPkuea7dvKSj5VgX3P1d4rW8Tg==}
 
-  wgc@0.105.5:
-    resolution: {integrity: sha512-EOQgH8Q8ZBV/+oPZA5G5BWmm8/XoXXEIzD5TrG7POjs5jihpEsMOyWQmV2H8I54xjWH0HfZ2lfIk2N8cbvmHGg==}
+  wgc@0.105.7:
+    resolution: {integrity: sha512-QYEaUumOTYzmAABr32wEXlEPxI66L0C8lEuN9dt9jdhxLPNFrzbtHJC7uRZtItqTnNY5kg1oWfvQ6qkuxYqUCg==}
     hasBin: true
 
   which-typed-array@1.1.20:
@@ -2038,7 +2038,7 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@wundergraph/composition@0.51.1':
+  '@wundergraph/composition@0.51.2':
     dependencies:
       '@graphql-tools/merge': 9.1.7(graphql@16.9.0)
       '@graphql-tools/schema': 10.0.31(graphql@16.9.0)
@@ -2048,7 +2048,7 @@ snapshots:
       lodash: 4.17.23
       pathe: 1.1.1
 
-  '@wundergraph/cosmo-connect@0.131.0(@connectrpc/connect@1.4.0(@bufbuild/protobuf@1.9.0))(@tanstack/react-query@5.90.21(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@wundergraph/cosmo-connect@0.132.0(@connectrpc/connect@1.4.0(@bufbuild/protobuf@1.9.0))(@tanstack/react-query@5.90.21(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@bufbuild/protobuf': 1.9.0
       '@connectrpc/connect-query': 1.4.2(@bufbuild/protobuf@1.9.0)(@connectrpc/connect@1.4.0(@bufbuild/protobuf@1.9.0))(@tanstack/react-query@5.90.21(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -2058,13 +2058,13 @@ snapshots:
       - react
       - react-dom
 
-  '@wundergraph/cosmo-shared@0.43.4(@connectrpc/connect@1.4.0(@bufbuild/protobuf@1.9.0))(@tanstack/react-query@5.90.21(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@wundergraph/cosmo-shared@0.43.6(@connectrpc/connect@1.4.0(@bufbuild/protobuf@1.9.0))(@tanstack/react-query@5.90.21(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@bufbuild/protobuf': 1.9.0
       '@graphql-tools/schema': 8.5.1(graphql@16.9.0)
       '@graphql-tools/utils': 11.0.0(graphql@16.9.0)
-      '@wundergraph/composition': 0.51.1
-      '@wundergraph/cosmo-connect': 0.131.0(@connectrpc/connect@1.4.0(@bufbuild/protobuf@1.9.0))(@tanstack/react-query@5.90.21(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@wundergraph/composition': 0.51.2
+      '@wundergraph/cosmo-connect': 0.132.0(@connectrpc/connect@1.4.0(@bufbuild/protobuf@1.9.0))(@tanstack/react-query@5.90.21(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       graphql: 16.9.0
       pino: 8.21.0
     transitivePeerDependencies:
@@ -2073,11 +2073,11 @@ snapshots:
       - react
       - react-dom
 
-  '@wundergraph/protographic@0.16.0(@connectrpc/connect@1.4.0(@bufbuild/protobuf@1.9.0))(@tanstack/react-query@5.90.21(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@wundergraph/protographic@0.16.2(@connectrpc/connect@1.4.0(@bufbuild/protobuf@1.9.0))(@tanstack/react-query@5.90.21(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@bufbuild/protobuf': 1.9.0
-      '@wundergraph/composition': 0.51.1
-      '@wundergraph/cosmo-connect': 0.131.0(@connectrpc/connect@1.4.0(@bufbuild/protobuf@1.9.0))(@tanstack/react-query@5.90.21(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@wundergraph/composition': 0.51.2
+      '@wundergraph/cosmo-connect': 0.132.0(@connectrpc/connect@1.4.0(@bufbuild/protobuf@1.9.0))(@tanstack/react-query@5.90.21(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       graphql: 16.9.0
       lodash-es: 4.17.21
       protobufjs: 7.5.4
@@ -3394,7 +3394,7 @@ snapshots:
     dependencies:
       defaults: 1.0.4
 
-  wgc@0.105.5(@tanstack/react-query@5.90.21(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  wgc@0.105.7(@tanstack/react-query@5.90.21(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       '@bufbuild/protobuf': 1.9.0
       '@connectrpc/connect': 1.4.0(@bufbuild/protobuf@1.9.0)
@@ -3402,10 +3402,10 @@ snapshots:
       '@graphql-tools/utils': 11.0.0(graphql@16.9.0)
       '@modelcontextprotocol/sdk': 1.26.0(zod@3.25.76)
       '@octokit/rest': 22.0.0
-      '@wundergraph/composition': 0.51.1
-      '@wundergraph/cosmo-connect': 0.131.0(@connectrpc/connect@1.4.0(@bufbuild/protobuf@1.9.0))(@tanstack/react-query@5.90.21(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@wundergraph/cosmo-shared': 0.43.4(@connectrpc/connect@1.4.0(@bufbuild/protobuf@1.9.0))(@tanstack/react-query@5.90.21(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@wundergraph/protographic': 0.16.0(@connectrpc/connect@1.4.0(@bufbuild/protobuf@1.9.0))(@tanstack/react-query@5.90.21(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@wundergraph/composition': 0.51.2
+      '@wundergraph/cosmo-connect': 0.132.0(@connectrpc/connect@1.4.0(@bufbuild/protobuf@1.9.0))(@tanstack/react-query@5.90.21(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@wundergraph/cosmo-shared': 0.43.6(@connectrpc/connect@1.4.0(@bufbuild/protobuf@1.9.0))(@tanstack/react-query@5.90.21(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@wundergraph/protographic': 0.16.2(@connectrpc/connect@1.4.0(@bufbuild/protobuf@1.9.0))(@tanstack/react-query@5.90.21(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       ajv: 8.17.1
       axios: 1.12.2
       boxen: 7.1.1
