@@ -211,8 +211,9 @@ func (h *CourierEmulationHandler) HandleOrderAssigned(ctx context.Context, event
 		event.AssignedAt,
 	)
 
-	if err := h.deliverySimulator.StartDelivery(ctx, event.CourierID, order); err != nil {
-		return fmt.Errorf("start delivery: %w", err)
+	startErr := h.deliverySimulator.StartDelivery(ctx, event.CourierID, order)
+	if startErr != nil {
+		return fmt.Errorf("start delivery: %w", startErr)
 	}
 
 	return nil

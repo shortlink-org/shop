@@ -115,15 +115,16 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (Result, error) {
 
 	// 7. Create order from lines (domain keeps invariants)
 	order := orderDomain.NewOrderState(cmd.CustomerID)
-	if err := order.CreateFromLines(ctx, lines); err != nil {
+	err = order.CreateFromLines(ctx, lines)
+	if err != nil {
 		return Result{}, fmt.Errorf("failed to create order: %w", err)
 	}
 
 	// 8. Set delivery info if provided
 	if cmd.DeliveryInfo != nil {
-		err := order.SetDeliveryInfo(*cmd.DeliveryInfo)
-		if err != nil {
-			return Result{}, fmt.Errorf("failed to set delivery info: %w", err)
+		setErr := order.SetDeliveryInfo(*cmd.DeliveryInfo)
+		if setErr != nil {
+			return Result{}, fmt.Errorf("failed to set delivery info: %w", setErr)
 		}
 	}
 
@@ -131,21 +132,23 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (Result, error) {
 	cart.Reset()
 
 	// 10. Save order (uses tx from ctx)
-	if err := h.orderRepo.Save(ctx, order); err != nil {
+	err = h.orderRepo.Save(ctx, order)
+	if err != nil {
 		return Result{}, fmt.Errorf("failed to save order: %w", err)
 	}
 
 	// 11. Save cart (uses tx from ctx)
-	if err := h.cartRepo.Save(ctx, cart); err != nil {
+	err = h.cartRepo.Save(ctx, cart)
+	if err != nil {
 		return Result{}, fmt.Errorf("failed to save cart: %w", err)
 	}
 
 	// 12. Publish domain events to outbox (same transaction).
 	// If outbox write fails, we must not commit — same as failing to save order/cart.
 	for _, event := range order.GetDomainEvents() {
-		err := h.publisher.Publish(ctx, event)
-		if err != nil {
-			return Result{}, fmt.Errorf("failed to publish domain event to outbox: %w", err)
+		pubErr := h.publisher.Publish(ctx, event)
+		if pubErr != nil {
+			return Result{}, fmt.Errorf("failed to publish domain event to outbox: %w", pubErr)
 		}
 	}
 

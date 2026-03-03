@@ -169,27 +169,9 @@ func executeSagaWithDelivery(ctx workflow.Context, input WorkflowInput) error {
 
 	// Step 2: Reserve stock (TODO: implement stock service activity)
 	workflow.SetCurrentDetails(ctx, fmt.Sprintf("**Step 2/%d:** Reserving stock...", totalSteps))
-	// err := workflow.ExecuteActivity(ctx, activities.ReserveStock, activities.ReserveStockRequest{
-	//     OrderID: input.OrderID,
-	//     Items:   input.Items,
-	// }).Get(ctx, nil)
-	// if err != nil {
-	//     workflow.SetCurrentDetails(ctx, "**Failed:** Stock reservation failed, compensating...")
-	//     // Compensation: cancel order
-	//     _ = workflow.ExecuteActivity(ctx, activities.CancelOrder, activities.CancelOrderRequest{OrderID: input.OrderID}).Get(ctx, nil)
-	//     return err
-	// }
 
 	// Step 3: Process payment (TODO: implement payment service activity)
 	workflow.SetCurrentDetails(ctx, fmt.Sprintf("**Step 3/%d:** Processing payment...", totalSteps))
-	// err = workflow.ExecuteActivity(ctx, activities.ProcessPayment, ...).Get(ctx, nil)
-	// if err != nil {
-	//     workflow.SetCurrentDetails(ctx, "**Failed:** Payment processing failed, compensating...")
-	//     // Compensation: release stock, cancel order
-	//     _ = workflow.ExecuteActivity(ctx, activities.ReleaseStock, ...).Get(ctx, nil)
-	//     _ = workflow.ExecuteActivity(ctx, activities.CancelOrder, ...).Get(ctx, nil)
-	//     return err
-	// }
 
 	// Step 4: Request delivery (activity loads order and uses domain delivery info)
 	if hasDelivery {

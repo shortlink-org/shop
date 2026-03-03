@@ -141,8 +141,10 @@ func (ds *DeliverySimulator) StartDelivery(ctx context.Context, courierID string
 
 // minRouteDistanceMeters and minRouteDuration ensure vo.NewRoute accepts the route
 // when from == to (e.g. start at pickup, route "to pickup" in tests without OSRM).
-const minRouteDistanceMeters = 1.0
-const minRouteDuration = time.Second
+const (
+	minRouteDistanceMeters = 1.0
+	minRouteDuration      = time.Second
+)
 
 // createMinimalRoute creates a minimal route between two points.
 func (ds *DeliverySimulator) createMinimalRoute(from, to vo.Location) (vo.Route, error) {
@@ -202,7 +204,7 @@ func encodeNumber(num int64) string {
 	if num < 0 {
 		num = ^(num << 1)
 	} else {
-		num = num << 1
+		num <<= 1
 	}
 
 	result := ""

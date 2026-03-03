@@ -50,6 +50,7 @@ func NewDeliverOrderEvent(
 	}
 
 	now := time.Now().UTC()
+
 	return DeliverOrderEvent{
 		OrderID:   order.OrderID(),
 		CourierID: courierID,

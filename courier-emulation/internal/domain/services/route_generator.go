@@ -129,10 +129,7 @@ func (rg *RouteGenerator) fetchRouteFromOSRM(ctx context.Context, origin, destin
 	}
 
 	defer func() {
-		err := resp.Body.Close()
-		if err != nil {
-			// Response body close error on defer, non-critical
-		}
+		_ = resp.Body.Close() //nolint:errcheck // best-effort close on defer
 	}()
 
 	if resp.StatusCode != http.StatusOK {
@@ -140,8 +137,9 @@ func (rg *RouteGenerator) fetchRouteFromOSRM(ctx context.Context, origin, destin
 	}
 
 	var osrmResp OSRMResponse
-	if err := json.NewDecoder(resp.Body).Decode(&osrmResp); err != nil {
-		return vo.Route{}, fmt.Errorf("%w: %w", ErrInvalidResponse, err)
+	decodeErr := json.NewDecoder(resp.Body).Decode(&osrmResp)
+	if decodeErr != nil {
+		return vo.Route{}, fmt.Errorf("%w: %w", ErrInvalidResponse, decodeErr)
 	}
 
 	if osrmResp.Code != "Ok" || len(osrmResp.Routes) == 0 {

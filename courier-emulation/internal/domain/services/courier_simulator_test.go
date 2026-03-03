@@ -2,7 +2,7 @@ package services
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"sync"
 	"testing"
 	"time"
@@ -70,7 +70,7 @@ func TestCourierSimulator_StartCourierWithRoute(t *testing.T) {
 
 	// Start courier
 	ctx, cancel := context.WithTimeoutCause(context.Background(), 2*time.Second,
-		fmt.Errorf("test timeout: StartCourierWithRoute (2s)"))
+		errors.New("test timeout: StartCourierWithRoute (2s)"))
 	defer cancel()
 
 	err = simulator.StartCourierWithRoute(ctx, "courier-1", route)

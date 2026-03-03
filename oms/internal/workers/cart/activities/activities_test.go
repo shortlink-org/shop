@@ -27,6 +27,7 @@ func TestAddItemRequest_ItemCreation(t *testing.T) {
 		}
 
 		// Simulate what the activity does internally
+		require.NotEmpty(t, req.CustomerID, "CustomerID set on request")
 		item, err := itemv1.NewItemWithPricing(req.GoodID, req.Quantity, req.Price, req.Discount, decimal.Zero)
 		require.NoError(t, err)
 		require.Equal(t, req.GoodID, item.GetGoodId())
@@ -43,7 +44,7 @@ func TestAddItemRequest_ItemCreation(t *testing.T) {
 			Price:      decimal.NewFromFloat(10.00),
 			Discount:   decimal.Zero,
 		}
-
+		require.NotEmpty(t, req.CustomerID, "CustomerID set on request")
 		_, err := itemv1.NewItemWithPricing(req.GoodID, req.Quantity, req.Price, req.Discount, decimal.Zero)
 		require.Error(t, err)
 		require.ErrorIs(t, err, itemv1.ErrItemGoodIdZero)
@@ -57,7 +58,7 @@ func TestAddItemRequest_ItemCreation(t *testing.T) {
 			Price:      decimal.NewFromFloat(10.00),
 			Discount:   decimal.Zero,
 		}
-
+		require.NotEmpty(t, req.CustomerID, "CustomerID set on request")
 		_, err := itemv1.NewItemWithPricing(req.GoodID, req.Quantity, req.Price, req.Discount, decimal.Zero)
 		require.Error(t, err)
 		require.ErrorIs(t, err, itemv1.ErrItemQuantityZero)

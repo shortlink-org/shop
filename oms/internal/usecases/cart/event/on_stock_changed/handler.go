@@ -77,7 +77,7 @@ func (h *Handler) Handle(ctx context.Context, event Event) error {
 			h.log.Warn("Failed to process cart",
 				slog.String("customer_id", customerID.String()),
 				slog.String("good_id", event.GoodID.String()),
-				slog.String("error", err.Error()))
+				slog.String("error", processErr.Error()))
 			// Continue processing other carts
 		}
 	}

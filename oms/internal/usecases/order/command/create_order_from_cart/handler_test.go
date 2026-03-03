@@ -190,7 +190,9 @@ func TestHandler_Handle_EmptyCart(t *testing.T) {
 	log, err := logger.New(logger.Default())
 	require.NoError(t, err)
 
-	defer log.Close()
+	defer func() {
+		_ = log.Close() //nolint:errcheck // teardown; ignore close error
+	}()
 
 	ctx := context.Background()
 	customerID := uuid.New()
@@ -236,7 +238,9 @@ func TestHandler_Handle_MultipleItems(t *testing.T) {
 	log, err := logger.New(logger.Default())
 	require.NoError(t, err)
 
-	defer log.Close()
+	defer func() {
+		_ = log.Close() //nolint:errcheck // teardown; ignore close error
+	}()
 
 	ctx := context.Background()
 	customerID := uuid.New()

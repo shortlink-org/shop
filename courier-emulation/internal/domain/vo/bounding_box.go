@@ -33,11 +33,13 @@ func NewBoundingBox(minLat, maxLat, minLon, maxLon float64) (BoundingBox, error)
 	}
 
 	// Validate coordinates are within valid ranges
-	if _, err := NewLocation(minLat, minLon); err != nil {
+	_, err := NewLocation(minLat, minLon)
+	if err != nil {
 		return BoundingBox{}, err
 	}
 
-	if _, err := NewLocation(maxLat, maxLon); err != nil {
+	_, err = NewLocation(maxLat, maxLon)
+	if err != nil {
 		return BoundingBox{}, err
 	}
 

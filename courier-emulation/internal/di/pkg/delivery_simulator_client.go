@@ -32,7 +32,7 @@ func NewDeliverySimulator(
 	deliveryWait := cfg.GetDuration("SIMULATION_DELIVERY_WAIT")
 	failureRate := cfg.GetFloat64("SIMULATION_FAILURE_RATE")
 
-	config := services.DeliverySimulatorConfig{
+	simCfg := services.DeliverySimulatorConfig{
 		UpdateInterval:   updateInterval,
 		SpeedKmH:         speedKmH,
 		TimeMultiplier:   timeMultiplier,
@@ -41,5 +41,5 @@ func NewDeliverySimulator(
 		FailureRate:      failureRate,
 	}
 
-	return services.NewDeliverySimulator(config, routeGen, locationPub, statusPub)
+	return services.NewDeliverySimulator(simCfg, routeGen, locationPub, statusPub)
 }

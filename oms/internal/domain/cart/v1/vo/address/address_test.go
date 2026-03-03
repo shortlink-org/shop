@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/shortlink-org/shop/oms/internal/domain/cart/v1/vo/location"
 )
 
@@ -226,7 +228,8 @@ func TestAddress_HasCoordinates(t *testing.T) {
 }
 
 func TestAddress_IsValid(t *testing.T) {
-	validAddr, _ := NewAddress("123 Main St", "Moscow", "101000", "Russia")
+	validAddr, err := NewAddress("123 Main St", "Moscow", "101000", "Russia")
+	require.NoError(t, err)
 	if !validAddr.IsValid() {
 		t.Errorf("Address.IsValid() = false for valid address")
 	}
@@ -297,10 +300,12 @@ func TestAddress_FullString(t *testing.T) {
 }
 
 func TestAddress_Equality(t *testing.T) {
-	addr1, _ := NewAddress("123 Main St", "Moscow", "101000", "Russia")
-	addr2, _ := NewAddress("123 Main St", "Moscow", "101000", "Russia")
-	addr3, _ := NewAddress("456 Oak Ave", "Moscow", "101000", "Russia")
-
+	addr1, err := NewAddress("123 Main St", "Moscow", "101000", "Russia")
+	require.NoError(t, err)
+	addr2, err := NewAddress("123 Main St", "Moscow", "101000", "Russia")
+	require.NoError(t, err)
+	addr3, err := NewAddress("456 Oak Ave", "Moscow", "101000", "Russia")
+	require.NoError(t, err)
 	if addr1 != addr2 {
 		t.Errorf("Addresses with same values should be equal")
 	}
