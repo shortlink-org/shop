@@ -1,0 +1,13 @@
+{{- if .Files.Get "files/grafana/dashboard.json" }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-grafana-dashboard
+  labels:
+    grafana_dashboard: "true"
+  annotations:
+    grafana_dashboard_folder: Shop
+data:
+  {{ .Chart.Name }}-dashboard.json: |
+{{ .Files.Get "files/grafana/dashboard.json" | nindent 4 }}
+{{- end }}

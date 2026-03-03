@@ -48,14 +48,40 @@
       }
     ]
   },
-  "description": "Django metrics dashboard using korfuri/django-prometheus Prometheus metrics exporter",
+  "description": "Admin panel: HTTP requests, response codes, latency and database activity.",
   "editable": true,
   "gnetId": 9528,
   "graphTooltip": 0,
   "id": null,
   "iteration": 1544716165397,
-  "links": [],
+  "links": [
+    {
+      "title": "Loki (logs)",
+      "type": "link",
+      "url": "/explore?left=%7B%22datasource%22%3A%22Loki%22%2C%22queries%22%3A%5B%7B%22refId%22%3A%22A%22%7D%5D%7D",
+      "icon": "doc",
+      "tooltip": "Open Loki Explore for logs"
+    },
+    {
+      "title": "Tempo (traces)",
+      "type": "link",
+      "url": "/explore?left=%7B%22datasource%22%3A%22Tempo%22%2C%22queries%22%3A%5B%7B%22refId%22%3A%22A%22%7D%5D%7D",
+      "icon": "doc",
+      "tooltip": "Open Tempo Explore for traces"
+    }
+  ],
   "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 2, "w": 24, "x": 0, "y": 0 },
+      "id": 0,
+      "options": {
+        "content": "**Explore:** [Logs (Loki)](/explore?left=%7B%22datasource%22%3A%22Loki%22%2C%22queries%22%3A%5B%7B%22refId%22%3A%22A%22%7D%5D%7D) | [Traces (Tempo)](/explore?left=%7B%22datasource%22%3A%22Tempo%22%2C%22queries%22%3A%5B%7B%22refId%22%3A%22A%22%7D%5D%7D)",
+        "mode": "markdown"
+      },
+      "title": "Links",
+      "type": "text"
+    },
     {
       "cacheTimeout": null,
       "colorBackground": false,
@@ -79,7 +105,7 @@
         "h": 2,
         "w": 12,
         "x": 0,
-        "y": 0
+        "y": 2
       },
       "id": 13,
       "interval": null,
@@ -159,7 +185,7 @@
         "h": 2,
         "w": 4,
         "x": 12,
-        "y": 0
+        "y": 2
       },
       "id": 15,
       "interval": null,
@@ -240,7 +266,7 @@
         "h": 2,
         "w": 4,
         "x": 16,
-        "y": 0
+        "y": 2
       },
       "id": 16,
       "interval": null,
@@ -321,7 +347,7 @@
         "h": 2,
         "w": 4,
         "x": 20,
-        "y": 0
+        "y": 2
       },
       "id": 17,
       "interval": null,
@@ -391,7 +417,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 2
+        "y": 4
       },
       "id": 2,
       "legend": {
@@ -476,7 +502,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 2
+        "y": 4
       },
       "id": 4,
       "legend": {
@@ -590,7 +616,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 11
+        "y": 13
       },
       "id": 7,
       "legend": {
@@ -677,7 +703,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 11
+        "y": 13
       },
       "id": 11,
       "legend": {
@@ -764,7 +790,7 @@
         "h": 5,
         "w": 24,
         "x": 0,
-        "y": 20
+        "y": 22
       },
       "id": 9,
       "legend": {
@@ -848,7 +874,7 @@
         "h": 5,
         "w": 24,
         "x": 0,
-        "y": 25
+        "y": 27
       },
       "id": 18,
       "legend": {
