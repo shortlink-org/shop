@@ -279,9 +279,9 @@ grpcio==1.78.0 \
     # via
     #   shop-admin (pyproject.toml)
     #   opentelemetry-exporter-otlp-proto-grpc
-gunicorn==25.0.0 \
-    --hash=sha256:4b1ab820ffc316352da7146005a9e66044a131434b17a7d2a9fb0604f1268864 \
-    --hash=sha256:b9b88f0ebc5a0fcd1e9e29a1f045f56f5402c6423ee3e3f675f679d0db5345d1
+gunicorn==25.1.0 \
+    --hash=sha256:1426611d959fa77e7de89f8c0f32eed6aa03ee735f98c01efba3e281b1c47616 \
+    --hash=sha256:d0b1236ccf27f72cfe14bce7caadf467186f19e865094ca84221424e839b8b8b
     # via shop-admin (pyproject.toml)
 idna==3.11 \
     --hash=sha256:771a87f49d9defaf64091e6e6fe9c18d4833f140bd19464795bc32d966ca37ea \
