@@ -96,11 +96,15 @@ class Migration(migrations.Migration):
             BEGIN
                 SELECT c.conname INTO conname
                 FROM pg_constraint c
-                JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey) AND a.attnum > 0
+                INNER JOIN pg_attribute a
+                  ON a.attrelid = c.conrelid
+                  AND a.attnum = (c.conkey)[1]
+                  AND a.attname = 'good_id'
+                  AND a.attnum > 0
+                  AND NOT a.attisdropped
                 WHERE c.conrelid = 'goods_goodimage'::regclass
                   AND c.contype = 'f'
-                  AND c.confrelid = 'goods_good'::regclass
-                  AND a.attname = 'good_id';
+                  AND c.confrelid = 'goods_good'::regclass;
                 IF conname IS NOT NULL THEN
                     EXECUTE format('ALTER TABLE goods_goodimage DROP CONSTRAINT %I', conname);
                 END IF;

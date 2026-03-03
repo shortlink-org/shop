@@ -16,9 +16,8 @@ def postgres_container():
     """Start a Postgres container with PostGIS for migration tests."""
     from testcontainers.postgres import PostgresContainer
 
-    image = "postgis/postgis:16-3.4-alpine"
     with PostgresContainer(
-        image=image,
+        image="postgis/postgis:16-3.4-alpine",
         username="postgres",
         password="shortlink",
         dbname="shortlink",
