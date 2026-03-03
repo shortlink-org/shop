@@ -61,6 +61,21 @@ class Migration(migrations.Migration):
             "ALTER TABLE goods_good ALTER COLUMN id_new SET NOT NULL",
             reverse_sql=migrations.RunSQL.noop,
         ),
+        # Drop FK from goodimage to good so we can drop good.id PK (PostgreSQL requirement)
+        migrations.RunSQL(
+            """
+            DO $$
+            DECLARE c name;
+            BEGIN
+              FOR c IN SELECT conname FROM pg_constraint
+                WHERE conrelid = 'goods_goodimage'::regclass AND confrelid = 'goods_good'::regclass
+              LOOP
+                EXECUTE format('ALTER TABLE goods_goodimage DROP CONSTRAINT %I', c);
+              END LOOP;
+            END $$;
+            """,
+            reverse_sql=migrations.RunSQL.noop,
+        ),
         migrations.RunSQL(
             "ALTER TABLE goods_good DROP CONSTRAINT goods_good_pkey",
             reverse_sql=migrations.RunSQL.noop,
