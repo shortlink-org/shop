@@ -168,7 +168,7 @@ func (h *Handler) processCart(ctx context.Context, customerID, goodID uuid.UUID)
 
 	// Post-commit: use a context without tx so index/notifier don't see a closed transaction
 	ctxClean, cancel := uow.ContextWithoutTx(ctx)
-	defer cancel()
+	defer cancel(nil)
 
 	// Update index
 	if err := h.goodsIndex.RemoveGoodFromCart(ctxClean, goodID, customerID); err != nil {

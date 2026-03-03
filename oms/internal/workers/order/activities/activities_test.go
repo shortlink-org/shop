@@ -158,8 +158,8 @@ func TestActivities_GetOrder_ContextCancelled(t *testing.T) {
 	activities := New(cancelHandler, getHandler, deliveryClient)
 
 	// Create canceled context
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
+	ctx, cancel := context.WithCancelCause(context.Background())
+	cancel(errors.New("test context canceled"))
 
 	// Set up expectation with context error
 	getHandler.On("Handle", mock.Anything, orderGet.NewQuery(testOrderID)).Return(nil, context.Canceled)

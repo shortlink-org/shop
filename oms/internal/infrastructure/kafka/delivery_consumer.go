@@ -34,7 +34,10 @@ const (
 	TopicDeliveryPackageStatus = "delivery.package.status.v1"
 )
 
-var errUnsupportedEventType = errors.New("unsupported or non-status event_type")
+var (
+	errUnsupportedEventType = errors.New("unsupported or non-status event_type")
+	errConsumerClosed       = errors.New("consumer closed")
+)
 
 // DeliveryStatusEvent represents a delivery status update from the Delivery service.
 type DeliveryStatusEvent struct {
@@ -100,7 +103,7 @@ type DeliveryConsumer struct {
 	handler    DeliveryEventHandler
 	log        logger.Logger
 	subscriber *kafka.Subscriber
-	cancel     context.CancelFunc
+	cancel     context.CancelCauseFunc
 }
 
 // NewDeliveryConsumer creates a new delivery consumer.
@@ -146,7 +149,7 @@ func (c *DeliveryConsumer) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to subscribe to topic: %w", err)
 	}
 
-	ctx, c.cancel = context.WithCancel(ctx)
+	ctx, c.cancel = context.WithCancelCause(ctx)
 
 	go func() {
 		for {
@@ -301,7 +304,7 @@ func timestampToTime(ts *timestamppb.Timestamp) time.Time {
 // Close closes the consumer.
 func (c *DeliveryConsumer) Close() error {
 	if c.cancel != nil {
-		c.cancel()
+		c.cancel(errConsumerClosed)
 	}
 
 	return c.subscriber.Close()
