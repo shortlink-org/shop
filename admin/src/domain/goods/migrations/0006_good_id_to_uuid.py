@@ -87,33 +87,29 @@ class Migration(migrations.Migration):
             "ALTER TABLE goods_good ALTER COLUMN id_new SET NOT NULL",
             reverse_sql=migrations.RunSQL.noop,
         ),
-        # Drop only the FK on good_id (not good_new_id): PostgreSQL does not CASCADE from PK drop.
+        # Drop all FK constraints from goods_goodimage to goods_good before PK swap.
+        # Constraint names may differ across environments, so detect dynamically.
         migrations.RunSQL(
             """
             DO $$
             DECLARE
-                conname text;
+                fk record;
             BEGIN
-                SELECT c.conname INTO conname
-                FROM pg_constraint c
-                INNER JOIN pg_attribute a
-                  ON a.attrelid = c.conrelid
-                  AND a.attnum = (c.conkey)[1]
-                  AND a.attname = 'good_id'
-                  AND a.attnum > 0
-                  AND NOT a.attisdropped
-                WHERE c.conrelid = 'goods_goodimage'::regclass
-                  AND c.contype = 'f'
-                  AND c.confrelid = 'goods_good'::regclass;
-                IF conname IS NOT NULL THEN
-                    EXECUTE format('ALTER TABLE goods_goodimage DROP CONSTRAINT %I', conname);
-                END IF;
+                FOR fk IN
+                    SELECT c.conname
+                    FROM pg_constraint c
+                    WHERE c.conrelid = 'goods_goodimage'::regclass
+                      AND c.contype = 'f'
+                      AND c.confrelid = 'goods_good'::regclass
+                LOOP
+                    EXECUTE format('ALTER TABLE goods_goodimage DROP CONSTRAINT %I', fk.conname);
+                END LOOP;
             END $$;
             """,
             reverse_sql=migrations.RunSQL.noop,
         ),
         migrations.RunSQL(
-            "ALTER TABLE goods_good DROP CONSTRAINT goods_good_pkey CASCADE",
+            "ALTER TABLE goods_good DROP CONSTRAINT goods_good_pkey",
             reverse_sql=migrations.RunSQL.noop,
         ),
         migrations.RunSQL(
