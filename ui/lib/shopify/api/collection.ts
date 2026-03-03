@@ -22,6 +22,21 @@ const DEFAULT_COLLECTIONS: Collection[] = [
 
 export type RequestOptions = { authorization?: string };
 
+function normalizePage(page: unknown): number {
+  if (typeof page === 'number' && Number.isInteger(page) && page > 0) {
+    return page;
+  }
+
+  if (typeof page === 'string') {
+    const trimmed = page.trim();
+    if (/^[1-9]\d*$/.test(trimmed)) {
+      return Number(trimmed);
+    }
+  }
+
+  return 1;
+}
+
 export async function getCollection(
   id: number,
   options?: RequestOptions
@@ -45,15 +60,21 @@ export async function getCollectionProducts(
   {
     page
   }: {
-    page?: number;
+    page?: number | string;
   } = {},
   options?: RequestOptions
 ): Promise<Good[] | typeof GOODS_UNAVAILABLE> {
   try {
+    const normalizedPage = normalizePage(page);
+
+    if (page !== undefined && normalizedPage === 1 && page !== 1 && page !== '1') {
+      console.warn('[getCollectionProducts] Invalid page value, fallback to 1', { page });
+    }
+
     const res = await shopifyFetch<ShopifyCollectionProductsOperation>({
       cache: 'no-store',
       query: getCollectionProductsQuery,
-      variables: { page: page ?? 1 },
+      variables: { page: normalizedPage },
       headers: options?.authorization ? { Authorization: options.authorization } : {}
     });
 
