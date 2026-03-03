@@ -1,30 +1,15 @@
 #!/usr/bin/env python
 """Django's command-line utility for administrative tasks."""
 
-import logging
 import os
 import sys
 
-from opentelemetry import trace
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.instrumentation.django import DjangoInstrumentor
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-from admin.otel_logging import CustomLogRecord
+from admin.otel_setup import configure_opentelemetry
 
-# Initialize OpenTelemetry with OTLP exporter
-provider = TracerProvider()
-otlp_exporter = OTLPSpanExporter(
-    endpoint=os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT", "http://grafana-tempo.grafana:4317"),
-    insecure=True,
-)
-processor = BatchSpanProcessor(otlp_exporter)
-provider.add_span_processor(processor)
-trace.set_tracer_provider(provider)
-
-logging.setLogRecordFactory(CustomLogRecord)
+configure_opentelemetry()
 
 
 def main():

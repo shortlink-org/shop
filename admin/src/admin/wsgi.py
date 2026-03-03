@@ -11,7 +11,10 @@ import os
 from django.core.wsgi import get_wsgi_application
 from opentelemetry.instrumentation.wsgi import OpenTelemetryMiddleware
 
+from admin.otel_setup import configure_opentelemetry
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "admin.settings")
+configure_opentelemetry()
 
 application = get_wsgi_application()
 
