@@ -8,6 +8,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 
@@ -34,7 +35,7 @@ func main() {
 	}()
 
 	// Create context for subscriber that can be canceled on shutdown
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancelCause(context.Background())
 
 	// Start the delivery subscriber to consume order assignment events
 	if service.DeliverySubscriber != nil {
@@ -54,7 +55,7 @@ func main() {
 	signal := graceful_shutdown.GracefulShutdown()
 
 	// Cancel the subscriber context to signal it to stop
-	cancel()
+	cancel(fmt.Errorf("shutdown signal received: %s", signal))
 
 	// Run cleanup (stops simulations and closes publishers)
 	cleanup()
