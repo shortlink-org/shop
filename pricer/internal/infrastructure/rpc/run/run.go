@@ -11,5 +11,6 @@ func Run(runRPCServer *grpc.Server) (*Response, error) {
 		go runRPCServer.Run()
 	}
 
-	return nil, nil
+	// Run() blocks until shutdown; return value is only for compatibility.
+	return nil, nil //nolint:nilnil // Run is fire-and-forget, caller ignores result
 }

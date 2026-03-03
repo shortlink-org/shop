@@ -67,9 +67,9 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (Result, error) {
 	}
 
 	defer func() {
-		err := h.uow.Rollback(ctx)
-		if err != nil {
-			h.log.Warn("rollback failed", slog.Any("error", err))
+		rollbackErr := h.uow.Rollback(ctx)
+		if rollbackErr != nil {
+			h.log.Warn("rollback failed", slog.Any("error", rollbackErr))
 		}
 	}()
 

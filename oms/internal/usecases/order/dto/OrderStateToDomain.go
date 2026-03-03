@@ -38,9 +38,9 @@ func OrderStateToDomain(in *v3.OrderState) (*v1.OrderState, error) {
 
 	// Add items to the order
 	for _, item := range in.GetItems() {
-		goodID, err := uuid.Parse(item.GetId())
-		if err != nil {
-			return nil, fmt.Errorf("%w: %w", errInvalidItemID, err)
+		goodID, parseErr := uuid.Parse(item.GetId())
+		if parseErr != nil {
+			return nil, fmt.Errorf("%w: %w", errInvalidItemID, parseErr)
 		}
 
 		price := decimal.NewFromFloat(item.GetPrice())

@@ -30,14 +30,33 @@ func TestAddRequestToDomain(t *testing.T) {
 			},
 			expectedError: nil,
 			expectedState: func() *domain.State {
-				customerId, _ := uuid.Parse("e2c8ba97-1a6b-4c5c-9a2a-3f4c9b9d65a1")
-				goodId1, _ := uuid.Parse("c5f5d6d6-98e6-4f57-b34a-48a3997f28d4")
-				goodId2, _ := uuid.Parse("da3f3a3e-784d-4a9a-8cfa-6321d555d6a3")
+				customerId, err := uuid.Parse("e2c8ba97-1a6b-4c5c-9a2a-3f4c9b9d65a1")
+				if err != nil {
+					panic(err)
+				}
+				goodId1, err := uuid.Parse("c5f5d6d6-98e6-4f57-b34a-48a3997f28d4")
+				if err != nil {
+					panic(err)
+				}
+				goodId2, err := uuid.Parse("da3f3a3e-784d-4a9a-8cfa-6321d555d6a3")
+				if err != nil {
+					panic(err)
+				}
 				state := domain.New(customerId)
-				item1, _ := itemv1.NewItem(goodId1, 1)
-				_ = state.AddItem(item1)
-				item2, _ := itemv1.NewItem(goodId2, 2)
-				_ = state.AddItem(item2)
+				item1, err := itemv1.NewItem(goodId1, 1)
+				if err != nil {
+					panic(err)
+				}
+				if addErr := state.AddItem(item1); addErr != nil {
+					panic(addErr)
+				}
+				item2, err := itemv1.NewItem(goodId2, 2)
+				if err != nil {
+					panic(err)
+				}
+				if addErr := state.AddItem(item2); addErr != nil {
+					panic(addErr)
+				}
 
 				return state
 			}(),

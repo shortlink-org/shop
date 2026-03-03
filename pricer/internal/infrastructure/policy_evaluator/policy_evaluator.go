@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/dgraph-io/ristretto/v2"
-	"github.com/open-policy-agent/opa/rego"
+	"github.com/open-policy-agent/opa/rego" //nolint:staticcheck // SA1019: legacy OPA API for v0.x compatibility
 	logger "github.com/shortlink-org/go-sdk/logger"
 
 	"github.com/shortlink-org/shop/pricer/internal/domain"
@@ -38,9 +38,11 @@ const (
 	cacheTTL         = 30 * time.Minute // pricing rules don't change frequently
 )
 
-// PolicyEvaluator interface as defined
+// PolicyEvaluator interface as defined (used by DI and callers).
+//
+//nolint:iface // interface is implemented by OPAEvaluator and used by DI
 type PolicyEvaluator interface {
-	Evaluate(ctx context.Context, cart *domain.Cart, params map[string]interface{}) (float64, error)
+	Evaluate(ctx context.Context, cart *domain.Cart, params map[string]any) (float64, error)
 	Close()
 }
 
@@ -61,7 +63,8 @@ func NewOPAEvaluator(log logger.Logger, policyPath, query string) (*OPAEvaluator
 	)
 
 	// Check if the policy directory exists
-	if _, err := os.Stat(policyPath); os.IsNotExist(err) {
+	_, err := os.Stat(policyPath)
+	if os.IsNotExist(err) {
 		return nil, fmt.Errorf("%s: %w", policyPath, ErrPolicyDirNotExist)
 	}
 
@@ -103,7 +106,7 @@ func (e *OPAEvaluator) Close() {
 
 // Evaluate executes the OPA policy against the provided cart and parameters.
 // Uses L1 cache to avoid re-evaluating identical inputs.
-func (e *OPAEvaluator) Evaluate(ctx context.Context, cart *domain.Cart, params map[string]interface{}) (float64, error) {
+func (e *OPAEvaluator) Evaluate(ctx context.Context, cart *domain.Cart, params map[string]any) (float64, error) {
 	// Generate cache key from cart and params
 	cacheKey := e.generateCacheKey(cart, params)
 
@@ -115,17 +118,17 @@ func (e *OPAEvaluator) Evaluate(ctx context.Context, cart *domain.Cart, params m
 	// Cache miss - evaluate the policy
 	input := transformCartToInput(cart, params)
 
-	rs, err := e.preparedQuery.Eval(ctx, rego.EvalInput(input))
+	resultSet, err := e.preparedQuery.Eval(ctx, rego.EvalInput(input))
 	if err != nil {
 		return 0.0, fmt.Errorf("OPA evaluation error: %w", err)
 	}
 
-	if len(rs) == 0 {
+	if len(resultSet) == 0 {
 		return 0.0, nil // No result from policy
 	}
 
 	// Assuming the policy returns a single value
-	expr := rs[0].Expressions[0].Value
+	expr := resultSet[0].Expressions[0].Value
 
 	result, err := parseOPAResult(expr)
 	if err != nil {
@@ -139,18 +142,18 @@ func (e *OPAEvaluator) Evaluate(ctx context.Context, cart *domain.Cart, params m
 }
 
 // generateCacheKey creates a deterministic hash key from cart and params.
-func (e *OPAEvaluator) generateCacheKey(cart *domain.Cart, params map[string]interface{}) string {
-	h := sha256.New()
+func (e *OPAEvaluator) generateCacheKey(cart *domain.Cart, params map[string]any) string {
+	hasher := sha256.New()
 
 	// Include policy path in the key (different policies = different results)
-	h.Write([]byte(e.policyPath))
-	h.Write([]byte(e.query))
+	_, _ = hasher.Write([]byte(e.policyPath))
+	_, _ = hasher.Write([]byte(e.query))
 
 	// Hash cart items in a deterministic order
 	for _, item := range cart.Items {
-		h.Write([]byte(item.GoodID.String()))
-		fmt.Fprintf(h, "%d", item.Quantity)
-		h.Write([]byte(item.Price.String()))
+		_, _ = hasher.Write([]byte(item.GoodID.String()))
+		_, _ = fmt.Fprintf(hasher, "%d", item.Quantity) //nolint:errcheck // hash write best-effort
+		_, _ = hasher.Write([]byte(item.Price.String()))
 	}
 
 	// Hash params in sorted order for determinism
@@ -163,52 +166,54 @@ func (e *OPAEvaluator) generateCacheKey(cart *domain.Cart, params map[string]int
 		sort.Strings(keys)
 
 		for _, k := range keys {
-			h.Write([]byte(k))
-			fmt.Fprintf(h, "%v", params[k])
+			_, _ = hasher.Write([]byte(k))
+			_, _ = fmt.Fprintf(hasher, "%v", params[k]) //nolint:errcheck // hash write best-effort
 		}
 	}
 
-	return hex.EncodeToString(h.Sum(nil))
+	return hex.EncodeToString(hasher.Sum(nil))
 }
 
 // transformCartToInput converts the domain.Cart to the input format expected by OPA
-func transformCartToInput(cart *domain.Cart, params map[string]interface{}) map[string]interface{} {
-	var items []map[string]interface{}
+func transformCartToInput(cart *domain.Cart, params map[string]any) map[string]any {
+	items := make([]map[string]any, 0, len(cart.Items))
 	for _, item := range cart.Items {
-		items = append(items, map[string]interface{}{
+		items = append(items, map[string]any{
 			"productId": item.GoodID.String(),
 			"quantity":  item.Quantity,
 			"price":     item.Price.InexactFloat64(),
 		})
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"items":  items,
 		"params": params, // Include additional parameters if needed
 	}
 }
 
+const float64Bits = 64
+
 // parseOPAResult handles different types that OPA might return and converts them to float64
-func parseOPAResult(value interface{}) (float64, error) {
-	switch v := value.(type) {
+func parseOPAResult(value any) (float64, error) {
+	switch val := value.(type) {
 	case float64:
-		return v, nil
+		return val, nil
 	case string:
-		parsed, err := strconv.ParseFloat(v, 64)
+		parsed, err := strconv.ParseFloat(val, float64Bits)
 		if err != nil {
 			return 0.0, fmt.Errorf("%w: %w", ErrOPAResultInvalidStr, err)
 		}
 
 		return parsed, nil
 	case json.Number:
-		parsed, err := v.Float64()
+		parsed, err := val.Float64()
 		if err != nil {
 			return 0.0, fmt.Errorf("%w: %w", ErrOPAResultInvalidNum, err)
 		}
 
 		return parsed, nil
 	default:
-		return 0.0, fmt.Errorf("%T: %w", v, ErrOPAResultUnexpectedType)
+		return 0.0, fmt.Errorf("%T: %w", val, ErrOPAResultUnexpectedType)
 	}
 }
 

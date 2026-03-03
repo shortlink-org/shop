@@ -40,9 +40,9 @@ func (h *Handler) Handle(ctx context.Context, q Query) (Result, error) {
 	}
 
 	defer func() {
-		err := h.uow.Rollback(ctx)
-		if err != nil {
-			slog.Default().WarnContext(ctx, "transaction rollback failed", "error", err)
+		rollbackErr := h.uow.Rollback(ctx)
+		if rollbackErr != nil {
+			slog.Default().WarnContext(ctx, "transaction rollback failed", "error", rollbackErr)
 		}
 	}()
 

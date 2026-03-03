@@ -1,4 +1,4 @@
-package v1
+package v1 //nolint:funlen,funcorder // FSM and helpers; order kept for readability
 
 import (
 	"context"

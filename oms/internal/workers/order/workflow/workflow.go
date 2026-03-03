@@ -206,7 +206,7 @@ func executeSagaWithDelivery(ctx workflow.Context, input WorkflowInput) error {
 			// Compensation: cancel order (stock release would also be needed if implemented)
 			var cancelActivities *activities.Activities
 
-			_ = workflow.ExecuteActivity(ctx, cancelActivities.CancelOrder, activities.CancelOrderRequest{OrderID: input.OrderID}).Get(ctx, nil)
+			_ = workflow.ExecuteActivity(ctx, cancelActivities.CancelOrder, activities.CancelOrderRequest{OrderID: input.OrderID}).Get(ctx, nil) //nolint:errcheck // best-effort compensation
 
 			return err
 		}

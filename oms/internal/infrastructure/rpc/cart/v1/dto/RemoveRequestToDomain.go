@@ -1,4 +1,4 @@
-package dto
+package dto //nolint:dupl // Add and Remove DTOs intentionally share structure
 
 import (
 	"fmt"

@@ -126,7 +126,7 @@ func Workflow(ctx workflow.Context, customerID uuid.UUID) error {
 		})
 		_ = workflow.ExecuteActivity(timeoutResetCtx, "ResetCart", activities.ResetCartRequest{
 			CustomerID: customerID,
-		}).Get(ctx, nil)
+		}).Get(ctx, nil) //nolint:errcheck // best-effort reset on timeout
 	})
 
 	// Process signals until timeout

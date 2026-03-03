@@ -23,7 +23,9 @@ func TestHandler_Handle_WithPricer(t *testing.T) {
 	log, err := logger.New(logger.Default())
 	require.NoError(t, err)
 
-	defer log.Close()
+	defer func() {
+		_ = log.Close() //nolint:errcheck // teardown; ignore close error
+	}()
 
 	ctx := context.Background()
 	customerID := uuid.New()
@@ -94,7 +96,9 @@ func TestHandler_Handle_WithoutPricer(t *testing.T) {
 	log, err := logger.New(logger.Default())
 	require.NoError(t, err)
 
-	defer log.Close()
+	defer func() {
+		_ = log.Close() //nolint:errcheck // teardown; ignore close error
+	}()
 
 	ctx := context.Background()
 	customerID := uuid.New()
@@ -137,7 +141,9 @@ func TestHandler_Handle_PricerError(t *testing.T) {
 	log, err := logger.New(logger.Default())
 	require.NoError(t, err)
 
-	defer log.Close()
+	defer func() {
+		_ = log.Close() //nolint:errcheck // teardown; ignore close error
+	}()
 
 	ctx := context.Background()
 	customerID := uuid.New()
@@ -239,9 +245,12 @@ func TestHandler_Handle_MultipleItems(t *testing.T) {
 	goodID3 := uuid.New()
 
 	// Create cart with multiple items
-	item1, _ := itemv1.NewItemWithPricing(goodID1, 2, decimal.NewFromInt(25), decimal.Zero, decimal.Zero)
-	item2, _ := itemv1.NewItemWithPricing(goodID2, 1, decimal.NewFromInt(50), decimal.Zero, decimal.Zero)
-	item3, _ := itemv1.NewItemWithPricing(goodID3, 3, decimal.NewFromInt(10), decimal.Zero, decimal.Zero)
+	item1, err := itemv1.NewItemWithPricing(goodID1, 2, decimal.NewFromInt(25), decimal.Zero, decimal.Zero)
+	require.NoError(t, err)
+	item2, err := itemv1.NewItemWithPricing(goodID2, 1, decimal.NewFromInt(50), decimal.Zero, decimal.Zero)
+	require.NoError(t, err)
+	item3, err := itemv1.NewItemWithPricing(goodID3, 3, decimal.NewFromInt(10), decimal.Zero, decimal.Zero)
+	require.NoError(t, err)
 	cart := cartv1.Reconstitute(customerID, itemsv1.Items{item1, item2, item3}, 1)
 
 	// Create mocks

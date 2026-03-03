@@ -27,7 +27,7 @@ func NewHandler(
 	discountPolicy *pricing.DiscountPolicy,
 	taxPolicy *pricing.TaxPolicy,
 	policyNames []string,
-) (*Handler, error) {
+) (*Handler, error) { //nolint:whitespace // multi-line signature; gofumpt prefers no blank after brace
 	return &Handler{
 		log:            log,
 		discountPolicy: discountPolicy,
@@ -76,7 +76,7 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (domain.CartTotal, er
 		subtotal = subtotal.Add(itemSubtotal)
 		h.log.InfoWithContext(ctx, "Item subtotal calculated",
 			slog.Any("item_id", item.GoodID),
-			slog.String("item_subtotal", itemSubtotal.StringFixed(2)),
+			slog.String("item_subtotal", itemSubtotal.StringFixed(2)), //nolint:mnd // 2 = decimal places for currency
 		)
 	}
 
@@ -96,7 +96,7 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (domain.CartTotal, er
 
 	h.log.InfoWithContext(ctx, "Final price calculated",
 		slog.Any("customer_id", cmd.Cart.CustomerID),
-		slog.String("final_price", finalPrice.StringFixed(2)),
+		slog.String("final_price", finalPrice.StringFixed(2)), //nolint:mnd // 2 = decimal places for currency
 	)
 
 	return total, nil

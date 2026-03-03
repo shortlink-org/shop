@@ -5,6 +5,7 @@ package integration
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -134,7 +135,8 @@ func TestDeliveryFlowE2E(t *testing.T) {
 	t.Cleanup(func() { _ = consumer.Close() })
 
 	topics := []string{kafka.TopicCourierLocation, kafka.TopicPickUpOrder, kafka.TopicDeliverOrder}
-	consumeCtx, consumeCancel := context.WithTimeout(context.Background(), fullFlowConsumeTimeout)
+	consumeCtx, consumeCancel := context.WithTimeoutCause(context.Background(), fullFlowConsumeTimeout,
+		fmt.Errorf("integration test consume timeout (%s)", fullFlowConsumeTimeout))
 	t.Cleanup(consumeCancel)
 
 	// Start consumer before producing so we don't miss pick_up or early location events

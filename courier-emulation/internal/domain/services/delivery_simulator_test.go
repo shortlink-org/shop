@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -172,7 +173,8 @@ func TestDeliverySimulator_StartDelivery(t *testing.T) {
 	simulator := NewDeliverySimulator(config, routeGen, locationPub, statusPub)
 	defer simulator.Stop()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeoutCause(context.Background(), 5*time.Second,
+		fmt.Errorf("test timeout: StartDelivery (5s)"))
 	defer cancel()
 
 	// Create a delivery order

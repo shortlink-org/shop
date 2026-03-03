@@ -55,7 +55,7 @@ func main() {
 	signal := graceful_shutdown.GracefulShutdown()
 
 	// Cancel the subscriber context to signal it to stop
-	cancel(fmt.Errorf("shutdown signal received: %s", signal))
+	cancel(fmt.Errorf("shutdown signal received: %s", signal)) //nolint:err113 // dynamic message for shutdown reason
 
 	// Run cleanup (stops simulations and closes publishers)
 	cleanup()

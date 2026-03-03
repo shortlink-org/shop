@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -68,7 +69,8 @@ func TestCourierSimulator_StartCourierWithRoute(t *testing.T) {
 	require.NoError(t, err)
 
 	// Start courier
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeoutCause(context.Background(), 2*time.Second,
+		fmt.Errorf("test timeout: StartCourierWithRoute (2s)"))
 	defer cancel()
 
 	err = simulator.StartCourierWithRoute(ctx, "courier-1", route)
@@ -100,8 +102,9 @@ func TestCourierSimulator_GetAllCouriers(t *testing.T) {
 	ctx := context.Background()
 
 	for i := 1; i <= 3; i++ {
-		route, _ := vo.NewRoute("route", origin, destination, polyline, 150, 30*time.Second)
-		err := simulator.StartCourierWithRoute(ctx, "courier-"+string(rune('0'+i)), route)
+		route, err := vo.NewRoute("route", origin, destination, polyline, 150, 30*time.Second)
+		require.NoError(t, err)
+		err = simulator.StartCourierWithRoute(ctx, "courier-"+string(rune('0'+i)), route)
 		require.NoError(t, err)
 	}
 
@@ -120,10 +123,11 @@ func TestCourierSimulator_StopCourier(t *testing.T) {
 	origin := vo.MustNewLocation(52.5200, 13.4050)
 	destination := vo.MustNewLocation(52.5210, 13.4060)
 	polyline := vo.MustNewPolyline("_c`|IgpvpAaB{A")
-	route, _ := vo.NewRoute("route", origin, destination, polyline, 150, 30*time.Second)
-
+	route, err := vo.NewRoute("route", origin, destination, polyline, 150, 30*time.Second)
+	require.NoError(t, err)
 	ctx := context.Background()
-	_ = simulator.StartCourierWithRoute(ctx, "courier-1", route)
+	err = simulator.StartCourierWithRoute(ctx, "courier-1", route)
+	require.NoError(t, err)
 
 	// Verify courier exists
 	_, exists := simulator.GetCourierState("courier-1")

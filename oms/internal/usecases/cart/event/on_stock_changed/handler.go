@@ -72,8 +72,8 @@ func (h *Handler) Handle(ctx context.Context, event Event) error {
 
 	// Process each cart
 	for _, customerID := range customerIDs {
-		err := h.processCart(ctx, customerID, event.GoodID)
-		if err != nil {
+		processErr := h.processCart(ctx, customerID, event.GoodID)
+		if processErr != nil {
 			h.log.Warn("Failed to process cart",
 				slog.String("customer_id", customerID.String()),
 				slog.String("good_id", event.GoodID.String()),
@@ -94,9 +94,9 @@ func (h *Handler) processCart(ctx context.Context, customerID, goodID uuid.UUID)
 	}
 
 	defer func() {
-		err := h.uow.Rollback(ctx)
-		if err != nil {
-			h.log.Warn("transaction rollback failed", slog.Any("error", err))
+		rollbackErr := h.uow.Rollback(ctx)
+		if rollbackErr != nil {
+			h.log.Warn("transaction rollback failed", slog.Any("error", rollbackErr))
 		}
 	}()
 
@@ -177,12 +177,12 @@ func (h *Handler) processCart(ctx context.Context, customerID, goodID uuid.UUID)
 
 	// Send websocket notification to UI
 	if h.notifier != nil {
-		err := h.notifier.NotifyStockDepleted(customerID, goodID)
-		if err != nil {
+		notifyErr := h.notifier.NotifyStockDepleted(customerID, goodID)
+		if notifyErr != nil {
 			h.log.Warn("Failed to send websocket notification",
 				slog.String("customer_id", customerID.String()),
 				slog.String("good_id", goodID.String()),
-				slog.String("error", err.Error()))
+				slog.String("error", notifyErr.Error()))
 		}
 	}
 

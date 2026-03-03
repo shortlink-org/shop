@@ -4,11 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 
 	"github.com/shortlink-org/shop/pricer/internal/domain"
 	"github.com/shortlink-org/shop/pricer/internal/usecases/cart/command/calculate_total"
+)
+
+const (
+	decimalPlaces  = 2
+	dirMode        = 0o750
+	outputFileMode = 0o600
 )
 
 // CLIHandler handles command-line interactions
@@ -44,33 +51,37 @@ func (h *CLIHandler) Run(cartFile string, discountParams, taxParams map[string]a
 	// Prepare the result map
 	result := map[string]any{
 		"customerId":    cart.CustomerID.String(),
-		"totalTax":      total.TotalTax.StringFixed(2),
-		"totalDiscount": total.TotalDiscount.StringFixed(2),
-		"finalPrice":    total.FinalPrice.StringFixed(2),
+		"totalTax":      total.TotalTax.StringFixed(decimalPlaces),
+		"totalDiscount": total.TotalDiscount.StringFixed(decimalPlaces),
+		"finalPrice":    total.FinalPrice.StringFixed(decimalPlaces),
 		"policies":      total.Policies,
 	}
 
 	// Save the result
 	filename := fmt.Sprintf("cart_result_%s.json", cart.CustomerID.String())
-	if err := saveResultToFile(result, h.OutputDir, filename); err != nil {
+
+	err = saveResultToFile(result, h.OutputDir, filename)
+	if err != nil {
 		return fmt.Errorf("failed to save result for cart %s: %w", cartFile, err)
 	}
 
-	fmt.Printf("Final result saved to %s\n", filepath.Join(h.OutputDir, filename))
+	slog.Info("Final result saved", slog.String("path", filepath.Join(h.OutputDir, filename)))
 
 	return nil
 }
 
-// loadCart reads and unmarshals the cart JSON file
+// loadCart reads and unmarshals the cart JSON file.
+// FilePath must be a path under current dir or otherwise validated by the caller to avoid path traversal.
 func loadCart(filePath string) (domain.Cart, error) {
 	var cart domain.Cart
 
-	file, err := os.ReadFile(filePath)
+	file, err := os.ReadFile(filePath) //nolint:gosec // G304: filePath is validated by caller (CLI args)
 	if err != nil {
 		return cart, fmt.Errorf("read cart file: %w", err)
 	}
 
-	if err := json.Unmarshal(file, &cart); err != nil {
+	err = json.Unmarshal(file, &cart)
+	if err != nil {
 		return cart, fmt.Errorf("unmarshal cart: %w", err)
 	}
 
@@ -79,7 +90,8 @@ func loadCart(filePath string) (domain.Cart, error) {
 
 // saveResultToFile marshals the result to JSON and writes it to a file
 func saveResultToFile(result map[string]any, outDir, filename string) error {
-	if err := os.MkdirAll(outDir, os.ModePerm); err != nil {
+	err := os.MkdirAll(outDir, dirMode)
+	if err != nil {
 		return fmt.Errorf("create output dir: %w", err)
 	}
 
@@ -90,7 +102,8 @@ func saveResultToFile(result map[string]any, outDir, filename string) error {
 		return fmt.Errorf("marshal result: %w", err)
 	}
 
-	if err := os.WriteFile(outputFile, data, 0o644); err != nil {
+	err = os.WriteFile(outputFile, data, outputFileMode)
+	if err != nil {
 		return fmt.Errorf("write result file: %w", err)
 	}
 

@@ -4,6 +4,8 @@ import (
 	"errors"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewLocation(t *testing.T) {
@@ -182,10 +184,12 @@ func TestLocation_String(t *testing.T) {
 }
 
 func TestLocation_Equality(t *testing.T) {
-	loc1, _ := NewLocation(55.7558, 37.6173)
-	loc2, _ := NewLocation(55.7558, 37.6173)
-	loc3, _ := NewLocation(59.9343, 30.3351)
-
+	loc1, err := NewLocation(55.7558, 37.6173)
+	require.NoError(t, err)
+	loc2, err := NewLocation(55.7558, 37.6173)
+	require.NoError(t, err)
+	loc3, err := NewLocation(59.9343, 30.3351)
+	require.NoError(t, err)
 	if loc1 != loc2 {
 		t.Errorf("Locations with same coordinates should be equal")
 	}

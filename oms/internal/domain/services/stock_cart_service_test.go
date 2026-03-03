@@ -11,8 +11,13 @@ import (
 
 func createCartWithItem(customerId, goodId uuid.UUID, quantity int32) *cart.State {
 	state := cart.New(customerId)
-	i, _ := item.NewItem(goodId, quantity)
-	_ = state.AddItem(i)
+	i, err := item.NewItem(goodId, quantity)
+	if err != nil {
+		panic(err)
+	}
+	if err := state.AddItem(i); err != nil {
+		panic(err)
+	}
 
 	return state
 }

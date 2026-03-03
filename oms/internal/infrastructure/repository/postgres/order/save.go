@@ -66,14 +66,14 @@ func (s *Store) Save(ctx context.Context, state *order.OrderState) error {
 	}
 
 	for _, item := range state.GetItems() {
-		err := qtx.InsertOrderItem(ctx, queries.InsertOrderItemParams{
+		insertErr := qtx.InsertOrderItem(ctx, queries.InsertOrderItemParams{
 			OrderID:  orderID,
 			GoodID:   item.GetGoodId(),
 			Quantity: item.GetQuantity(),
 			Price:    item.GetPrice(),
 		})
-		if err != nil {
-			return err
+		if insertErr != nil {
+			return insertErr
 		}
 	}
 

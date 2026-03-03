@@ -28,7 +28,8 @@ type Config struct {
 
 // NewClient creates a new Delivery gRPC client.
 func NewClient(cfg Config) (*Client, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), cfg.Timeout)
+	ctx, cancel := context.WithTimeoutCause(context.Background(), cfg.Timeout,
+		fmt.Errorf("delivery gRPC connection timeout (%s)", cfg.Timeout)) //nolint:err113 // dynamic timeout in error message for diagnostics
 	defer cancel()
 
 	conn, err := grpc.DialContext(ctx, cfg.Address,

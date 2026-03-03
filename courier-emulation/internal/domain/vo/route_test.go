@@ -54,7 +54,8 @@ func TestRoute_String(t *testing.T) {
 	destination := MustNewLocation(52.5300, 13.4150)
 	polyline := MustNewPolyline("_p~iF~ps|U_ulLnnqC")
 
-	route, _ := NewRoute("route-1", origin, destination, polyline, 1500.0, 3*time.Minute)
+	route, err := NewRoute("route-1", origin, destination, polyline, 1500.0, 3*time.Minute)
+	require.NoError(t, err)
 	str := route.String()
 
 	assert.Contains(t, str, "route-1")

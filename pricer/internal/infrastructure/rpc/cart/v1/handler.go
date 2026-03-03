@@ -28,7 +28,7 @@ func NewCartHandler(calculateTotalHandler *calculate_total.Handler) *CartHandler
 // CalculateTotal calculates the total price, tax, and discounts for a cart
 func (h *CartHandler) CalculateTotal(ctx context.Context, req *CalculateTotalRequest) (*CalculateTotalResponse, error) {
 	if req == nil || req.GetCart() == nil {
-		return &CalculateTotalResponse{}, nil
+		return &CalculateTotalResponse{}, nil //nolint:nilnil // empty request is valid, return empty response
 	}
 
 	cart, err := protoToDomainCart(req.GetCart())
@@ -51,31 +51,31 @@ func (h *CartHandler) CalculateTotal(ctx context.Context, req *CalculateTotalReq
 	}, nil
 }
 
-func protoToDomainCart(p *Cart) (*domain.Cart, error) {
-	if p == nil {
-		return nil, nil
+func protoToDomainCart(protoCart *Cart) (*domain.Cart, error) {
+	if protoCart == nil {
+		return nil, nil //nolint:nilnil // nil cart is valid for empty request
 	}
 
-	items := make([]domain.CartItem, 0, len(p.GetItems()))
-	for _, it := range p.GetItems() {
-		goodID, err := uuid.Parse(it.GetProductId())
+	items := make([]domain.CartItem, 0, len(protoCart.GetItems()))
+	for _, item := range protoCart.GetItems() {
+		goodID, err := uuid.Parse(item.GetProductId())
 		if err != nil {
 			return nil, fmt.Errorf("item product_id: %w", err)
 		}
 
-		price, err := decimal.NewFromString(it.GetPrice())
+		price, err := decimal.NewFromString(item.GetPrice())
 		if err != nil {
 			return nil, fmt.Errorf("item price: %w", err)
 		}
 
 		items = append(items, domain.CartItem{
 			GoodID:   goodID,
-			Quantity: it.GetQuantity(),
+			Quantity: item.GetQuantity(),
 			Price:    price,
 		})
 	}
 
-	customerID, err := uuid.Parse(p.GetCustomerId())
+	customerID, err := uuid.Parse(protoCart.GetCustomerId())
 	if err != nil {
 		return nil, fmt.Errorf("customer_id: %w", err)
 	}
@@ -86,16 +86,16 @@ func protoToDomainCart(p *Cart) (*domain.Cart, error) {
 	}, nil
 }
 
-func domainToProtoCartTotal(t *domain.CartTotal) *CartTotal {
-	if t == nil {
+func domainToProtoCartTotal(total *domain.CartTotal) *CartTotal {
+	if total == nil {
 		return nil
 	}
 
 	return &CartTotal{
-		TotalTax:      t.TotalTax.String(),
-		TotalDiscount: t.TotalDiscount.String(),
-		FinalPrice:    t.FinalPrice.String(),
-		Policies:      t.Policies,
+		TotalTax:      total.TotalTax.String(),
+		TotalDiscount: total.TotalDiscount.String(),
+		FinalPrice:    total.FinalPrice.String(),
+		Policies:      total.Policies,
 	}
 }
 

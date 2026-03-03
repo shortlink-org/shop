@@ -32,7 +32,7 @@ func TestRouteGenerator_GenerateRoute(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp) //nolint:errcheck // test mock response
 	}))
 	defer server.Close()
 
@@ -68,7 +68,7 @@ func TestRouteGenerator_GenerateRoute_NoRoute(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp) //nolint:errcheck // test mock response
 	}))
 	defer server.Close()
 
@@ -123,7 +123,7 @@ func TestRouteGenerator_GenerateRandomRoute(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp) //nolint:errcheck // test mock response
 	}))
 	defer server.Close()
 
@@ -165,7 +165,7 @@ func TestRouteGenerator_GenerateBatch(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp) //nolint:errcheck // test mock response
 	}))
 	defer server.Close()
 
@@ -208,7 +208,7 @@ func TestRouteGenerator_CacheHit(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp) //nolint:errcheck // test mock response
 	}))
 	defer server.Close()
 
