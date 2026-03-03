@@ -6,6 +6,8 @@ import { revalidateTag } from 'next/cache';
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
+export type AddItemResult = { ok: true } | { ok: false; message: string };
+
 async function getOrCreateCartId() {
   const cookieStore = await cookies();
   const existingCartId = cookieStore.get('cartId')?.value;
@@ -22,16 +24,19 @@ async function getOrCreateCartId() {
   return newCart.id ?? '';
 }
 
-export async function addItem(prevState: any, selectedVariantId: string | undefined) {
+export async function addItem(
+  prevState: unknown,
+  selectedVariantId: string | undefined
+): Promise<AddItemResult> {
   if (!selectedVariantId) {
     console.error('[addItem] missing selectedVariantId');
-    return 'Error adding item to cart';
+    return { ok: false, message: 'Unable to add this product right now.' };
   }
 
   const cartId = await getOrCreateCartId();
   if (!cartId) {
     console.error('[addItem] getOrCreateCartId returned empty');
-    return 'Missing cart ID';
+    return { ok: false, message: 'Unable to create a cart. Please try again.' };
   }
 
   const authHeader = (await headers()).get('authorization') ?? undefined;
@@ -41,6 +46,7 @@ export async function addItem(prevState: any, selectedVariantId: string | undefi
       authorization: authHeader
     });
     revalidateTag(TAGS.cart, 'max');
+    return { ok: true };
   } catch (e) {
     const err = e as Record<string, unknown>;
     const msgRaw = err?.message ?? (e instanceof Error ? e.message : null);
@@ -63,7 +69,12 @@ export async function addItem(prevState: any, selectedVariantId: string | undefi
       status: err?.status,
       serialized
     });
-    return 'Error adding item to cart';
+    return {
+      ok: false,
+      message: typeof message === 'string' && message.trim()
+        ? message
+        : 'Error adding item to cart'
+    };
   }
 }
 

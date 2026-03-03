@@ -5,13 +5,26 @@ import clsx from 'clsx';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { addItem } from 'components/cart/actions';
-import { Good } from 'lib/shopify/types';
+import { useCart } from 'components/cart/cart-context';
+import { Good, GoodVariant } from 'lib/shopify/types';
+import { toast } from 'sonner';
 import type { ProductGridProduct, ProductQuickViewProduct } from '@shortlink-org/ui-kit';
 
 const PLACEHOLDER_IMAGE = 'https://picsum.photos/400/500';
+const ADDING_BADGE = [{ label: 'Adding...', tone: 'info' as const }];
 
 function formatPrice(amount: number): string {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+}
+
+function goodToOptimisticVariant(good: Good): GoodVariant {
+  return {
+    id: good.id,
+    title: good.name,
+    availableForSale: true,
+    selectedOptions: [],
+    price: { amount: good.price, currencyCode: 'USD' }
+  };
 }
 
 function goodToQuickViewProduct(good: Good): ProductQuickViewProduct {
@@ -30,8 +43,9 @@ function goodToQuickViewProduct(good: Good): ProductQuickViewProduct {
 
 function goodToProduct(
   good: Good,
-  onAddToCart: (goodId: string) => void,
-  onQuickView: (good: Good) => void
+  onAddToCart: (good: Good) => void,
+  onQuickView: (good: Good) => void,
+  isAdding: boolean
 ): ProductGridProduct {
   return {
     id: good.id,
@@ -44,8 +58,13 @@ function goodToProduct(
       currency: 'USD',
       locale: 'en-US'
     },
-    description: good.description ? (good.description.length > 120 ? `${good.description.slice(0, 120)}…` : good.description) : undefined,
-    onAddToCart: () => onAddToCart(good.id),
+    description: good.description
+      ? good.description.length > 120
+        ? `${good.description.slice(0, 120)}…`
+        : good.description
+      : undefined,
+    badges: isAdding ? ADDING_BADGE : undefined,
+    onAddToCart: isAdding ? undefined : () => onAddToCart(good),
     cta: {
       onQuickView: () => onQuickView(good),
       rating: 4.5,
@@ -66,20 +85,60 @@ export function ShopProductGrid({
   gridClassName?: string;
 }) {
   const router = useRouter();
+  const { addCartItem, updateCartItem } = useCart();
   const [quickViewGood, setQuickViewGood] = useState<Good | null>(null);
+  const [isQuickViewAdding, setIsQuickViewAdding] = useState(false);
+  const [pendingGoodIds, setPendingGoodIds] = useState<Record<string, boolean>>({});
 
-  const handleAddToCart = async (goodId: string) => {
-    await addItem(undefined, goodId);
+  const setGoodPending = (goodId: string, isPending: boolean) => {
+    setPendingGoodIds((prev) => {
+      const next = { ...prev };
+      if (isPending) {
+        next[goodId] = true;
+      } else {
+        delete next[goodId];
+      }
+      return next;
+    });
+  };
+
+  const addGoodToCart = async (good: Good): Promise<boolean> => {
+    addCartItem(goodToOptimisticVariant(good), good);
+    try {
+      const result = await addItem(undefined, good.id);
+      if (!result.ok) {
+        updateCartItem(good.id, 'minus');
+        toast.error(result.message);
+        return false;
+      }
+      toast.success(`${good.name} added to cart`);
+      return true;
+    } catch {
+      updateCartItem(good.id, 'minus');
+      toast.error('Error adding item to cart');
+      return false;
+    }
+  };
+
+  const handleAddToCart = async (good: Good) => {
+    if (pendingGoodIds[good.id]) return;
+    setGoodPending(good.id, true);
+    await addGoodToCart(good);
+    setGoodPending(good.id, false);
   };
 
   const handleQuickViewAddToCart = async () => {
-    if (!quickViewGood) return;
-    await addItem(undefined, quickViewGood.id);
-    setQuickViewGood(null);
+    if (!quickViewGood || isQuickViewAdding) return;
+    setIsQuickViewAdding(true);
+    const added = await addGoodToCart(quickViewGood);
+    if (added) {
+      setQuickViewGood(null);
+    }
+    setIsQuickViewAdding(false);
   };
 
-  const products: ProductGridProduct[] = goods.map((good) =>
-    goodToProduct(good, handleAddToCart, setQuickViewGood)
+  const products = goods.map((good) =>
+    goodToProduct(good, handleAddToCart, setQuickViewGood, !!pendingGoodIds[good.id])
   );
 
   return (
@@ -92,10 +151,22 @@ export function ShopProductGrid({
         onProductClick={(product) => router.push(product.href)}
       />
       <ProductQuickView
-        className="shop-productquickview shop-productquickview--high-rating"
+        className={clsx(
+          'shop-productquickview',
+          'shop-productquickview--high-rating',
+          isQuickViewAdding && 'pointer-events-none opacity-80'
+        )}
         open={!!quickViewGood}
-        onClose={() => setQuickViewGood(null)}
-        product={quickViewGood ? goodToQuickViewProduct(quickViewGood) : { name: '', imageSrc: '', imageAlt: '', price: '' }}
+        onClose={() => {
+          if (!isQuickViewAdding) {
+            setQuickViewGood(null);
+          }
+        }}
+        product={
+          quickViewGood
+            ? goodToQuickViewProduct(quickViewGood)
+            : { name: '', imageSrc: '', imageAlt: '', price: '' }
+        }
         onAddToCart={handleQuickViewAddToCart}
       />
     </>

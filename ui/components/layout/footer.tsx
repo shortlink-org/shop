@@ -1,6 +1,7 @@
 'use client';
 
 import { ToggleDarkMode } from '@shortlink-org/ui-kit';
+import { SORT_SLUGS } from 'lib/constants';
 import Link from 'next/link';
 
 const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME || 'Shop';
@@ -8,9 +9,9 @@ const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME || 'Shop';
 const navigation = {
   shop: [
     { name: 'All Products', href: '/search' },
-    { name: 'New Arrivals', href: '/search?sort=latest' },
-    { name: 'Best Sellers', href: '/search?sort=trending' },
-  ],
+    { name: 'New Arrivals', href: `/search?sort=${SORT_SLUGS.latest}` },
+    { name: 'Best Sellers', href: `/search?sort=${SORT_SLUGS.trending}` }
+  ]
 };
 
 export function Footer() {

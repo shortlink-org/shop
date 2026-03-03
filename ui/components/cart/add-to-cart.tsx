@@ -2,7 +2,7 @@
 
 import { PlusIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
-import { addItem } from 'components/cart/actions';
+import { addItem, type AddItemResult } from 'components/cart/actions';
 import { Good, GoodVariant } from 'lib/shopify/types';
 import { useFormState } from 'react-dom';
 import { useCart } from './cart-context';
@@ -58,7 +58,10 @@ function SubmitButton({
 
 export function AddToCart({ good }: { good: Good }) {
   const { addCartItem } = useCart();
-  const [message, formAction] = useFormState(addItem, null);
+  const [result, formAction] = useFormState<AddItemResult | null, string | undefined>(
+    addItem,
+    null
+  );
   const actionWithVariant = formAction.bind(null, good.id);
   const optimisticVariant: GoodVariant = {
     id: good.id,
@@ -77,7 +80,7 @@ export function AddToCart({ good }: { good: Good }) {
     >
       <SubmitButton availableForSale={true} selectedVariantId={good.id} />
       <p aria-live="polite" className="sr-only" role="status">
-        {message}
+        {result?.ok === false ? result.message : ''}
       </p>
     </form>
   );

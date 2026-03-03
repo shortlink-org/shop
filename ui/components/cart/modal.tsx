@@ -5,7 +5,6 @@ import { ShoppingCartIcon } from '@heroicons/react/24/outline';
 import LoadingDots from 'components/loading-dots';
 import Price from 'components/price';
 import { DEFAULT_OPTION } from 'lib/constants';
-import { createUrl } from 'lib/utils';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Fragment, useEffect, useRef, useState } from 'react';
@@ -16,10 +15,6 @@ import CloseCart from './close-cart';
 import { DeleteItemButton } from './delete-item-button';
 import { EditItemQuantityButton } from './edit-item-quantity-button';
 import OpenCart from './open-cart';
-
-type MerchandiseSearchParams = {
-  [key: string]: string;
-};
 
 export default function CartModal() {
   const { cart, cartUnavailable, updateCartItem } = useCart();
@@ -104,23 +99,14 @@ export default function CartModal() {
                       .sort((a, b) =>
                         a.merchandise.product.title.localeCompare(b.merchandise.product.title)
                       )
-                      .map((item, i) => {
-                        // const merchandiseSearchParams = {} as MerchandiseSearchParams;
-
-                        // item.merchandise.selectedOptions.forEach(({ name, value }) => {
-                        //   if (value !== DEFAULT_OPTION) {
-                        //     merchandiseSearchParams[name.toLowerCase()] = value;
-                        //   }
-                        // });
-
-                        // const merchandiseUrl = createUrl(
-                        //   `/good/${item.merchandise.product.handle}`,
-                        //   new URLSearchParams(merchandiseSearchParams)
-                        // );
+                      .map((item) => {
+                        const merchandiseUrl = `/good/${item.merchandise.product.id}`;
+                        const title = item.merchandise.product.title;
+                        const hasVariantTitle = item.merchandise.title !== DEFAULT_OPTION;
 
                         return (
                           <li
-                            key={i}
+                            key={item.id ?? item.merchandise.id}
                             className="flex w-full flex-col border-b border-neutral-300 dark:border-neutral-700"
                           >
                             <div className="relative flex w-full flex-row justify-between px-1 py-4">
@@ -133,26 +119,22 @@ export default function CartModal() {
                                     className="h-full w-full object-cover"
                                     width={64}
                                     height={64}
-                                    alt={"cart"}
-                                    src={"https://picsum.photos/200"}
+                                    alt={`${title} product image`}
+                                    src="https://picsum.photos/200"
                                   />
                                 </div>
-                                {/*<Link*/}
-                                {/*  href={merchandiseUrl}*/}
-                                {/*  onClick={closeCart}*/}
-                                {/*  className="z-30 ml-2 flex flex-row space-x-4"*/}
-                                {/*>*/}
-                                {/*  <div className="flex flex-1 flex-col text-base">*/}
-                                {/*    <span className="leading-tight">*/}
-                                {/*      {item.merchandise.product.title}*/}
-                                {/*    </span>*/}
-                                {/*    {item.merchandise.title !== DEFAULT_OPTION ? (*/}
-                                {/*      <p className="text-sm text-neutral-500 dark:text-neutral-400">*/}
-                                {/*        {item.merchandise.title}*/}
-                                {/*      </p>*/}
-                                {/*    ) : null}*/}
-                                {/*  </div>*/}
-                                {/*</Link>*/}
+                                <Link
+                                  href={merchandiseUrl}
+                                  onClick={closeCart}
+                                  className="z-30 ml-3 flex min-w-0 flex-col justify-center"
+                                >
+                                  <span className="truncate leading-tight">{title}</span>
+                                  {hasVariantTitle ? (
+                                    <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                                      {item.merchandise.title}
+                                    </p>
+                                  ) : null}
+                                </Link>
                               </div>
                               <div className="flex h-16 flex-col justify-between">
                                 <Price
