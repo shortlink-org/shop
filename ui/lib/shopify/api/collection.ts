@@ -56,6 +56,10 @@ export async function getCollection(
   }
 }
 
+/**
+ * Load goods list (paginated). Callers must pass only a numeric page or omit it.
+ * Do not pass URL/searchParams.page directly — it may be a UUID (e.g. CMS page handle) and BFF expects Int.
+ */
 export async function getCollectionProducts(
   {
     page
