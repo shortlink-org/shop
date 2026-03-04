@@ -4,7 +4,7 @@ import { Footer } from 'components/layout/footer';
 import { Providers } from 'components/providers';
 import { GeistSans } from 'geist/font/sans';
 import { CART_UNAVAILABLE, getCart, type CartLoadResult } from 'lib/shopify';
-import { ensureStartsWith } from 'lib/utils';
+import { ensureStartsWith, sanitizeJsonLd } from 'lib/utils';
 import { cookies, headers } from 'next/headers';
 import { ReactNode, ViewTransition } from 'react';
 import { Toaster } from 'sonner';
@@ -57,9 +57,20 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     authorization: authHeader
   }).catch(() => CART_UNAVAILABLE);
 
+  const websiteJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SITE_NAME,
+    url: baseUrl,
+  };
+
   return (
     <html lang="en" className={GeistSans.variable} suppressHydrationWarning>
       <body className="bg-neutral-50 text-black selection:bg-teal-300 dark:bg-neutral-900 dark:text-white dark:selection:bg-pink-500 dark:selection:text-white">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: sanitizeJsonLd(websiteJsonLd) }}
+        />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <Providers>
             <CartProvider cartPromise={cartPromise}>

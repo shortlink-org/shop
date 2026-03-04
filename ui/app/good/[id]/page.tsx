@@ -7,6 +7,7 @@ import { GoodProductPage } from 'components/good/good-product-page';
 import { GoodProvider } from 'components/good/good-context';
 import { getGood, getGoodRecommendations, GOODS_UNAVAILABLE } from 'lib/shopify';
 import { Image } from 'lib/shopify/types';
+import { getBaseUrl, sanitizeJsonLd } from 'lib/utils';
 import Link from 'next/link';
 import { Suspense } from 'react';
 
@@ -58,18 +59,6 @@ export default async function GoodPage(props: { params: Promise<{ id: string }> 
   }
   if (!good) return notFound();
 
-  const goodJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: good.name,
-    description: good.description,
-    offers: {
-      '@type': 'Offer',
-      priceCurrency: 'USD',
-      price: good.price,
-    }
-  };
-
   // Mock images for demo
   const images: Image[] = [
     { url: 'https://picsum.photos/600/600?random=1', altText: good.name, width: 600, height: 600 },
@@ -84,12 +73,26 @@ export default async function GoodPage(props: { params: Promise<{ id: string }> 
     altText: image.altText
   }));
 
+  const goodJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: good.name,
+    description: good.description,
+    image: images.slice(0, 3).map((img) => img.url),
+    url: `${getBaseUrl()}/good/${good.id}`,
+    offers: {
+      '@type': 'Offer',
+      priceCurrency: 'USD',
+      price: good.price,
+    },
+  };
+
   return (
     <GoodProvider>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(goodJsonLd)
+          __html: sanitizeJsonLd(goodJsonLd),
         }}
       />
       <div className="mx-auto max-w-screen-2xl px-4 pb-16">

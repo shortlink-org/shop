@@ -1,5 +1,18 @@
 import { ReadonlyURLSearchParams } from 'next/navigation';
 
+/** Base URL for the site (used in JSON-LD, sitemap, etc.). */
+export const getBaseUrl = () =>
+  process.env.NEXT_PUBLIC_VERCEL_URL
+    ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+    : 'http://localhost:3000';
+
+/**
+ * Serialize JSON-LD and escape `<` to prevent XSS when injected into script tag.
+ * @see https://nextjs.org/docs/app/guides/json-ld
+ */
+export const sanitizeJsonLd = (data: object): string =>
+  JSON.stringify(data).replace(/</g, '\\u003c');
+
 export const createUrl = (pathname: string, params: URLSearchParams | ReadonlyURLSearchParams) => {
   const paramsString = params.toString();
   const queryString = `${paramsString.length ? '?' : ''}${paramsString}`;

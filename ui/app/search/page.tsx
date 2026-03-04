@@ -2,6 +2,7 @@ import { ShopProductGrid } from 'components/layout/shop-product-grid';
 import { RetryButton } from 'components/retry-button';
 import { defaultSort, sorting } from 'lib/constants';
 import { getGoods, GOODS_UNAVAILABLE } from 'lib/shopify';
+import { getBaseUrl, sanitizeJsonLd } from 'lib/utils';
 import { headers } from 'next/headers';
 
 export const metadata = {
@@ -36,8 +37,29 @@ export default async function SearchPage(props: {
 
   const resultsText = goods.length > 1 ? 'results' : 'result';
 
+  const itemListJsonLd =
+    goods.length > 0
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          numberOfItems: goods.length,
+          itemListElement: goods.map((good, index) => ({
+            '@type': 'ListItem',
+            position: index + 1,
+            url: `${getBaseUrl()}/good/${good.id}`,
+            name: good.name,
+          })),
+        }
+      : null;
+
   return (
     <>
+      {itemListJsonLd ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: sanitizeJsonLd(itemListJsonLd) }}
+        />
+      ) : null}
       {searchValue ? (
         <p className="mb-4">
           {goods.length === 0
