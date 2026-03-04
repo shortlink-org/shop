@@ -34,9 +34,12 @@ DEBUG = False
 ALLOWED_HOSTS = ["*"]
 
 # Minimal INSTALLED_APPS - only what's needed for migrations
+# Include django admin/sessions so built-in migrations are fully applied.
 INSTALLED_APPS = [
+    "django.contrib.admin",
     "django.contrib.contenttypes",
     "django.contrib.auth",
+    "django.contrib.sessions",
     "django.contrib.gis",  # Required for PostGIS models
     "django.contrib.postgres",  # Required for ArrayField (goods.Good.tags)
     # Domain apps with migrations

@@ -498,7 +498,7 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {
         "json": {
-            "()": "json_log_formatter.JSONFormatter",
+            "()": "json_log_formatter.FlatJSONFormatter",
         },
         "verbose": {
             "format": "[{levelname}] {asctime} [{trace_id}] {name}: {message}",
