@@ -14,8 +14,8 @@ export const getGoodQuery = /* GraphQL */ `
 export const getGoodsQuery = /* GraphQL */ `
   # NOTE: BFF goods endpoint currently supports pagination only.
   # Search and sort are applied client-side in lib/shopify/api/good.ts.
-  query GetGoods($page: Int) {
-    goods(page: $page) {
+  query GetGoods {
+    goods {
       count
       next
       previous
@@ -32,8 +32,8 @@ export const getGoodsQuery = /* GraphQL */ `
 `;
 
 export const getGoodRecommendationsQuery = /* GraphQL */ `
-  query GetGoodRecommendations($page: Int) {
-    goods(page: $page) {
+  query GetGoodRecommendations {
+    goods {
       count
       next
       previous

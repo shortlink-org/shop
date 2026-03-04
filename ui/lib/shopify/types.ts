@@ -232,9 +232,7 @@ export type ShopifyCollectionProductsOperation = {
       results: ShopifyProduct[];
     };
   };
-  variables: {
-    page?: number;
-  };
+  variables: Record<string, never>;
 };
 
 export type ShopifyCollectionsOperation = {
@@ -286,9 +284,7 @@ export type ShopifyProductRecommendationsOperation = {
       results: ShopifyProduct[];
     };
   };
-  variables: {
-    page?: number;
-  };
+  variables: Record<string, never>;
 };
 
 export type ShopifyProductsOperation = {
@@ -304,7 +300,6 @@ export type ShopifyProductsOperation = {
     query?: string;
     reverse?: boolean;
     sortKey?: string;
-    page?: number;
   };
 };
 

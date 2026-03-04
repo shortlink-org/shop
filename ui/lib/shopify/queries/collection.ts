@@ -37,26 +37,8 @@ export const getCollectionsQuery = /* GraphQL */ `
 `;
 
 export const getCollectionProductsQuery = /* GraphQL */ `
-  query GetGoodsList($page: Int = 1) {
-    goods(page: $page) {
-      count
-      next
-      previous
-      results {
-        id
-        name
-        price
-        description
-        created_at
-        updated_at
-      }
-    }
-  }
-`;
-
-export const getCollectionProductsPage1Query = /* GraphQL */ `
-  query GetGoodsListPage1 {
-    goods(page: 1) {
+  query GetGoodsList {
+    goods {
       count
       next
       previous

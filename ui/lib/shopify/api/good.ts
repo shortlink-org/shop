@@ -93,9 +93,6 @@ export async function getGoodRecommendations(
   try {
     const res = await shopifyFetch<ShopifyProductRecommendationsOperation>({
       query: getGoodRecommendationsQuery,
-      variables: {
-        page: 1,
-      },
       headers: options?.authorization ? { Authorization: options.authorization } : {}
     });
 
@@ -124,9 +121,6 @@ export async function getGoods(
       cache: 'no-store',
       query: getGoodsQuery,
       tags: [TAGS.goods],
-      variables: {
-        page: 1
-      },
       headers: options?.authorization ? { Authorization: options.authorization } : {}
     });
 

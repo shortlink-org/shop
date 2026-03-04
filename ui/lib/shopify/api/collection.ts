@@ -4,7 +4,6 @@ import { normalizeGood, reshapeCollection } from '../mappers';
 import { GOODS_UNAVAILABLE } from '../sentinels';
 import type { Collection, Good, ShopifyCollectionOperation, ShopifyCollectionProductsOperation } from '../types';
 import {
-  getCollectionProductsPage1Query,
   getCollectionProductsQuery,
   getCollectionQuery
 } from '../queries/collection';
@@ -22,31 +21,6 @@ const DEFAULT_COLLECTIONS: Collection[] = [
 ];
 
 export type RequestOptions = { authorization?: string };
-
-function normalizePage(page: unknown): number {
-  if (typeof page === 'number' && Number.isInteger(page) && page > 0) {
-    return page;
-  }
-
-  if (typeof page === 'string') {
-    const trimmed = page.trim().replace(/^"+|"+$/g, '');
-    if (/^[1-9]\d*$/.test(trimmed)) {
-      return Number(trimmed);
-    }
-  }
-
-  return 1;
-}
-
-function extractErrorMessage(err: unknown): string {
-  if (typeof err === 'object' && err !== null) {
-    const direct = (err as { message?: unknown }).message;
-    if (typeof direct === 'string') return direct;
-    const nested = (err as { error?: { message?: unknown } }).error?.message;
-    if (typeof nested === 'string') return nested;
-  }
-  return '';
-}
 
 export async function getCollection(
   id: number,
@@ -67,33 +41,16 @@ export async function getCollection(
   }
 }
 
-/**
- * Load goods list (paginated). Callers must pass only a numeric page or omit it.
- * Do not pass URL/searchParams.page directly — it may be a UUID (e.g. CMS page handle) and BFF expects Int.
- */
 export async function getCollectionProducts(
-  {
-    page
-  }: {
-    page?: number | string;
-  } = {},
   options?: RequestOptions
 ): Promise<Good[] | typeof GOODS_UNAVAILABLE> {
   const headers: HeadersInit | undefined = options?.authorization
     ? { Authorization: options.authorization }
     : undefined;
   try {
-    const normalizedPage = normalizePage(page);
-
-    if (page !== undefined && normalizedPage === 1 && page !== 1 && page !== '1') {
-      console.warn('[getCollectionProducts] Invalid page value, fallback to 1', { page });
-    }
-
-    const pageInt = Math.floor(Number(normalizedPage)) || 1;
     const res = await shopifyFetch<ShopifyCollectionProductsOperation>({
       cache: 'no-store',
       query: getCollectionProductsQuery,
-      variables: { page: pageInt > 0 ? pageInt : 1 },
       headers
     });
 
@@ -104,26 +61,6 @@ export async function getCollectionProducts(
 
     return res.body.data.goods.results.map(normalizeGood);
   } catch (err) {
-    const errorMessage = extractErrorMessage(err);
-
-    // Defensive fallback for rare runtime paths where page variable arrives as non-Int.
-    if (errorMessage.includes('Int cannot represent non-integer value')) {
-      try {
-        const fallbackRes = await shopifyFetch<ShopifyCollectionProductsOperation>({
-          cache: 'no-store',
-          query: getCollectionProductsPage1Query,
-          headers
-        });
-
-        if (!fallbackRes.body.data?.goods) {
-          return [];
-        }
-        return fallbackRes.body.data.goods.results.map(normalizeGood);
-      } catch (fallbackErr) {
-        console.error('[getCollectionProducts] Fallback (page=1 literal) failed', { fallbackErr });
-      }
-    }
-
     console.error('[getCollectionProducts] Failed to load products', { err });
     return GOODS_UNAVAILABLE;
   }

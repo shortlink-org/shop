@@ -18,7 +18,8 @@ function sanitizeGetGoodsListBody(rawBody: string): string {
   try {
     const payload = JSON.parse(rawBody) as { query?: string; variables?: Record<string, unknown> };
     const query = typeof payload.query === 'string' ? payload.query : '';
-    if (!query.includes('GetGoodsList') || !query.includes('goods(page')) return rawBody;
+    // Sanitize for any operation that calls goods(page: ...), not only GetGoodsList.
+    if (!/goods\s*\(\s*page\s*:/.test(query)) return rawBody;
     const variables = payload.variables && typeof payload.variables === 'object' ? { ...payload.variables } : {};
     const page = variables.page;
     const safePage = normalizePage(page);
@@ -43,7 +44,24 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     );
   }
 
-  body = sanitizeGetGoodsListBody(body);
+  const sanitizedBody = sanitizeGetGoodsListBody(body);
+  if (sanitizedBody !== body) {
+    try {
+      const before = JSON.parse(body) as { variables?: Record<string, unknown> };
+      const after = JSON.parse(sanitizedBody) as { variables?: Record<string, unknown> };
+      if (before?.variables?.page !== after?.variables?.page) {
+        console.warn('[api/graphql] Sanitized goods page variable', {
+          originalPage: before?.variables?.page,
+          safePage: after?.variables?.page,
+          userAgent: req.headers.get('user-agent') ?? '',
+          forwardedFor: req.headers.get('x-forwarded-for') ?? ''
+        });
+      }
+    } catch {
+      // no-op
+    }
+  }
+  body = sanitizedBody;
 
   const headers: HeadersInit = {
     'Content-Type': contentType

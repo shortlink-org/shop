@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { POST } from '../route';
 
-describe('POST /api/graphql sanitize GetGoodsList page', () => {
+describe('POST /api/graphql sanitize goods page variable', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });
@@ -60,7 +60,7 @@ describe('POST /api/graphql sanitize GetGoodsList page', () => {
     expect(body.variables.page).toBe(2);
   });
 
-  it('does not modify body for non-GetGoodsList queries', async () => {
+  it('sanitizes non-GetGoodsList queries when they include goods(page: $page)', async () => {
     const fetchMock = vi
       .spyOn(globalThis, 'fetch')
       .mockResolvedValueOnce(
@@ -82,6 +82,7 @@ describe('POST /api/graphql sanitize GetGoodsList page', () => {
 
     await POST(req);
 
-    expect(String(fetchMock.mock.calls[0]?.[1]?.body)).toBe(rawBody);
+    const body = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
+    expect(body.variables.page).toBe(1);
   });
 });
