@@ -510,12 +510,15 @@ LOGGING = {
             "()": "django.utils.log.CallbackFilter",
             "callback": lambda record: setattr(record, "trace_id", getattr(record, "trace_id", "-")) or True,
         },
+        "drop_empty_json_line": {
+            "()": "admin.log_filters.DropEmptyJsonLineFilter",
+        },
     },
     "handlers": {
         "stdout": {
             "class": "logging.StreamHandler",
             "formatter": "json",
-            "filters": ["trace_context"],
+            "filters": ["trace_context", "drop_empty_json_line"],
         },
     },
     "root": {

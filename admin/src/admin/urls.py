@@ -15,6 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+from asgiref.sync import async_to_sync
 from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import TemplateView
@@ -24,22 +25,24 @@ from health_check.views import HealthCheckView
 from . import admin as user_admin  # noqa: F401 - Register User/Group with Unfold styling
 from . import views
 
+# django-health-check 4.x view is async; under WSGI (gunicorn) the async view's coroutines
+# are never awaited, causing 500 and "coroutine 'HealthCheck.get_result' was never awaited".
+# Wrap with async_to_sync so the health check runs in an event loop and returns a real response.
+_health_check_view = HealthCheckView.as_view(
+    checks=[
+        "health_check.Database",
+        "health_check.Cache",
+        "health_check.contrib.migrations.Migrations",
+    ],
+)
+
 urlpatterns = [
     path("__debug__/", include("debug_toolbar.urls")),
     path("admin/logout/", views.logout_view, name="admin_logout"),
     path("admin/orders/", include("domain.orders.urls", namespace="orders")),
     path("admin/", admin.site.urls),
     path("hello/", views.hello, name="hello"),
-    path(
-        "healthz/",
-        HealthCheckView.as_view(
-            checks=[
-                "health_check.Database",
-                "health_check.Cache",
-                "health_check.contrib.migrations.Migrations",
-            ],
-        ),
-    ),
+    path("healthz/", async_to_sync(_health_check_view)),
     path("", TemplateView.as_view(template_name="base.html"), name="home"),
     # REST API:
     path("goods/", include("domain.goods.urls")),

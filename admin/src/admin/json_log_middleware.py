@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 # HTTP status code thresholds for log levels
 HTTP_SERVER_ERROR = HTTPStatus.INTERNAL_SERVER_ERROR  # 500
 HTTP_CLIENT_ERROR = HTTPStatus.BAD_REQUEST  # 400
+SKIP_LOG_PATH_PREFIXES = ("/healthz", "/health", "/ping")
 
 
 class JsonLogMiddleware:
@@ -33,6 +34,10 @@ class JsonLogMiddleware:
         start_time = time.perf_counter()
 
         response = self.get_response(request)
+
+        # Skip noisy probe endpoints.
+        if request.path.startswith(SKIP_LOG_PATH_PREFIXES):
+            return response
 
         # Calculate response time
         duration_ms = (time.perf_counter() - start_time) * 1000
