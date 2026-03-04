@@ -1442,7 +1442,7 @@ requires-dist = [
     { name = "shortlink-org-shop-delivery-rpc-grpc-python", specifier = ">=1.76.0.2.20260201222625" },
     { name = "shortlink-org-shop-oms-grpc-python", specifier = "==1.76.0.2.20260201221610+71e3c8b3c462" },
     { name = "sqlparse", specifier = "==0.5.5" },
-    { name = "testcontainers", extras = ["postgres"], marker = "extra == 'test'", specifier = ">=4.9.0" },
+    { name = "testcontainers", extras = ["postgres"], marker = "extra == 'test'", specifier = ">=4.14.1" },
     { name = "typing-extensions", specifier = "==4.15.0" },
     { name = "uritemplate", specifier = "==4.2.0" },
     { name = "urllib3", specifier = "==2.6.3" },
