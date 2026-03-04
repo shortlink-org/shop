@@ -62,7 +62,7 @@ importers:
     devDependencies:
       '@shortlink-org/ui-kit':
         specifier: ^0.20260130.210344
-        version: 0.20260130.210344(@babel/core@7.29.0)(@mui/system@7.3.8(@types/react@19.2.14)(react@19.2.4))(@types/node@24.11.0)(@types/react-dom@19.2.3(@types/react@19.2.14))(postcss@8.5.6)(rollup@4.59.0)(typescript@5.9.3)(vite@7.3.1(@types/node@24.11.0)(jiti@2.6.1)(lightningcss@1.31.1))
+        version: 0.20260130.210344(@babel/core@7.29.0)(@mui/system@7.3.8(@types/react@19.2.14)(react@19.2.4))(@types/node@24.11.0)(@types/react-dom@19.2.3(@types/react@19.2.14))(postcss@8.5.8)(rollup@4.59.0)(typescript@5.9.3)(vite@7.3.1(@types/node@24.11.0)(jiti@2.6.1)(lightningcss@1.31.1))
       '@tailwindcss/container-queries':
         specifier: ^0.1.1
         version: 0.1.1(tailwindcss@4.2.1)
@@ -92,7 +92,7 @@ importers:
         version: 5.1.4(vite@7.3.1(@types/node@24.11.0)(jiti@2.6.1)(lightningcss@1.31.1))
       autoprefixer:
         specifier: ^10.4.27
-        version: 10.4.27(postcss@8.5.6)
+        version: 10.4.27(postcss@8.5.8)
       jsdom:
         specifier: ^26.1.0
         version: 26.1.0
@@ -100,8 +100,8 @@ importers:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       postcss:
-        specifier: ^8.5.6
-        version: 8.5.6
+        specifier: ^8.5.8
+        version: 8.5.8
       prettier:
         specifier: 3.6.2
         version: 3.6.2
@@ -2514,8 +2514,8 @@ packages:
     resolution: {integrity: sha512-PS08Iboia9mts/2ygV3eLpY5ghnUcfLV/EXTOW1E2qYxJKGGBUtNjN76FYHnMs36RmARn41bC0AZmn+rR0OVpQ==}
     engines: {node: ^10 || ^12 || >=14}
 
-  postcss@8.5.6:
-    resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
+  postcss@8.5.8:
+    resolution: {integrity: sha512-OW/rX8O/jXnm82Ey1k44pObPtdblfiuWnrd8X7GJ7emImCOstunGbXUpp7HdBrFQX6rJzn3sPT397Wp5aCwCHg==}
     engines: {node: ^10 || ^12 || >=14}
 
   prettier-plugin-tailwindcss@0.7.2:
@@ -4127,7 +4127,7 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
 
-  '@shortlink-org/ui-kit@0.20260130.210344(@babel/core@7.29.0)(@mui/system@7.3.8(@types/react@19.2.14)(react@19.2.4))(@types/node@24.11.0)(@types/react-dom@19.2.3(@types/react@19.2.14))(postcss@8.5.6)(rollup@4.59.0)(typescript@5.9.3)(vite@7.3.1(@types/node@24.11.0)(jiti@2.6.1)(lightningcss@1.31.1))':
+  '@shortlink-org/ui-kit@0.20260130.210344(@babel/core@7.29.0)(@mui/system@7.3.8(@types/react@19.2.14)(react@19.2.4))(@types/node@24.11.0)(@types/react-dom@19.2.3(@types/react@19.2.14))(postcss@8.5.8)(rollup@4.59.0)(typescript@5.9.3)(vite@7.3.1(@types/node@24.11.0)(jiti@2.6.1)(lightningcss@1.31.1))':
     dependencies:
       '@fontsource/caveat': 5.2.8
       '@fontsource/material-icons': 5.2.7
@@ -4143,7 +4143,7 @@ snapshots:
       '@tanstack/react-table': 8.20.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@tanstack/react-virtual': 3.13.19(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@types/react': 19.2.14
-      autoprefixer: 10.4.27(postcss@8.5.6)
+      autoprefixer: 10.4.27(postcss@8.5.8)
       clsx: 2.1.1
       date-fns: 4.1.0
       dayjs: 1.11.19
@@ -4329,7 +4329,7 @@ snapshots:
       '@alloc/quick-lru': 5.2.0
       '@tailwindcss/node': 4.1.18
       '@tailwindcss/oxide': 4.1.18
-      postcss: 8.5.6
+      postcss: 8.5.8
       tailwindcss: 4.1.18
 
   '@tailwindcss/postcss@4.2.1':
@@ -4337,7 +4337,7 @@ snapshots:
       '@alloc/quick-lru': 5.2.0
       '@tailwindcss/node': 4.2.1
       '@tailwindcss/oxide': 4.2.1
-      postcss: 8.5.6
+      postcss: 8.5.8
       tailwindcss: 4.2.1
 
   '@tailwindcss/typography@0.5.19(tailwindcss@4.1.18)':
@@ -4604,13 +4604,13 @@ snapshots:
 
   asynckit@0.4.0: {}
 
-  autoprefixer@10.4.27(postcss@8.5.6):
+  autoprefixer@10.4.27(postcss@8.5.8):
     dependencies:
       browserslist: 4.28.1
       caniuse-lite: 1.0.30001775
       fraction.js: 5.3.4
       picocolors: 1.1.1
-      postcss: 8.5.6
+      postcss: 8.5.8
       postcss-value-parser: 4.2.0
 
   axios@1.13.6:
@@ -5289,7 +5289,7 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  postcss@8.5.6:
+  postcss@8.5.8:
     dependencies:
       nanoid: 3.3.11
       picocolors: 1.1.1
@@ -5452,7 +5452,7 @@ snapshots:
       htmlparser2: 8.0.2
       is-plain-object: 5.0.0
       parse-srcset: 1.0.2
-      postcss: 8.5.6
+      postcss: 8.5.8
 
   saxes@6.0.0:
     dependencies:
@@ -5673,7 +5673,7 @@ snapshots:
       esbuild: 0.27.3
       fdir: 6.5.0(picomatch@4.0.3)
       picomatch: 4.0.3
-      postcss: 8.5.6
+      postcss: 8.5.8
       rollup: 4.59.0
       tinyglobby: 0.2.15
     optionalDependencies:
