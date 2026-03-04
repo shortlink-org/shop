@@ -15,7 +15,8 @@ function getTraceId(request: NextRequest): string {
   const traceparent = request.headers.get('traceparent');
   if (traceparent) {
     const parts = traceparent.split('-');
-    if (parts.length >= 2 && parts[1].length === 32) return parts[1];
+    const traceIdFromParent = parts[1];
+    if (traceIdFromParent && traceIdFromParent.length === 32) return traceIdFromParent;
   }
 
   return crypto.randomUUID().replace(/-/g, '');
