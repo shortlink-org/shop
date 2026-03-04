@@ -8,13 +8,32 @@ import { redirect } from 'next/navigation';
 
 export type AddItemResult = { ok: true } | { ok: false; message: string };
 
-async function getOrCreateCartId() {
+async function getHeaderCustomerId() {
+  const requestHeaders = await headers();
+  return requestHeaders.get('x-user-id') ?? requestHeaders.get('x-customer-id') ?? undefined;
+}
+
+async function getExistingCustomerId() {
   const cookieStore = await cookies();
   const existingCartId = cookieStore.get('cartId')?.value;
 
   if (existingCartId) {
     return existingCartId;
   }
+
+  const headerCustomerId = await getHeaderCustomerId();
+  if (headerCustomerId) {
+    cookieStore.set('cartId', headerCustomerId);
+    return headerCustomerId;
+  }
+
+  return '';
+}
+
+async function getOrCreateCartId() {
+  const cookieStore = await cookies();
+  const existingCustomerId = await getExistingCustomerId();
+  if (existingCustomerId) return existingCustomerId;
 
   const newCart = await createCart();
   if (newCart.id) {
@@ -79,7 +98,7 @@ export async function addItem(
 }
 
 export async function removeItem(prevState: any, merchandiseId: string) {
-  const cartId = (await cookies()).get('cartId')?.value;
+  const cartId = await getExistingCustomerId();
 
   if (!cartId || !merchandiseId) {
     return 'Missing cart ID';
@@ -106,7 +125,7 @@ export async function updateItemQuantity(
     quantity: number;
   }
 ) {
-  const cartId = (await cookies()).get('cartId')?.value;
+  const cartId = await getExistingCustomerId();
 
   if (!cartId) {
     return 'Missing cart ID';
@@ -127,7 +146,7 @@ export async function updateItemQuantity(
 }
 
 export async function redirectToCheckout(): Promise<void> {
-  const cartId = (await cookies()).get('cartId')?.value;
+  const cartId = await getExistingCustomerId();
 
   if (!cartId) {
     console.error('Missing cart ID');
@@ -138,13 +157,13 @@ export async function redirectToCheckout(): Promise<void> {
 }
 
 export async function createCartAndSetCookie() {
-  const cookieStore = await cookies();
-  const existingCartId = cookieStore.get('cartId')?.value;
+  const existingCartId = await getExistingCustomerId();
 
   if (existingCartId) {
     return;
   }
 
+  const cookieStore = await cookies();
   const cart = await createCart();
   if (cart.id) {
     cookieStore.set('cartId', cart.id);

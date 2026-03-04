@@ -28,7 +28,7 @@ function normalizePage(page: unknown): number {
   }
 
   if (typeof page === 'string') {
-    const trimmed = page.trim();
+    const trimmed = page.trim().replace(/^"+|"+$/g, '');
     if (/^[1-9]\d*$/.test(trimmed)) {
       return Number(trimmed);
     }
@@ -71,10 +71,11 @@ export async function getCollectionProducts(
       console.warn('[getCollectionProducts] Invalid page value, fallback to 1', { page });
     }
 
+    const pageInt = Math.floor(Number(normalizedPage)) || 1;
     const res = await shopifyFetch<ShopifyCollectionProductsOperation>({
       cache: 'no-store',
       query: getCollectionProductsQuery,
-      variables: { page: normalizedPage },
+      variables: { page: pageInt > 0 ? pageInt : 1 },
       headers: options?.authorization ? { Authorization: options.authorization } : {}
     });
 

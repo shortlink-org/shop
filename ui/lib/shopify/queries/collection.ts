@@ -37,7 +37,7 @@ export const getCollectionsQuery = /* GraphQL */ `
 `;
 
 export const getCollectionProductsQuery = /* GraphQL */ `
-  query GetGoodsList($page: Int) {
+  query GetGoodsList($page: Int = 1) {
     goods(page: $page) {
       count
       next

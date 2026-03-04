@@ -44,10 +44,16 @@ export const metadata = {
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const cookieStore = await cookies();
   const cartId = cookieStore.get('cartId')?.value;
-  const authHeader = (await headers()).get('authorization') ?? undefined;
+  const requestHeaders = await headers();
+  const authHeader = requestHeaders.get('authorization') ?? undefined;
+  const headerCustomerId =
+    requestHeaders.get('x-user-id') ??
+    requestHeaders.get('x-customer-id') ??
+    undefined;
+  const customerId = cartId ?? headerCustomerId;
 
   // Pass cart promise that never rejects — when carts service is down we resolve with CART_UNAVAILABLE so UI can show "we'll display it later"
-  const cartPromise: Promise<CartLoadResult> = getCart(cartId, {
+  const cartPromise: Promise<CartLoadResult> = getCart(customerId, {
     authorization: authHeader
   }).catch(() => CART_UNAVAILABLE);
 
