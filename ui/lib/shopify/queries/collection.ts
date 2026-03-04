@@ -53,3 +53,21 @@ export const getCollectionProductsQuery = /* GraphQL */ `
     }
   }
 `;
+
+export const getCollectionProductsPage1Query = /* GraphQL */ `
+  query GetGoodsListPage1 {
+    goods(page: 1) {
+      count
+      next
+      previous
+      results {
+        id
+        name
+        price
+        description
+        created_at
+        updated_at
+      }
+    }
+  }
+`;

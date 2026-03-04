@@ -7,8 +7,8 @@ const BFF_GRAPHQL_URL =
 function normalizePage(value: unknown): number {
   if (typeof value === 'number' && Number.isInteger(value) && value > 0) return value;
   if (typeof value === 'string') {
-    const n = parseInt(value.trim().replace(/^"+|"+$/g, ''), 10);
-    if (Number.isInteger(n) && n > 0) return n;
+    const trimmed = value.trim().replace(/^"+|"+$/g, '');
+    if (/^[1-9]\d*$/.test(trimmed)) return Number(trimmed);
   }
   return 1;
 }

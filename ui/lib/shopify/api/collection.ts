@@ -4,6 +4,7 @@ import { normalizeGood, reshapeCollection } from '../mappers';
 import { GOODS_UNAVAILABLE } from '../sentinels';
 import type { Collection, Good, ShopifyCollectionOperation, ShopifyCollectionProductsOperation } from '../types';
 import {
+  getCollectionProductsPage1Query,
   getCollectionProductsQuery,
   getCollectionQuery
 } from '../queries/collection';
@@ -37,6 +38,16 @@ function normalizePage(page: unknown): number {
   return 1;
 }
 
+function extractErrorMessage(err: unknown): string {
+  if (typeof err === 'object' && err !== null) {
+    const direct = (err as { message?: unknown }).message;
+    if (typeof direct === 'string') return direct;
+    const nested = (err as { error?: { message?: unknown } }).error?.message;
+    if (typeof nested === 'string') return nested;
+  }
+  return '';
+}
+
 export async function getCollection(
   id: number,
   options?: RequestOptions
@@ -68,6 +79,9 @@ export async function getCollectionProducts(
   } = {},
   options?: RequestOptions
 ): Promise<Good[] | typeof GOODS_UNAVAILABLE> {
+  const headers: HeadersInit | undefined = options?.authorization
+    ? { Authorization: options.authorization }
+    : undefined;
   try {
     const normalizedPage = normalizePage(page);
 
@@ -80,7 +94,7 @@ export async function getCollectionProducts(
       cache: 'no-store',
       query: getCollectionProductsQuery,
       variables: { page: pageInt > 0 ? pageInt : 1 },
-      headers: options?.authorization ? { Authorization: options.authorization } : {}
+      headers
     });
 
     if (!res.body.data?.goods) {
@@ -90,6 +104,26 @@ export async function getCollectionProducts(
 
     return res.body.data.goods.results.map(normalizeGood);
   } catch (err) {
+    const errorMessage = extractErrorMessage(err);
+
+    // Defensive fallback for rare runtime paths where page variable arrives as non-Int.
+    if (errorMessage.includes('Int cannot represent non-integer value')) {
+      try {
+        const fallbackRes = await shopifyFetch<ShopifyCollectionProductsOperation>({
+          cache: 'no-store',
+          query: getCollectionProductsPage1Query,
+          headers
+        });
+
+        if (!fallbackRes.body.data?.goods) {
+          return [];
+        }
+        return fallbackRes.body.data.goods.results.map(normalizeGood);
+      } catch (fallbackErr) {
+        console.error('[getCollectionProducts] Fallback (page=1 literal) failed', { fallbackErr });
+      }
+    }
+
     console.error('[getCollectionProducts] Failed to load products', { err });
     return GOODS_UNAVAILABLE;
   }
