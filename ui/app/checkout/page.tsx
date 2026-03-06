@@ -1,8 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import CheckoutForm, { CheckoutFormData } from 'components/cart/checkout-form';
+import { getCheckoutCartId } from 'components/cart/actions';
 import Price from 'components/price';
 import { useCart } from 'components/cart/cart-context';
 import { RATE_LIMIT_MESSAGE } from 'lib/constants';
@@ -33,13 +34,21 @@ export default function CheckoutPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const formErrorRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    if (error) {
+      formErrorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [error]);
+
   const handleSubmit = async (formData: CheckoutFormData) => {
-    if (!cart?.id) {
+    const customerId = cart?.id || (await getCheckoutCartId());
+    if (!customerId) {
       setError('No cart found. Please add items to your cart first.');
       return;
     }
@@ -49,7 +58,7 @@ export default function CheckoutPage() {
 
     try {
       const result = await checkout({
-        customerId: cart.id,
+        customerId,
         deliveryInfo: {
           pickupAddress: PICKUP_ADDRESS,
           deliveryAddress: formData.deliveryAddress,
@@ -233,8 +242,11 @@ export default function CheckoutPage() {
 
         {/* Checkout Form */}
         <div className="order-1 lg:order-2">
-          <div className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800">
-            <CheckoutForm onSubmit={handleSubmit} isLoading={isLoading} />
+          <div
+            ref={formErrorRef}
+            className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800"
+          >
+            <CheckoutForm onSubmit={handleSubmit} isLoading={isLoading} submitError={error} />
           </div>
         </div>
       </div>

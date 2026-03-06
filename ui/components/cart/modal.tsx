@@ -109,11 +109,11 @@ export default function CartModal() {
                             key={item.id ?? item.merchandise.id}
                             className="flex w-full flex-col border-b border-neutral-300 dark:border-neutral-700"
                           >
-                            <div className="relative flex w-full flex-row justify-between px-1 py-4">
+                            <div className="relative flex w-full items-start gap-3 px-1 py-4">
                               <div className="absolute z-40 -ml-1 -mt-2">
                                 <DeleteItemButton item={item} optimisticUpdate={updateCartItem} />
                               </div>
-                              <div className="flex flex-row">
+                              <div className="flex min-w-0 flex-1 items-start gap-3">
                                 <div className="relative h-16 w-16 overflow-hidden rounded-md border border-neutral-300 bg-neutral-300 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800">
                                   <Image
                                     className="h-full w-full object-cover"
@@ -126,17 +126,17 @@ export default function CartModal() {
                                 <Link
                                   href={merchandiseUrl}
                                   onClick={closeCart}
-                                  className="z-30 ml-3 flex min-w-0 flex-col justify-center"
+                                  className="z-30 flex min-w-0 flex-1 flex-col justify-center"
                                 >
-                                  <span className="truncate leading-tight">{title}</span>
+                                  <span className="line-clamp-2 break-words leading-tight">{title}</span>
                                   {hasVariantTitle ? (
-                                    <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                                    <p className="line-clamp-1 break-words text-sm text-neutral-500 dark:text-neutral-400">
                                       {item.merchandise.title}
                                     </p>
                                   ) : null}
                                 </Link>
                               </div>
-                              <div className="flex h-16 flex-col justify-between">
+                              <div className="flex h-16 shrink-0 flex-col justify-between pl-1">
                                 <Price
                                   className="flex justify-end space-y-2 text-right text-sm"
                                   amount={item.cost.totalAmount.amount}

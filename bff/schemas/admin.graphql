@@ -56,7 +56,7 @@ type Query {
   """
   Get a paginated list of goods.
   """
-  goods(page: Int): GoodsList
+  goods: GoodsList
 
   """
   Get a single good by ID.

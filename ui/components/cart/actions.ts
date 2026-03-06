@@ -156,6 +156,10 @@ export async function redirectToCheckout(): Promise<void> {
   redirect('/checkout');
 }
 
+export async function getCheckoutCartId(): Promise<string> {
+  return (await getExistingCustomerId()) || '';
+}
+
 export async function createCartAndSetCookie() {
   const existingCartId = await getExistingCustomerId();
 

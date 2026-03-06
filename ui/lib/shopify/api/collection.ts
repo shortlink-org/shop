@@ -61,7 +61,15 @@ export async function getCollectionProducts(
 
     return res.body.data.goods.results.map(normalizeGood);
   } catch (err) {
-    console.error('[getCollectionProducts] Failed to load products', { err });
+    const errorPath =
+      typeof err === 'object' &&
+      err !== null &&
+      'error' in err &&
+      typeof (err as { error?: unknown }).error === 'object' &&
+      (err as { error?: { path?: unknown } }).error?.path
+        ? JSON.stringify((err as { error: { path: unknown } }).error.path)
+        : undefined;
+    console.error('[getCollectionProducts] Failed to load products', { err, errorPath });
     return GOODS_UNAVAILABLE;
   }
 }

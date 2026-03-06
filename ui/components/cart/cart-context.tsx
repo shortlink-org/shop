@@ -1,5 +1,6 @@
 'use client';
 
+import { DEFAULT_OPTION } from 'lib/constants';
 import type { Cart, CartItem, Good, GoodVariant } from 'lib/shopify/types';
 import { CART_UNAVAILABLE, type CartLoadResult } from 'lib/shopify';
 import React, { createContext, use, useContext, useMemo, useOptimistic } from 'react';
@@ -54,6 +55,9 @@ function createOrUpdateCartItem(
   const quantity = existingItem ? existingItem.quantity + 1 : 1;
   const totalAmount = calculateItemCost(quantity, variant.price.amount);
 
+  const merchandiseTitle =
+    variant.selectedOptions.length > 0 && variant.title ? variant.title : DEFAULT_OPTION;
+
   return {
     id: existingItem?.id,
     quantity,
@@ -65,7 +69,7 @@ function createOrUpdateCartItem(
     },
     merchandise: {
       id: variant.id,
-      title: variant.title,
+      title: merchandiseTitle,
       selectedOptions: variant.selectedOptions,
       product: {
         id: good.id,

@@ -3,6 +3,7 @@
 import { PlusIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import { addItem, type AddItemResult } from 'components/cart/actions';
+import { DEFAULT_OPTION } from 'lib/constants';
 import { Good, GoodVariant } from 'lib/shopify/types';
 import { useFormState } from 'react-dom';
 import { useCart } from './cart-context';
@@ -65,7 +66,7 @@ export function AddToCart({ good }: { good: Good }) {
   const actionWithVariant = formAction.bind(null, good.id);
   const optimisticVariant: GoodVariant = {
     id: good.id,
-    title: good.name,
+    title: DEFAULT_OPTION,
     availableForSale: true,
     selectedOptions: [],
     price: { amount: good.price, currencyCode: 'USD' }

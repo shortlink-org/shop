@@ -20,6 +20,7 @@ import type {
 } from '../types';
 import { getGood } from './good';
 import { GOODS_UNAVAILABLE as GOODS_UNAVAILABLE_SENTINEL } from '../sentinels';
+import { DEFAULT_OPTION } from '../../constants';
 
 function buildCartFromState(
   state: CartState | undefined | null,
@@ -57,7 +58,7 @@ function buildCartFromState(
         },
         merchandise: {
           id: goodId,
-          title,
+          title: DEFAULT_OPTION,
           selectedOptions: [],
           product: {
             id: good?.id ?? goodId,

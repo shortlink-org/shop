@@ -107,6 +107,7 @@ type CheckoutFormInput = z.input<typeof checkoutFormInputSchema>;
 interface CheckoutFormProps {
   onSubmit: (data: CheckoutFormData) => Promise<void>;
   isLoading?: boolean;
+  submitError?: string | null;
 }
 
 const defaultValues: CheckoutFormInput = {
@@ -126,7 +127,11 @@ const defaultValues: CheckoutFormInput = {
   priority: 'NORMAL'
 };
 
-export default function CheckoutForm({ onSubmit, isLoading = false }: CheckoutFormProps) {
+export default function CheckoutForm({
+  onSubmit,
+  isLoading = false,
+  submitError = null
+}: CheckoutFormProps) {
   const {
     register,
     handleSubmit: rhfHandleSubmit,
@@ -139,6 +144,8 @@ export default function CheckoutForm({ onSubmit, isLoading = false }: CheckoutFo
   });
 
   const selectedTimeSlot = watch('selectedTimeSlot');
+  const selectedDeliveryDate = watch('deliveryDate');
+  const tomorrowDate = getMinDate();
 
   const onValid = async (data: CheckoutFormData) => {
     await onSubmit(data);
@@ -322,17 +329,36 @@ export default function CheckoutForm({ onSubmit, isLoading = false }: CheckoutFo
         <h3 className="text-lg font-semibold text-black dark:text-white">Delivery Time</h3>
 
         <div>
-          <label
-            htmlFor="deliveryDate"
-            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300"
-          >
-            Delivery Date *
-          </label>
+          <div className="flex items-center justify-between">
+            <label
+              htmlFor="deliveryDate"
+              className="block text-sm font-medium text-neutral-700 dark:text-neutral-300"
+            >
+              Delivery Date *
+            </label>
+            <button
+              type="button"
+              onClick={() =>
+                setValue('deliveryDate', tomorrowDate, {
+                  shouldDirty: true,
+                  shouldTouch: true,
+                  shouldValidate: true
+                })
+              }
+              className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                selectedDeliveryDate === tomorrowDate
+                  ? 'border-blue-500 bg-blue-500 text-white'
+                  : 'border-neutral-300 text-neutral-700 hover:bg-neutral-50 dark:border-neutral-600 dark:text-neutral-300 dark:hover:bg-neutral-700'
+              }`}
+            >
+              Tomorrow
+            </button>
+          </div>
           <input
             type="date"
             id="deliveryDate"
             {...register('deliveryDate')}
-            min={getMinDate()}
+            min={tomorrowDate}
             max={getMaxDate()}
             className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-neutral-800 dark:text-white ${
               errors.deliveryDate
@@ -401,6 +427,15 @@ export default function CheckoutForm({ onSubmit, isLoading = false }: CheckoutFo
       </div>
 
       {/* Submit Button */}
+      {submitError ? (
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300"
+        >
+          {submitError}
+        </div>
+      ) : null}
       <button
         type="submit"
         disabled={isLoading}

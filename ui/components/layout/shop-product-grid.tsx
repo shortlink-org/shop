@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { addItem } from 'components/cart/actions';
 import { useCart } from 'components/cart/cart-context';
+import { DEFAULT_OPTION } from 'lib/constants';
 import { Good, GoodVariant } from 'lib/shopify/types';
 import { toast } from 'sonner';
 import type { ProductGridProduct, ProductQuickViewProduct } from '@shortlink-org/ui-kit';
@@ -20,7 +21,7 @@ function formatPrice(amount: number): string {
 function goodToOptimisticVariant(good: Good): GoodVariant {
   return {
     id: good.id,
-    title: good.name,
+    title: DEFAULT_OPTION,
     availableForSale: true,
     selectedOptions: [],
     price: { amount: good.price, currencyCode: 'USD' }
@@ -145,7 +146,9 @@ export function ShopProductGrid({
     <>
       <ProductGrid
         className={clsx('shop-productgrid', 'shop-productgrid--with-add-to-cart', className)}
-        gridClassName={gridClassName}
+        gridClassName={clsx('gap-4 sm:gap-6 lg:gap-8', gridClassName)}
+        spacingX="lg"
+        spacingY="lg"
         products={products}
         title={title}
         onProductClick={(product) => router.push(product.href)}
