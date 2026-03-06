@@ -1,0 +1,156 @@
+{{- if .Values.monitoring.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ .Release.Name }}-service-rules
+  labels:
+    role: shop-rules
+    app: {{ .Chart.Name }}
+    release: prometheus-operator
+spec:
+  groups:
+    - name: {{ .Release.Name }}.kubernetes.rules
+      rules:
+        - alert: ServiceDeploymentReplicasMismatch
+          expr: |
+            sum by (namespace, deployment) (
+              kube_deployment_spec_replicas{
+                namespace="{{ .Release.Namespace }}",
+                deployment=~"{{ .Release.Name }}.*"
+              }
+            )
+            >
+            sum by (namespace, deployment) (
+              kube_deployment_status_replicas_available{
+                namespace="{{ .Release.Namespace }}",
+                deployment=~"{{ .Release.Name }}.*"
+              }
+            )
+          for: 10m
+          labels:
+            severity: warning
+            team: shop
+            service: {{ .Chart.Name }}
+          annotations:
+            summary: "Deployment has unavailable replicas"
+            description: "Deployment {{ "{{" }} $labels.namespace {{ "}}" }}/{{ "{{" }} $labels.deployment {{ "}}" }} has fewer available replicas than desired for 10m."
+
+        - alert: ServiceDeploymentDown
+          expr: |
+            (
+              sum by (namespace, deployment) (
+                kube_deployment_spec_replicas{
+                  namespace="{{ .Release.Namespace }}",
+                  deployment=~"{{ .Release.Name }}.*"
+                }
+              ) > 0
+            )
+            and on (namespace, deployment)
+            (
+              sum by (namespace, deployment) (
+                kube_deployment_status_replicas_available{
+                  namespace="{{ .Release.Namespace }}",
+                  deployment=~"{{ .Release.Name }}.*"
+                }
+              ) == 0
+            )
+          for: 5m
+          labels:
+            severity: critical
+            team: shop
+            service: {{ .Chart.Name }}
+          annotations:
+            summary: "Deployment is down"
+            description: "Deployment {{ "{{" }} $labels.namespace {{ "}}" }}/{{ "{{" }} $labels.deployment {{ "}}" }} has 0 available replicas for 5m."
+
+        - alert: ServicePodRestartBurst
+          expr: |
+            sum by (namespace, pod, container) (
+              increase(
+                kube_pod_container_status_restarts_total{
+                  namespace="{{ .Release.Namespace }}",
+                  pod=~"{{ .Release.Name }}.*",
+                  container!="POD"
+                }[10m]
+              )
+            ) >= 3
+          for: 10m
+          labels:
+            severity: warning
+            team: shop
+            service: {{ .Chart.Name }}
+          annotations:
+            summary: "Pod is restarting frequently"
+            description: "Container {{ "{{" }} $labels.container {{ "}}" }} in pod {{ "{{" }} $labels.namespace {{ "}}" }}/{{ "{{" }} $labels.pod {{ "}}" }} restarted 3+ times in 10m."
+
+    - name: {{ .Release.Name }}.istio.rules
+      rules:
+        - alert: ServiceHigh5xxRate
+          expr: |
+            (
+              sum by (destination_workload) (
+                rate(
+                  istio_requests_total{
+                    reporter="destination",
+                    destination_workload_namespace="{{ .Release.Namespace }}",
+                    destination_workload=~"{{ .Release.Name }}.*",
+                    response_code=~"5.."
+                  }[5m]
+                )
+              )
+              /
+              clamp_min(
+                sum by (destination_workload) (
+                  rate(
+                    istio_requests_total{
+                      reporter="destination",
+                      destination_workload_namespace="{{ .Release.Namespace }}",
+                      destination_workload=~"{{ .Release.Name }}.*"
+                    }[5m]
+                  )
+                ),
+                0.001
+              )
+            ) > 0.05
+            and on (destination_workload)
+            sum by (destination_workload) (
+              rate(
+                istio_requests_total{
+                  reporter="destination",
+                  destination_workload_namespace="{{ .Release.Namespace }}",
+                  destination_workload=~"{{ .Release.Name }}.*"
+                }[5m]
+              )
+            ) > 0.2
+          for: 10m
+          labels:
+            severity: warning
+            team: shop
+            service: {{ .Chart.Name }}
+          annotations:
+            summary: "High 5xx rate on service"
+            description: "Service {{ "{{" }} $labels.destination_workload {{ "}}" }} has >5% 5xx responses for 10m."
+
+        - alert: ServiceHighP95Latency
+          expr: |
+            histogram_quantile(
+              0.95,
+              sum by (le, destination_workload) (
+                rate(
+                  istio_request_duration_milliseconds_bucket{
+                    reporter="destination",
+                    destination_workload_namespace="{{ .Release.Namespace }}",
+                    destination_workload=~"{{ .Release.Name }}.*"
+                  }[5m]
+                )
+              )
+            ) > 1500
+          for: 15m
+          labels:
+            severity: warning
+            team: shop
+            service: {{ .Chart.Name }}
+          annotations:
+            summary: "High p95 latency on service"
+            description: "Service {{ "{{" }} $labels.destination_workload {{ "}}" }} p95 latency is above 1500ms for 15m."
+{{- end }}
