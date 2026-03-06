@@ -5,7 +5,7 @@ import { Providers } from 'components/providers';
 import { GeistSans } from 'geist/font/sans';
 import { CART_UNAVAILABLE, getCart, type CartLoadResult } from 'lib/shopify';
 import { ensureStartsWith, sanitizeJsonLd } from 'lib/utils';
-import { cookies, headers } from 'next/headers';
+import { headers } from 'next/headers';
 import { ReactNode, ViewTransition } from 'react';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from 'next-themes';
@@ -42,18 +42,11 @@ export const metadata = {
 };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  const cookieStore = await cookies();
-  const cartId = cookieStore.get('cartId')?.value;
   const requestHeaders = await headers();
   const authHeader = requestHeaders.get('authorization') ?? undefined;
-  const headerCustomerId =
-    requestHeaders.get('x-user-id') ??
-    requestHeaders.get('x-customer-id') ??
-    undefined;
-  const customerId = cartId ?? headerCustomerId;
 
   // Pass cart promise that never rejects — when carts service is down we resolve with CART_UNAVAILABLE so UI can show "we'll display it later"
-  const cartPromise: Promise<CartLoadResult> = getCart(customerId, {
+  const cartPromise: Promise<CartLoadResult> = getCart({
     authorization: authHeader
   }).catch(() => CART_UNAVAILABLE);
 

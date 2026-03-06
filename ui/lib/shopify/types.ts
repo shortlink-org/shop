@@ -142,7 +142,6 @@ export type ShopifyCartOperation = {
     getCart: {
       state: {
         cartId?: string | null;
-        customerId?: string | null;
         items?: Array<{
           goodId?: string | null;
           quantity?: number | null;
@@ -150,9 +149,7 @@ export type ShopifyCartOperation = {
       };
     };
   };
-  variables: {
-    customerId?: string;
-  };
+  variables: Record<string, never>;
 };
 
 export type ShopifyCreateCartOperation = {
@@ -171,7 +168,6 @@ export type ShopifyAddToCartOperation = {
   };
   variables: {
     addRequest: {
-      customerId: string;
       items: {
         goodId: string;
         quantity: number;
@@ -188,7 +184,6 @@ export type ShopifyRemoveFromCartOperation = {
   };
   variables: {
     removeRequest: {
-      customerId: string;
       items: {
         goodId: string;
         quantity: number;
@@ -205,7 +200,6 @@ export type ShopifyUpdateCartOperation = {
   };
   variables: {
     addRequest: {
-      customerId: string;
       items: {
         goodId: string;
         quantity: number;
@@ -338,7 +332,6 @@ export type DeliveryInfo = {
 };
 
 export type CheckoutInput = {
-  customerId: string;
   deliveryInfo?: DeliveryInfo;
 };
 

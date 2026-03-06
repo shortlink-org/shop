@@ -1,12 +1,14 @@
 'use server';
 
 import { TAGS } from 'lib/constants';
-import { addToCart, createCart, updateCart } from 'lib/shopify';
+import { addToCart, updateCart } from 'lib/shopify';
 import { revalidateTag } from 'next/cache';
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-export type AddItemResult = { ok: true } | { ok: false; message: string };
+export type AddItemResult =
+  | { ok: true; cartId: string }
+  | { ok: false; message: string };
 
 async function getHeaderCustomerId() {
   const requestHeaders = await headers();
@@ -15,12 +17,6 @@ async function getHeaderCustomerId() {
 
 async function getExistingCustomerId() {
   const cookieStore = await cookies();
-  const existingCartId = cookieStore.get('cartId')?.value;
-
-  if (existingCartId) {
-    return existingCartId;
-  }
-
   const headerCustomerId = await getHeaderCustomerId();
   if (headerCustomerId) {
     cookieStore.set('cartId', headerCustomerId);
@@ -31,16 +27,8 @@ async function getExistingCustomerId() {
 }
 
 async function getOrCreateCartId() {
-  const cookieStore = await cookies();
   const existingCustomerId = await getExistingCustomerId();
-  if (existingCustomerId) return existingCustomerId;
-
-  const newCart = await createCart();
-  if (newCart.id) {
-    cookieStore.set('cartId', newCart.id);
-  }
-
-  return newCart.id ?? '';
+  return existingCustomerId;
 }
 
 export async function addItem(
@@ -61,11 +49,11 @@ export async function addItem(
   const authHeader = (await headers()).get('authorization') ?? undefined;
 
   try {
-    await addToCart(cartId, [{ goodId: selectedVariantId, quantity: 1 }], {
+    await addToCart([{ goodId: selectedVariantId, quantity: 1 }], {
       authorization: authHeader
     });
     revalidateTag(TAGS.cart, 'max');
-    return { ok: true };
+    return { ok: true, cartId };
   } catch (e) {
     const err = e as Record<string, unknown>;
     const msgRaw = err?.message ?? (e instanceof Error ? e.message : null);
@@ -108,7 +96,6 @@ export async function removeItem(prevState: any, merchandiseId: string) {
 
   try {
     await updateCart(
-      cartId,
       [{ id: merchandiseId, merchandiseId, quantity: 0 }],
       { authorization: authHeader }
     );
@@ -135,7 +122,7 @@ export async function updateItemQuantity(
   const authHeader = (await headers()).get('authorization') ?? undefined;
 
   try {
-    await updateCart(cartId, [{ id: merchandiseId, merchandiseId, quantity }], {
+    await updateCart([{ id: merchandiseId, merchandiseId, quantity }], {
       authorization: authHeader
     });
     revalidateTag(TAGS.cart, 'max');
@@ -161,15 +148,11 @@ export async function getCheckoutCartId(): Promise<string> {
 }
 
 export async function createCartAndSetCookie() {
-  const existingCartId = await getExistingCustomerId();
-
-  if (existingCartId) {
+  const customerId = await getHeaderCustomerId();
+  if (!customerId) {
     return;
   }
 
   const cookieStore = await cookies();
-  const cart = await createCart();
-  if (cart.id) {
-    cookieStore.set('cartId', cart.id);
-  }
+  cookieStore.set('cartId', customerId);
 }

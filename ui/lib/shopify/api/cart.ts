@@ -88,15 +88,9 @@ function buildCartFromState(
   });
 }
 
-export async function createCart(): Promise<Cart> {
-  const cartId = crypto.randomUUID();
-  return createEmptyCart(cartId);
-}
-
 export type RequestOptions = { authorization?: string };
 
 export async function addToCart(
-  customerId: string,
   items: { goodId: string; quantity: number }[],
   options?: RequestOptions
 ): Promise<void> {
@@ -104,7 +98,6 @@ export async function addToCart(
     query: addToCartMutation,
     variables: {
       addRequest: {
-        customerId,
         items
       }
     },
@@ -114,7 +107,6 @@ export async function addToCart(
 }
 
 export async function removeFromCart(
-  customerId: string,
   items: { goodId: string; quantity: number }[],
   options?: RequestOptions
 ): Promise<void> {
@@ -122,7 +114,6 @@ export async function removeFromCart(
     query: removeFromCartMutation,
     variables: {
       removeRequest: {
-        customerId,
         items
       }
     },
@@ -132,15 +123,11 @@ export async function removeFromCart(
 }
 
 export async function updateCart(
-  customerId: string,
   lines: { id: string; merchandiseId: string; quantity: number }[],
   options?: RequestOptions
 ): Promise<void> {
   const res = await shopifyFetch<ShopifyCartOperation>({
     query: getCartQuery,
-    variables: {
-      customerId
-    },
     cache: 'no-store',
     headers: options?.authorization ? { Authorization: options.authorization } : {}
   });
@@ -167,33 +154,26 @@ export async function updateCart(
   }
 
   if (itemsToAdd.length > 0) {
-    await addToCart(customerId, itemsToAdd, options);
+    await addToCart(itemsToAdd, options);
   }
 
   if (itemsToRemove.length > 0) {
-    await removeFromCart(customerId, itemsToRemove, options);
+    await removeFromCart(itemsToRemove, options);
   }
 }
 
 export async function getCart(
-  cartId: string | undefined,
   options?: RequestOptions
 ): Promise<CartLoadResult> {
-  if (!cartId) {
-    return undefined;
-  }
-
   try {
     const res = await shopifyFetch<ShopifyCartOperation>({
       query: getCartQuery,
-      variables: {
-        customerId: cartId
-      },
       cache: 'no-store',
       headers: options?.authorization ? { Authorization: options.authorization } : {}
     });
 
-    return buildCartFromState(res.body.data.getCart?.state, cartId, options);
+    const state = res.body.data.getCart?.state;
+    return buildCartFromState(state, state?.cartId ?? undefined, options);
   } catch {
     return CART_UNAVAILABLE;
   }

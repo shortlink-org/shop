@@ -1,9 +1,8 @@
 export const getCartQuery = /* GraphQL */ `
-  query GetCart($customerId: String!) {
-    getCart(customerId: { customerId: $customerId }) {
+  query GetCart {
+    getCart {
       state {
         cartId
-        customerId
         items {
           goodId
           quantity

@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 export function AddToCartBlock({ good }: { good: Good }) {
-  const { addCartItem, updateCartItem } = useCart();
+  const { addCartItem, updateCartItem, setCartId } = useCart();
   const [isAdding, setIsAdding] = useState(false);
 
   const optimisticVariant: GoodVariant = {
@@ -32,6 +32,7 @@ export function AddToCartBlock({ good }: { good: Good }) {
         toast.error(result.message);
         return;
       }
+      setCartId(result.cartId);
       toast.success(`${good.name} added to cart`);
     } catch {
       updateCartItem(good.id, 'minus');

@@ -5,6 +5,7 @@ import clsx from 'clsx';
 import { addItem, type AddItemResult } from 'components/cart/actions';
 import { DEFAULT_OPTION } from 'lib/constants';
 import { Good, GoodVariant } from 'lib/shopify/types';
+import { useEffect } from 'react';
 import { useFormState } from 'react-dom';
 import { useCart } from './cart-context';
 
@@ -58,7 +59,7 @@ function SubmitButton({
 }
 
 export function AddToCart({ good }: { good: Good }) {
-  const { addCartItem } = useCart();
+  const { addCartItem, setCartId } = useCart();
   const [result, formAction] = useFormState<AddItemResult | null, string | undefined>(
     addItem,
     null
@@ -71,6 +72,12 @@ export function AddToCart({ good }: { good: Good }) {
     selectedOptions: [],
     price: { amount: good.price, currencyCode: 'USD' }
   };
+
+  useEffect(() => {
+    if (result?.ok) {
+      setCartId(result.cartId);
+    }
+  }, [result, setCartId]);
 
   return (
     <form

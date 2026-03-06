@@ -2,6 +2,7 @@ schema
 @server(port: 8080, hostname: "0.0.0.0", enableFederation: true, introspection: true)
 @upstream(
   allowedHeaders: ["Authorization", "user-id"]
+  onRequest: "requireUserId"
 )
 @telemetry(
   export: {
@@ -29,7 +30,6 @@ type CartItem {
 
 type CartState {
   cartId: String
-  customerId: String
   items: [CartItem]
 #  createdAt: String  # ISO8601 timestamp
 #  updatedAt: String  # ISO8601 timestamp
@@ -37,10 +37,6 @@ type CartState {
 
 type GetCartResponse {
   state: CartState
-}
-
-type CartRequest {
-  customerId: String
 }
 
 # ============================================
@@ -88,7 +84,6 @@ type DeliveryInfo {
 
 type OrderState {
   id: String
-  customerId: String
   items: [OrderItem]
   status: OrderStatus
   deliveryInfo: DeliveryInfo
@@ -119,14 +114,14 @@ enum OrderStatus {
 
 type Query {
   # Cart queries
-  getCart(customerId: CartRequest): GetCartResponse
+  getCart: GetCartResponse
   @grpc(
     url: "{{.env.OMS_GRPC_URL}}"
     method: "infrastructure.rpc.cart.v1.CartService.Get"
-    body: "{{.args.customerId}}"
+    body: "{\"customer_id\": \"{{.headers.user-id}}\"}"
     headers: [
       {key: "Authorization", value: "{{.headers.Authorization}}"},
-      {key: "user-id", value: "3e173751-8840-4b0d-8065-fbea88357cc5"}
+      {key: "user-id", value: "{{.headers.user-id}}"}
     ]
   )
 
@@ -138,7 +133,7 @@ type Query {
     body: "{\"id\": \"{{.args.id}}\"}"
     headers: [
       {key: "Authorization", value: "{{.headers.Authorization}}"},
-      {key: "user-id", value: "3e173751-8840-4b0d-8065-fbea88357cc5"}
+      {key: "user-id", value: "{{.headers.user-id}}"}
     ]
   )
 }
@@ -148,7 +143,6 @@ type Query {
 # ============================================
 
 input ItemRequest {
-  customerId: String!
   items: [CartItemInput!]!
 }
 
@@ -201,7 +195,6 @@ input OrderItemInput {
 }
 
 input CreateOrderInput {
-  customerId: String!
   items: [OrderItemInput!]!
   deliveryInfo: DeliveryInfoInput
 }
@@ -212,7 +205,6 @@ input UpdateDeliveryInfoInput {
 }
 
 input CheckoutInput {
-  customerId: String!
   deliveryInfo: DeliveryInfoInput
 }
 
@@ -225,10 +217,10 @@ type Mutation {
   @grpc(
     url: "{{.env.OMS_GRPC_URL}}"
     method: "infrastructure.rpc.cart.v1.CartService.Add"
-    body: "{{.args.addRequest}}"
+    body: "{\"customer_id\": \"{{.headers.user-id}}\", \"items\": {{.args.addRequest.items}}}"
     headers: [
       {key: "Authorization", value: "{{.headers.Authorization}}"},
-      {key: "user-id", value: "3e173751-8840-4b0d-8065-fbea88357cc5"}
+      {key: "user-id", value: "{{.headers.user-id}}"}
     ]
   )
 
@@ -236,21 +228,21 @@ type Mutation {
   @grpc(
     url: "{{.env.OMS_GRPC_URL}}"
     method: "infrastructure.rpc.cart.v1.CartService.Remove"
-    body: "{{.args.removeRequest}}"
+    body: "{\"customer_id\": \"{{.headers.user-id}}\", \"items\": {{.args.removeRequest.items}}}"
     headers: [
       {key: "Authorization", value: "{{.headers.Authorization}}"},
-      {key: "user-id", value: "3e173751-8840-4b0d-8065-fbea88357cc5"}
+      {key: "user-id", value: "{{.headers.user-id}}"}
     ]
   )
 
-  resetCart(customerId: CartRequest): Empty!
+  resetCart: Empty!
   @grpc(
     url: "{{.env.OMS_GRPC_URL}}"
     method: "infrastructure.rpc.cart.v1.CartService.Reset"
-    body: "{{.args.customerId}}"
+    body: "{\"customer_id\": \"{{.headers.user-id}}\"}"
     headers: [
       {key: "Authorization", value: "{{.headers.Authorization}}"},
-      {key: "user-id", value: "3e173751-8840-4b0d-8065-fbea88357cc5"}
+      {key: "user-id", value: "{{.headers.user-id}}"}
     ]
   )
 
@@ -259,10 +251,10 @@ type Mutation {
   @grpc(
     url: "{{.env.OMS_GRPC_URL}}"
     method: "infrastructure.rpc.order.v1.OrderService.Create"
-    body: "{{.args.input}}"
+    body: "{\"customer_id\": \"{{.headers.user-id}}\", \"items\": {{.args.input.items}}, \"delivery_info\": {{.args.input.deliveryInfo}}}"
     headers: [
       {key: "Authorization", value: "{{.headers.Authorization}}"},
-      {key: "user-id", value: "3e173751-8840-4b0d-8065-fbea88357cc5"}
+      {key: "user-id", value: "{{.headers.user-id}}"}
     ]
   )
 
@@ -273,7 +265,7 @@ type Mutation {
     body: "{\"id\": \"{{.args.orderId}}\"}"
     headers: [
       {key: "Authorization", value: "{{.headers.Authorization}}"},
-      {key: "user-id", value: "3e173751-8840-4b0d-8065-fbea88357cc5"}
+      {key: "user-id", value: "{{.headers.user-id}}"}
     ]
   )
 
@@ -284,7 +276,7 @@ type Mutation {
     body: "{\"order_id\": \"{{.args.input.orderId}}\", \"delivery_info\": {{.args.input.deliveryInfo}}}"
     headers: [
       {key: "Authorization", value: "{{.headers.Authorization}}"},
-      {key: "user-id", value: "3e173751-8840-4b0d-8065-fbea88357cc5"}
+      {key: "user-id", value: "{{.headers.user-id}}"}
     ]
   )
 
@@ -292,10 +284,10 @@ type Mutation {
   @grpc(
     url: "{{.env.OMS_GRPC_URL}}"
     method: "infrastructure.rpc.order.v1.OrderService.Checkout"
-    body: "{\"customer_id\": \"{{.args.input.customerId}}\", \"delivery_info\": {{.args.input.deliveryInfo}}}"
+    body: "{\"customer_id\": \"{{.headers.user-id}}\", \"delivery_info\": {{.args.input.deliveryInfo}}}"
     headers: [
       {key: "Authorization", value: "{{.headers.Authorization}}"},
-      {key: "user-id", value: "{{.args.input.customerId}}"}
+      {key: "user-id", value: "{{.headers.user-id}}"}
     ]
   )
 }

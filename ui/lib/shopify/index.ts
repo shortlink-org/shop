@@ -13,7 +13,6 @@ export { shopifyFetch } from './fetch';
 export {
   addToCart,
   checkout,
-  createCart,
   getCart,
   removeFromCart,
   updateCart

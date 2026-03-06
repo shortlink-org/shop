@@ -1,7 +1,21 @@
-function onRequest({ request }) {
-  request.headers["user-id"] = "3e173751-8840-4b0d-8065-fbea88357cc4"
+function requireUserId({ request }) {
+  const userId = request.headers["user-id"];
+
+  if (userId && userId.trim() !== "") {
+    return { request };
+  }
 
   return {
-    request
-  }
+    response: {
+      status: 401,
+      headers: {
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({
+        error: {
+          message: "Missing required user-id header"
+        }
+      })
+    }
+  };
 }

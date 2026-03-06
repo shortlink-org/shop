@@ -193,7 +193,7 @@ query {
 
 ```graphql
 query {
-  getCart(customerId: { customerId: "user-123" }) {
+  getCart {
     state {
       cartId
       items {

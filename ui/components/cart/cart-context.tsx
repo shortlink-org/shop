@@ -9,7 +9,8 @@ type UpdateType = 'plus' | 'minus' | 'delete';
 
 type CartAction =
   | { type: 'UPDATE_ITEM'; payload: { merchandiseId: string; updateType: UpdateType } }
-  | { type: 'ADD_ITEM'; payload: { variant: GoodVariant; good: Good } };
+  | { type: 'ADD_ITEM'; payload: { variant: GoodVariant; good: Good } }
+  | { type: 'SET_CART_ID'; payload: { cartId: string } };
 
 type CartContextType = {
   cart: Cart | undefined;
@@ -17,6 +18,7 @@ type CartContextType = {
   cartUnavailable: boolean;
   updateCartItem: (merchandiseId: string, updateType: UpdateType) => void;
   addCartItem: (variant: GoodVariant, good: Good) => void;
+  setCartId: (cartId: string) => void;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -148,6 +150,10 @@ function cartReducer(state: Cart | undefined, action: CartAction): Cart {
 
       return { ...currentCart, ...updateCartTotals(updatedLines), lines: updatedLines };
     }
+    case 'SET_CART_ID': {
+      const { cartId } = action.payload;
+      return { ...currentCart, id: cartId };
+    }
     default:
       return currentCart;
   }
@@ -173,12 +179,18 @@ export function CartProvider({
     updateOptimisticCart({ type: 'ADD_ITEM', payload: { variant, good } });
   };
 
+  const setCartId = (cartId: string) => {
+    if (!cartId) return;
+    updateOptimisticCart({ type: 'SET_CART_ID', payload: { cartId } });
+  };
+
   const value = useMemo(
     () => ({
       cart: optimisticCart,
       cartUnavailable,
       updateCartItem,
-      addCartItem
+      addCartItem,
+      setCartId
     }),
     [optimisticCart, cartUnavailable]
   );

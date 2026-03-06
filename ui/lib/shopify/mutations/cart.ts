@@ -33,8 +33,8 @@ export const removeFromCartMutation = /* GraphQL */ `
 `;
 
 export const resetCartMutation = /* GraphQL */ `
-  mutation ResetCart($customerId: CartRequest!) {
-    resetCart(customerId: $customerId) {
+  mutation ResetCart {
+    resetCart {
       _
     }
   }

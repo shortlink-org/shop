@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import CheckoutForm, { CheckoutFormData } from 'components/cart/checkout-form';
-import { getCheckoutCartId } from 'components/cart/actions';
 import Price from 'components/price';
 import { useCart } from 'components/cart/cart-context';
 import { RATE_LIMIT_MESSAGE } from 'lib/constants';
@@ -47,18 +46,11 @@ export default function CheckoutPage() {
   }, [error]);
 
   const handleSubmit = async (formData: CheckoutFormData) => {
-    const customerId = cart?.id || (await getCheckoutCartId());
-    if (!customerId) {
-      setError('No cart found. Please add items to your cart first.');
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
 
     try {
       const result = await checkout({
-        customerId,
         deliveryInfo: {
           pickupAddress: PICKUP_ADDRESS,
           deliveryAddress: formData.deliveryAddress,

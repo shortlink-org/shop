@@ -86,7 +86,7 @@ export function ShopProductGrid({
   gridClassName?: string;
 }) {
   const router = useRouter();
-  const { addCartItem, updateCartItem } = useCart();
+  const { addCartItem, updateCartItem, setCartId } = useCart();
   const [quickViewGood, setQuickViewGood] = useState<Good | null>(null);
   const [isQuickViewAdding, setIsQuickViewAdding] = useState(false);
   const [pendingGoodIds, setPendingGoodIds] = useState<Record<string, boolean>>({});
@@ -112,6 +112,7 @@ export function ShopProductGrid({
         toast.error(result.message);
         return false;
       }
+      setCartId(result.cartId);
       toast.success(`${good.name} added to cart`);
       return true;
     } catch {
