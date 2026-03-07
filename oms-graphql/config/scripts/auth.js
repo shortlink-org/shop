@@ -1,8 +1,16 @@
 function requireUserId({ request }) {
-  const userId = request.headers["user-id"];
+  const userId = request.headers["x-user-id"];
 
   if (userId && userId.trim() !== "") {
-    return { request };
+    return {
+      request: {
+        ...request,
+        headers: {
+          ...request.headers,
+          "user-id": userId
+        }
+      }
+    };
   }
 
   return {

@@ -85,4 +85,32 @@ describe('POST /api/graphql sanitize goods page variable', () => {
     const body = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body));
     expect(body.variables.page).toBe(1);
   });
+
+  it('forwards x-user-id to the BFF as X-User-ID', async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ data: { getCart: { state: null } } }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        })
+      );
+
+    const req = {
+      headers: new Headers({
+        'content-type': 'application/json',
+        'x-user-id': '550e8400-e29b-41d4-a716-446655440000'
+      }),
+      text: vi.fn().mockResolvedValue(
+        JSON.stringify({
+          query: 'query GetCart { getCart { state { cartId } } }'
+        })
+      )
+    } as never;
+
+    await POST(req);
+
+    const forwardedHeaders = new Headers(fetchMock.mock.calls[0]?.[1]?.headers);
+    expect(forwardedHeaders.get('X-User-ID')).toBe('550e8400-e29b-41d4-a716-446655440000');
+  });
 });

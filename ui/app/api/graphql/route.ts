@@ -32,6 +32,7 @@ function sanitizeGetGoodsListBody(rawBody: string): string {
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const authorization = req.headers.get('authorization') ?? undefined;
+  const userId = req.headers.get('x-user-id') ?? undefined;
   const contentType = req.headers.get('content-type') ?? 'application/json';
 
   let body: string;
@@ -68,6 +69,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   };
   if (authorization) {
     headers['Authorization'] = authorization;
+  }
+  if (userId) {
+    headers['X-User-ID'] = userId;
   }
 
   const res = await fetch(BFF_GRAPHQL_URL, {

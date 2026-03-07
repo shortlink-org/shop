@@ -1,7 +1,7 @@
 schema
 @server(port: 8080, hostname: "0.0.0.0", enableFederation: true, introspection: true)
 @upstream(
-  allowedHeaders: ["Authorization", "user-id"]
+  allowedHeaders: ["Authorization", "X-User-ID"]
   onRequest: "requireUserId"
 )
 @telemetry(
@@ -11,7 +11,7 @@ schema
       format: "text"
     }
   }
-  requestHeaders: ["user-id", "Authorization"]
+  requestHeaders: ["X-User-ID", "Authorization"]
 )
 @link(type: Script, src: "scripts/auth.js")
 @link(src: "{{.env.OMS_GRPC_URL}}", type: Grpc) {
