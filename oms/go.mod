@@ -196,3 +196,7 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260203192932-546029d2fa20 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+// Align OpenTelemetry schema: avoid conflicting Schema URL (1.37.0 vs 1.39.0).
+// go-sdk/db and go-sdk/watermill pull in otlptracehttp v1.27.0 (schema 1.37).
+replace go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp => go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.39.0
