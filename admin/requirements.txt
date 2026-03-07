@@ -381,9 +381,9 @@ opentelemetry-instrumentation-dbapi==0.60b1 \
     # via
     #   shop-admin (pyproject.toml)
     #   opentelemetry-instrumentation-sqlite3
-opentelemetry-instrumentation-django==0.60b1 \
-    --hash=sha256:3f6b4ba201eee35406dab965b254eed0c64fa1ef42e4a7b0296ad1b30e8e3f81 \
-    --hash=sha256:765b69c7ccdea7e9ebfd0b9e68387956b8f74816f3e39775d5b06a20f16b0522
+opentelemetry-instrumentation-django==0.61b0 \
+    --hash=sha256:26c1b0b325a9783d4a2f4df660ba05cf929c3eda2ae9b07916b649bb44e1c5b6 \
+    --hash=sha256:9885154dc128578de0e6b5ce49e965c786f8ab071175bec005dcd454510be951
     # via shop-admin (pyproject.toml)
 opentelemetry-instrumentation-logging==0.60b1 \
     --hash=sha256:98f4b9c7aeb9314a30feee7c002c7ea9abea07c90df5f97fb058b850bc45b89a \

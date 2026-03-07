@@ -40,7 +40,7 @@ dependencies = [
   'opentelemetry-exporter-otlp-proto-http==1.40.0',
   'opentelemetry-instrumentation==0.60b1',
   'opentelemetry-instrumentation-dbapi==0.60b1',
-  'opentelemetry-instrumentation-django==0.60b1',
+  'opentelemetry-instrumentation-django==0.61b0',
   'opentelemetry-instrumentation-logging==0.60b1',
   'opentelemetry-instrumentation-requests==0.60b1',
   'opentelemetry-instrumentation-sqlite3==0.60b1',
