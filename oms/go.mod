@@ -26,7 +26,7 @@ require (
 	github.com/shortlink-org/go-sdk/graceful_shutdown v0.0.0-20260307190635-c49239be411f
 	github.com/shortlink-org/go-sdk/grpc v0.0.0-20260307190635-c49239be411f
 	github.com/shortlink-org/go-sdk/logger v0.0.0-20260307190635-c49239be411f
-	github.com/shortlink-org/go-sdk/observability v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/observability v0.0.0-20260307200444-15cb7da01fe0
 	github.com/shortlink-org/go-sdk/specification v0.0.0-20260307190635-c49239be411f
 	github.com/shortlink-org/go-sdk/temporal v0.0.0-20260307190635-c49239be411f
 	github.com/shortlink-org/go-sdk/uow v0.0.0-20260307190635-c49239be411f

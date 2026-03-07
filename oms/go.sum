@@ -599,6 +599,8 @@ github.com/shortlink-org/go-sdk/logger v0.0.0-20260307190635-c49239be411f h1:fL3
 github.com/shortlink-org/go-sdk/logger v0.0.0-20260307190635-c49239be411f/go.mod h1:Xa9G5sA1SqTA7pA0IrrNb22aE6Knho9slOxkoyA9Cg4=
 github.com/shortlink-org/go-sdk/observability v0.0.0-20260307190635-c49239be411f h1:hevU1gq5MYxDpfFnZEKtGzZ5GNQiWQSzH61/3kBxh64=
 github.com/shortlink-org/go-sdk/observability v0.0.0-20260307190635-c49239be411f/go.mod h1:zVx7vFkXnP1OyEj0S87w95Tr0dParsy8/l++e533MPs=
+github.com/shortlink-org/go-sdk/observability v0.0.0-20260307200444-15cb7da01fe0 h1:JBDzNA8KgRZBPhQPuyZNcixUguA6CT/Rgl2Tbc2YsoU=
+github.com/shortlink-org/go-sdk/observability v0.0.0-20260307200444-15cb7da01fe0/go.mod h1:zVx7vFkXnP1OyEj0S87w95Tr0dParsy8/l++e533MPs=
 github.com/shortlink-org/go-sdk/specification v0.0.0-20260307190635-c49239be411f h1:RZbKkMqHWNcpE96hx0MzXVYSzE4o54Gscf73VxcCNko=
 github.com/shortlink-org/go-sdk/specification v0.0.0-20260307190635-c49239be411f/go.mod h1:EzKxwz9p0eqG4J2DFL4sk7EA0ZvnJ3hwRO0gnMUBmSo=
 github.com/shortlink-org/go-sdk/temporal v0.0.0-20260307190635-c49239be411f h1:Y71kJD9gMJuDlfFN9Hch2kZBHItu2M+bIgY4PyC6Kyc=
