@@ -14,6 +14,7 @@ RUN npm install -g wgc@latest
 
 # Copy schema files and configuration
 COPY schemas/ schemas/
+COPY subgraphs/ subgraphs/
 COPY graph-static.yaml .
 
 # Compose the federated schema from static SDL files

@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "service": "Admin",
+  "operationMappings": [
+    {
+      "type": "OPERATION_TYPE_QUERY",
+      "original": "goods",
+      "mapped": "QueryGoods",
+      "request": "QueryGoodsRequest",
+      "response": "QueryGoodsResponse"
+    },
+    {
+      "type": "OPERATION_TYPE_QUERY",
+      "original": "good",
+      "mapped": "QueryGood",
+      "request": "QueryGoodRequest",
+      "response": "QueryGoodResponse"
+    }
+  ],
+  "entityMappings": [],
+  "typeFieldMappings": [
+    {
+      "type": "Query",
+      "fieldMappings": [
+        {
+          "original": "goods",
+          "mapped": "goods",
+          "argumentMappings": []
+        },
+        {
+          "original": "good",
+          "mapped": "good",
+          "argumentMappings": [
+            {
+              "original": "id",
+              "mapped": "id"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Good",
+      "fieldMappings": [
+        {
+          "original": "id",
+          "mapped": "id",
+          "argumentMappings": []
+        },
+        {
+          "original": "name",
+          "mapped": "name",
+          "argumentMappings": []
+        },
+        {
+          "original": "price",
+          "mapped": "price",
+          "argumentMappings": []
+        },
+        {
+          "original": "description",
+          "mapped": "description",
+          "argumentMappings": []
+        },
+        {
+          "original": "created_at",
+          "mapped": "created_at",
+          "argumentMappings": []
+        },
+        {
+          "original": "updated_at",
+          "mapped": "updated_at",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "GoodsList",
+      "fieldMappings": [
+        {
+          "original": "count",
+          "mapped": "count",
+          "argumentMappings": []
+        },
+        {
+          "original": "next",
+          "mapped": "next",
+          "argumentMappings": []
+        },
+        {
+          "original": "previous",
+          "mapped": "previous",
+          "argumentMappings": []
+        },
+        {
+          "original": "results",
+          "mapped": "results",
+          "argumentMappings": []
+        }
+      ]
+    }
+  ],
+  "enumMappings": [],
+  "resolveMappings": []
+}

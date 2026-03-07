@@ -1,0 +1,36 @@
+# Admin Subgraph SDL Schema
+# Auto-generated for federation composition
+
+"""
+Good entity representing a product in the shop.
+"""
+type Good {
+  id: String!
+  name: String!
+  price: String!
+  description: String!
+  created_at: String!
+  updated_at: String!
+}
+
+"""
+Paginated list of goods.
+"""
+type GoodsList {
+  count: Int!
+  next: String
+  previous: String
+  results: [Good!]!
+}
+
+type Query {
+  """
+  Get a paginated list of goods.
+  """
+  goods: GoodsList
+
+  """
+  Get a single good by ID.
+  """
+  good(id: String!): Good
+}

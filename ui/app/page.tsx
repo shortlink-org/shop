@@ -36,7 +36,7 @@ export default async function HomePage(_props: {
 
   return (
     <section className="mx-auto max-w-screen-2xl px-4 pb-4">
-      <ShopProductGrid goods={homepageItems} />
+      <ShopProductGrid goods={homepageItems} withCardBorder />
     </section>
   );
 }

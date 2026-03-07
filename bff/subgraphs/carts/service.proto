@@ -1,0 +1,240 @@
+syntax = "proto3";
+package shop.carts.v1;
+
+option go_package = "github.com/shortlink-org/shop/oms-graphql/pkg/generated/service/v1";
+
+import "google/protobuf/wrappers.proto";
+
+// Service definition for Shop
+service Shop {
+  rpc MutationAddItem(MutationAddItemRequest) returns (MutationAddItemResponse) {}
+  rpc MutationCancelOrder(MutationCancelOrderRequest) returns (MutationCancelOrderResponse) {}
+  rpc MutationCheckout(MutationCheckoutRequest) returns (MutationCheckoutResponse) {}
+  rpc MutationCreateOrder(MutationCreateOrderRequest) returns (MutationCreateOrderResponse) {}
+  rpc MutationRemoveItem(MutationRemoveItemRequest) returns (MutationRemoveItemResponse) {}
+  rpc MutationResetCart(MutationResetCartRequest) returns (MutationResetCartResponse) {}
+  rpc MutationUpdateDeliveryInfo(MutationUpdateDeliveryInfoRequest) returns (MutationUpdateDeliveryInfoResponse) {}
+  rpc QueryGetCart(QueryGetCartRequest) returns (QueryGetCartResponse) {}
+  rpc QueryGetOrder(QueryGetOrderRequest) returns (QueryGetOrderResponse) {}
+}
+
+// Wrapper message for a list of CartItem.
+message ListOfCartItem {
+  message List {
+    repeated CartItem items = 1;
+  }
+  List list = 1;
+}
+// Wrapper message for a list of OrderItem.
+message ListOfOrderItem {
+  message List {
+    repeated OrderItem items = 1;
+  }
+  List list = 1;
+}
+// Request message for getCart operation.
+message QueryGetCartRequest {
+}
+// Response message for getCart operation.
+message QueryGetCartResponse {
+  GetCartResponse get_cart = 1;
+}
+// Request message for getOrder operation.
+message QueryGetOrderRequest {
+  string id = 1;
+}
+// Response message for getOrder operation.
+message QueryGetOrderResponse {
+  GetOrderResponse get_order = 1;
+}
+// Request message for addItem operation.
+message MutationAddItemRequest {
+  ItemRequest add_request = 1;
+}
+// Response message for addItem operation.
+message MutationAddItemResponse {
+  Empty add_item = 1;
+}
+// Request message for removeItem operation.
+message MutationRemoveItemRequest {
+  ItemRequest remove_request = 1;
+}
+// Response message for removeItem operation.
+message MutationRemoveItemResponse {
+  Empty remove_item = 1;
+}
+// Request message for resetCart operation.
+message MutationResetCartRequest {
+}
+// Response message for resetCart operation.
+message MutationResetCartResponse {
+  Empty reset_cart = 1;
+}
+// Request message for createOrder operation.
+message MutationCreateOrderRequest {
+  CreateOrderInput input = 1;
+}
+// Response message for createOrder operation.
+message MutationCreateOrderResponse {
+  Empty create_order = 1;
+}
+// Request message for cancelOrder operation.
+message MutationCancelOrderRequest {
+  string order_id = 1;
+}
+// Response message for cancelOrder operation.
+message MutationCancelOrderResponse {
+  Empty cancel_order = 1;
+}
+// Request message for updateDeliveryInfo operation.
+message MutationUpdateDeliveryInfoRequest {
+  UpdateDeliveryInfoInput input = 1;
+}
+// Response message for updateDeliveryInfo operation.
+message MutationUpdateDeliveryInfoResponse {
+  Empty update_delivery_info = 1;
+}
+// Request message for checkout operation.
+message MutationCheckoutRequest {
+  CheckoutInput input = 1;
+}
+// Response message for checkout operation.
+message MutationCheckoutResponse {
+  CheckoutResult checkout = 1;
+}
+
+message GetCartResponse {
+  CartState state = 1;
+}
+
+message GetOrderResponse {
+  OrderState order = 1;
+}
+
+message ItemRequest {
+  repeated CartItemInput items = 1;
+}
+
+message Empty {
+  google.protobuf.BoolValue ok = 1;
+}
+
+message CreateOrderInput {
+  repeated OrderItemInput items = 1;
+  DeliveryInfoInput delivery_info = 2;
+}
+
+message UpdateDeliveryInfoInput {
+  string order_id = 1;
+  DeliveryInfoInput delivery_info = 2;
+}
+
+message CheckoutInput {
+  DeliveryInfoInput delivery_info = 1;
+}
+
+message CheckoutResult {
+  google.protobuf.StringValue order_id = 1;
+}
+
+message CartItem {
+  google.protobuf.StringValue good_id = 1;
+  google.protobuf.Int32Value quantity = 2;
+}
+
+message CartState {
+  google.protobuf.StringValue cart_id = 1;
+  ListOfCartItem items = 2;
+}
+
+message CartItemInput {
+  string good_id = 1;
+  int32 quantity = 2;
+}
+
+message OrderItem {
+  google.protobuf.StringValue id = 1;
+  google.protobuf.Int32Value quantity = 2;
+  google.protobuf.DoubleValue price = 3;
+}
+
+message DeliveryAddress {
+  google.protobuf.StringValue street = 1;
+  google.protobuf.StringValue city = 2;
+  google.protobuf.StringValue postal_code = 3;
+  google.protobuf.StringValue country = 4;
+  google.protobuf.DoubleValue latitude = 5;
+  google.protobuf.DoubleValue longitude = 6;
+}
+
+message DeliveryPeriod {
+  google.protobuf.StringValue start_time = 1;
+  google.protobuf.StringValue end_time = 2;
+}
+
+message PackageInfo {
+  google.protobuf.DoubleValue weight_kg = 1;
+  google.protobuf.StringValue dimensions = 2;
+}
+
+message RecipientContacts {
+  google.protobuf.StringValue recipient_name = 1;
+  google.protobuf.StringValue recipient_phone = 2;
+  google.protobuf.StringValue recipient_email = 3;
+}
+
+message DeliveryInfo {
+  DeliveryAddress pickup_address = 1;
+  DeliveryAddress delivery_address = 2;
+  DeliveryPeriod delivery_period = 3;
+  PackageInfo package_info = 4;
+  google.protobuf.StringValue priority = 5;
+  RecipientContacts recipient_contacts = 6;
+}
+
+message OrderState {
+  google.protobuf.StringValue id = 1;
+  ListOfOrderItem items = 2;
+  google.protobuf.StringValue status = 3;
+  DeliveryInfo delivery_info = 4;
+}
+
+message DeliveryAddressInput {
+  string street = 1;
+  string city = 2;
+  google.protobuf.StringValue postal_code = 3;
+  string country = 4;
+  google.protobuf.DoubleValue latitude = 5;
+  google.protobuf.DoubleValue longitude = 6;
+}
+
+message DeliveryPeriodInput {
+  string start_time = 1;
+  string end_time = 2;
+}
+
+message PackageInfoInput {
+  double weight_kg = 1;
+  string dimensions = 2;
+}
+
+message RecipientContactsInput {
+  google.protobuf.StringValue recipient_name = 1;
+  google.protobuf.StringValue recipient_phone = 2;
+  google.protobuf.StringValue recipient_email = 3;
+}
+
+message DeliveryInfoInput {
+  DeliveryAddressInput pickup_address = 1;
+  DeliveryAddressInput delivery_address = 2;
+  DeliveryPeriodInput delivery_period = 3;
+  PackageInfoInput package_info = 4;
+  google.protobuf.StringValue priority = 5;
+  RecipientContactsInput recipient_contacts = 6;
+}
+
+message OrderItemInput {
+  string id = 1;
+  int32 quantity = 2;
+  double price = 3;
+}

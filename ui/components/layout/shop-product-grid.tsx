@@ -73,12 +73,14 @@ export function ShopProductGrid({
   goods,
   title,
   className,
-  gridClassName
+  gridClassName,
+  withCardBorder = false
 }: {
   goods: Good[];
   title?: string;
   className?: string;
   gridClassName?: string;
+  withCardBorder?: boolean;
 }) {
   const router = useRouter();
   const { addCartItem, updateCartItem, setCartId } = useCart();
@@ -143,7 +145,11 @@ export function ShopProductGrid({
       <ProductGrid
         className={clsx('shop-productgrid', 'shop-productgrid--with-add-to-cart', className)}
         gridClassName={clsx('gap-4 sm:gap-6 lg:gap-8', gridClassName)}
-        productClassName="border border-[var(--color-border)] shadow-[0_18px_45px_-36px_rgba(15,23,42,0.28)]"
+        productClassName={
+          withCardBorder
+            ? 'border border-[var(--color-border)] shadow-[0_18px_45px_-36px_rgba(15,23,42,0.28)]'
+            : undefined
+        }
         spacingX="lg"
         spacingY="lg"
         products={products}
