@@ -26,7 +26,11 @@
 - Use `uv add` to install dependencies
 - Use `uv sync` to sync dependencies from pyproject.toml
 
+## Testing
+- Integration tests must fail hard if required runtime dependencies are unavailable
+- **NEVER** auto-skip integration tests because Docker daemon, Temporal, databases, or other required services are missing
+- Missing Docker daemon or other integration-test infrastructure is a test environment error, not a passing or skipped test condition
+
 ## Language
 - Use English for code comments, documentation, and git commits
 - User communication can be in Russian if preferred
-

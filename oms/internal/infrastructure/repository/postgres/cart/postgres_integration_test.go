@@ -48,6 +48,7 @@ func setupCartTest(t *testing.T) (*cartrepo.Store, *uowpg.UoW, *testhelpers.Post
 
 	store, err := cartrepo.New(context.Background(), pc.DB())
 	require.NoError(t, err, "failed to create cart repository")
+	t.Cleanup(store.Close)
 
 	uow := uowpg.New(pc.Pool)
 

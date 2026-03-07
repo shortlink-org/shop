@@ -13,6 +13,14 @@ import (
 	"github.com/shortlink-org/shop/oms/pkg/uow"
 )
 
+func cloneCartState(state *cart.State) *cart.State {
+	if state == nil {
+		return nil
+	}
+
+	return cart.Reconstitute(state.GetCustomerId(), state.GetItems(), state.GetVersion())
+}
+
 // Load retrieves a cart by customer ID.
 // Uses L1 cache for frequently accessed carts.
 // Requires transaction in context (use UnitOfWork.Begin()).
@@ -20,7 +28,7 @@ func (s *Store) Load(ctx context.Context, customerID uuid.UUID) (*cart.State, er
 	// Check L1 cache first
 	cacheKey := customerID.String()
 	if cachedCart, found := s.cache.Get(cacheKey); found {
-		return cachedCart, nil
+		return cloneCartState(cachedCart), nil
 	}
 
 	// Cache miss - fetch from database
@@ -51,7 +59,7 @@ func (s *Store) Load(ctx context.Context, customerID uuid.UUID) (*cart.State, er
 
 	// Store in L1 cache: cost = base + items * per-item cost
 	cost := int64(100 + len(items)*50)
-	s.cache.SetWithTTL(cacheKey, result, cost, cacheTTL)
+	s.cache.SetWithTTL(cacheKey, cloneCartState(result), cost, cacheTTL)
 
 	return result, nil
 }

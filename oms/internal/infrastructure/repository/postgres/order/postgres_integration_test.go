@@ -51,6 +51,7 @@ func setupOrderTest(t *testing.T) (*orderrepo.Store, *uowpg.UoW, *testhelpers.Po
 
 	store, err := orderrepo.New(context.Background(), pc.DB())
 	require.NoError(t, err, "failed to create order repository")
+	t.Cleanup(store.Close)
 
 	uow := uowpg.New(pc.Pool)
 
@@ -282,15 +283,15 @@ func TestOrder_OptimisticConcurrency(t *testing.T) {
 	order2, err := store.Load(txCtx2, orderID)
 	require.NoError(t, err)
 
-	// First transaction completes the order
-	err = order1.CompleteOrder()
+	// First transaction cancels the order
+	err = order1.CancelOrder()
 	require.NoError(t, err)
 	err = store.Save(txCtx1, order1)
 	require.NoError(t, err)
 	err = uow.Commit(txCtx1)
 	require.NoError(t, err)
 
-	// Second transaction tries to cancel with stale version - should fail
+	// Second transaction tries to cancel with stale version - save should fail
 	err = order2.CancelOrder()
 	require.NoError(t, err)
 	err = store.Save(txCtx2, order2)

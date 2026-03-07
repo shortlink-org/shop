@@ -14,6 +14,48 @@ import (
 	"github.com/shortlink-org/shop/oms/pkg/uow"
 )
 
+func cloneOrderDeliveryInfo(info *order.DeliveryInfo) *order.DeliveryInfo {
+	if info == nil {
+		return nil
+	}
+
+	var recipientContacts *order.RecipientContacts
+	if rc := info.GetRecipientContacts(); rc != nil {
+		clone := order.NewRecipientContacts(rc.GetName(), rc.GetPhone(), rc.GetEmail())
+		recipientContacts = &clone
+	}
+
+	cloned := order.NewDeliveryInfo(
+		info.GetPickupAddress(),
+		info.GetDeliveryAddress(),
+		info.GetDeliveryPeriod(),
+		info.GetPackageInfo(),
+		info.GetPriority(),
+		recipientContacts,
+	)
+
+	if packageID := info.GetPackageId(); packageID != nil {
+		cloned.SetPackageId(*packageID)
+	}
+
+	return &cloned
+}
+
+func cloneOrderState(state *order.OrderState) *order.OrderState {
+	if state == nil {
+		return nil
+	}
+
+	return order.NewOrderStateFromPersisted(
+		state.GetOrderID(),
+		state.GetCustomerId(),
+		state.GetItems(),
+		state.GetStatus(),
+		state.GetVersion(),
+		cloneOrderDeliveryInfo(state.GetDeliveryInfo()),
+	)
+}
+
 // Load retrieves an order by ID.
 // Uses L1 cache for frequently accessed orders.
 // Requires transaction in context (use UnitOfWork.Begin()).
@@ -21,7 +63,7 @@ func (s *Store) Load(ctx context.Context, orderID uuid.UUID) (*order.OrderState,
 	// Check L1 cache first
 	cacheKey := orderID.String()
 	if cachedOrder, found := s.cache.Get(cacheKey); found {
-		return cachedOrder, nil
+		return cloneOrderState(cachedOrder), nil
 	}
 
 	// Cache miss - fetch from database
@@ -65,7 +107,7 @@ func (s *Store) Load(ctx context.Context, orderID uuid.UUID) (*order.OrderState,
 
 	// Store in L1 cache: cost = base + items * per-item cost
 	cost := int64(200 + len(items)*50)
-	s.cache.SetWithTTL(cacheKey, result, cost, cacheTTL)
+	s.cache.SetWithTTL(cacheKey, cloneOrderState(result), cost, cacheTTL)
 
 	return result, nil
 }
