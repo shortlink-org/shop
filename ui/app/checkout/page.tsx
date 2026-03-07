@@ -1,16 +1,17 @@
 'use client';
 
+import { BasketItem, Button, FeedbackPanel } from '@shortlink-org/ui-kit';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import CheckoutForm, { CheckoutFormData } from 'components/cart/checkout-form';
-import Price from 'components/price';
 import { useCart } from 'components/cart/cart-context';
+import { useCartBasket } from 'components/cart/use-cart-basket';
+import { formatCartMoney } from 'components/cart/ui-kit';
 import { RATE_LIMIT_MESSAGE } from 'lib/constants';
 import { checkout } from 'lib/shopify';
 import type { PackageInfo } from 'lib/shopify/types';
 import { ArrowLeftIcon, ShoppingCartIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
-import Image from 'next/image';
 
 // Default warehouse/pickup address
 const PICKUP_ADDRESS = {
@@ -30,6 +31,7 @@ const DEFAULT_PACKAGE_INFO: PackageInfo = {
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart, cartUnavailable } = useCart();
+  const { items, handleRemoveItem, handleQuantityChange } = useCartBasket();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -103,22 +105,22 @@ export default function CheckoutPage() {
   if (cartUnavailable) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-8">
-        <div className="flex flex-col items-center justify-center py-16">
-          <ShoppingCartIcon className="h-16 w-16 text-neutral-400" />
-          <h2 className="mt-4 text-xl font-semibold text-black dark:text-white">
-            We couldn&apos;t load your cart
-          </h2>
-          <p className="mt-2 text-center text-neutral-600 dark:text-neutral-400">
-            We&apos;ll show it when it&apos;s available again. You can keep browsing.
-          </p>
-          <Link
-            href="/"
-            className="mt-6 inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-6 py-2 text-sm font-medium dark:border-neutral-700 dark:bg-neutral-800"
-          >
-            <ArrowLeftIcon className="h-4 w-4" />
-            Continue shopping
-          </Link>
-        </div>
+        <FeedbackPanel
+          variant="error"
+          eyebrow="Checkout"
+          title="We couldn't load your cart"
+          message="We'll show it when it's available again. You can keep browsing while the cart service recovers."
+          action={
+            <Button
+              as={Link}
+              asProps={{ href: '/' }}
+              variant="secondary"
+              icon={<ArrowLeftIcon />}
+            >
+              Continue shopping
+            </Button>
+          }
+        />
       </div>
     );
   }
@@ -127,21 +129,18 @@ export default function CheckoutPage() {
   if (!cart || cart.lines.length === 0) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-8">
-        <div className="flex flex-col items-center justify-center py-16">
-          <ShoppingCartIcon className="h-16 w-16 text-neutral-400" />
-          <h2 className="mt-4 text-xl font-semibold text-black dark:text-white">
-            Your cart is empty
-          </h2>
-          <p className="mt-2 text-neutral-600 dark:text-neutral-400">
-            Add some items to your cart before checking out.
-          </p>
-          <Link
-            href="/"
-            className="mt-6 rounded-full bg-blue-600 px-6 py-3 text-sm font-medium text-white hover:bg-blue-700"
-          >
-            Continue Shopping
-          </Link>
-        </div>
+        <FeedbackPanel
+          variant="empty"
+          eyebrow="Checkout"
+          title="Your cart is empty"
+          message="Add a few products before starting checkout."
+          icon={<ShoppingCartIcon className="h-6 w-6 text-slate-500" />}
+          action={
+            <Button as={Link} asProps={{ href: '/' }} icon={<ArrowLeftIcon />}>
+              Continue shopping
+            </Button>
+          }
+        />
       </div>
     );
   }
@@ -174,48 +173,36 @@ export default function CheckoutPage() {
               Order Summary
             </h2>
 
-            <ul className="divide-y divide-neutral-200 dark:divide-neutral-700">
-              {cart.lines.map((item, i) => (
-                <li key={i} className="flex py-4">
-                  <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border border-neutral-200 dark:border-neutral-700">
-                    <Image
-                      src="https://picsum.photos/200"
-                      alt="Product"
-                      width={64}
-                      height={64}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                  <div className="ml-4 flex flex-1 flex-col">
-                    <div className="flex justify-between text-sm font-medium text-black dark:text-white">
-                      <span>{item.merchandise.product.title}</span>
-                      <Price
-                        amount={item.cost.totalAmount.amount}
-                        currencyCode={item.cost.totalAmount.currencyCode}
-                      />
-                    </div>
-                    <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-                      Qty: {item.quantity}
-                    </p>
-                  </div>
-                </li>
+            <ul className="space-y-3">
+              {items.map((item) => (
+                <BasketItem
+                  key={item.id}
+                  item={item}
+                  onRemove={handleRemoveItem}
+                  onQuantityChange={handleQuantityChange}
+                  confirmRemove={false}
+                />
               ))}
             </ul>
 
             <div className="mt-4 space-y-2 border-t border-neutral-200 pt-4 dark:border-neutral-700">
               <div className="flex justify-between text-sm text-neutral-600 dark:text-neutral-400">
                 <span>Subtotal</span>
-                <Price
-                  amount={cart.cost.subtotalAmount.amount}
-                  currencyCode={cart.cost.subtotalAmount.currencyCode}
-                />
+                <span>
+                  {formatCartMoney(
+                    cart.cost.subtotalAmount.amount,
+                    cart.cost.subtotalAmount.currencyCode
+                  )}
+                </span>
               </div>
               <div className="flex justify-between text-sm text-neutral-600 dark:text-neutral-400">
                 <span>Taxes</span>
-                <Price
-                  amount={cart.cost.totalTaxAmount?.amount ?? 0}
-                  currencyCode={cart.cost.totalTaxAmount?.currencyCode ?? 'USD'}
-                />
+                <span>
+                  {formatCartMoney(
+                    cart.cost.totalTaxAmount?.amount ?? 0,
+                    cart.cost.totalTaxAmount?.currencyCode ?? 'USD'
+                  )}
+                </span>
               </div>
               <div className="flex justify-between text-sm text-neutral-600 dark:text-neutral-400">
                 <span>Shipping</span>
@@ -223,10 +210,7 @@ export default function CheckoutPage() {
               </div>
               <div className="flex justify-between border-t border-neutral-200 pt-2 text-base font-semibold text-black dark:border-neutral-700 dark:text-white">
                 <span>Total</span>
-                <Price
-                  amount={cart.cost.totalAmount.amount}
-                  currencyCode={cart.cost.totalAmount.currencyCode}
-                />
+                <span>{formatCartMoney(cart.cost.totalAmount.amount, cart.cost.totalAmount.currencyCode)}</span>
               </div>
             </div>
           </div>

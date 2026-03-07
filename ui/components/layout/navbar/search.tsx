@@ -1,10 +1,17 @@
 'use client';
 
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import clsx from 'clsx';
 import { createUrl } from 'lib/utils';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function Search() {
+export default function Search({
+  className,
+  inputClassName
+}: {
+  className?: string;
+  inputClassName?: string;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -25,7 +32,10 @@ export default function Search() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="relative w-full max-w-[550px] lg:w-80 xl:w-full">
+    <form
+      onSubmit={onSubmit}
+      className={clsx('relative w-full max-w-[550px] lg:w-80 xl:w-full', className)}
+    >
       <input
         key={searchParams?.get('q')}
         type="text"
@@ -33,7 +43,10 @@ export default function Search() {
         placeholder="Search for products..."
         autoComplete="off"
         defaultValue={searchParams?.get('q') || ''}
-        className="text-md w-full rounded-lg border bg-white px-4 py-2 text-black placeholder:text-neutral-500 md:text-sm dark:border-neutral-800 dark:bg-transparent dark:text-white dark:placeholder:text-neutral-400"
+        className={clsx(
+          'text-md w-full rounded-lg border bg-white px-4 py-2 text-black placeholder:text-neutral-500 md:text-sm dark:border-neutral-800 dark:bg-transparent dark:text-white dark:placeholder:text-neutral-400',
+          inputClassName
+        )}
       />
       <div className="absolute right-0 top-0 mr-3 flex h-full items-center">
         <MagnifyingGlassIcon className="h-4" />

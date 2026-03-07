@@ -1,9 +1,9 @@
 'use client';
 
+import { Button } from '@shortlink-org/ui-kit';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import LoadingDots from 'components/loading-dots';
 import { useSession } from '@/contexts/SessionContext';
 import { useEffect } from 'react';
 
@@ -461,13 +461,9 @@ export default function CheckoutForm({
           {submitError}
         </div>
       ) : null}
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="w-full rounded-full bg-blue-600 px-6 py-3 text-center text-sm font-medium text-white opacity-90 hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {isLoading ? <LoadingDots className="bg-white" /> : 'Place Order'}
-      </button>
+      <Button type="submit" loading={isLoading} className="w-full justify-center">
+        Place Order
+      </Button>
     </form>
   );
 }

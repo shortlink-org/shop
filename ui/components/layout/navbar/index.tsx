@@ -1,63 +1,92 @@
+'use client';
+
+import { AppHeader } from '@shortlink-org/ui-kit';
 import CartModal from 'components/cart/modal';
 import LogoSquare from 'components/logo-square';
 import { ProfileWidget } from 'components/user';
-
-import { Menu } from 'lib/shopify/types';
+import { createUrl } from 'lib/utils';
 import Link from 'next/link';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import type { ReactNode } from 'react';
 import { Suspense } from 'react';
-import MobileMenu from './mobile-menu';
 import Search, { SearchSkeleton } from './search';
 
 const { SITE_NAME } = process.env;
 
-export async function Navbar() {
-  const menu = [{ title: 'Home', path: '/' }];
+function HeaderLink({
+  href,
+  className,
+  children
+}: {
+  href: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <Link href={href} prefetch={true} className={className}>
+      {children}
+    </Link>
+  );
+}
+
+export function Navbar() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const menu = [{ name: 'Home', href: '/' }];
+
+  const handleSearch = (query: string) => {
+    const newParams = new URLSearchParams(searchParams?.toString() ?? '');
+
+    if (query) {
+      newParams.set('q', query);
+    } else {
+      newParams.delete('q');
+    }
+
+    router.push(createUrl('/search', newParams));
+  };
 
   return (
-    <nav className="relative flex items-center justify-between p-4 lg:px-6">
-      <div className="block flex-none md:hidden">
-        <Suspense fallback={null}>
-          <MobileMenu menu={menu} />
+    <div className="relative">
+      <AppHeader
+        className="border-b-0"
+        brand={{
+          name: SITE_NAME || 'Shortlink Shop',
+          href: '/',
+          logo: <LogoSquare size="sm" />
+        }}
+        navigation={menu}
+        currentPath={pathname}
+        LinkComponent={HeaderLink}
+        showMenuButton={false}
+        showThemeToggle={true}
+        showSearch={true}
+        searchProps={{
+          placeholder: 'Search for products...',
+          defaultQuery: searchParams?.get('q') || '',
+          onSearch: handleSearch
+        }}
+        showProfile={true}
+        profile={{
+          render: () => (
+            <div className="relative z-30 flex items-center gap-3">
+              <ProfileWidget />
+              <CartModal />
+            </div>
+          )
+        }}
+        sticky={false}
+        fullWidth={true}
+      />
+      <div className="border-b border-[var(--color-border)]/80 bg-[color-mix(in_srgb,var(--color-background)_82%,white_18%)] px-3 pb-4 pt-1 shadow-[0_18px_45px_-40px_rgba(15,23,42,0.24)] backdrop-blur-xl md:hidden">
+        <Suspense fallback={<SearchSkeleton />}>
+          <Search
+            className="max-w-none"
+            inputClassName="rounded-2xl border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-[var(--color-foreground)] shadow-[0_16px_36px_-32px_rgba(15,23,42,0.28)] placeholder:text-[var(--color-muted-foreground)]"
+          />
         </Suspense>
       </div>
-      <div className="flex w-full items-center">
-        <div className="flex w-full md:w-1/3">
-          <Link
-            href="/"
-            prefetch={true}
-            className="mr-2 flex w-full items-center justify-center md:w-auto lg:mr-6"
-          >
-            <LogoSquare />
-            <div className="ml-2 flex-none text-sm font-medium uppercase md:hidden lg:block">
-              {SITE_NAME}
-            </div>
-          </Link>
-          {menu.length ? (
-            <ul className="hidden gap-6 text-sm md:flex md:items-center">
-              {menu.map((item: Menu) => (
-                <li key={item.title}>
-                  <Link
-                    href={item.path}
-                    prefetch={true}
-                    className="text-neutral-500 underline-offset-4 hover:text-black hover:underline dark:text-neutral-400 dark:hover:text-neutral-300"
-                  >
-                    {item.title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-        </div>
-        <div className="hidden justify-center md:flex md:w-1/3">
-          <Suspense fallback={<SearchSkeleton />}>
-            <Search />
-          </Suspense>
-        </div>
-        <div className="flex items-center justify-end gap-4 md:w-1/3">
-          <ProfileWidget />
-          <CartModal />
-        </div>
-      </div>
-    </nav>
+    </div>
   );
 }

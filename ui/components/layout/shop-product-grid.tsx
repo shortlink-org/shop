@@ -34,9 +34,6 @@ function goodToQuickViewProduct(good: Good): ProductQuickViewProduct {
     imageSrc: PLACEHOLDER_IMAGE,
     imageAlt: good.name,
     price: formatPrice(good.price),
-    rating: 4.5,
-    reviewCount: 24,
-    reviewsHref: `/good/${good.id}#reviews`,
     colors: [],
     sizes: []
   };
@@ -67,9 +64,7 @@ function goodToProduct(
     badges: isAdding ? ADDING_BADGE : undefined,
     onAddToCart: isAdding ? undefined : () => onAddToCart(good),
     cta: {
-      onQuickView: () => onQuickView(good),
-      rating: 4.5,
-      reviewCount: 24
+      onQuickView: () => onQuickView(good)
     }
   };
 }
@@ -148,6 +143,7 @@ export function ShopProductGrid({
       <ProductGrid
         className={clsx('shop-productgrid', 'shop-productgrid--with-add-to-cart', className)}
         gridClassName={clsx('gap-4 sm:gap-6 lg:gap-8', gridClassName)}
+        productClassName="border border-[var(--color-border)] shadow-[0_18px_45px_-36px_rgba(15,23,42,0.28)]"
         spacingX="lg"
         spacingY="lg"
         products={products}
@@ -157,7 +153,6 @@ export function ShopProductGrid({
       <ProductQuickView
         className={clsx(
           'shop-productquickview',
-          'shop-productquickview--high-rating',
           isQuickViewAdding && 'pointer-events-none opacity-80'
         )}
         open={!!quickViewGood}

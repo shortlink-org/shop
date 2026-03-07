@@ -1,57 +1,59 @@
 'use client';
 
-import { ToggleDarkMode } from '@shortlink-org/ui-kit';
+import { Footer as UiKitFooter } from '@shortlink-org/ui-kit';
 import { SORT_SLUGS } from 'lib/constants';
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 
 const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME || 'Shop';
 
-const navigation = {
-  shop: [
-    { name: 'All Products', href: '/search' },
-    { name: 'New Arrivals', href: `/search?sort=${SORT_SLUGS.latest}` },
-    { name: 'Best Sellers', href: `/search?sort=${SORT_SLUGS.trending}` }
-  ]
-};
+const footerLinks = [
+  { id: 'all-products', label: 'All Products', href: '/search' },
+  { id: 'new-arrivals', label: 'New Arrivals', href: `/search?sort=${SORT_SLUGS.latest}` },
+  { id: 'best-sellers', label: 'Best Sellers', href: `/search?sort=${SORT_SLUGS.trending}` }
+];
+
+function FooterLink({
+  href,
+  className,
+  target,
+  children
+}: {
+  href: string;
+  className?: string;
+  target?: string;
+  children: ReactNode;
+}) {
+  return (
+    <Link href={href} prefetch={true} className={className} target={target}>
+      {children}
+    </Link>
+  );
+}
 
 export function Footer() {
   return (
-    <footer className="border-t border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900">
-      <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
-        <div className="xl:grid xl:grid-cols-3 xl:gap-8">
-          <div className="space-y-4">
-            <span className="text-xl font-bold">{SITE_NAME}</span>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
-              Your trusted online shop for quality products.
-            </p>
-            <div className="flex items-center gap-4">
-              <ToggleDarkMode />
-            </div>
-          </div>
-          <div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
-            <div>
-              <h3 className="text-sm font-semibold">Shop</h3>
-              <ul className="mt-4 space-y-2">
-                {navigation.shop.map((item) => (
-                  <li key={item.name}>
-                    <Link
-                      href={item.href}
-                      className="text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
-                    >
-                      {item.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+    <UiKitFooter
+      className="mt-0 max-w-none rounded-none border-t border-[var(--color-border)] bg-[var(--color-surface)] px-4 sm:px-6 lg:px-8"
+      links={footerLinks}
+      socialLinks={[]}
+      LinkComponent={FooterLink}
+      logoSlot={
+        <div className="flex flex-col items-center gap-2">
+          <span className="text-xl font-bold tracking-tight text-[var(--color-foreground)]">
+            {SITE_NAME}
+          </span>
+          <span className="text-xs font-medium uppercase tracking-[0.18em] text-[var(--color-muted-foreground)]">
+            Curated everyday picks
+          </span>
         </div>
-        <div className="mt-12 border-t border-neutral-200 pt-8 dark:border-neutral-700">
-          <p className="text-center text-xs text-neutral-500 dark:text-neutral-400">
-            &copy; {new Date().getFullYear()} {SITE_NAME}. All rights reserved.
-          </p>
-        </div>
-      </div>
-    </footer>
+      }
+      description="Your trusted online shop for quality products."
+      copyright={
+        <span className="text-sm text-[var(--color-muted-foreground)]">
+          &copy; {new Date().getFullYear()} {SITE_NAME}. All rights reserved.
+        </span>
+      }
+    />
   );
 }

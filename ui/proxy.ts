@@ -12,8 +12,10 @@ function normalizeTraceId(value: string): string {
 
 /** Generate 16 hex chars for W3C span-id. */
 function randomSpanId(): string {
-  return crypto.getRandomValues(new Uint8Array(8))
-    .reduce((s, b) => s + b.toString(16).padStart(2, '0'), '');
+  return crypto.getRandomValues(new Uint8Array(8)).reduce(
+    (s, b) => s + b.toString(16).padStart(2, '0'),
+    ''
+  );
 }
 
 /**
@@ -40,10 +42,10 @@ function getTraceContext(request: NextRequest): { traceId: string; traceparent: 
 }
 
 /**
- * Middleware: propagate or create trace context so the same trace-id is used by OpenTelemetry
+ * Proxy: propagate or create trace context so the same trace-id is used by OpenTelemetry
  * (and exported to Tempo) and returned in the response header.
  */
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { traceId, traceparent } = getTraceContext(request);
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set(TRACEPARENT_HEADER, traceparent);
