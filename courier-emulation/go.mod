@@ -8,13 +8,13 @@ require (
 	github.com/ThreeDotsLabs/watermill-kafka/v3 v3.1.2
 	github.com/dgraph-io/ristretto/v2 v2.4.0
 	github.com/google/wire v0.7.0
-	github.com/shortlink-org/go-sdk/config v0.0.0-20260307181652-685fa7c2cd44
-	github.com/shortlink-org/go-sdk/context v0.0.0-20260307181652-685fa7c2cd44
-	github.com/shortlink-org/go-sdk/flags v0.0.0-20260307181652-685fa7c2cd44
-	github.com/shortlink-org/go-sdk/graceful_shutdown v0.0.0-20260307181652-685fa7c2cd44
-	github.com/shortlink-org/go-sdk/logger v0.0.0-20260307181652-685fa7c2cd44
-	github.com/shortlink-org/go-sdk/observability v0.0.0-20260307181652-685fa7c2cd44
-	github.com/shortlink-org/go-sdk/watermill v0.0.0-20260307181652-685fa7c2cd44
+	github.com/shortlink-org/go-sdk/config v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/context v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/flags v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/graceful_shutdown v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/logger v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/observability v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/watermill v0.0.0-20260307190635-c49239be411f
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.40.0
@@ -99,7 +99,7 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
 	github.com/shirou/gopsutil/v4 v4.25.6 // indirect
-	github.com/shortlink-org/go-sdk/http v0.0.0-20260307181652-685fa7c2cd44 // indirect
+	github.com/shortlink-org/go-sdk/http v0.0.0-20260307190635-c49239be411f // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/sony/gobreaker v1.0.0 // indirect
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 // indirect

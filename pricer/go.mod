@@ -8,13 +8,13 @@ require (
 	github.com/google/wire v0.7.0
 	github.com/open-policy-agent/opa v1.14.0
 	github.com/shopspring/decimal v1.4.0
-	github.com/shortlink-org/go-sdk/config v0.0.0-20260307181652-685fa7c2cd44
-	github.com/shortlink-org/go-sdk/context v0.0.0-20260307181652-685fa7c2cd44
-	github.com/shortlink-org/go-sdk/flags v0.0.0-20260307181652-685fa7c2cd44
-	github.com/shortlink-org/go-sdk/graceful_shutdown v0.0.0-20260307181652-685fa7c2cd44
-	github.com/shortlink-org/go-sdk/grpc v0.0.0-20260307181652-685fa7c2cd44
-	github.com/shortlink-org/go-sdk/logger v0.0.0-20260307181652-685fa7c2cd44
-	github.com/shortlink-org/go-sdk/observability v0.0.0-20260307181652-685fa7c2cd44
+	github.com/shortlink-org/go-sdk/config v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/context v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/flags v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/graceful_shutdown v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/grpc v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/logger v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/observability v0.0.0-20260307190635-c49239be411f
 	github.com/spf13/viper v1.21.0
 	go.opentelemetry.io/otel/trace v1.42.0
 	google.golang.org/grpc v1.79.2
@@ -66,9 +66,9 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
 	github.com/segmentio/asm v1.2.1 // indirect
-	github.com/shortlink-org/go-sdk/auth v0.0.0-20260307181652-685fa7c2cd44 // indirect
-	github.com/shortlink-org/go-sdk/flight_trace v0.0.0-20260307181652-685fa7c2cd44 // indirect
-	github.com/shortlink-org/go-sdk/http v0.0.0-20260307181652-685fa7c2cd44 // indirect
+	github.com/shortlink-org/go-sdk/auth v0.0.0-20260307190635-c49239be411f // indirect
+	github.com/shortlink-org/go-sdk/flight_trace v0.0.0-20260307190635-c49239be411f // indirect
+	github.com/shortlink-org/go-sdk/http v0.0.0-20260307190635-c49239be411f // indirect
 	github.com/sirupsen/logrus v1.9.4 // indirect
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
@@ -108,5 +108,3 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
-
-replace github.com/shortlink-org/go-sdk => github.com/shortlink-org/go-sdk v0.0.0-20260307181652-685fa7c2cd44 // indirect

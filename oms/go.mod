@@ -15,21 +15,21 @@ require (
 	github.com/jackc/pgx/v5 v5.8.0
 	github.com/redis/rueidis v1.0.72
 	github.com/shopspring/decimal v1.4.0
-	github.com/shortlink-org/go-sdk/auth v0.0.0-20260307181652-685fa7c2cd44
-	github.com/shortlink-org/go-sdk/config v0.0.0-20260307181652-685fa7c2cd44
-	github.com/shortlink-org/go-sdk/context v0.0.0-20260307181652-685fa7c2cd44
-	github.com/shortlink-org/go-sdk/cqrs v0.0.0-20260307181652-685fa7c2cd44
-	github.com/shortlink-org/go-sdk/db v0.0.0-20260307181652-685fa7c2cd44
-	github.com/shortlink-org/go-sdk/flags v0.0.0-20260307181652-685fa7c2cd44
-	github.com/shortlink-org/go-sdk/flight_trace v0.0.0-20260307181652-685fa7c2cd44
-	github.com/shortlink-org/go-sdk/fsm v0.0.0-20260307181652-685fa7c2cd44
-	github.com/shortlink-org/go-sdk/graceful_shutdown v0.0.0-20260307181652-685fa7c2cd44
-	github.com/shortlink-org/go-sdk/grpc v0.0.0-20260307181652-685fa7c2cd44
-	github.com/shortlink-org/go-sdk/logger v0.0.0-20260307181652-685fa7c2cd44
-	github.com/shortlink-org/go-sdk/observability v0.0.0-20260307181652-685fa7c2cd44
-	github.com/shortlink-org/go-sdk/specification v0.0.0-20260307181652-685fa7c2cd44
-	github.com/shortlink-org/go-sdk/temporal v0.0.0-20260307181652-685fa7c2cd44
-	github.com/shortlink-org/go-sdk/uow v0.0.0-20260307181652-685fa7c2cd44
+	github.com/shortlink-org/go-sdk/auth v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/config v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/context v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/cqrs v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/db v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/flags v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/flight_trace v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/fsm v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/graceful_shutdown v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/grpc v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/logger v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/observability v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/specification v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/temporal v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/uow v0.0.0-20260307190635-c49239be411f
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.40.0
@@ -148,8 +148,8 @@ require (
 	github.com/robfig/cron v1.2.0 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
 	github.com/shirou/gopsutil/v4 v4.25.6 // indirect
-	github.com/shortlink-org/go-sdk/http v0.0.0-20260307181652-685fa7c2cd44 // indirect
-	github.com/shortlink-org/go-sdk/watermill v0.0.0-20260307181652-685fa7c2cd44 // indirect
+	github.com/shortlink-org/go-sdk/http v0.0.0-20260307190635-c49239be411f // indirect
+	github.com/shortlink-org/go-sdk/watermill v0.0.0-20260307190635-c49239be411f // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/sony/gobreaker v1.0.0 // indirect
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 // indirect
@@ -197,7 +197,3 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260226221140-a57be14db171 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-// Align OpenTelemetry schema: avoid conflicting Schema URL (1.37.0 vs 1.39.0).
-// go-sdk/db and go-sdk/watermill pull in otlptracehttp v1.27.0 (schema 1.37).
-replace go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp => go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.39.0
