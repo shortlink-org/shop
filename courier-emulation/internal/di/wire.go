@@ -13,7 +13,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/shortlink-org/go-sdk/config"
-	sdkctx "github.com/shortlink-org/go-sdk/context"
 	"github.com/shortlink-org/go-sdk/flags"
 	"github.com/shortlink-org/go-sdk/logger"
 	"github.com/shortlink-org/go-sdk/observability/metrics"
@@ -48,7 +47,7 @@ type CourierEmulationService struct {
 
 // DefaultSet ==========================================================================================================
 var DefaultSet = wire.NewSet(
-	sdkctx.New,
+	newSDKContext,
 	flags.New,
 	config.New,
 	logger.NewDefault,

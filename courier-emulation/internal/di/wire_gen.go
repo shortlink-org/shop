@@ -9,7 +9,6 @@ package courier_di
 import (
 	"github.com/google/wire"
 	"github.com/shortlink-org/go-sdk/config"
-	"github.com/shortlink-org/go-sdk/context"
 	"github.com/shortlink-org/go-sdk/flags"
 	"github.com/shortlink-org/go-sdk/logger"
 	"github.com/shortlink-org/go-sdk/observability/metrics"
@@ -24,7 +23,7 @@ import (
 // Injectors from wire.go:
 
 func InitializeCourierEmulationService() (*CourierEmulationService, func(), error) {
-	context, cleanup, err := ctx.New()
+	context, cleanup, err := newSDKContext()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -143,7 +142,9 @@ type CourierEmulationService struct {
 }
 
 // DefaultSet ==========================================================================================================
-var DefaultSet = wire.NewSet(ctx.New, flags.New, config.New, logger.NewDefault, tracing.New, metrics.New, profiling.New)
+var DefaultSet = wire.NewSet(
+	newSDKContext, flags.New, config.New, logger.NewDefault, tracing.New, metrics.New, profiling.New,
+)
 
 // CourierEmulationSet =================================================================================================
 var CourierEmulationSet = wire.NewSet(

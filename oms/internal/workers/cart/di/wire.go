@@ -16,7 +16,6 @@ import (
 	"go.temporal.io/sdk/client"
 
 	config "github.com/shortlink-org/go-sdk/config"
-	sdkctx "github.com/shortlink-org/go-sdk/context"
 	"github.com/shortlink-org/go-sdk/flags"
 	logger "github.com/shortlink-org/go-sdk/logger"
 	"github.com/shortlink-org/go-sdk/observability/metrics"
@@ -43,7 +42,7 @@ type OMSCartWorkerService struct {
 
 // OMSCartWorkerService ================================================================================================
 var CustomDefaultSet = wire.NewSet(
-	sdkctx.New,
+	newSDKContext,
 	flags.New,
 )
 

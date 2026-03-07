@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"github.com/google/wire"
 	"github.com/shortlink-org/go-sdk/config"
-	"github.com/shortlink-org/go-sdk/context"
 	"github.com/shortlink-org/go-sdk/flags"
 	"github.com/shortlink-org/go-sdk/grpc"
 	"github.com/shortlink-org/go-sdk/logger"
@@ -32,7 +31,7 @@ import (
 // Injectors from wire.go:
 
 func InitializePricerService() (*PricerService, func(), error) {
-	context, cleanup, err := ctx.New()
+	context, cleanup, err := newSDKContext()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -164,7 +163,9 @@ type PricerService struct {
 
 // PricerService =======================================================================================================
 // CustomDefaultSet - DefaultSet with go-sdk packages (config, context, flags, profiling)
-var CustomDefaultSet = wire.NewSet(ctx.New, flags.New, newGoSDKProfiling)
+var CustomDefaultSet = wire.NewSet(
+	newSDKContext, flags.New, newGoSDKProfiling,
+)
 
 var PricerSet = wire.NewSet(
 
@@ -191,29 +192,29 @@ func newGoSDKConfig() (*config.Config, error) {
 }
 
 // newGoSDKLogger creates a go-sdk logger instance for observability
-func newGoSDKLogger(ctx2 context.Context, cfg *config.Config) (logger.Logger, func(), error) {
-	return logger.NewDefault(ctx2, cfg)
+func newGoSDKLogger(ctx context.Context, cfg *config.Config) (logger.Logger, func(), error) {
+	return logger.NewDefault(ctx, cfg)
 }
 
 // newGoSDKTracer creates a tracer using go-sdk observability
-func newGoSDKTracer(ctx2 context.Context, log logger.Logger, cfg *config.Config) (trace.TracerProvider, func(), error) {
-	return tracing.New(ctx2, log, cfg)
+func newGoSDKTracer(ctx context.Context, log logger.Logger, cfg *config.Config) (trace.TracerProvider, func(), error) {
+	return tracing.New(ctx, log, cfg)
 }
 
 // newGoSDKMonitoring creates monitoring using go-sdk observability
-func newGoSDKMonitoring(ctx2 context.Context, log logger.Logger, tracer trace.TracerProvider, cfg *config.Config) (*metrics.Monitoring, func(), error) {
-	return metrics.New(ctx2, log, tracer, cfg)
+func newGoSDKMonitoring(ctx context.Context, log logger.Logger, tracer trace.TracerProvider, cfg *config.Config) (*metrics.Monitoring, func(), error) {
+	return metrics.New(ctx, log, tracer, cfg)
 }
 
 // newGoSDKProfiling creates profiling endpoint using go-sdk observability
-func newGoSDKProfiling(ctx2 context.Context, log logger.Logger, tracer trace.TracerProvider, cfg *config.Config) (profiling.PprofEndpoint, error) {
-	return profiling.New(ctx2, log, tracer, cfg)
+func newGoSDKProfiling(ctx context.Context, log logger.Logger, tracer trace.TracerProvider, cfg *config.Config) (profiling.PprofEndpoint, error) {
+	return profiling.New(ctx, log, tracer, cfg)
 }
 
 // newGRPCServerWithHandler creates gRPC server and registers CartService handler
-func newGRPCServerWithHandler(ctx2 context.Context, log logger.Logger, tracer trace.TracerProvider, monitoring *metrics.Monitoring, cfg *config.Config, calculateTotalHandler *calculate_total.Handler) (*grpc.Server, error) {
+func newGRPCServerWithHandler(ctx context.Context, log logger.Logger, tracer trace.TracerProvider, monitoring *metrics.Monitoring, cfg *config.Config, calculateTotalHandler *calculate_total.Handler) (*grpc.Server, error) {
 	promRegistry := monitoring.Prometheus
-	server, err := grpc.InitServer(ctx2, log, tracer, promRegistry, nil, cfg)
+	server, err := grpc.InitServer(ctx, log, tracer, promRegistry, nil, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -229,7 +230,7 @@ func NewRunRPCServer(runRPCServer *grpc.Server) (*run.Response, error) {
 }
 
 // newDiscountPolicy creates a new discount policy
-func newDiscountPolicy(ctx2 context.Context, log logger.Logger, cfg *pkg_di.Config) (*pricing.DiscountPolicy, error) {
+func newDiscountPolicy(ctx context.Context, log logger.Logger, cfg *pkg_di.Config) (*pricing.DiscountPolicy, error) {
 	discountPolicyPath := viper.GetString("policies.discounts")
 	discountQuery := viper.GetString("queries.discounts")
 
@@ -242,7 +243,7 @@ func newDiscountPolicy(ctx2 context.Context, log logger.Logger, cfg *pkg_di.Conf
 }
 
 // newTaxPolicy creates a new tax policy
-func newTaxPolicy(ctx2 context.Context, log logger.Logger, cfg *pkg_di.Config) (*pricing.TaxPolicy, error) {
+func newTaxPolicy(ctx context.Context, log logger.Logger, cfg *pkg_di.Config) (*pricing.TaxPolicy, error) {
 	taxPolicyPath := viper.GetString("policies.taxes")
 	taxQuery := viper.GetString("queries.taxes")
 

@@ -17,7 +17,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/shortlink-org/go-sdk/config"
-	sdkctx "github.com/shortlink-org/go-sdk/context"
 	"github.com/shortlink-org/go-sdk/flags"
 	"github.com/shortlink-org/go-sdk/grpc"
 	logger "github.com/shortlink-org/go-sdk/logger"
@@ -56,7 +55,7 @@ type PricerService struct {
 // PricerService =======================================================================================================
 // CustomDefaultSet - DefaultSet with go-sdk packages (config, context, flags, profiling)
 var CustomDefaultSet = wire.NewSet(
-	sdkctx.New,
+	newSDKContext,
 	flags.New,
 	newGoSDKProfiling,
 	// cache.New, - not used in pricer

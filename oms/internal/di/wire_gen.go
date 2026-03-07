@@ -13,7 +13,6 @@ import (
 	"github.com/redis/rueidis"
 	"github.com/shortlink-org/go-sdk/auth/permission"
 	"github.com/shortlink-org/go-sdk/config"
-	"github.com/shortlink-org/go-sdk/context"
 	"github.com/shortlink-org/go-sdk/cqrs/bus"
 	"github.com/shortlink-org/go-sdk/db"
 	"github.com/shortlink-org/go-sdk/flags"
@@ -53,7 +52,7 @@ import (
 // Injectors from wire.go:
 
 func InitializeOMSService() (*OMSService, func(), error) {
-	context, cleanup, err := ctx.New()
+	context, cleanup, err := newSDKContext()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -428,7 +427,7 @@ type OMSService struct {
 
 // OMSService ==========================================================================================================
 // CustomDefaultSet - DefaultSet with go-sdk packages (config, context, flags, profiling)
-var CustomDefaultSet = wire.NewSet(ctx.New, flags.New, profiling.New, permission.New)
+var CustomDefaultSet = wire.NewSet(newSDKContext, flags.New, profiling.New, permission.New)
 
 var OMSSet = wire.NewSet(
 

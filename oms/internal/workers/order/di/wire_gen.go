@@ -10,7 +10,6 @@ import (
 	"context"
 	"github.com/google/wire"
 	"github.com/shortlink-org/go-sdk/config"
-	"github.com/shortlink-org/go-sdk/context"
 	"github.com/shortlink-org/go-sdk/flags"
 	"github.com/shortlink-org/go-sdk/logger"
 	"github.com/shortlink-org/go-sdk/observability/metrics"
@@ -25,7 +24,7 @@ import (
 // Injectors from wire.go:
 
 func InitializeOMSOrderWorkerService() (*OMSOrderWorkerService, func(), error) {
-	context, cleanup, err := ctx.New()
+	context, cleanup, err := newSDKContext()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -110,7 +109,9 @@ type OMSOrderWorkerService struct {
 }
 
 // OMSOrderWorkerService ================================================================================================
-var CustomDefaultSet = wire.NewSet(ctx.New, flags.New)
+var CustomDefaultSet = wire.NewSet(
+	newSDKContext, flags.New,
+)
 
 var OMSOrderWorkerSet = wire.NewSet(
 	CustomDefaultSet,
@@ -128,20 +129,20 @@ func newGoSDKConfig() (*config.Config, error) {
 }
 
 // newGoSDKProfiling creates profiling endpoint using go-sdk observability
-func newGoSDKProfiling(ctx2 context.Context, log logger.Logger, tracer trace.TracerProvider, cfg *config.Config) (profiling.PprofEndpoint, error) {
-	return profiling.New(ctx2, log, tracer, cfg)
+func newGoSDKProfiling(ctx context.Context, log logger.Logger, tracer trace.TracerProvider, cfg *config.Config) (profiling.PprofEndpoint, error) {
+	return profiling.New(ctx, log, tracer, cfg)
 }
 
-func newGoSDKLogger(ctx2 context.Context, cfg *config.Config) (logger.Logger, func(), error) {
-	return logger.NewDefault(ctx2, cfg)
+func newGoSDKLogger(ctx context.Context, cfg *config.Config) (logger.Logger, func(), error) {
+	return logger.NewDefault(ctx, cfg)
 }
 
-func newGoSDKTracer(ctx2 context.Context, log logger.Logger, cfg *config.Config) (trace.TracerProvider, func(), error) {
-	return tracing.New(ctx2, log, cfg)
+func newGoSDKTracer(ctx context.Context, log logger.Logger, cfg *config.Config) (trace.TracerProvider, func(), error) {
+	return tracing.New(ctx, log, cfg)
 }
 
-func newGoSDKMonitoring(ctx2 context.Context, log logger.Logger, tracer trace.TracerProvider, cfg *config.Config) (*metrics.Monitoring, func(), error) {
-	return metrics.New(ctx2, log, tracer, cfg)
+func newGoSDKMonitoring(ctx context.Context, log logger.Logger, tracer trace.TracerProvider, cfg *config.Config) (*metrics.Monitoring, func(), error) {
+	return metrics.New(ctx, log, tracer, cfg)
 }
 
 func NewOMSOrderWorkerService(

@@ -17,7 +17,6 @@ import (
 
 	"github.com/shortlink-org/go-sdk/auth/permission"
 	config "github.com/shortlink-org/go-sdk/config"
-	sdkctx "github.com/shortlink-org/go-sdk/context"
 	"github.com/shortlink-org/go-sdk/db"
 	"github.com/shortlink-org/go-sdk/flags"
 	"github.com/shortlink-org/go-sdk/flight_trace"
@@ -111,7 +110,7 @@ type OMSService struct {
 // OMSService ==========================================================================================================
 // CustomDefaultSet - DefaultSet with go-sdk packages (config, context, flags, profiling)
 var CustomDefaultSet = wire.NewSet(
-	sdkctx.New,
+	newSDKContext,
 	flags.New,
 	profiling.New,
 	permission.New, // For authzed.Client
