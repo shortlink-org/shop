@@ -2,7 +2,9 @@ package postgres
 
 import (
 	"context"
+	"errors"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/shortlink-org/shop/oms/pkg/uow"
@@ -46,5 +48,10 @@ func (u *UoW) Rollback(ctx context.Context) error {
 		return nil // no-op if no transaction
 	}
 
-	return pgxTx.Rollback(ctx)
+	err := pgxTx.Rollback(ctx)
+	if errors.Is(err, pgx.ErrTxClosed) {
+		return nil
+	}
+
+	return err
 }

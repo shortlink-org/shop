@@ -118,7 +118,11 @@ type Query {
   @grpc(
     url: "{{.env.OMS_GRPC_URL}}"
     method: "infrastructure.rpc.cart.v1.CartService.Get"
-    body: "{\"customer_id\": \"{{.headers.user-id}}\"}"
+    body: """
+    {
+      "customer_id": "{{.headers.user-id}}"
+    }
+    """
     headers: [
       {key: "Authorization", value: "{{.headers.Authorization}}"},
       {key: "user-id", value: "{{.headers.user-id}}"}
@@ -130,7 +134,11 @@ type Query {
   @grpc(
     url: "{{.env.OMS_GRPC_URL}}"
     method: "infrastructure.rpc.order.v1.OrderService.Get"
-    body: "{\"id\": \"{{.args.id}}\"}"
+    body: """
+    {
+      "id": "{{.args.id}}"
+    }
+    """
     headers: [
       {key: "Authorization", value: "{{.headers.Authorization}}"},
       {key: "user-id", value: "{{.headers.user-id}}"}
@@ -217,7 +225,12 @@ type Mutation {
   @grpc(
     url: "{{.env.OMS_GRPC_URL}}"
     method: "infrastructure.rpc.cart.v1.CartService.Add"
-    body: "{\"customer_id\": \"{{.headers.user-id}}\", \"items\": {{.args.addRequest.items}}}"
+    body: """
+    {
+      "customer_id": "{{.headers.user-id}}",
+      "items": {{.args.addRequest.items}}
+    }
+    """
     headers: [
       {key: "Authorization", value: "{{.headers.Authorization}}"},
       {key: "user-id", value: "{{.headers.user-id}}"}
@@ -228,7 +241,12 @@ type Mutation {
   @grpc(
     url: "{{.env.OMS_GRPC_URL}}"
     method: "infrastructure.rpc.cart.v1.CartService.Remove"
-    body: "{\"customer_id\": \"{{.headers.user-id}}\", \"items\": {{.args.removeRequest.items}}}"
+    body: """
+    {
+      "customer_id": "{{.headers.user-id}}",
+      "items": {{.args.removeRequest.items}}
+    }
+    """
     headers: [
       {key: "Authorization", value: "{{.headers.Authorization}}"},
       {key: "user-id", value: "{{.headers.user-id}}"}
@@ -239,7 +257,11 @@ type Mutation {
   @grpc(
     url: "{{.env.OMS_GRPC_URL}}"
     method: "infrastructure.rpc.cart.v1.CartService.Reset"
-    body: "{\"customer_id\": \"{{.headers.user-id}}\"}"
+    body: """
+    {
+      "customer_id": "{{.headers.user-id}}"
+    }
+    """
     headers: [
       {key: "Authorization", value: "{{.headers.Authorization}}"},
       {key: "user-id", value: "{{.headers.user-id}}"}
@@ -251,7 +273,13 @@ type Mutation {
   @grpc(
     url: "{{.env.OMS_GRPC_URL}}"
     method: "infrastructure.rpc.order.v1.OrderService.Create"
-    body: "{\"customer_id\": \"{{.headers.user-id}}\", \"items\": {{.args.input.items}}, \"delivery_info\": {{.args.input.deliveryInfo}}}"
+    body: """
+    {
+      "customer_id": "{{.headers.user-id}}",
+      "items": {{.args.input.items}},
+      "delivery_info": {{.args.input.deliveryInfo}}
+    }
+    """
     headers: [
       {key: "Authorization", value: "{{.headers.Authorization}}"},
       {key: "user-id", value: "{{.headers.user-id}}"}
@@ -262,7 +290,11 @@ type Mutation {
   @grpc(
     url: "{{.env.OMS_GRPC_URL}}"
     method: "infrastructure.rpc.order.v1.OrderService.Cancel"
-    body: "{\"id\": \"{{.args.orderId}}\"}"
+    body: """
+    {
+      "id": "{{.args.orderId}}"
+    }
+    """
     headers: [
       {key: "Authorization", value: "{{.headers.Authorization}}"},
       {key: "user-id", value: "{{.headers.user-id}}"}
@@ -273,7 +305,12 @@ type Mutation {
   @grpc(
     url: "{{.env.OMS_GRPC_URL}}"
     method: "infrastructure.rpc.order.v1.OrderService.UpdateDeliveryInfo"
-    body: "{\"order_id\": \"{{.args.input.orderId}}\", \"delivery_info\": {{.args.input.deliveryInfo}}}"
+    body: """
+    {
+      "order_id": "{{.args.input.orderId}}",
+      "delivery_info": {{.args.input.deliveryInfo}}
+    }
+    """
     headers: [
       {key: "Authorization", value: "{{.headers.Authorization}}"},
       {key: "user-id", value: "{{.headers.user-id}}"}
@@ -284,7 +321,12 @@ type Mutation {
   @grpc(
     url: "{{.env.OMS_GRPC_URL}}"
     method: "infrastructure.rpc.order.v1.OrderService.Checkout"
-    body: "{\"customer_id\": \"{{.headers.user-id}}\", \"delivery_info\": {{.args.input.deliveryInfo}}}"
+    body: """
+    {
+      "customer_id": "{{.headers.user-id}}",
+      "delivery_info": {{.args.input.deliveryInfo}}
+    }
+    """
     headers: [
       {key: "Authorization", value: "{{.headers.Authorization}}"},
       {key: "user-id", value: "{{.headers.user-id}}"}
