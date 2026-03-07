@@ -26,9 +26,7 @@ deploy:
   env:
     # OMS gRPC URL
     OMS_GRPC_URL: http://shortlink-shop-oms.shortlink-shop:50051
-    # OTLP exporter URL (Grafana Tempo), OTLP HTTP on 4318
-    OTLP_URL: "http://grafana-tempo.grafana.svc.cluster.local:4318"
-    TC_LOG_LEVEL: "debug"
+    LISTEN_ADDR: "0.0.0.0:4011"
 
   resources:
     limits:
@@ -49,19 +47,19 @@ deploy:
     # Ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
     pullPolicy: Always
 
-  # -- define a liveness probe; GET /graphql without query returns 500, use /metrics
+  # -- define a liveness probe
   livenessProbe:
     enabled: true
     httpGet:
-      path: /metrics
-      port: 8080
+      path: /healthz
+      port: 4011
 
   # -- define a readiness probe
   readinessProbe:
     enabled: true
     httpGet:
-      path: /metrics
-      port: 8080
+      path: /healthz
+      port: 4011
 
   securityContext:
     readOnlyRootFilesystem: true
@@ -77,7 +75,7 @@ service:
   type: ClusterIP
   ports:
     - name: http
-      port: 8080
+      port: 4011
       protocol: TCP
       public: true
 

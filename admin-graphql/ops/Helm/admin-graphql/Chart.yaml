@@ -1,16 +1,15 @@
 apiVersion: v2
 appVersion: "1.0.0"
 name: admin-graphql
-description: ShortLink Shop Admin GraphQL Subgraph (Tailcall)
+description: ShortLink Shop Admin GraphQL Subgraph (Cosmo Connect)
 version: 0.1.1
 kubeVersion: ">= 1.30.0 || >= v1.30.0-0"
 keywords:
   - graphql
   - admin
-  - tailcall
+  - connectrpc
   - subgraph
   - goods
-  - offices
 home: https://github.com/shortlink-org/shortlink
 sources:
   - https://github.com/shortlink-org/shortlink

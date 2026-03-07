@@ -1,0 +1,604 @@
+{
+  "version": 1,
+  "service": "Shop",
+  "operationMappings": [
+    {
+      "type": "OPERATION_TYPE_QUERY",
+      "original": "getCart",
+      "mapped": "QueryGetCart",
+      "request": "QueryGetCartRequest",
+      "response": "QueryGetCartResponse"
+    },
+    {
+      "type": "OPERATION_TYPE_QUERY",
+      "original": "getOrder",
+      "mapped": "QueryGetOrder",
+      "request": "QueryGetOrderRequest",
+      "response": "QueryGetOrderResponse"
+    },
+    {
+      "type": "OPERATION_TYPE_MUTATION",
+      "original": "addItem",
+      "mapped": "MutationAddItem",
+      "request": "MutationAddItemRequest",
+      "response": "MutationAddItemResponse"
+    },
+    {
+      "type": "OPERATION_TYPE_MUTATION",
+      "original": "removeItem",
+      "mapped": "MutationRemoveItem",
+      "request": "MutationRemoveItemRequest",
+      "response": "MutationRemoveItemResponse"
+    },
+    {
+      "type": "OPERATION_TYPE_MUTATION",
+      "original": "resetCart",
+      "mapped": "MutationResetCart",
+      "request": "MutationResetCartRequest",
+      "response": "MutationResetCartResponse"
+    },
+    {
+      "type": "OPERATION_TYPE_MUTATION",
+      "original": "createOrder",
+      "mapped": "MutationCreateOrder",
+      "request": "MutationCreateOrderRequest",
+      "response": "MutationCreateOrderResponse"
+    },
+    {
+      "type": "OPERATION_TYPE_MUTATION",
+      "original": "cancelOrder",
+      "mapped": "MutationCancelOrder",
+      "request": "MutationCancelOrderRequest",
+      "response": "MutationCancelOrderResponse"
+    },
+    {
+      "type": "OPERATION_TYPE_MUTATION",
+      "original": "updateDeliveryInfo",
+      "mapped": "MutationUpdateDeliveryInfo",
+      "request": "MutationUpdateDeliveryInfoRequest",
+      "response": "MutationUpdateDeliveryInfoResponse"
+    },
+    {
+      "type": "OPERATION_TYPE_MUTATION",
+      "original": "checkout",
+      "mapped": "MutationCheckout",
+      "request": "MutationCheckoutRequest",
+      "response": "MutationCheckoutResponse"
+    }
+  ],
+  "entityMappings": [],
+  "typeFieldMappings": [
+    {
+      "type": "Query",
+      "fieldMappings": [
+        {
+          "original": "getCart",
+          "mapped": "get_cart",
+          "argumentMappings": []
+        },
+        {
+          "original": "getOrder",
+          "mapped": "get_order",
+          "argumentMappings": [
+            {
+              "original": "id",
+              "mapped": "id"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Mutation",
+      "fieldMappings": [
+        {
+          "original": "addItem",
+          "mapped": "add_item",
+          "argumentMappings": [
+            {
+              "original": "addRequest",
+              "mapped": "add_request"
+            }
+          ]
+        },
+        {
+          "original": "removeItem",
+          "mapped": "remove_item",
+          "argumentMappings": [
+            {
+              "original": "removeRequest",
+              "mapped": "remove_request"
+            }
+          ]
+        },
+        {
+          "original": "resetCart",
+          "mapped": "reset_cart",
+          "argumentMappings": []
+        },
+        {
+          "original": "createOrder",
+          "mapped": "create_order",
+          "argumentMappings": [
+            {
+              "original": "input",
+              "mapped": "input"
+            }
+          ]
+        },
+        {
+          "original": "cancelOrder",
+          "mapped": "cancel_order",
+          "argumentMappings": [
+            {
+              "original": "orderId",
+              "mapped": "order_id"
+            }
+          ]
+        },
+        {
+          "original": "updateDeliveryInfo",
+          "mapped": "update_delivery_info",
+          "argumentMappings": [
+            {
+              "original": "input",
+              "mapped": "input"
+            }
+          ]
+        },
+        {
+          "original": "checkout",
+          "mapped": "checkout",
+          "argumentMappings": [
+            {
+              "original": "input",
+              "mapped": "input"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "CartItem",
+      "fieldMappings": [
+        {
+          "original": "goodId",
+          "mapped": "good_id",
+          "argumentMappings": []
+        },
+        {
+          "original": "quantity",
+          "mapped": "quantity",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "CartState",
+      "fieldMappings": [
+        {
+          "original": "cartId",
+          "mapped": "cart_id",
+          "argumentMappings": []
+        },
+        {
+          "original": "items",
+          "mapped": "items",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "GetCartResponse",
+      "fieldMappings": [
+        {
+          "original": "state",
+          "mapped": "state",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "CartItemInput",
+      "fieldMappings": [
+        {
+          "original": "goodId",
+          "mapped": "good_id",
+          "argumentMappings": []
+        },
+        {
+          "original": "quantity",
+          "mapped": "quantity",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "ItemRequest",
+      "fieldMappings": [
+        {
+          "original": "items",
+          "mapped": "items",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "OrderItem",
+      "fieldMappings": [
+        {
+          "original": "id",
+          "mapped": "id",
+          "argumentMappings": []
+        },
+        {
+          "original": "quantity",
+          "mapped": "quantity",
+          "argumentMappings": []
+        },
+        {
+          "original": "price",
+          "mapped": "price",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "DeliveryAddress",
+      "fieldMappings": [
+        {
+          "original": "street",
+          "mapped": "street",
+          "argumentMappings": []
+        },
+        {
+          "original": "city",
+          "mapped": "city",
+          "argumentMappings": []
+        },
+        {
+          "original": "postalCode",
+          "mapped": "postal_code",
+          "argumentMappings": []
+        },
+        {
+          "original": "country",
+          "mapped": "country",
+          "argumentMappings": []
+        },
+        {
+          "original": "latitude",
+          "mapped": "latitude",
+          "argumentMappings": []
+        },
+        {
+          "original": "longitude",
+          "mapped": "longitude",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "DeliveryPeriod",
+      "fieldMappings": [
+        {
+          "original": "startTime",
+          "mapped": "start_time",
+          "argumentMappings": []
+        },
+        {
+          "original": "endTime",
+          "mapped": "end_time",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "PackageInfo",
+      "fieldMappings": [
+        {
+          "original": "weightKg",
+          "mapped": "weight_kg",
+          "argumentMappings": []
+        },
+        {
+          "original": "dimensions",
+          "mapped": "dimensions",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "RecipientContacts",
+      "fieldMappings": [
+        {
+          "original": "recipientName",
+          "mapped": "recipient_name",
+          "argumentMappings": []
+        },
+        {
+          "original": "recipientPhone",
+          "mapped": "recipient_phone",
+          "argumentMappings": []
+        },
+        {
+          "original": "recipientEmail",
+          "mapped": "recipient_email",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "DeliveryInfo",
+      "fieldMappings": [
+        {
+          "original": "pickupAddress",
+          "mapped": "pickup_address",
+          "argumentMappings": []
+        },
+        {
+          "original": "deliveryAddress",
+          "mapped": "delivery_address",
+          "argumentMappings": []
+        },
+        {
+          "original": "deliveryPeriod",
+          "mapped": "delivery_period",
+          "argumentMappings": []
+        },
+        {
+          "original": "packageInfo",
+          "mapped": "package_info",
+          "argumentMappings": []
+        },
+        {
+          "original": "priority",
+          "mapped": "priority",
+          "argumentMappings": []
+        },
+        {
+          "original": "recipientContacts",
+          "mapped": "recipient_contacts",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "OrderState",
+      "fieldMappings": [
+        {
+          "original": "id",
+          "mapped": "id",
+          "argumentMappings": []
+        },
+        {
+          "original": "items",
+          "mapped": "items",
+          "argumentMappings": []
+        },
+        {
+          "original": "status",
+          "mapped": "status",
+          "argumentMappings": []
+        },
+        {
+          "original": "deliveryInfo",
+          "mapped": "delivery_info",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "GetOrderResponse",
+      "fieldMappings": [
+        {
+          "original": "order",
+          "mapped": "order",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "DeliveryAddressInput",
+      "fieldMappings": [
+        {
+          "original": "street",
+          "mapped": "street",
+          "argumentMappings": []
+        },
+        {
+          "original": "city",
+          "mapped": "city",
+          "argumentMappings": []
+        },
+        {
+          "original": "postalCode",
+          "mapped": "postal_code",
+          "argumentMappings": []
+        },
+        {
+          "original": "country",
+          "mapped": "country",
+          "argumentMappings": []
+        },
+        {
+          "original": "latitude",
+          "mapped": "latitude",
+          "argumentMappings": []
+        },
+        {
+          "original": "longitude",
+          "mapped": "longitude",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "DeliveryPeriodInput",
+      "fieldMappings": [
+        {
+          "original": "startTime",
+          "mapped": "start_time",
+          "argumentMappings": []
+        },
+        {
+          "original": "endTime",
+          "mapped": "end_time",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "PackageInfoInput",
+      "fieldMappings": [
+        {
+          "original": "weightKg",
+          "mapped": "weight_kg",
+          "argumentMappings": []
+        },
+        {
+          "original": "dimensions",
+          "mapped": "dimensions",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "RecipientContactsInput",
+      "fieldMappings": [
+        {
+          "original": "recipientName",
+          "mapped": "recipient_name",
+          "argumentMappings": []
+        },
+        {
+          "original": "recipientPhone",
+          "mapped": "recipient_phone",
+          "argumentMappings": []
+        },
+        {
+          "original": "recipientEmail",
+          "mapped": "recipient_email",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "DeliveryInfoInput",
+      "fieldMappings": [
+        {
+          "original": "pickupAddress",
+          "mapped": "pickup_address",
+          "argumentMappings": []
+        },
+        {
+          "original": "deliveryAddress",
+          "mapped": "delivery_address",
+          "argumentMappings": []
+        },
+        {
+          "original": "deliveryPeriod",
+          "mapped": "delivery_period",
+          "argumentMappings": []
+        },
+        {
+          "original": "packageInfo",
+          "mapped": "package_info",
+          "argumentMappings": []
+        },
+        {
+          "original": "priority",
+          "mapped": "priority",
+          "argumentMappings": []
+        },
+        {
+          "original": "recipientContacts",
+          "mapped": "recipient_contacts",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "OrderItemInput",
+      "fieldMappings": [
+        {
+          "original": "id",
+          "mapped": "id",
+          "argumentMappings": []
+        },
+        {
+          "original": "quantity",
+          "mapped": "quantity",
+          "argumentMappings": []
+        },
+        {
+          "original": "price",
+          "mapped": "price",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "CreateOrderInput",
+      "fieldMappings": [
+        {
+          "original": "items",
+          "mapped": "items",
+          "argumentMappings": []
+        },
+        {
+          "original": "deliveryInfo",
+          "mapped": "delivery_info",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "UpdateDeliveryInfoInput",
+      "fieldMappings": [
+        {
+          "original": "orderId",
+          "mapped": "order_id",
+          "argumentMappings": []
+        },
+        {
+          "original": "deliveryInfo",
+          "mapped": "delivery_info",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "CheckoutInput",
+      "fieldMappings": [
+        {
+          "original": "deliveryInfo",
+          "mapped": "delivery_info",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "CheckoutResult",
+      "fieldMappings": [
+        {
+          "original": "orderId",
+          "mapped": "order_id",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "Empty",
+      "fieldMappings": [
+        {
+          "original": "_",
+          "mapped": "ok",
+          "argumentMappings": []
+        }
+      ]
+    }
+  ],
+  "enumMappings": [],
+  "resolveMappings": []
+}

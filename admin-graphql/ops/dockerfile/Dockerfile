@@ -1,34 +1,53 @@
 # syntax=docker/dockerfile:1.21
-# admin-graphql Dockerfile
-# Uses Tailcall for REST → GraphQL
 
-FROM ghcr.io/tailcallhq/tailcall/tc-server:latest
+ARG BUILDKIT_SBOM_SCAN_STAGE=true
+ARG BUILDKIT_SBOM_SCAN_CONTEXT=true
+
+FROM --platform=$BUILDPLATFORM golang:1.26-alpine AS builder
+
+ARG TARGETOS
+ARG TARGETARCH
 
 LABEL maintainer=batazor111@gmail.com
 LABEL org.opencontainers.image.title="shortlink-shop-admin-graphql"
-LABEL org.opencontainers.image.description="Admin GraphQL Subgraph - REST to GraphQL via Tailcall"
+LABEL org.opencontainers.image.description="Admin GraphQL Subgraph - Cosmo Connect adapter for Django Admin REST API"
 LABEL org.opencontainers.image.authors="Login Viktor @batazor"
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.url="http://shortlink.best/"
 LABEL org.opencontainers.image.source="https://github.com/shortlink-org/shortlink"
 
-# Set working directory
 WORKDIR /app
 
-# Copy tailcall binary to /app so it works when container runs as non-root (e.g. Kubernetes runAsNonRoot)
-RUN mkdir -p /app/bin && cp /root/.tailcall/bin/tailcall /app/bin/tailcall && chmod 755 /app/bin/tailcall
+RUN apk add --no-cache git ca-certificates
 
-# Copy Tailcall configuration
-COPY config/admin.graphql /app/config/admin.graphql
+COPY go.mod go.sum ./
+RUN go mod download
 
-# Environment variables
-ENV ADMIN_API_URL="http://127.0.0.1:8000"
+COPY . .
 
-# Expose port
-EXPOSE 8080
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build \
+    -ldflags="-w -s" \
+    -o /admin-graphql \
+    ./cmd/service
 
-# Health check (GET /graphql without query returns 500; /metrics returns 200)
+FROM --platform=$TARGETPLATFORM alpine:3.23
+
+RUN apk add --no-cache ca-certificates tini
+
+EXPOSE 4012
+
+WORKDIR /app
+
+RUN addgroup -S app && adduser -S app -G app
+
+COPY --from=builder /admin-graphql /app/admin-graphql
+
+RUN chown -R app:app /app
+
+USER app
+
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/metrics || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:4012/healthz || exit 1
 
-CMD ["/app/bin/tailcall", "start", "/app/config/admin.graphql"]
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["/app/admin-graphql"]

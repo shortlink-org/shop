@@ -50,7 +50,7 @@
       "gridPos": { "h": 3, "w": 24, "x": 0, "y": 2 },
       "id": 1,
       "options": {
-        "content": "# Admin GraphQL (Tailcall)\n\nGraphQL API for admin. Tailcall Prometheus metrics.",
+        "content": "# Admin GraphQL (Cosmo Connect)\n\nGraphQL adapter for the Django Admin API. Service and upstream HTTP metrics.",
         "mode": "markdown"
       },
       "title": "Overview",
@@ -151,7 +151,7 @@
   ],
   "refresh": "30s",
   "schemaVersion": 39,
-  "tags": ["admin-graphql", "tailcall", "shop"],
+  "tags": ["admin-graphql", "grpc", "shop"],
   "templating": {
     "list": [
       {
@@ -184,7 +184,7 @@
   },
   "time": { "from": "now-6h", "to": "now" },
   "timezone": "browser",
-  "title": "Admin GraphQL — Tailcall",
+  "title": "Admin GraphQL — Cosmo Connect",
   "uid": "shop-admin-graphql-golden-signals",
   "version": 1,
   "weekStart": ""

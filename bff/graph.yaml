@@ -4,17 +4,21 @@
 version: 1
 
 subgraphs:
-  # Cart operations (gRPC -> GraphQL via Tailcall)
+  # Cart and order operations via Cosmo Connect gRPC subgraph.
   - name: carts
-    routing_url: http://localhost:8080/graphql
-    introspection:
-      url: http://localhost:8080/graphql
+    routing_url: dns:///localhost:4011
+    grpc:
+      schema_file: ../oms-graphql/pkg/graph/schema.graphql
+      proto_file: ../oms-graphql/pkg/proto/service/v1/service.proto
+      mapping_file: ../oms-graphql/pkg/proto/service/v1/mapping.json
 
-  # Admin API (REST -> GraphQL via Tailcall) - goods, offices, etc.
+  # Admin API via Cosmo Connect gRPC subgraph.
   - name: admin
-    routing_url: http://localhost:8080/graphql
-    introspection:
-      url: http://localhost:8080/graphql
+    routing_url: dns:///localhost:4012
+    grpc:
+      schema_file: ../admin-graphql/pkg/graph/schema.graphql
+      proto_file: ../admin-graphql/pkg/proto/service/v1/service.proto
+      mapping_file: ../admin-graphql/pkg/proto/service/v1/mapping.json
 
   # Delivery API (gRPC -> GraphQL via Tailcall) - couriers, deliveries
   - name: delivery

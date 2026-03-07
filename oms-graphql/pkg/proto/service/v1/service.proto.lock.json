@@ -1,0 +1,304 @@
+{
+  "version": "1.0.0",
+  "messages": {
+    "Query": {
+      "fields": {
+        "getCart": 1,
+        "getOrder": 2
+      }
+    },
+    "QueryGetCartRequest": {
+      "fields": {}
+    },
+    "QueryGetCartResponse": {
+      "fields": {
+        "get_cart": 1
+      }
+    },
+    "QueryGetOrderRequest": {
+      "fields": {
+        "id": 1
+      }
+    },
+    "QueryGetOrder": {
+      "fields": {
+        "id": 1
+      }
+    },
+    "QueryGetOrderResponse": {
+      "fields": {
+        "get_order": 1
+      }
+    },
+    "Mutation": {
+      "fields": {
+        "addItem": 1,
+        "removeItem": 2,
+        "resetCart": 3,
+        "createOrder": 4,
+        "cancelOrder": 5,
+        "updateDeliveryInfo": 6,
+        "checkout": 7
+      }
+    },
+    "MutationAddItemRequest": {
+      "fields": {
+        "add_request": 1
+      }
+    },
+    "MutationAddItem": {
+      "fields": {
+        "addRequest": 1
+      }
+    },
+    "MutationAddItemResponse": {
+      "fields": {
+        "add_item": 1
+      }
+    },
+    "MutationRemoveItemRequest": {
+      "fields": {
+        "remove_request": 1
+      }
+    },
+    "MutationRemoveItem": {
+      "fields": {
+        "removeRequest": 1
+      }
+    },
+    "MutationRemoveItemResponse": {
+      "fields": {
+        "remove_item": 1
+      }
+    },
+    "MutationResetCartRequest": {
+      "fields": {}
+    },
+    "MutationResetCartResponse": {
+      "fields": {
+        "reset_cart": 1
+      }
+    },
+    "MutationCreateOrderRequest": {
+      "fields": {
+        "input": 1
+      }
+    },
+    "MutationCreateOrder": {
+      "fields": {
+        "input": 1
+      }
+    },
+    "MutationCreateOrderResponse": {
+      "fields": {
+        "create_order": 1
+      }
+    },
+    "MutationCancelOrderRequest": {
+      "fields": {
+        "order_id": 1
+      }
+    },
+    "MutationCancelOrder": {
+      "fields": {
+        "orderId": 1
+      }
+    },
+    "MutationCancelOrderResponse": {
+      "fields": {
+        "cancel_order": 1
+      }
+    },
+    "MutationUpdateDeliveryInfoRequest": {
+      "fields": {
+        "input": 1
+      }
+    },
+    "MutationUpdateDeliveryInfo": {
+      "fields": {
+        "input": 1
+      }
+    },
+    "MutationUpdateDeliveryInfoResponse": {
+      "fields": {
+        "update_delivery_info": 1
+      }
+    },
+    "MutationCheckoutRequest": {
+      "fields": {
+        "input": 1
+      }
+    },
+    "MutationCheckout": {
+      "fields": {
+        "input": 1
+      }
+    },
+    "MutationCheckoutResponse": {
+      "fields": {
+        "checkout": 1
+      }
+    },
+    "GetCartResponse": {
+      "fields": {
+        "state": 1
+      }
+    },
+    "GetOrderResponse": {
+      "fields": {
+        "order": 1
+      }
+    },
+    "ItemRequest": {
+      "fields": {
+        "items": 1
+      }
+    },
+    "Empty": {
+      "fields": {
+        "_": 1
+      }
+    },
+    "CreateOrderInput": {
+      "fields": {
+        "items": 1,
+        "deliveryInfo": 2
+      }
+    },
+    "UpdateDeliveryInfoInput": {
+      "fields": {
+        "orderId": 1,
+        "deliveryInfo": 2
+      }
+    },
+    "CheckoutInput": {
+      "fields": {
+        "deliveryInfo": 1
+      }
+    },
+    "CheckoutResult": {
+      "fields": {
+        "orderId": 1
+      }
+    },
+    "CartItem": {
+      "fields": {
+        "goodId": 1,
+        "quantity": 2
+      }
+    },
+    "CartState": {
+      "fields": {
+        "cartId": 1,
+        "items": 2
+      }
+    },
+    "CartItemInput": {
+      "fields": {
+        "goodId": 1,
+        "quantity": 2
+      }
+    },
+    "OrderItem": {
+      "fields": {
+        "id": 1,
+        "quantity": 2,
+        "price": 3
+      }
+    },
+    "DeliveryAddress": {
+      "fields": {
+        "street": 1,
+        "city": 2,
+        "postalCode": 3,
+        "country": 4,
+        "latitude": 5,
+        "longitude": 6
+      }
+    },
+    "DeliveryPeriod": {
+      "fields": {
+        "startTime": 1,
+        "endTime": 2
+      }
+    },
+    "PackageInfo": {
+      "fields": {
+        "weightKg": 1,
+        "dimensions": 2
+      }
+    },
+    "RecipientContacts": {
+      "fields": {
+        "recipientName": 1,
+        "recipientPhone": 2,
+        "recipientEmail": 3
+      }
+    },
+    "DeliveryInfo": {
+      "fields": {
+        "pickupAddress": 1,
+        "deliveryAddress": 2,
+        "deliveryPeriod": 3,
+        "packageInfo": 4,
+        "priority": 5,
+        "recipientContacts": 6
+      }
+    },
+    "OrderState": {
+      "fields": {
+        "id": 1,
+        "items": 2,
+        "status": 3,
+        "deliveryInfo": 4
+      }
+    },
+    "DeliveryAddressInput": {
+      "fields": {
+        "street": 1,
+        "city": 2,
+        "postalCode": 3,
+        "country": 4,
+        "latitude": 5,
+        "longitude": 6
+      }
+    },
+    "DeliveryPeriodInput": {
+      "fields": {
+        "startTime": 1,
+        "endTime": 2
+      }
+    },
+    "PackageInfoInput": {
+      "fields": {
+        "weightKg": 1,
+        "dimensions": 2
+      }
+    },
+    "RecipientContactsInput": {
+      "fields": {
+        "recipientName": 1,
+        "recipientPhone": 2,
+        "recipientEmail": 3
+      }
+    },
+    "DeliveryInfoInput": {
+      "fields": {
+        "pickupAddress": 1,
+        "deliveryAddress": 2,
+        "deliveryPeriod": 3,
+        "packageInfo": 4,
+        "priority": 5,
+        "recipientContacts": 6
+      }
+    },
+    "OrderItemInput": {
+      "fields": {
+        "id": 1,
+        "quantity": 2,
+        "price": 3
+      }
+    }
+  },
+  "enums": {}
+}

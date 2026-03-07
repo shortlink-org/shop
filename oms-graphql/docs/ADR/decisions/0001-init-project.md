@@ -4,7 +4,7 @@ Date: 2024-09-02
 
 ## Status
 
-Accepted
+Superseded
 
 ## Context
 
@@ -13,10 +13,8 @@ This is necessary to expose the gRPC functionality to a broader audience that ut
 
 ## Decision
 
-We will implement the OMS GraphQL API Bridge using `https://tailcall.run/`. 
-This tool was chosen for its simplicity, robust feature set, and ease of use in translating gRPC APIs to GraphQL. 
-Additionally, Tailcall is written in Rust, ensuring high performance and safety. 
-It is also actively developed, which provides confidence in its future support and improvements.
+At the time, we chose `https://tailcall.run/` as the bridge implementation.
+That decision has since been replaced by a Go-based Cosmo Connect gRPC subgraph implementation that talks to `oms` directly over gRPC.
 
 ### Alternatives
 
@@ -29,6 +27,5 @@ making the product unreliable for our use case.
 
 ## Consequences
 
-This decision simplifies the process of exposing our gRPC API as a public GraphQL API, 
-making it easier to interact with the service. However, this introduces a dependency on `tailcall.run`, 
-which will need to be monitored for any updates or changes that might affect our integration. 
+This document is kept only as historical context.
+The active implementation no longer depends on Tailcall and uses `buf`-generated protobuf code plus a Go Connect service instead.

@@ -1,0 +1,53 @@
+{
+  "version": "1.0.0",
+  "messages": {
+    "Query": {
+      "fields": {
+        "goods": 1,
+        "good": 2
+      }
+    },
+    "QueryGoodsRequest": {
+      "fields": {}
+    },
+    "QueryGoodsResponse": {
+      "fields": {
+        "goods": 1
+      }
+    },
+    "QueryGoodRequest": {
+      "fields": {
+        "id": 1
+      }
+    },
+    "QueryGood": {
+      "fields": {
+        "id": 1
+      }
+    },
+    "QueryGoodResponse": {
+      "fields": {
+        "good": 1
+      }
+    },
+    "GoodsList": {
+      "fields": {
+        "count": 1,
+        "next": 2,
+        "previous": 3,
+        "results": 4
+      }
+    },
+    "Good": {
+      "fields": {
+        "id": 1,
+        "name": 2,
+        "price": 3,
+        "description": 4,
+        "created_at": 5,
+        "updated_at": 6
+      }
+    }
+  },
+  "enums": {}
+}

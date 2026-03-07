@@ -1,0 +1,50 @@
+syntax = "proto3";
+package shop.admin.v1;
+
+option go_package = "github.com/shortlink-org/shop/admin-graphql/pkg/generated/service/v1";
+
+import "google/protobuf/wrappers.proto";
+
+// Service definition for Admin
+service Admin {
+  // Get a single good by ID.
+  rpc QueryGood(QueryGoodRequest) returns (QueryGoodResponse) {}
+  // Get a paginated list of goods.
+  rpc QueryGoods(QueryGoodsRequest) returns (QueryGoodsResponse) {}
+}
+
+// Request message for goods operation: Get a paginated list of goods..
+message QueryGoodsRequest {
+}
+// Response message for goods operation: Get a paginated list of goods..
+message QueryGoodsResponse {
+  // Get a paginated list of goods.
+  GoodsList goods = 1;
+}
+// Request message for good operation: Get a single good by ID..
+message QueryGoodRequest {
+  string id = 1;
+}
+// Response message for good operation: Get a single good by ID..
+message QueryGoodResponse {
+  // Get a single good by ID.
+  Good good = 1;
+}
+
+// Paginated list of goods.
+message GoodsList {
+  int32 count = 1;
+  google.protobuf.StringValue next = 2;
+  google.protobuf.StringValue previous = 3;
+  repeated Good results = 4;
+}
+
+// Good entity representing a product in the shop.
+message Good {
+  string id = 1;
+  string name = 2;
+  string price = 3;
+  string description = 4;
+  string created_at = 5;
+  string updated_at = 6;
+}

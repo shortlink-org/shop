@@ -1,91 +1,64 @@
 # Admin GraphQL Subgraph
 
-GraphQL subgraph for the Django Admin API, converting REST endpoints to GraphQL using [Tailcall](https://tailcall.run/).
+Cosmo Connect gRPC subgraph that adapts Django Admin REST endpoints to the federated shop graph.
 
 ## Architecture
 
-This service acts as a GraphQL layer over the Django Admin REST API:
+This service acts as a typed adapter over the Django Admin REST API:
 
 ```
-Cosmo Router → admin-graphql (Tailcall) → Django Admin API
-     :9991           :8101                      :8000
+Cosmo Router → admin-graphql (Go/Connect) → Django Admin API
+     :9991              :4012                       :8000
 ```
 
 ## Supported Resources
 
 - **Goods** - Product catalog
-- **Offices** - Pickup locations with geolocation
 
 ## Prerequisites
 
-- Node.js 18+
-- pnpm (recommended) or npm
+- Go 1.25+
+- buf
 - Django Admin service running on port 8000
-
-## Installation
-
-```bash
-pnpm install
-```
 
 ## Running
 
 ```bash
-# Start the service
-pnpm start
+# Generate protobuf/Connect code
+buf generate
 
-# Development mode with watch
-pnpm dev
+# Start the service
+go run ./cmd/service
 ```
 
-The GraphQL endpoint will be available at `http://localhost:8101/graphql`.
+The subgraph endpoint will be available at `http://localhost:4012`.
 
 ## Configuration
 
-The Tailcall configuration is in `config/admin.graphql`.
+The federated schema is in `pkg/graph/schema.graphql`.
 
 ### Environment Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `ADMIN_API_URL` | `http://127.0.0.1:8000` | Django Admin API base URL |
+| `LISTEN_ADDR` | `0.0.0.0:4012` | Connect/gRPC listen address |
 
 ## GraphQL Schema
 
 ### Queries
 
-#### Goods
-- `goods(page: Int): GoodsList` - Get paginated list of goods
+- `goods: GoodsList` - Get paginated list of goods
 - `good(id: String!): Good` - Get a single good by ID (UUID)
-
-#### Offices
-- `offices`: [Office!]!` - Get all offices
-- `office(id: Int!): Office` - Get a single office by ID
 
 ### Types
 
 ```graphql
 type Good {
-  id: Int!
+  id: String!
   name: String!
   price: String!
   description: String!
-  created_at: String!
-  updated_at: String!
-}
-
-type Office {
-  id: Int!
-  name: String!
-  address: String!
-  latitude: Float
-  longitude: Float
-  opening_time: String!
-  closing_time: String!
-  working_days: String!
-  phone: String
-  email: String
-  is_active: Boolean!
   created_at: String!
   updated_at: String!
 }
@@ -94,9 +67,8 @@ type Office {
 ## Example Queries
 
 ```graphql
-# Get all goods
 query {
-  goods(page: 1) {
+  goods {
     count
     results {
       id
@@ -106,37 +78,12 @@ query {
   }
 }
 
-# Get single good (id is UUID string)
 query {
   good(id: "550e8400-e29b-41d4-a716-446655440000") {
     id
     name
     price
     description
-  }
-}
-
-# Get all offices
-query {
-  offices {
-    id
-    name
-    address
-    latitude
-    longitude
-    is_active
-  }
-}
-
-# Get single office
-query {
-  office(id: 1) {
-    id
-    name
-    address
-    opening_time
-    closing_time
-    working_days
   }
 }
 ```

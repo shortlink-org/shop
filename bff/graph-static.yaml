@@ -5,14 +5,18 @@ version: 1
 
 subgraphs:
   - name: carts
-    routing_url: http://oms-graphql:8080/graphql
-    schema:
-      file: schemas/carts.graphql
+    routing_url: dns:///oms-graphql:4011
+    grpc:
+      schema_file: ../oms-graphql/pkg/graph/schema.graphql
+      proto_file: ../oms-graphql/pkg/proto/service/v1/service.proto
+      mapping_file: ../oms-graphql/pkg/proto/service/v1/mapping.json
 
   - name: admin
-    routing_url: http://admin-graphql:8080/graphql
-    schema:
-      file: schemas/admin.graphql
+    routing_url: dns:///admin-graphql:4012
+    grpc:
+      schema_file: ../admin-graphql/pkg/graph/schema.graphql
+      proto_file: ../admin-graphql/pkg/proto/service/v1/service.proto
+      mapping_file: ../admin-graphql/pkg/proto/service/v1/mapping.json
 
   - name: countries
     routing_url: https://countries.trevorblades.com/

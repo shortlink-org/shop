@@ -1,0 +1,16 @@
+version: v2
+modules:
+  - path: pkg/proto
+lint:
+  use:
+    - STANDARD
+  except:
+    - COMMENT_ENUM_VALUE
+    - COMMENT_FIELD
+    - COMMENT_MESSAGE
+    - COMMENT_RPC
+    - COMMENT_SERVICE
+    - FIELD_NOT_REQUIRED
+breaking:
+  use:
+    - WIRE_JSON

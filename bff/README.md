@@ -13,8 +13,8 @@ GraphQL Federation Gateway powered by [WunderGraph Cosmo Router](https://cosmo-d
                 ▼                 ▼                 ▼
         ┌───────────────┐ ┌───────────────┐ ┌───────────────┐
         │ carts-subgraph│ │ admin-subgraph│ │   countries   │
-        │  (Tailcall)   │ │  (Tailcall)   │ │  (external)   │
-        │    :8100      │ │    :8101      │ │               │
+        │ (Go/Connect)  │ │ (Go/Connect)  │ │  (external)   │
+        │    :4011      │ │    :4012      │ │               │
         └───────┬───────┘ └───────┬───────┘ └───────────────┘
                 │                 │
                 ▼                 ▼
@@ -28,8 +28,8 @@ GraphQL Federation Gateway powered by [WunderGraph Cosmo Router](https://cosmo-d
 
 | Subgraph   | Port | Technology | Description                        |
 |------------|------|------------|------------------------------------|
-| carts      | 8100 | Tailcall   | gRPC → GraphQL for cart            |
-| admin      | 8101 | Tailcall   | REST → GraphQL for goods, offices  |
+| carts      | 4011 | Go/Connect | gRPC adapter for cart and orders   |
+| admin      | 4012 | Go/Connect | REST adapter for goods             |
 | countries  | -    | External   | External GraphQL API               |
 
 ## Prerequisites
@@ -54,10 +54,10 @@ pnpm install
 cd ../oms && make run
 
 # Terminal 2: Carts subgraph
-cd ../oms-graphql && pnpm start
+cd ../oms-graphql && go run ./cmd/service
 
-# Terminal 3: Admin subgraph (goods, offices)
-cd ../admin-graphql && pnpm start
+# Terminal 3: Admin subgraph (goods)
+cd ../admin-graphql && go run ./cmd/service
 
 # Terminal 4: Django Admin
 cd ../admin && uv run python src/manage.py runserver 8000
@@ -112,13 +112,17 @@ Update `graph.yaml` to use schema files instead of introspection:
 version: 1
 subgraphs:
   - name: carts
-    routing_url: http://localhost:8100/graphql
-    schema:
-      file: ../oms-graphql/config/grpc.graphql
+    routing_url: dns:///localhost:4011
+    grpc:
+      schema_file: ../oms-graphql/pkg/graph/schema.graphql
+      proto_file: ../oms-graphql/pkg/proto/service/v1/service.proto
+      mapping_file: ../oms-graphql/pkg/proto/service/v1/mapping.json
   - name: admin
-    routing_url: http://localhost:8101/graphql
-    schema:
-      file: ../admin-graphql/config/admin.graphql
+    routing_url: dns:///localhost:4012
+    grpc:
+      schema_file: ../admin-graphql/pkg/graph/schema.graphql
+      proto_file: ../admin-graphql/pkg/proto/service/v1/service.proto
+      mapping_file: ../admin-graphql/pkg/proto/service/v1/mapping.json
 ```
 
 ### CI/CD Integration
@@ -146,13 +150,17 @@ Defines subgraphs for schema composition:
 version: 1
 subgraphs:
   - name: carts
-    routing_url: http://localhost:8100/graphql
-    introspection:
-      url: http://localhost:8100/graphql
+    routing_url: dns:///localhost:4011
+    grpc:
+      schema_file: ../oms-graphql/pkg/graph/schema.graphql
+      proto_file: ../oms-graphql/pkg/proto/service/v1/service.proto
+      mapping_file: ../oms-graphql/pkg/proto/service/v1/mapping.json
   - name: admin
-    routing_url: http://localhost:8101/graphql
-    introspection:
-      url: http://localhost:8101/graphql
+    routing_url: dns:///localhost:4012
+    grpc:
+      schema_file: ../admin-graphql/pkg/graph/schema.graphql
+      proto_file: ../admin-graphql/pkg/proto/service/v1/service.proto
+      mapping_file: ../admin-graphql/pkg/proto/service/v1/mapping.json
   - name: countries
     routing_url: https://countries.trevorblades.com/
     introspection:
@@ -167,8 +175,8 @@ Router runtime configuration (CORS, logging, metrics, etc.).
 
 | Variable              | Default                              | Description                |
 |-----------------------|--------------------------------------|----------------------------|
-| `CARTS_SUBGRAPH_URL`  | `http://localhost:8100/graphql`      | Carts subgraph URL         |
-| `ADMIN_SUBGRAPH_URL`  | `http://localhost:8101/graphql`      | Admin subgraph URL         |
+| `CARTS_SUBGRAPH_URL`  | `dns:///localhost:4011`              | Carts subgraph URL         |
+| `ADMIN_SUBGRAPH_URL`  | `dns:///localhost:4012`              | Admin subgraph URL         |
 | `COUNTRIES_SUBGRAPH_URL` | `https://countries.trevorblades.com/` | Countries subgraph URL |
 | `LOG_LEVEL`           | `info`                               | Log level                  |
 
@@ -178,7 +186,7 @@ Router runtime configuration (CORS, logging, metrics, etc.).
 
 ```graphql
 query {
-  goods(page: 1) {
+  goods {
     count
     results {
       id
@@ -200,23 +208,6 @@ query {
         goodId
         quantity
       }
-    }
-  }
-}
-```
-
-### Get offices
-
-```graphql
-query {
-  offices {
-    results {
-      id
-      name
-      address
-      latitude
-      longitude
-      is_active
     }
   }
 }

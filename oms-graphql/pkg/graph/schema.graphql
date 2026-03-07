@@ -1,0 +1,184 @@
+# OMS Subgraph SDL Schema
+# Includes Cart and Order operations
+# Auto-generated for federation composition
+
+# ============================================
+# Cart Types
+# ============================================
+
+type CartItem {
+  goodId: String
+  quantity: Int
+}
+
+type CartState {
+  cartId: String
+  items: [CartItem]
+}
+
+type GetCartResponse {
+  state: CartState
+}
+
+input CartItemInput {
+  goodId: String!
+  quantity: Int!
+}
+
+input ItemRequest {
+  items: [CartItemInput!]!
+}
+
+# ============================================
+# Order Types
+# ============================================
+
+type OrderItem {
+  id: String
+  quantity: Int
+  price: Float
+}
+
+type DeliveryAddress {
+  street: String
+  city: String
+  postalCode: String
+  country: String
+  latitude: Float
+  longitude: Float
+}
+
+type DeliveryPeriod {
+  startTime: String
+  endTime: String
+}
+
+type PackageInfo {
+  weightKg: Float
+  dimensions: String
+}
+
+type RecipientContacts {
+  recipientName: String
+  recipientPhone: String
+  recipientEmail: String
+}
+
+type DeliveryInfo {
+  pickupAddress: DeliveryAddress
+  deliveryAddress: DeliveryAddress
+  deliveryPeriod: DeliveryPeriod
+  packageInfo: PackageInfo
+  priority: String
+  recipientContacts: RecipientContacts
+}
+
+type OrderState {
+  id: String
+  items: [OrderItem]
+  status: String
+  deliveryInfo: DeliveryInfo
+}
+
+type GetOrderResponse {
+  order: OrderState
+}
+
+# ============================================
+# Order Inputs
+# ============================================
+
+input DeliveryAddressInput {
+  street: String!
+  city: String!
+  postalCode: String
+  country: String!
+  latitude: Float
+  longitude: Float
+}
+
+input DeliveryPeriodInput {
+  startTime: String!
+  endTime: String!
+}
+
+input PackageInfoInput {
+  weightKg: Float!
+  dimensions: String!
+}
+
+input RecipientContactsInput {
+  recipientName: String
+  recipientPhone: String
+  recipientEmail: String
+}
+
+input DeliveryInfoInput {
+  pickupAddress: DeliveryAddressInput!
+  deliveryAddress: DeliveryAddressInput!
+  deliveryPeriod: DeliveryPeriodInput!
+  packageInfo: PackageInfoInput!
+  priority: String
+  recipientContacts: RecipientContactsInput
+}
+
+input OrderItemInput {
+  id: String!
+  quantity: Int!
+  price: Float!
+}
+
+input CreateOrderInput {
+  items: [OrderItemInput!]!
+  deliveryInfo: DeliveryInfoInput
+}
+
+input UpdateDeliveryInfoInput {
+  orderId: String!
+  deliveryInfo: DeliveryInfoInput!
+}
+
+input CheckoutInput {
+  deliveryInfo: DeliveryInfoInput
+}
+
+type CheckoutResult {
+  orderId: String
+}
+
+# ============================================
+# Common Types
+# ============================================
+
+type Empty {
+  _: Boolean
+}
+
+# ============================================
+# Queries
+# ============================================
+
+type Query {
+  # Cart queries
+  getCart: GetCartResponse
+  
+  # Order queries
+  getOrder(id: String!): GetOrderResponse
+}
+
+# ============================================
+# Mutations
+# ============================================
+
+type Mutation {
+  # Cart mutations
+  addItem(addRequest: ItemRequest): Empty!
+  removeItem(removeRequest: ItemRequest): Empty!
+  resetCart: Empty!
+  
+  # Order mutations
+  createOrder(input: CreateOrderInput!): Empty!
+  cancelOrder(orderId: String!): Empty!
+  updateDeliveryInfo(input: UpdateDeliveryInfoInput!): Empty!
+  checkout(input: CheckoutInput!): CheckoutResult!
+}

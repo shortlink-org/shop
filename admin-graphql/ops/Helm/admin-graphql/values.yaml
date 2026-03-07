@@ -24,10 +24,7 @@ deploy:
   env:
     # Django Admin API URL
     ADMIN_API_URL: http://shortlink-shop-admin.shortlink-shop:8000
-    # OTLP exporter URL (Grafana Tempo), OTLP HTTP on 4318
-    OTLP_URL: "http://grafana-tempo.grafana.svc.cluster.local:4318"
-    # More verbose logs: upstream requests, errors (RBAC, 403, etc.)
-    TC_LOG_LEVEL: "debug"
+    LISTEN_ADDR: "0.0.0.0:4012"
 
   resources:
     limits:
@@ -48,20 +45,19 @@ deploy:
     # Ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
     pullPolicy: Always
 
-  # -- define a liveness probe that checks every 5 seconds, starting after 5 seconds
-  # GET /graphql without query returns 500; use /metrics which returns 200
+  # -- define a liveness probe
   livenessProbe:
     enabled: true
     httpGet:
-      path: /metrics
-      port: 8080
+      path: /healthz
+      port: 4012
 
-  # -- define a readiness probe that checks every 5 seconds, starting after 5 seconds
+  # -- define a readiness probe
   readinessProbe:
     enabled: true
     httpGet:
-      path: /metrics
-      port: 8080
+      path: /healthz
+      port: 4012
 
   securityContext:
     readOnlyRootFilesystem: true
@@ -73,14 +69,11 @@ deploy:
 
 # ==============================================================================
 # Service configuration
-# NOTE: Tailcall exposes both GraphQL and Prometheus metrics on the same port 8080
-# - GraphQL: /graphql
-# - Metrics: /metrics
 service:
   type: ClusterIP
   ports:
     - name: http
-      port: 8080
+      port: 4012
       protocol: TCP
       public: true
 

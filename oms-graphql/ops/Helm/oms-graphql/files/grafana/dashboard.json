@@ -151,7 +151,7 @@
   ],
   "refresh": "30s",
   "schemaVersion": 39,
-  "tags": ["oms-graphql", "tailcall", "shop"],
+  "tags": ["oms-graphql", "grpc", "shop"],
   "templating": {
     "list": [
       {
