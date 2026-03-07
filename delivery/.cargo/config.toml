@@ -1,3 +1,5 @@
+include = ["../../.cargo/rust-services-common.toml"]
+
 # Cargo configuration for delivery service
 
 # Force dynamic linking for musl targets (Alpine Linux)

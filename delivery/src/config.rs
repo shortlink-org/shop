@@ -160,8 +160,6 @@ impl TemporalConfig {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn test_default_grpc_port() {
         // This test requires env vars to be set

@@ -547,11 +547,6 @@ mod tests {
                 free_couriers: Mutex::new(Vec::new()),
             }
         }
-
-        fn add_free_courier(&self, id: Uuid) {
-            let mut couriers = self.free_couriers.lock().unwrap();
-            couriers.push(id);
-        }
     }
 
     #[async_trait]
@@ -786,7 +781,7 @@ mod tests {
         )
         .unwrap();
 
-        let mut courier = Courier::builder(
+        let courier = Courier::builder(
             "Test Courier".to_string(),
             "+1234567890".to_string(),
             "test@example.com".to_string(),
