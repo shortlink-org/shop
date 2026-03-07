@@ -104,8 +104,8 @@ importers:
         specifier: 19.2.14
         version: 19.2.14
       '@types/sanitize-html':
-        specifier: ^2.16.0
-        version: 2.16.0
+        specifier: ^2.16.1
+        version: 2.16.1
       '@vitejs/plugin-react':
         specifier: ^5.1.4
         version: 5.1.4(vite@7.3.1(@types/node@24.11.0)(jiti@2.6.1)(lightningcss@1.31.1))
@@ -1708,8 +1708,8 @@ packages:
   '@types/react@19.2.14':
     resolution: {integrity: sha512-ilcTH/UniCkMdtexkoCN0bI7pMcJDvmQFPvuPvmEaYA/NSfFTAgdUSLAoVjaRJm7+6PvcM+q1zYOwS4wTYMF9w==}
 
-  '@types/sanitize-html@2.16.0':
-    resolution: {integrity: sha512-l6rX1MUXje5ztPT0cAFtUayXF06DqPhRyfVXareEN5gGCFaP/iwsxIyKODr9XDhfxPpN6vXUFNfo5kZMXCxBtw==}
+  '@types/sanitize-html@2.16.1':
+    resolution: {integrity: sha512-n9wjs8bCOTyN/ynwD8s/nTcTreIHB1vf31vhLMGqUPNHaweKC4/fAl4Dj+hUlCTKYgm4P3k83fmiFfzkZ6sgMA==}
 
   '@vercel/otel@2.1.1':
     resolution: {integrity: sha512-kQluigvboW0uIQGf2VvJAjnn54Rs4Cv/2XnHXEaniBiKxPecnAeIEOvDi9XIUG4XLaWk1EJURQ3guXhRbD5iXQ==}
@@ -2199,6 +2199,9 @@ packages:
   html-encoding-sniffer@4.0.0:
     resolution: {integrity: sha512-Y22oTqIU4uuPgEemfz7NDJz6OeKf12Lsu+QC+s3BVpda64lTiMYCyGwg5ki4vFxkMwQdeZDl2adZoqUgdFuTgQ==}
     engines: {node: '>=18'}
+
+  htmlparser2@10.1.0:
+    resolution: {integrity: sha512-VTZkM9GWRAtEpveh7MSF6SjjrpNVNNVJfFup7xTY3UpFtm67foy9HDVXneLtFVt4pMz5kZtgNcvCniNFb1hlEQ==}
 
   htmlparser2@8.0.2:
     resolution: {integrity: sha512-GYdjWKDkbRLkZ5geuHs5NY1puJ+PXwP7+fHPRz06Eirsb9ugf6d8kkXav6ADhcODhFFPMIXyxkxSuMf3D6NCFA==}
@@ -4506,9 +4509,9 @@ snapshots:
     dependencies:
       csstype: 3.2.3
 
-  '@types/sanitize-html@2.16.0':
+  '@types/sanitize-html@2.16.1':
     dependencies:
-      htmlparser2: 8.0.2
+      htmlparser2: 10.1.0
 
   '@vercel/otel@2.1.1(@opentelemetry/api-logs@0.213.0)(@opentelemetry/api@1.9.0)(@opentelemetry/instrumentation@0.213.0(@opentelemetry/api@1.9.0))(@opentelemetry/resources@2.6.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-logs@0.213.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-metrics@2.6.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.6.0(@opentelemetry/api@1.9.0))':
     dependencies:
@@ -4974,6 +4977,13 @@ snapshots:
   html-encoding-sniffer@4.0.0:
     dependencies:
       whatwg-encoding: 3.1.1
+
+  htmlparser2@10.1.0:
+    dependencies:
+      domelementtype: 2.3.0
+      domhandler: 5.0.3
+      domutils: 3.2.2
+      entities: 7.0.1
 
   htmlparser2@8.0.2:
     dependencies:

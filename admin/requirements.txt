@@ -188,9 +188,9 @@ django-request-logging==0.7.5 \
     --hash=sha256:4d9e520842303aaf654c6ffd39831b04513ea343574f8579a59ada46ffb95fb6 \
     --hash=sha256:94934d77c2d0fd76fdb9879b874368aa7d55672f0c7e1f59dd39b991c3e123b4
     # via shop-admin (pyproject.toml)
-django-unfold==0.82.0 \
-    --hash=sha256:0d90264fd399ae54d3f63e9d0a8d2dea003de479e417e88f274473f78713c253 \
-    --hash=sha256:d3920e0d98e72bbdcb0698e4307dc35cf6ffab55b92a6bdc6c20a79147df3472
+django-unfold==0.83.1 \
+    --hash=sha256:233cca8f7d9d173518597ce4dbafb0167f3075b556d7fb2b97e44217a1c6ba0f \
+    --hash=sha256:af3f9710496d172f0079343d1ba3128528da6d8ef4a57b070efcfc6456d8ed2b
     # via shop-admin (pyproject.toml)
 djangorestframework==3.16.1 \
     --hash=sha256:166809528b1aced0a17dc66c24492af18049f2c9420dbd0be29422029cfc3ff7 \
@@ -341,9 +341,9 @@ opentelemetry-api==1.39.1 \
     #   opentelemetry-instrumentation-wsgi
     #   opentelemetry-sdk
     #   opentelemetry-semantic-conventions
-opentelemetry-exporter-otlp==1.39.1 \
-    --hash=sha256:68ae69775291f04f000eb4b698ff16ff685fdebe5cb52871bc4e87938a7b00fe \
-    --hash=sha256:7cf7470e9fd0060c8a38a23e4f695ac686c06a48ad97f8d4867bc9b420180b9c
+opentelemetry-exporter-otlp==1.40.0 \
+    --hash=sha256:48c87e539ec9afb30dc443775a1334cc5487de2f72a770a4c00b1610bf6c697d \
+    --hash=sha256:7caa0870b95e2fcb59d64e16e2b639ecffb07771b6cd0000b5d12e5e4fef765a
     # via shop-admin (pyproject.toml)
 opentelemetry-exporter-otlp-proto-common==1.39.1 \
     --hash=sha256:08f8a5862d64cc3435105686d0216c1365dc5701f86844a8cd56597d0c764fde \
@@ -358,9 +358,9 @@ opentelemetry-exporter-otlp-proto-grpc==1.39.1 \
     # via
     #   shop-admin (pyproject.toml)
     #   opentelemetry-exporter-otlp
-opentelemetry-exporter-otlp-proto-http==1.39.1 \
-    --hash=sha256:31bdab9745c709ce90a49a0624c2bd445d31a28ba34275951a6a362d16a0b9cb \
-    --hash=sha256:d9f5207183dd752a412c4cd564ca8875ececba13be6e9c6c370ffb752fd59985
+opentelemetry-exporter-otlp-proto-http==1.40.0 \
+    --hash=sha256:a8d1dab28f504c5d96577d6509f80a8150e44e8f45f82cdbe0e34c99ab040069 \
+    --hash=sha256:db48f5e0f33217588bbc00274a31517ba830da576e59503507c839b38fa0869c
     # via
     #   shop-admin (pyproject.toml)
     #   opentelemetry-exporter-otlp
@@ -429,9 +429,9 @@ opentelemetry-semantic-conventions==0.60b1 \
     #   opentelemetry-instrumentation-requests
     #   opentelemetry-instrumentation-wsgi
     #   opentelemetry-sdk
-opentelemetry-util-http==0.60b1 \
-    --hash=sha256:0d97152ca8c8a41ced7172d29d3622a219317f74ae6bb3027cfbdcf22c3cc0d6 \
-    --hash=sha256:66381ba28550c91bee14dcba8979ace443444af1ed609226634596b4b0faf199
+opentelemetry-util-http==0.61b0 \
+    --hash=sha256:1039cb891334ad2731affdf034d8fb8b48c239af9b6dd295e5fabd07f1c95572 \
+    --hash=sha256:8e715e848233e9527ea47e275659ea60a57a75edf5206a3b937e236a6da5fc33
     # via
     #   shop-admin (pyproject.toml)
     #   opentelemetry-instrumentation-django

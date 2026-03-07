@@ -1,4 +1,11 @@
 # Cargo configuration for delivery service
+# (includes common settings from ../../.cargo/rust-services-common.toml inlined for Docker build)
+
+[build]
+incremental = true
+
+[term]
+color = "always"
 
 # Force dynamic linking for musl targets (Alpine Linux)
 # Without this, Rust tries to statically link librdkafka which isn't available

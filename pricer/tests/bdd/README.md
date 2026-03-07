@@ -1,12 +1,12 @@
 # BDD tests (Gherkin)
 
-Acceptance tests in Gherkin format. Run with **cucumber-rs** (see ROADMAP Phase 3).
+Acceptance tests in Gherkin format. They currently act as executable/portable specifications for pricing behavior.
 
 ## Features
 
 | Feature | Scenarios | Use case |
 |---------|-----------|----------|
-| [quantity_discount.feature](./features/quantity_discount.feature) | Buy 2 get 3rd free; Buy 3 get 4th with 25% off | Calculate Cart Discount |
+| [quantity_discount.feature](./features/quantity_discount.feature) | Buy 2 get 3rd free; Buy 3 get 4th with 25% off | Calculate Total |
 | [promo_code.feature](./features/promo_code.feature) | Promo -10%; Promo -10% from 3000; invalid/expired | Apply Promo Code |
 
 ## Test cases (summary)
@@ -16,4 +16,8 @@ Acceptance tests in Gherkin format. Run with **cucumber-rs** (see ROADMAP Phase 
 3. **Промокод -10%** — `promo_code.feature`: SAVE10, no minimum → 10% off (e.g. 1000 → 100 discount).
 4. **Промокод -10% от суммы покупки от 3000** — `promo_code.feature`: BIG10, min 3000 → applied when subtotal ≥ 3000 (300 discount), rejected when &lt; 3000 (MIN_ORDER_NOT_MET).
 
-Step definitions and wiring to use cases are to be implemented in Phase 3 (ROADMAP).
+Related docs:
+
+- [internal/usecases/README.md](/Users/user/myprojects/shortlink/shop/pricer/internal/usecases/README.md)
+- [internal/usecases/cart/command/calculate_total/README.md](/Users/user/myprojects/shortlink/shop/pricer/internal/usecases/cart/command/calculate_total/README.md)
+- [internal/usecases/cart/command/apply_promo_code/README.md](/Users/user/myprojects/shortlink/shop/pricer/internal/usecases/cart/command/apply_promo_code/README.md)
