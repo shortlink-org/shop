@@ -188,7 +188,7 @@ namespaceSetup:
   # Temporal CLI image
   image:
     repository: temporalio/admin-tools
-    tag: "1.29"
+    tag: "1.30"
     pullPolicy: IfNotPresent
 
   # Temporal frontend address
