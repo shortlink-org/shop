@@ -429,9 +429,9 @@ opentelemetry-semantic-conventions==0.60b1 \
     #   opentelemetry-instrumentation-requests
     #   opentelemetry-instrumentation-wsgi
     #   opentelemetry-sdk
-opentelemetry-util-http==0.60b1 \
-    --hash=sha256:0d97152ca8c8a41ced7172d29d3622a219317f74ae6bb3027cfbdcf22c3cc0d6 \
-    --hash=sha256:66381ba28550c91bee14dcba8979ace443444af1ed609226634596b4b0faf199
+opentelemetry-util-http==0.61b0 \
+    --hash=sha256:1039cb891334ad2731affdf034d8fb8b48c239af9b6dd295e5fabd07f1c95572 \
+    --hash=sha256:8e715e848233e9527ea47e275659ea60a57a75edf5206a3b937e236a6da5fc33
     # via
     #   shop-admin (pyproject.toml)
     #   opentelemetry-instrumentation-django
