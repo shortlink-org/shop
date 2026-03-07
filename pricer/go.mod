@@ -17,7 +17,7 @@ require (
 	github.com/shortlink-org/go-sdk/observability v0.0.0-20251124222339-a66ccb288e7f
 	github.com/spf13/viper v1.21.0
 	go.opentelemetry.io/otel/trace v1.42.0
-	google.golang.org/grpc v1.79.1
+	google.golang.org/grpc v1.79.2
 	google.golang.org/protobuf v1.36.11
 )
 
