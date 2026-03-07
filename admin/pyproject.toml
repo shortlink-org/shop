@@ -52,7 +52,7 @@ dependencies = [
   'packaging==26.0',
   'pip==26.0.1',
   'prometheus-client==0.24.1',
-  'protobuf>=6.33.5,<7.0.0', # Compatible with opentelemetry-proto and gRPC stubs (shortlink-org-shop-*)
+  'protobuf>=7.34.0,<7.34.1', # Compatible with opentelemetry-proto and gRPC stubs (shortlink-org-shop-*)
   'pytz==2026.1.post1',
   'pyyaml==6.0.3',
   'referencing==0.37.0',
