@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.21
+# syntax=docker/dockerfile:1.22
 # delivery-graphql Dockerfile
 # Uses Tailcall for gRPC → GraphQL
 
