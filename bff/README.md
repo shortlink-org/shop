@@ -173,12 +173,14 @@ Router runtime configuration (CORS, logging, metrics, etc.).
 
 ### Environment Variables
 
-| Variable              | Default                              | Description                |
-|-----------------------|--------------------------------------|----------------------------|
-| `COUNTRIES_SUBGRAPH_URL` | `https://countries.trevorblades.com/` | Countries subgraph URL     |
-| `LOG_LEVEL`           | `info`                               | Log level                  |
+| Variable              | Default                                                                 | Description                |
+|-----------------------|-------------------------------------------------------------------------|----------------------------|
+| `COUNTRIES_SUBGRAPH_URL` | `https://countries.trevorblades.com/`                                 | Countries subgraph URL     |
+| `ADMIN_SUBGRAPH_URL` | `http://shortlink-shop-admin-graphql.shortlink-shop.svc.cluster.local:4012` | Admin (Connect) subgraph   |
+| `CARTS_SUBGRAPH_URL` | `http://shortlink-shop-oms-graphql.shortlink-shop.svc.cluster.local:4011`  | Carts (Connect) subgraph   |
+| `LOG_LEVEL`           | `info`                                                                 | Log level                  |
 
-Admin and carts subgraph URLs are fixed at build time in `graph-static.yaml` (baked into `router-config.json`). They are not overridden via env so that an unset variable cannot replace them with an empty URL.
+All subgraph URLs are overridden at runtime from env (Helm sets defaults for the cluster; use `http://` only).
 
 ## Troubleshooting
 
@@ -206,7 +208,7 @@ The BFF cannot reach the gRPC subgraphs. In Kubernetes the router expects these 
    kubectl get svc -n shortlink-shop shortlink-shop-admin-graphql shortlink-shop-oms-graphql
    ```
 
-4. **Different names** – The BFF image is built with URLs from `graph-static.yaml`. If your Services use other names or namespaces, rebuild the image with updated `bff/graph-static.yaml` and redeploy.
+4. **Different names** – Set `ADMIN_SUBGRAPH_URL` and `CARTS_SUBGRAPH_URL` when deploying (e.g. other namespace: `http://<svc>.<ns>.svc.cluster.local:port`).
 
 ## Example Queries
 

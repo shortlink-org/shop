@@ -120,8 +120,9 @@ export async function shopifyFetch<T>({
       };
     }
 
-    if (body.errors?.length) {
-      throw normalizeGraphqlError(body.errors[0], query, result.status, traceId);
+    const firstError = body.errors?.[0];
+    if (firstError) {
+      throw normalizeGraphqlError(firstError, query, result.status, traceId);
     }
 
     const bffMessage = body.error?.message ?? '';
