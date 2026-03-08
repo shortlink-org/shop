@@ -1,18 +1,18 @@
-# Static graph configuration for offline composition
-# Uses SDL schema files instead of introspection
-
+# Static graph configuration for offline composition (Docker build).
+# Uses SDL schema files instead of introspection.
+# gRPC subgraphs use http:// (not dns://) so the router uses HTTP/2; works with Istio and cluster DNS.
 version: 1
 
 subgraphs:
   - name: carts
-    routing_url: dns:///shortlink-shop-oms-graphql.shortlink-shop:4011
+    routing_url: http://shortlink-shop-oms-graphql.shortlink-shop:4011
     grpc:
       schema_file: subgraphs/carts/schema.graphql
       proto_file: subgraphs/carts/service.proto
       mapping_file: subgraphs/carts/mapping.json
 
   - name: admin
-    routing_url: dns:///shortlink-shop-admin-graphql.shortlink-shop:4012
+    routing_url: http://shortlink-shop-admin-graphql.shortlink-shop:4012
     grpc:
       schema_file: subgraphs/admin/schema.graphql
       proto_file: subgraphs/admin/service.proto
