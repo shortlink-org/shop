@@ -1,4 +1,6 @@
+import { ShopLeaderboard } from 'components/layout/shop-leaderboard';
 import { ShopProductGrid } from 'components/layout/shop-product-grid';
+import { ShopSidebar } from 'components/layout/shop-sidebar';
 import { RetryButton } from 'components/retry-button';
 import { getCollectionProducts, GOODS_UNAVAILABLE } from 'lib/shopify';
 import { headers } from 'next/headers';
@@ -35,8 +37,18 @@ export default async function HomePage(_props: {
   if (homepageItems.length === 0) return null;
 
   return (
-    <section className="mx-auto max-w-screen-2xl px-4 pb-4">
-      <ShopProductGrid goods={homepageItems} />
+    <section className="mx-auto max-w-screen-2xl px-4 pb-10 pt-2 xl:grid xl:grid-cols-[17rem_minmax(0,1fr)] xl:gap-8">
+      <aside className="hidden xl:block">
+        <ShopSidebar />
+      </aside>
+      <div className="space-y-10">
+        <div>
+          <ShopProductGrid goods={homepageItems} />
+        </div>
+        <div id="leaderboard">
+          <ShopLeaderboard />
+        </div>
+      </div>
     </section>
   );
 }

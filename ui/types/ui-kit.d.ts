@@ -222,6 +222,23 @@ declare module '@shortlink-org/ui-kit' {
 
   export const FeedbackPanel: FC<FeedbackPanelProps>;
 
+  export interface DrawerProps {
+    open: boolean;
+    onClose: (open: boolean) => void;
+    title?: ReactNode;
+    children?: ReactNode;
+    position?: 'left' | 'right' | 'bottom';
+    size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+    showCloseButton?: boolean;
+    panelClassName?: string;
+    backdropClassName?: string;
+    titleClassName?: string;
+    contentClassName?: string;
+    contentScrollable?: boolean;
+  }
+
+  export const Drawer: FC<DrawerProps>;
+
   export interface BasketItemData {
     id: number | string;
     name: string;
@@ -271,6 +288,108 @@ declare module '@shortlink-org/ui-kit' {
 
   export const Basket: FC<BasketProps>;
   export type BasketItem = BasketItemData;
+
+  export interface LeaderboardBadge {
+    label: string;
+    tone?: 'neutral' | 'accent' | 'success' | 'warning' | 'danger';
+  }
+
+  export interface LeaderboardStat {
+    id: string;
+    label: string;
+    value: string | number;
+    change?: string;
+    tone?: 'neutral' | 'accent' | 'success' | 'warning';
+  }
+
+  export interface LeaderboardFilter {
+    id: string;
+    label: string;
+    count?: number;
+  }
+
+  export interface LeaderboardEntry {
+    id: string | number;
+    rank: number;
+    name: string;
+    subtitle?: string;
+    avatarSrc?: string;
+    avatarAlt?: string;
+    href?: string;
+    score: number;
+    scoreDisplay?: string;
+    delta?: number;
+    metric?: string;
+    note?: string;
+    badge?: LeaderboardBadge;
+    isCurrentUser?: boolean;
+    verified?: boolean;
+    accentColor?: string;
+  }
+
+  export type LeaderboardFilterId = string;
+
+  export interface MarketplaceLeaderboardProps {
+    eyebrow?: string;
+    title: string;
+    description?: string;
+    scoreLabel?: string;
+    entries: LeaderboardEntry[];
+    stats?: LeaderboardStat[];
+    filters?: LeaderboardFilter[];
+    selectedFilterId?: LeaderboardFilterId;
+    onFilterChange?: (filterId: LeaderboardFilterId) => void;
+    visibleRows?: number;
+    loading?: boolean;
+    emptyTitle?: string;
+    emptyDescription?: string;
+    showPodium?: boolean;
+    pinCurrentUser?: boolean;
+    mobileRankingLayout?: 'vertical' | 'horizontal';
+    headerAction?: ReactNode;
+    className?: string;
+  }
+
+  export const MarketplaceLeaderboard: FC<MarketplaceLeaderboardProps>;
+
+  export interface SidebarItem {
+    url: string;
+    icon: ReactNode;
+    name: string;
+  }
+
+  export interface SidebarCollapsibleSection {
+    type: 'collapsible';
+    icon: ElementType<{ className?: string }>;
+    title: string;
+    items: SidebarItem[];
+    defaultCollapsed?: boolean;
+  }
+
+  export interface SidebarSimpleSection {
+    type: 'simple';
+    items: SidebarItem[];
+  }
+
+  export type SidebarSection = SidebarCollapsibleSection | SidebarSimpleSection;
+
+  export interface SidebarProps {
+    mode?: 'full' | 'mini';
+    sections?: SidebarSection[];
+    activePath?: string;
+    collapsed?: boolean;
+    width?: string | number;
+    height?: string | number;
+    footerSlot?: ReactNode;
+    variant?: 'sticky' | 'scrollable';
+    ariaLabel?: string;
+    className?: string;
+    onCollapsedChange?: (collapsed: boolean) => void;
+    activeClassName?: string;
+    inactiveClassName?: string;
+  }
+
+  export const Sidebar: FC<SidebarProps>;
 
   export interface AppHeaderBrand {
     name: string;
