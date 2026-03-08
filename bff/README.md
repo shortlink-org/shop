@@ -173,12 +173,12 @@ Router runtime configuration (CORS, logging, metrics, etc.).
 
 ### Environment Variables
 
-| Variable              | Default                                                                    | Description                |
-|-----------------------|----------------------------------------------------------------------------|----------------------------|
-| `COUNTRIES_SUBGRAPH_URL` | `https://countries.trevorblades.com/`                                    | Countries subgraph URL     |
-| `ADMIN_SUBGRAPH_URL`  | `dns:///shortlink-shop-admin-graphql.shortlink-shop:4012`                  | Admin gRPC subgraph URL    |
-| `CARTS_SUBGRAPH_URL`  | `dns:///shortlink-shop-oms-graphql.shortlink-shop:4011`                     | Carts gRPC subgraph URL    |
-| `LOG_LEVEL`           | `info`                                                                    | Log level                  |
+| Variable              | Default                              | Description                |
+|-----------------------|--------------------------------------|----------------------------|
+| `COUNTRIES_SUBGRAPH_URL` | `https://countries.trevorblades.com/` | Countries subgraph URL     |
+| `LOG_LEVEL`           | `info`                               | Log level                  |
+
+Admin and carts subgraph URLs are fixed at build time in `graph-static.yaml` (baked into `router-config.json`). They are not overridden via env so that an unset variable cannot replace them with an empty URL.
 
 ## Troubleshooting
 
@@ -206,9 +206,7 @@ The BFF cannot reach the gRPC subgraphs. In Kubernetes the router expects these 
    kubectl get svc -n shortlink-shop shortlink-shop-admin-graphql shortlink-shop-oms-graphql
    ```
 
-4. **Different names** – If your Services use other names or namespaces, set overrides when deploying the BFF:
-   - `ADMIN_SUBGRAPH_URL=dns:///<admin-service>.<namespace>:4012`
-   - `CARTS_SUBGRAPH_URL=dns:///<carts-service>.<namespace>:4011`
+4. **Different names** – The BFF image is built with URLs from `graph-static.yaml`. If your Services use other names or namespaces, rebuild the image with updated `bff/graph-static.yaml` and redeploy.
 
 ## Example Queries
 

@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const BFF_GRAPHQL_URL =
   process.env.BFF_GRAPHQL_URL ??
-  'http://shortlink-shop-bff.shortlink-shop.svc.cluster.local:9991/graphql';
+  (process.env.NODE_ENV === 'development'
+    ? 'http://localhost:9991/graphql'
+    : 'http://shortlink-shop-bff.shortlink-shop.svc.cluster.local:9991/graphql');
 
 function normalizePage(value: unknown): number {
   if (typeof value === 'number' && Number.isInteger(value) && value > 0) return value;

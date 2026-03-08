@@ -1,0 +1,22 @@
+# Local dev: admin + carts on localhost (e.g. port-forwarded from K8s), no delivery
+version: 1
+
+subgraphs:
+  - name: carts
+    routing_url: dns:///localhost:4011
+    grpc:
+      schema_file: subgraphs/carts/schema.graphql
+      proto_file: subgraphs/carts/service.proto
+      mapping_file: subgraphs/carts/mapping.json
+
+  - name: admin
+    routing_url: dns:///localhost:4012
+    grpc:
+      schema_file: subgraphs/admin/schema.graphql
+      proto_file: subgraphs/admin/service.proto
+      mapping_file: subgraphs/admin/mapping.json
+
+  - name: countries
+    routing_url: https://countries.trevorblades.com/
+    schema:
+      file: schemas/countries.graphql
