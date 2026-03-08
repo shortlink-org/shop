@@ -31,10 +31,6 @@ WORKDIR /app
 COPY router.yaml /app/router.yaml
 COPY --from=builder /build/router-config.json /app/router-config.json
 
-# Environment variables
-ENV LISTEN_ADDR="0.0.0.0:9991"
-ENV LOG_LEVEL="info"
-
 # Expose ports
 # 9991 - GraphQL API
 # 8088 - Prometheus metrics

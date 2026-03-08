@@ -9,17 +9,6 @@ execution_config:
   file:
     path: "./router-config.json"
 
-# Override subgraph URLs at runtime via env (http(s) only; no dns://).
-# https://cosmo-docs.wundergraph.com/router/proxy-capabilities/override-subgraph-config
-overrides:
-  subgraphs:
-    countries:
-      routing_url: "${COUNTRIES_SUBGRAPH_URL}"
-    admin:
-      routing_url: "${ADMIN_SUBGRAPH_URL}"
-    carts:
-      routing_url: "${CARTS_SUBGRAPH_URL}"
-
 # Server configuration
 listen_addr: "0.0.0.0:9991"
 

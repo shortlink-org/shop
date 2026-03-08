@@ -42,15 +42,6 @@ deploy:
 
   imagePullSecrets: []
 
-  env:
-    # Subgraph URLs (http:// required; override for different namespace or local dev)
-    COUNTRIES_SUBGRAPH_URL: https://countries.trevorblades.com/
-    ADMIN_SUBGRAPH_URL: http://shortlink-shop-admin-graphql.shortlink-shop.svc.cluster.local:4012
-    CARTS_SUBGRAPH_URL: http://shortlink-shop-oms-graphql.shortlink-shop.svc.cluster.local:4011
-    # Router configuration
-    LOG_LEVEL: info
-    LISTEN_ADDR: "0.0.0.0:9991"
-
   resources:
     limits:
       cpu: 1000m

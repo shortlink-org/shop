@@ -1,18 +1,19 @@
 # Static graph configuration for offline composition (Docker build).
 # Uses SDL schema files instead of introspection.
-# Runtime URLs are overridden via env (ADMIN_SUBGRAPH_URL, CARTS_SUBGRAPH_URL) in router.yaml.
+# These routing URLs are baked into router-config.json during image build, so deployment-safe
+# cluster service addresses must be used here instead of localhost.
 version: 1
 
 subgraphs:
   - name: carts
-    routing_url: http://localhost:4011
+    routing_url: http://shortlink-shop-oms-graphql.shortlink-shop.svc.cluster.local:4011
     grpc:
       schema_file: subgraphs/carts/schema.graphql
       proto_file: subgraphs/carts/service.proto
       mapping_file: subgraphs/carts/mapping.json
 
   - name: admin
-    routing_url: http://localhost:4012
+    routing_url: http://shortlink-shop-admin-graphql.shortlink-shop.svc.cluster.local:4012
     grpc:
       schema_file: subgraphs/admin/schema.graphql
       proto_file: subgraphs/admin/service.proto

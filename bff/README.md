@@ -171,16 +171,10 @@ subgraphs:
 
 Router runtime configuration (CORS, logging, metrics, etc.).
 
-### Environment Variables
+### Runtime Config
 
-| Variable              | Default                                                                 | Description                |
-|-----------------------|-------------------------------------------------------------------------|----------------------------|
-| `COUNTRIES_SUBGRAPH_URL` | `https://countries.trevorblades.com/`                                 | Countries subgraph URL     |
-| `ADMIN_SUBGRAPH_URL` | `http://shortlink-shop-admin-graphql.shortlink-shop.svc.cluster.local:4012` | Admin (Connect) subgraph   |
-| `CARTS_SUBGRAPH_URL` | `http://shortlink-shop-oms-graphql.shortlink-shop.svc.cluster.local:4011`  | Carts (Connect) subgraph   |
-| `LOG_LEVEL`           | `info`                                                                 | Log level                  |
-
-All subgraph URLs are overridden at runtime from env (Helm sets defaults for the cluster; use `http://` only).
+The router reads runtime settings from `router.yaml`.
+Subgraph routing URLs are baked into `router-config.json` during image build from `graph-static.yaml`.
 
 ## Troubleshooting
 
@@ -208,7 +202,7 @@ The BFF cannot reach the gRPC subgraphs. In Kubernetes the router expects these 
    kubectl get svc -n shortlink-shop shortlink-shop-admin-graphql shortlink-shop-oms-graphql
    ```
 
-4. **Different names** – Set `ADMIN_SUBGRAPH_URL` and `CARTS_SUBGRAPH_URL` when deploying (e.g. other namespace: `http://<svc>.<ns>.svc.cluster.local:port`).
+4. **Different names** – Update `graph-static.yaml`, rebuild `router-config.json` via Docker image build, and redeploy BFF.
 
 ## Example Queries
 
