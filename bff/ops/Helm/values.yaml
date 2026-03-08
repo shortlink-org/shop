@@ -43,8 +43,10 @@ deploy:
   imagePullSecrets: []
 
   env:
-    # Subgraph URLs for Cosmo Router
+    # Subgraph URLs for Cosmo Router (must match K8s Service names in shortlink-shop namespace)
     COUNTRIES_SUBGRAPH_URL: https://countries.trevorblades.com/
+    ADMIN_SUBGRAPH_URL: dns:///shortlink-shop-admin-graphql.shortlink-shop:4012
+    CARTS_SUBGRAPH_URL: dns:///shortlink-shop-oms-graphql.shortlink-shop:4011
     # Router configuration
     LOG_LEVEL: info
     LISTEN_ADDR: "0.0.0.0:9991"

@@ -173,10 +173,42 @@ Router runtime configuration (CORS, logging, metrics, etc.).
 
 ### Environment Variables
 
-| Variable              | Default                              | Description                |
-|-----------------------|--------------------------------------|----------------------------|
-| `COUNTRIES_SUBGRAPH_URL` | `https://countries.trevorblades.com/` | Countries subgraph URL |
-| `LOG_LEVEL`           | `info`                               | Log level                  |
+| Variable              | Default                                                                    | Description                |
+|-----------------------|----------------------------------------------------------------------------|----------------------------|
+| `COUNTRIES_SUBGRAPH_URL` | `https://countries.trevorblades.com/`                                    | Countries subgraph URL     |
+| `ADMIN_SUBGRAPH_URL`  | `dns:///shortlink-shop-admin-graphql.shortlink-shop:4012`                  | Admin gRPC subgraph URL    |
+| `CARTS_SUBGRAPH_URL`  | `dns:///shortlink-shop-oms-graphql.shortlink-shop:4011`                     | Carts gRPC subgraph URL    |
+| `LOG_LEVEL`           | `info`                                                                    | Log level                  |
+
+## Troubleshooting
+
+### "Failed to fetch from Subgraph 'admin'" or "Failed to fetch from Subgraph 'carts'"
+
+The BFF cannot reach the gRPC subgraphs. In Kubernetes the router expects these **Service** names in the **shortlink-shop** namespace:
+
+| Subgraph | Expected Service name              | Port |
+|----------|------------------------------------|------|
+| admin    | `shortlink-shop-admin-graphql`      | 4012 |
+| carts    | `shortlink-shop-oms-graphql`       | 4011 |
+
+**Checks:**
+
+1. **Deployments** – Ensure `admin-graphql` and `oms-graphql` are deployed. Helm release names should be `shortlink-shop-admin-graphql` and `shortlink-shop-oms-graphql` so that the created Services match the names above (if your chart uses `Release.Name` for the Service name).
+
+2. **Pods** – Confirm subgraph pods are Running and Ready:
+   ```bash
+   kubectl get pods -n shortlink-shop -l app.kubernetes.io/name=admin-graphql
+   kubectl get pods -n shortlink-shop -l app.kubernetes.io/name=oms-graphql
+   ```
+
+3. **Services** – Verify Services exist and target the correct port:
+   ```bash
+   kubectl get svc -n shortlink-shop shortlink-shop-admin-graphql shortlink-shop-oms-graphql
+   ```
+
+4. **Different names** – If your Services use other names or namespaces, set overrides when deploying the BFF:
+   - `ADMIN_SUBGRAPH_URL=dns:///<admin-service>.<namespace>:4012`
+   - `CARTS_SUBGRAPH_URL=dns:///<carts-service>.<namespace>:4011`
 
 ## Example Queries
 

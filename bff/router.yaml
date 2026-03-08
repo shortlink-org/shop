@@ -9,14 +9,17 @@ execution_config:
   file:
     path: "./router-config.json"
 
-# Override HTTP subgraph URLs at runtime when needed.
+# Override subgraph URLs at runtime (e.g. different K8s service names or local dev).
 # gRPC subgraph URLs are composed into router-config.json from graph-static.yaml.
-# Local dev: set COUNTRIES_SUBGRAPH_URL or omit to use router-config.json URLs.
 # https://cosmo-docs.wundergraph.com/router/proxy-capabilities/override-subgraph-config
 overrides:
   subgraphs:
     countries:
       routing_url: "${COUNTRIES_SUBGRAPH_URL}"
+    admin:
+      routing_url: "${ADMIN_SUBGRAPH_URL}"
+    carts:
+      routing_url: "${CARTS_SUBGRAPH_URL}"
 
 # Server configuration
 listen_addr: "0.0.0.0:9991"
