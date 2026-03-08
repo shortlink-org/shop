@@ -26,9 +26,11 @@ type MockGoodsResponse = {
 
 describe('getCollectionProducts', () => {
   const mockedShopifyFetch = vi.mocked(shopifyFetch);
+  const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
   beforeEach(() => {
     mockedShopifyFetch.mockReset();
+    consoleErrorSpy.mockClear();
   });
 
   it('requests goods without page variables', async () => {
@@ -92,5 +94,29 @@ describe('getCollectionProducts', () => {
 
     expect(mockedShopifyFetch).toHaveBeenCalledTimes(1);
     expect(result).toBe(GOODS_UNAVAILABLE);
+  });
+
+  it('logs GraphQL path and traceId when they are present on the error', async () => {
+    mockedShopifyFetch.mockRejectedValueOnce({
+      path: ['goods'],
+      traceId: '4bf92f3577b34da6a3ce929d0e0e4736',
+      error: {
+        message: "Failed to fetch from Subgraph 'admin'.",
+        extensions: {
+          traceId: '4bf92f3577b34da6a3ce929d0e0e4736'
+        }
+      }
+    });
+
+    const result = await getCollectionProducts();
+
+    expect(result).toBe(GOODS_UNAVAILABLE);
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      '[getCollectionProducts] Failed to load products',
+      expect.objectContaining({
+        errorPath: '["goods"]',
+        traceId: '4bf92f3577b34da6a3ce929d0e0e4736'
+      })
+    );
   });
 });

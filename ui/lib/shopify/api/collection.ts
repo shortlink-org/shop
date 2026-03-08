@@ -61,15 +61,9 @@ export async function getCollectionProducts(
 
     return res.body.data.goods.results.map(normalizeGood);
   } catch (err) {
-    const errorPath =
-      typeof err === 'object' &&
-      err !== null &&
-      'error' in err &&
-      typeof (err as { error?: unknown }).error === 'object' &&
-      (err as { error?: { path?: unknown } }).error?.path
-        ? JSON.stringify((err as { error: { path: unknown } }).error.path)
-        : undefined;
-    console.error('[getCollectionProducts] Failed to load products', { err, errorPath });
+    const errorPath = extractErrorPath(err);
+    const traceId = extractTraceId(err);
+    console.error('[getCollectionProducts] Failed to load products', { err, errorPath, traceId });
     return GOODS_UNAVAILABLE;
   }
 }
@@ -79,4 +73,34 @@ export async function getCollections(
 ): Promise<Collection[] | typeof GOODS_UNAVAILABLE> {
   // BFF has no Collection type / collections query; return default "All" only.
   return DEFAULT_COLLECTIONS;
+}
+
+function extractErrorPath(err: unknown): string | undefined {
+  const path = getNestedProperty(err, 'path');
+  return path !== undefined ? JSON.stringify(path) : undefined;
+}
+
+function extractTraceId(err: unknown): string | undefined {
+  const traceId = getNestedProperty(err, 'traceId');
+  if (typeof traceId === 'string' && traceId.trim()) {
+    return traceId;
+  }
+
+  const extensions = getNestedProperty(err, 'extensions');
+  if (typeof extensions === 'object' && extensions !== null) {
+    const extensionTraceId =
+      ('traceId' in extensions && typeof extensions.traceId === 'string' && extensions.traceId) ||
+      ('traceID' in extensions && typeof extensions.traceID === 'string' && extensions.traceID) ||
+      ('trace_id' in extensions && typeof extensions.trace_id === 'string' && extensions.trace_id);
+    return extensionTraceId || undefined;
+  }
+
+  return undefined;
+}
+
+function getNestedProperty(value: unknown, key: string): unknown {
+  if (typeof value !== 'object' || value === null) return undefined;
+  if (key in value) return (value as Record<string, unknown>)[key];
+  if ('error' in value) return getNestedProperty((value as { error?: unknown }).error, key);
+  return undefined;
 }

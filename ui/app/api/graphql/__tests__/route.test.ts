@@ -113,4 +113,36 @@ describe('POST /api/graphql sanitize goods page variable', () => {
     const forwardedHeaders = new Headers(fetchMock.mock.calls[0]?.[1]?.headers);
     expect(forwardedHeaders.get('X-User-ID')).toBe('550e8400-e29b-41d4-a716-446655440000');
   });
+
+  it('forwards traceparent to the BFF and echoes trace-id in the response', async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ data: { goods: { results: [] } } }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        })
+      );
+
+    const req = {
+      headers: new Headers({
+        'content-type': 'application/json',
+        traceparent: '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01'
+      }),
+      text: vi.fn().mockResolvedValue(
+        JSON.stringify({
+          query: 'query GetGoodsList { goods { count } }'
+        })
+      )
+    } as never;
+
+    const response = await POST(req);
+
+    const forwardedHeaders = new Headers(fetchMock.mock.calls[0]?.[1]?.headers);
+    expect(forwardedHeaders.get('traceparent')).toBe(
+      '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01'
+    );
+    expect(forwardedHeaders.get('trace-id')).toBe('4bf92f3577b34da6a3ce929d0e0e4736');
+    expect(response.headers.get('trace-id')).toBe('4bf92f3577b34da6a3ce929d0e0e4736');
+  });
 });

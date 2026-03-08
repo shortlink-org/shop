@@ -3,6 +3,13 @@ import { isShopifyError } from 'lib/type-guards';
 import { getGraphqlEndpoint } from './config';
 
 type ExtractVariables<T> = T extends { variables: object } ? T['variables'] : never;
+type GraphqlErrorDetails = {
+  message?: string;
+  cause?: unknown;
+  status?: number;
+  path?: unknown;
+  extensions?: Record<string, unknown>;
+};
 
 function parseRetryAfter(header: string | null): number | undefined {
   if (!header?.trim()) return undefined;
@@ -14,6 +21,35 @@ function parseRetryAfter(header: string | null): number | undefined {
     return delay > 0 ? delay : undefined;
   }
   return undefined;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function getNestedProperty(value: unknown, key: string): unknown {
+  if (!isRecord(value)) return undefined;
+  if (key in value) return value[key];
+  if ('error' in value) return getNestedProperty(value.error, key);
+  return undefined;
+}
+
+function normalizeGraphqlError(
+  error: GraphqlErrorDetails,
+  query: string,
+  status: number,
+  traceId?: string
+): Record<string, unknown> {
+  return {
+    cause: error.cause?.toString() || 'unknown',
+    status: error.status || status || 500,
+    message: error.message || 'Request failed',
+    query,
+    ...(error.path !== undefined ? { path: error.path } : {}),
+    ...(error.extensions ? { extensions: error.extensions } : {}),
+    ...(traceId ? { traceId } : {}),
+    error
+  };
 }
 
 export async function shopifyFetch<T>({
@@ -32,6 +68,7 @@ export async function shopifyFetch<T>({
   const endpoint = getGraphqlEndpoint();
   const upstreamUnavailableMessage =
     'Service temporarily unavailable. Please try again in a moment.';
+  let traceId: string | undefined;
 
   try {
     const result = await fetch(endpoint, {
@@ -46,6 +83,7 @@ export async function shopifyFetch<T>({
       }),
       cache,
     });
+    traceId = result.headers.get('trace-id') ?? undefined;
 
     const text = await result.text();
 
@@ -55,13 +93,14 @@ export async function shopifyFetch<T>({
         status: HTTP_STATUS_RATE_LIMIT,
         message: RATE_LIMIT_MESSAGE,
         ...(retryAfter !== undefined && { retryAfter }),
-        query
+        query,
+        ...(traceId ? { traceId } : {})
       };
     }
 
     let body: T & {
-      error?: { message?: string };
-      errors?: Array<{ message: string; cause?: unknown; status?: number }>;
+      error?: GraphqlErrorDetails;
+      errors?: GraphqlErrorDetails[];
     };
 
     try {
@@ -76,12 +115,13 @@ export async function shopifyFetch<T>({
         cause: 'unknown',
         status: result.status || 500,
         message,
-        query
+        query,
+        ...(traceId ? { traceId } : {})
       };
     }
 
-    if (body.errors) {
-      throw body.errors[0];
+    if (body.errors?.length) {
+      throw normalizeGraphqlError(body.errors[0], query, result.status, traceId);
     }
 
     const bffMessage = body.error?.message ?? '';
@@ -90,19 +130,18 @@ export async function shopifyFetch<T>({
       bffMessage.toLowerCase().includes('failed to fetch from subgraph');
     if (body.error && isUpstreamUnavailable) {
       throw {
-        cause: 'unknown',
+        ...normalizeGraphqlError(body.error, query, result.status, traceId),
         status: result.status || 500,
         message: upstreamUnavailableMessage,
-        query
       };
     }
     if (body.error) {
-      throw {
-        cause: 'unknown',
-        status: result.status || 500,
-        message: bffMessage || 'Request failed',
-        query
-      };
+      throw normalizeGraphqlError(
+        { ...body.error, message: bffMessage || 'Request failed' },
+        query,
+        result.status,
+        traceId
+      );
     }
 
     return {
@@ -115,7 +154,8 @@ export async function shopifyFetch<T>({
         cause: e.cause?.toString() || 'unknown',
         status: e.status || 500,
         message: e.message,
-        query
+        query,
+        ...(traceId ? { traceId } : {})
       };
     }
 
@@ -126,12 +166,20 @@ export async function shopifyFetch<T>({
       'message' in e &&
       'query' in e
     ) {
-      throw e;
+      throw {
+        ...e,
+        ...(traceId && !('traceId' in e) ? { traceId } : {})
+      };
     }
 
     throw {
       error: e,
-      query
+      query,
+      ...(traceId ? { traceId } : {}),
+      ...(getNestedProperty(e, 'path') !== undefined ? { path: getNestedProperty(e, 'path') } : {}),
+      ...(getNestedProperty(e, 'extensions') !== undefined
+        ? { extensions: getNestedProperty(e, 'extensions') }
+        : {})
     };
   }
 }

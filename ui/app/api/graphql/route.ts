@@ -5,6 +5,8 @@ const BFF_GRAPHQL_URL =
   (process.env.NODE_ENV === 'development'
     ? 'http://localhost:9991/graphql'
     : 'http://shortlink-shop-bff.shortlink-shop.svc.cluster.local:9991/graphql');
+const TRACE_ID_HEADER = 'trace-id';
+const TRACEPARENT_HEADER = 'traceparent';
 
 function normalizePage(value: unknown): number {
   if (typeof value === 'number' && Number.isInteger(value) && value > 0) return value;
@@ -13,6 +15,26 @@ function normalizePage(value: unknown): number {
     if (/^[1-9]\d*$/.test(trimmed)) return Number(trimmed);
   }
   return 1;
+}
+
+function getTraceContext(request: NextRequest): { traceId?: string; traceparent?: string } {
+  const traceparent = request.headers.get(TRACEPARENT_HEADER) ?? undefined;
+  const headerTraceId =
+    request.headers.get(TRACE_ID_HEADER) ??
+    request.headers.get('x-trace-id') ??
+    request.headers.get('x-request-id');
+
+  if (headerTraceId) {
+    return { traceId: headerTraceId, traceparent };
+  }
+
+  if (!traceparent) {
+    return {};
+  }
+
+  const parts = traceparent.split('-');
+  const traceId = parts[1];
+  return traceId && traceId.length === 32 ? { traceId, traceparent } : { traceparent };
 }
 
 /** If the request is GetGoodsList (goods(page: $page)), coerce variables.page to Int to avoid BFF error. */
@@ -36,6 +58,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const authorization = req.headers.get('authorization') ?? undefined;
   const userId = req.headers.get('x-user-id') ?? undefined;
   const contentType = req.headers.get('content-type') ?? 'application/json';
+  const { traceId, traceparent } = getTraceContext(req);
 
   let body: string;
   try {
@@ -75,6 +98,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (userId) {
     headers['X-User-ID'] = userId;
   }
+  if (traceparent) {
+    headers[TRACEPARENT_HEADER] = traceparent;
+  }
+  if (traceId) {
+    headers[TRACE_ID_HEADER] = traceId;
+  }
 
   const res = await fetch(BFF_GRAPHQL_URL, {
     method: 'POST',
@@ -86,7 +115,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   return new NextResponse(text, {
     status: res.status,
     headers: {
-      'Content-Type': res.headers.get('Content-Type') ?? 'application/json'
+      'Content-Type': res.headers.get('Content-Type') ?? 'application/json',
+      ...(res.headers.get(TRACE_ID_HEADER)
+        ? { [TRACE_ID_HEADER]: res.headers.get(TRACE_ID_HEADER) as string }
+        : traceId
+          ? { [TRACE_ID_HEADER]: traceId }
+          : {})
     }
   });
 }
