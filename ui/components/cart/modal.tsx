@@ -32,7 +32,7 @@ function CartStateDrawer({
       }
       titleClassName="!text-inherit"
       panelClassName="sm:!rounded-[1.75rem]"
-      backdropClassName="bg-slate-950/40 backdrop-blur-[2px]"
+      backdropClassName="bg-[var(--color-background)]/40 backdrop-blur-[2px]"
       contentClassName="!px-4 !pb-6 !pt-4 sm:!px-6"
     >
       <div className="flex h-full min-h-0 items-center justify-center">
@@ -110,7 +110,7 @@ export default function CartModal() {
           checkoutText="Proceed to checkout"
           continueShoppingText="Keep browsing"
           panelClassName="sm:!rounded-[1.75rem]"
-          backdropClassName="bg-slate-950/40 backdrop-blur-[2px]"
+          backdropClassName="bg-[var(--color-background)]/40 backdrop-blur-[2px]"
           onCheckout={() => {
             void redirectToCheckout();
           }}

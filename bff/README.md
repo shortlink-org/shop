@@ -36,7 +36,7 @@ GraphQL Federation Gateway powered by [WunderGraph Cosmo Router](https://cosmo-d
 
 - Node.js 18+
 - pnpm
-- Cosmo CLI (`wgc`)
+- Cosmo CLI (`wgc`, pinned to `0.107.1` in `package.json`)
 - All subgraphs running
 
 ## Installation
@@ -69,7 +69,7 @@ cd ../admin && uv run python src/manage.py runserver 8000
 pnpm run compose
 ```
 
-This generates `router-config.json` from all subgraph schemas.
+This generates `router-config.json` from `graph-local.yaml` for local development.
 
 ### 3. Download and run the router
 
@@ -106,7 +106,8 @@ pnpm run compose
 
 ### Option 2: Schema Files (offline composition)
 
-Update `graph.yaml` to use schema files instead of introspection:
+Use `graph-static.yaml` for deployment builds and `graph-local.yaml` for local development.
+For grpc-mapped subgraphs, use `dns:///host:port` routing URLs:
 
 ```yaml
 version: 1
@@ -133,8 +134,8 @@ In your CI pipeline, compose the schema before building the Docker image:
 build:bff:
   script:
     - cd bff
-    - npm install -g wgc
-    - wgc router compose -i graph.yaml -o router-config.json
+    - npm install -g wgc@0.107.1
+    - wgc router compose -i graph-static.yaml -o router-config.json
     - docker build -f ops/dockerfile/Dockerfile -t bff:latest .
 ```
 
@@ -142,9 +143,9 @@ build:bff:
 
 ## Configuration
 
-### graph.yaml
+### graph-local.yaml
 
-Defines subgraphs for schema composition:
+Defines local-development subgraphs for schema composition:
 
 ```yaml
 version: 1
@@ -167,6 +168,31 @@ subgraphs:
       url: https://countries.trevorblades.com/
 ```
 
+### graph-static.yaml
+
+Defines deployment-safe subgraphs baked into the Docker image during build:
+
+```yaml
+version: 1
+subgraphs:
+  - name: carts
+    routing_url: dns:///shortlink-shop-oms-graphql.shortlink-shop.svc.cluster.local:4011
+    grpc:
+      schema_file: subgraphs/carts/schema.graphql
+      proto_file: subgraphs/carts/service.proto
+      mapping_file: subgraphs/carts/mapping.json
+  - name: admin
+    routing_url: dns:///shortlink-shop-admin-graphql.shortlink-shop.svc.cluster.local:4012
+    grpc:
+      schema_file: subgraphs/admin/schema.graphql
+      proto_file: subgraphs/admin/service.proto
+      mapping_file: subgraphs/admin/mapping.json
+  - name: countries
+    routing_url: https://countries.trevorblades.com/
+    schema:
+      file: schemas/countries.graphql
+```
+
 ### router.yaml
 
 Router runtime configuration (CORS, logging, metrics, etc.).
@@ -175,6 +201,7 @@ Router runtime configuration (CORS, logging, metrics, etc.).
 
 The router reads runtime settings from `router.yaml`.
 Subgraph routing URLs are baked into `router-config.json` during image build from `graph-static.yaml`.
+For grpc-mapped subgraphs, `routing_url` must use `dns:///host:port`, not `http://host:port`.
 
 ## Troubleshooting
 

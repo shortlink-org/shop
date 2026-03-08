@@ -3,7 +3,9 @@
   "version": "2.0.0",
   "description": "ShortLink Shop BFF - Cosmo Router based GraphQL Federation Gateway",
   "scripts": {
-    "compose": "wgc router compose -i graph.yaml -o router-config.json",
+    "compose": "pnpm run compose:local",
+    "compose:local": "wgc router compose -i graph-local.yaml -o router-config.json",
+    "compose:static": "wgc router compose -i graph-static.yaml -o router-config.json",
     "start": "echo 'Run the router binary with: ./router --config router.yaml'",
     "download:router": "wgc router download-binary -o ./router",
     "build": "pnpm run compose",
@@ -13,6 +15,12 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "wgc": "^0.107.1"
+    "@bufbuild/protobuf": "1.10.0",
+    "wgc": "0.107.1"
+  },
+  "pnpm": {
+    "overrides": {
+      "@bufbuild/protobuf": "1.10.0"
+    }
   }
 }

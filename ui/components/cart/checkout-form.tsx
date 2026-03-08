@@ -183,12 +183,12 @@ export default function CheckoutForm({
     >
       {/* Delivery Address Section */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-black dark:text-white">Delivery Address</h3>
+        <h3 className="text-lg font-semibold text-[var(--color-foreground)]">Delivery Address</h3>
 
         <div>
           <label
             htmlFor="street"
-            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300"
+            className="block text-sm font-medium text-[var(--color-muted-foreground)]"
           >
             Street Address *
           </label>
@@ -196,15 +196,15 @@ export default function CheckoutForm({
             type="text"
             id="street"
             {...register('deliveryAddress.street')}
-            className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-neutral-800 dark:text-white ${
+            className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] bg-[var(--color-surface)] text-[var(--color-foreground)] ${
               errors.deliveryAddress?.street
-                ? 'border-red-500'
-                : 'border-neutral-300 dark:border-neutral-600'
+                ? 'border-[var(--color-destructive)]'
+                : 'border-[var(--color-border)]'
             }`}
             placeholder="123 Main Street, Apt 4"
           />
           {errors.deliveryAddress?.street && (
-            <p className="mt-1 text-sm text-red-500">{errors.deliveryAddress.street.message}</p>
+            <p className="mt-1 text-sm text-[var(--color-destructive)]">{errors.deliveryAddress.street.message}</p>
           )}
         </div>
 
@@ -212,38 +212,38 @@ export default function CheckoutForm({
           <div>
             <label
               htmlFor="city"
-              className="block text-sm font-medium text-neutral-700 dark:text-neutral-300"
-            >
-              City *
+            className="block text-sm font-medium text-[var(--color-muted-foreground)]"
+          >
+            City *
             </label>
             <input
               type="text"
               id="city"
               {...register('deliveryAddress.city')}
-              className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-neutral-800 dark:text-white ${
+              className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] bg-[var(--color-surface)] text-[var(--color-foreground)] ${
                 errors.deliveryAddress?.city
-                  ? 'border-red-500'
-                  : 'border-neutral-300 dark:border-neutral-600'
+                  ? 'border-[var(--color-destructive)]'
+                  : 'border-[var(--color-border)]'
               }`}
               placeholder="Berlin"
             />
             {errors.deliveryAddress?.city && (
-              <p className="mt-1 text-sm text-red-500">{errors.deliveryAddress.city.message}</p>
+              <p className="mt-1 text-sm text-[var(--color-destructive)]">{errors.deliveryAddress.city.message}</p>
             )}
           </div>
 
           <div>
             <label
               htmlFor="postalCode"
-              className="block text-sm font-medium text-neutral-700 dark:text-neutral-300"
-            >
-              Postal Code
+            className="block text-sm font-medium text-[var(--color-muted-foreground)]"
+          >
+            Postal Code
             </label>
             <input
               type="text"
               id="postalCode"
               {...register('deliveryAddress.postalCode')}
-              className="mt-1 block w-full rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-800 dark:text-white"
+              className="mt-1 block w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[var(--color-foreground)] shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
               placeholder="10115"
             />
           </div>
@@ -252,17 +252,17 @@ export default function CheckoutForm({
         <div>
           <label
             htmlFor="country"
-            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300"
+            className="block text-sm font-medium text-[var(--color-muted-foreground)]"
           >
             Country *
           </label>
           <select
             id="country"
             {...register('deliveryAddress.country')}
-            className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-neutral-800 dark:text-white ${
+            className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] bg-[var(--color-surface)] text-[var(--color-foreground)] ${
               errors.deliveryAddress?.country
-                ? 'border-red-500'
-                : 'border-neutral-300 dark:border-neutral-600'
+                ? 'border-[var(--color-destructive)]'
+                : 'border-[var(--color-border)]'
             }`}
           >
             <option value="Germany">Germany</option>
@@ -273,19 +273,19 @@ export default function CheckoutForm({
             <option value="France">France</option>
           </select>
           {errors.deliveryAddress?.country && (
-            <p className="mt-1 text-sm text-red-500">{errors.deliveryAddress.country.message}</p>
+            <p className="mt-1 text-sm text-[var(--color-destructive)]">{errors.deliveryAddress.country.message}</p>
           )}
         </div>
       </div>
 
       {/* Recipient Contacts Section */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-black dark:text-white">Recipient Contacts</h3>
+        <h3 className="text-lg font-semibold text-[var(--color-foreground)]">Recipient Contacts</h3>
 
         <div>
           <label
             htmlFor="recipientName"
-            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300"
+            className="block text-sm font-medium text-[var(--color-muted-foreground)]"
           >
             Recipient Name
           </label>
@@ -293,7 +293,7 @@ export default function CheckoutForm({
             type="text"
             id="recipientName"
             {...register('recipientContacts.recipientName')}
-            className="mt-1 block w-full rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-800 dark:text-white"
+            className="mt-1 block w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[var(--color-foreground)] shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
             placeholder="John Doe"
           />
         </div>
@@ -301,7 +301,7 @@ export default function CheckoutForm({
         <div>
           <label
             htmlFor="recipientPhone"
-            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300"
+            className="block text-sm font-medium text-[var(--color-muted-foreground)]"
           >
             Phone *
           </label>
@@ -309,15 +309,15 @@ export default function CheckoutForm({
             type="tel"
             id="recipientPhone"
             {...register('recipientContacts.recipientPhone')}
-            className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-neutral-800 dark:text-white ${
-              errors.recipientContacts?.recipientPhone
-                ? 'border-red-500'
-                : 'border-neutral-300 dark:border-neutral-600'
-            }`}
+            className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] bg-[var(--color-surface)] text-[var(--color-foreground)] ${
+                errors.recipientContacts?.recipientPhone
+                  ? 'border-[var(--color-destructive)]'
+                  : 'border-[var(--color-border)]'
+              }`}
             placeholder="+49 123 456 7890"
           />
           {errors.recipientContacts?.recipientPhone && (
-            <p className="mt-1 text-sm text-red-500">
+            <p className="mt-1 text-sm text-[var(--color-destructive)]">
               {errors.recipientContacts.recipientPhone.message}
             </p>
           )}
@@ -326,7 +326,7 @@ export default function CheckoutForm({
         <div>
           <label
             htmlFor="recipientEmail"
-            className="block text-sm font-medium text-neutral-700 dark:text-neutral-300"
+            className="block text-sm font-medium text-[var(--color-muted-foreground)]"
           >
             Email
           </label>
@@ -334,15 +334,15 @@ export default function CheckoutForm({
             type="email"
             id="recipientEmail"
             {...register('recipientContacts.recipientEmail')}
-            className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-neutral-800 dark:text-white ${
-              errors.recipientContacts?.recipientEmail
-                ? 'border-red-500'
-                : 'border-neutral-300 dark:border-neutral-600'
-            }`}
+            className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] bg-[var(--color-surface)] text-[var(--color-foreground)] ${
+                errors.recipientContacts?.recipientEmail
+                  ? 'border-[var(--color-destructive)]'
+                  : 'border-[var(--color-border)]'
+              }`}
             placeholder="recipient@example.com"
           />
           {errors.recipientContacts?.recipientEmail && (
-            <p className="mt-1 text-sm text-red-500">
+            <p className="mt-1 text-sm text-[var(--color-destructive)]">
               {errors.recipientContacts.recipientEmail.message}
             </p>
           )}
@@ -351,13 +351,13 @@ export default function CheckoutForm({
 
       {/* Delivery Period Section */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-black dark:text-white">Delivery Time</h3>
+        <h3 className="text-lg font-semibold text-[var(--color-foreground)]">Delivery Time</h3>
 
         <div>
           <div className="flex items-center justify-between">
             <label
               htmlFor="deliveryDate"
-              className="block text-sm font-medium text-neutral-700 dark:text-neutral-300"
+              className="block text-sm font-medium text-[var(--color-muted-foreground)]"
             >
               Delivery Date *
             </label>
@@ -372,8 +372,8 @@ export default function CheckoutForm({
               }
               className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
                 selectedDeliveryDate === tomorrowDate
-                  ? 'border-blue-500 bg-blue-500 text-white'
-                  : 'border-neutral-300 text-neutral-700 hover:bg-neutral-50 dark:border-neutral-600 dark:text-neutral-300 dark:hover:bg-neutral-700'
+                  ? 'border-[var(--color-primary)] bg-[var(--color-primary)] text-white'
+                  : 'border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]'
               }`}
             >
               Tomorrow
@@ -385,19 +385,19 @@ export default function CheckoutForm({
             {...register('deliveryDate')}
             min={tomorrowDate}
             max={getMaxDate()}
-            className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-neutral-800 dark:text-white ${
-              errors.deliveryDate
-                ? 'border-red-500'
-                : 'border-neutral-300 dark:border-neutral-600'
+            className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] bg-[var(--color-surface)] text-[var(--color-foreground)] ${
+                errors.deliveryDate
+                  ? 'border-[var(--color-destructive)]'
+                  : 'border-[var(--color-border)]'
             }`}
           />
           {errors.deliveryDate && (
-            <p className="mt-1 text-sm text-red-500">{errors.deliveryDate.message}</p>
+            <p className="mt-1 text-sm text-[var(--color-destructive)]">{errors.deliveryDate.message}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+          <label className="block text-sm font-medium text-[var(--color-muted-foreground)]">
             Time Slot *
           </label>
           <div className="mt-2 grid grid-cols-2 gap-2">
@@ -408,8 +408,8 @@ export default function CheckoutForm({
                 onClick={() => setValue('selectedTimeSlot', slot.label, { shouldValidate: true })}
                 className={`rounded-md border px-4 py-2 text-sm font-medium transition-colors ${
                   selectedTimeSlot === slot.label
-                    ? 'border-blue-500 bg-blue-500 text-white'
-                    : 'border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700'
+                    ? 'border-[var(--color-primary)] bg-[var(--color-primary)] text-white'
+                    : 'border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]'
                 }`}
               >
                 {slot.label}
@@ -417,23 +417,23 @@ export default function CheckoutForm({
             ))}
           </div>
           {errors.selectedTimeSlot && (
-            <p className="mt-1 text-sm text-red-500">{errors.selectedTimeSlot.message}</p>
+            <p className="mt-1 text-sm text-[var(--color-destructive)]">{errors.selectedTimeSlot.message}</p>
           )}
         </div>
       </div>
 
       {/* Priority Section */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-black dark:text-white">Delivery Priority</h3>
+        <h3 className="text-lg font-semibold text-[var(--color-foreground)]">Delivery Priority</h3>
         <div className="flex gap-4">
           <label className="flex cursor-pointer items-center">
             <input
               type="radio"
               value="NORMAL"
               {...register('priority')}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+              className="h-4 w-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
             />
-            <span className="ml-2 text-sm text-neutral-700 dark:text-neutral-300">
+            <span className="ml-2 text-sm text-[var(--color-muted-foreground)]">
               Normal Delivery
             </span>
           </label>
@@ -442,9 +442,9 @@ export default function CheckoutForm({
               type="radio"
               value="URGENT"
               {...register('priority')}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+              className="h-4 w-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
             />
-            <span className="ml-2 text-sm text-neutral-700 dark:text-neutral-300">
+            <span className="ml-2 text-sm text-[var(--color-muted-foreground)]">
               Urgent Delivery (+$10)
             </span>
           </label>
@@ -456,7 +456,7 @@ export default function CheckoutForm({
         <div
           role="alert"
           aria-live="assertive"
-          className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300"
+          className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)] p-3 text-sm text-[var(--color-foreground)]"
         >
           {submitError}
         </div>

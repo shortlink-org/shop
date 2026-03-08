@@ -91,10 +91,10 @@ export default function CheckoutPage() {
     return (
       <div className="mx-auto max-w-4xl px-4 py-8">
         <div className="animate-pulse">
-          <div className="mb-8 h-8 w-48 rounded bg-neutral-200 dark:bg-neutral-700" />
+          <div className="mb-8 h-8 w-48 rounded bg-[var(--color-muted)]" />
           <div className="grid gap-8 lg:grid-cols-2">
-            <div className="h-96 rounded-lg bg-neutral-200 dark:bg-neutral-700" />
-            <div className="h-96 rounded-lg bg-neutral-200 dark:bg-neutral-700" />
+            <div className="h-96 rounded-lg bg-[var(--color-muted)]" />
+            <div className="h-96 rounded-lg bg-[var(--color-muted)]" />
           </div>
         </div>
       </div>
@@ -134,7 +134,7 @@ export default function CheckoutPage() {
           eyebrow="Checkout"
           title="Your cart is empty"
           message="Add a few products before starting checkout."
-          icon={<ShoppingCartIcon className="h-6 w-6 text-slate-500" />}
+          icon={<ShoppingCartIcon className="h-6 w-6 text-[var(--color-muted-foreground)]" />}
           action={
             <Button as={Link} asProps={{ href: '/' }} icon={<ArrowLeftIcon />}>
               Continue shopping
@@ -151,16 +151,16 @@ export default function CheckoutPage() {
       <div className="mb-8">
         <Link
           href="/"
-          className="mb-4 inline-flex items-center text-sm text-neutral-600 hover:text-black dark:text-neutral-400 dark:hover:text-white"
+          className="mb-4 inline-flex items-center text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
         >
           <ArrowLeftIcon className="mr-2 h-4 w-4" />
           Continue Shopping
         </Link>
-        <h1 className="text-2xl font-bold text-black dark:text-white">Checkout</h1>
+        <h1 className="text-2xl font-bold text-[var(--color-foreground)]">Checkout</h1>
       </div>
 
       {error && (
-        <div className="mb-6 rounded-lg bg-red-50 p-4 text-red-700 dark:bg-red-900/20 dark:text-red-400">
+        <div className="mb-6 rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)] p-4 text-[var(--color-foreground)]">
           {error}
         </div>
       )}
@@ -168,8 +168,8 @@ export default function CheckoutPage() {
       <div className="grid gap-8 lg:grid-cols-2">
         {/* Order Summary */}
         <div className="order-2 lg:order-1">
-          <div className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800">
-            <h2 className="mb-4 text-lg font-semibold text-black dark:text-white">
+          <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
+            <h2 className="mb-4 text-lg font-semibold text-[var(--color-foreground)]">
               Order Summary
             </h2>
 
@@ -185,8 +185,8 @@ export default function CheckoutPage() {
               ))}
             </ul>
 
-            <div className="mt-4 space-y-2 border-t border-neutral-200 pt-4 dark:border-neutral-700">
-              <div className="flex justify-between text-sm text-neutral-600 dark:text-neutral-400">
+            <div className="mt-4 space-y-2 border-t border-[var(--color-border)] pt-4">
+              <div className="flex justify-between text-sm text-[var(--color-muted-foreground)]">
                 <span>Subtotal</span>
                 <span>
                   {formatCartMoney(
@@ -195,7 +195,7 @@ export default function CheckoutPage() {
                   )}
                 </span>
               </div>
-              <div className="flex justify-between text-sm text-neutral-600 dark:text-neutral-400">
+              <div className="flex justify-between text-sm text-[var(--color-muted-foreground)]">
                 <span>Taxes</span>
                 <span>
                   {formatCartMoney(
@@ -204,11 +204,11 @@ export default function CheckoutPage() {
                   )}
                 </span>
               </div>
-              <div className="flex justify-between text-sm text-neutral-600 dark:text-neutral-400">
+              <div className="flex justify-between text-sm text-[var(--color-muted-foreground)]">
                 <span>Shipping</span>
                 <span>Calculated at delivery</span>
               </div>
-              <div className="flex justify-between border-t border-neutral-200 pt-2 text-base font-semibold text-black dark:border-neutral-700 dark:text-white">
+              <div className="flex justify-between border-t border-[var(--color-border)] pt-2 text-base font-semibold text-[var(--color-foreground)]">
                 <span>Total</span>
                 <span>{formatCartMoney(cart.cost.totalAmount.amount, cart.cost.totalAmount.currencyCode)}</span>
               </div>
@@ -220,7 +220,7 @@ export default function CheckoutPage() {
         <div className="order-1 lg:order-2">
           <div
             ref={formErrorRef}
-            className="rounded-lg border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800"
+            className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-6"
           >
             <CheckoutForm onSubmit={handleSubmit} isLoading={isLoading} submitError={error} />
           </div>

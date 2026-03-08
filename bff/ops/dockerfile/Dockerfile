@@ -5,12 +5,16 @@
 # =============================================================================
 # Stage 1: Generate router-config.json (offline composition)
 # =============================================================================
+ARG WGC_VERSION=0.107.1
+ARG COSMO_ROUTER_VERSION=0.288.2
+
 FROM node:24.14.0-alpine AS builder
 
 WORKDIR /build
 
 # Install Cosmo CLI
-RUN npm install -g wgc@latest
+ARG WGC_VERSION
+RUN npm install -g wgc@${WGC_VERSION}
 
 # Copy schema files and configuration
 COPY schemas/ schemas/
@@ -23,7 +27,8 @@ RUN wgc router compose -i graph-static.yaml -o router-config.json
 # =============================================================================
 # Stage 2: Final router image
 # =============================================================================
-FROM ghcr.io/wundergraph/cosmo/router:latest
+ARG COSMO_ROUTER_VERSION
+FROM ghcr.io/wundergraph/cosmo/router:${COSMO_ROUTER_VERSION}
 
 WORKDIR /app
 
