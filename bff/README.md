@@ -175,8 +175,8 @@ Router runtime configuration (CORS, logging, metrics, etc.).
 
 | Variable              | Default                              | Description                |
 |-----------------------|--------------------------------------|----------------------------|
-| `CARTS_SUBGRAPH_URL`  | `dns:///localhost:4011`              | Carts subgraph URL         |
-| `ADMIN_SUBGRAPH_URL`  | `dns:///localhost:4012`              | Admin subgraph URL         |
+| `CARTS_SUBGRAPH_URL`  | `http://localhost:4011`              | Carts subgraph runtime URL |
+| `ADMIN_SUBGRAPH_URL`  | `http://localhost:4012`              | Admin subgraph runtime URL |
 | `COUNTRIES_SUBGRAPH_URL` | `https://countries.trevorblades.com/` | Countries subgraph URL |
 | `LOG_LEVEL`           | `info`                               | Log level                  |
 
