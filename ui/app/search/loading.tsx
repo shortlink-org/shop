@@ -4,13 +4,13 @@ export default function SearchLoading() {
       {Array.from({ length: 6 }).map((_, idx) => (
         <div
           key={idx}
-          className="overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900"
+          className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]"
         >
-          <div className="aspect-[4/5] animate-pulse bg-neutral-200 dark:bg-neutral-800" />
+          <div className="aspect-[4/5] animate-pulse bg-[var(--color-muted)]" />
           <div className="space-y-2 p-4">
-            <div className="h-4 w-3/4 animate-pulse rounded bg-neutral-200 dark:bg-neutral-800" />
-            <div className="h-3 w-full animate-pulse rounded bg-neutral-200 dark:bg-neutral-800" />
-            <div className="h-3 w-2/3 animate-pulse rounded bg-neutral-200 dark:bg-neutral-800" />
+            <div className="h-4 w-3/4 animate-pulse rounded bg-[var(--color-muted)]" />
+            <div className="h-3 w-full animate-pulse rounded bg-[var(--color-muted)]" />
+            <div className="h-3 w-2/3 animate-pulse rounded bg-[var(--color-muted)]" />
           </div>
         </div>
       ))}

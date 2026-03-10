@@ -27,7 +27,7 @@ function CartStateDrawer({
           <h2 className="text-lg font-semibold tracking-tight text-[var(--color-foreground)] sm:text-xl">
             Cart
           </h2>
-          <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">0 items</p>
+          <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">Empty</p>
         </div>
       }
       titleClassName="!text-inherit"

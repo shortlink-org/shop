@@ -11,7 +11,9 @@ import { Good, GoodVariant } from 'lib/shopify/types';
 import { toast } from 'sonner';
 import type { ProductGridProduct, ProductQuickViewProduct } from '@shortlink-org/ui-kit';
 
-const PLACEHOLDER_IMAGE = 'https://picsum.photos/400/500';
+function placeholderImage(goodId: string): string {
+  return `https://picsum.photos/seed/${encodeURIComponent(goodId)}/400/500`;
+}
 const ADDING_BADGE = [{ label: 'Adding...', tone: 'info' as const }];
 
 function formatPrice(amount: number): string {
@@ -31,7 +33,7 @@ function goodToOptimisticVariant(good: Good): GoodVariant {
 function goodToQuickViewProduct(good: Good): ProductQuickViewProduct {
   return {
     name: good.name,
-    imageSrc: PLACEHOLDER_IMAGE,
+    imageSrc: placeholderImage(good.id),
     imageAlt: good.name,
     price: formatPrice(good.price),
     colors: [],
@@ -49,7 +51,7 @@ function goodToProduct(
     id: good.id,
     name: good.name,
     href: `/good/${good.id}`,
-    imageSrc: PLACEHOLDER_IMAGE,
+    imageSrc: placeholderImage(good.id),
     imageAlt: good.name,
     price: {
       current: good.price,
@@ -143,6 +145,7 @@ export function ShopProductGrid({
       <ProductGrid
         className={clsx('shop-productgrid', 'shop-productgrid--with-add-to-cart', className)}
         gridClassName={clsx('gap-4 sm:gap-6 lg:gap-8', gridClassName)}
+        productClassName="shop-productgrid__card"
         spacingX="lg"
         spacingY="lg"
         products={products}

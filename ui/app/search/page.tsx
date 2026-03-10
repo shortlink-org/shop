@@ -63,7 +63,7 @@ export default async function SearchPage(props: {
       {searchValue ? (
         <p className="mb-4">
           {goods.length === 0
-            ? 'There are no goods that match '
+            ? 'No products found for '
             : `Showing ${goods.length} ${resultsText} for `}
           <span className="font-bold">&quot;{searchValue}&quot;</span>
         </p>

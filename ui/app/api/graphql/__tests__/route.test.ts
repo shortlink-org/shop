@@ -114,6 +114,37 @@ describe('POST /api/graphql sanitize goods page variable', () => {
     expect(forwardedHeaders.get('X-User-ID')).toBe('550e8400-e29b-41d4-a716-446655440000');
   });
 
+  it('forwards Authorization and X-User-ID together to the BFF', async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ data: { addItem: { _: true } } }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        })
+      );
+
+    const req = {
+      headers: new Headers({
+        'content-type': 'application/json',
+        authorization: 'Bearer token',
+        'x-user-id': '550e8400-e29b-41d4-a716-446655440000'
+      }),
+      text: vi.fn().mockResolvedValue(
+        JSON.stringify({
+          query: 'mutation AddToCart($addRequest: ItemRequest!) { addItem(addRequest: $addRequest) { _ } }',
+          variables: { addRequest: { items: [{ goodId: '1', quantity: 1 }] } }
+        })
+      )
+    } as never;
+
+    await POST(req);
+
+    const forwardedHeaders = new Headers(fetchMock.mock.calls[0]?.[1]?.headers);
+    expect(forwardedHeaders.get('Authorization')).toBe('Bearer token');
+    expect(forwardedHeaders.get('X-User-ID')).toBe('550e8400-e29b-41d4-a716-446655440000');
+  });
+
   it('forwards traceparent to the BFF and echoes trace-id in the response', async () => {
     const fetchMock = vi
       .spyOn(globalThis, 'fetch')

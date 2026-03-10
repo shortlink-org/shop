@@ -62,7 +62,7 @@ export function ShopSidebar() {
       activePath={pathname}
       variant="sticky"
       height="calc(100vh - 6.5rem)"
-      className="top-6"
+      className="shop-sidebar top-6"
       footerSlot={
         <div className="border-t border-[var(--color-border)] p-3">
           <div className="rounded-[1.2rem] border border-[var(--color-border)] bg-[var(--color-background)]/75 p-4">

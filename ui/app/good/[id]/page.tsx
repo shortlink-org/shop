@@ -59,13 +59,13 @@ export default async function GoodPage(props: { params: Promise<{ id: string }> 
   }
   if (!good) return notFound();
 
-  // Mock images for demo
+  // Mock images for demo (stable per product via seed)
   const images: Image[] = [
-    { url: 'https://picsum.photos/600/600?random=1', altText: good.name, width: 600, height: 600 },
-    { url: 'https://picsum.photos/600/600?random=2', altText: good.name, width: 600, height: 600 },
-    { url: 'https://picsum.photos/600/600?random=3', altText: good.name, width: 600, height: 600 },
-    { url: 'https://picsum.photos/600/600?random=4', altText: good.name, width: 600, height: 600 },
-    { url: 'https://picsum.photos/600/600?random=5', altText: good.name, width: 600, height: 600 },
+    { url: `https://picsum.photos/seed/${encodeURIComponent(id)}-1/600/600`, altText: good.name, width: 600, height: 600 },
+    { url: `https://picsum.photos/seed/${encodeURIComponent(id)}-2/600/600`, altText: good.name, width: 600, height: 600 },
+    { url: `https://picsum.photos/seed/${encodeURIComponent(id)}-3/600/600`, altText: good.name, width: 600, height: 600 },
+    { url: `https://picsum.photos/seed/${encodeURIComponent(id)}-4/600/600`, altText: good.name, width: 600, height: 600 },
+    { url: `https://picsum.photos/seed/${encodeURIComponent(id)}-5/600/600`, altText: good.name, width: 600, height: 600 },
   ];
 
   const galleryImages = images.slice(0, 5).map((image: Image) => ({

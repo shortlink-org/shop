@@ -160,7 +160,11 @@ export default function CheckoutPage() {
       </div>
 
       {error && (
-        <div className="mb-6 rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)] p-4 text-[var(--color-foreground)]">
+        <div
+          ref={formErrorRef}
+          className="mb-6 rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)] p-4 text-[var(--color-foreground)]"
+          role="alert"
+        >
           {error}
         </div>
       )}
@@ -218,10 +222,7 @@ export default function CheckoutPage() {
 
         {/* Checkout Form */}
         <div className="order-1 lg:order-2">
-          <div
-            ref={formErrorRef}
-            className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-6"
-          >
+          <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
             <CheckoutForm onSubmit={handleSubmit} isLoading={isLoading} submitError={error} />
           </div>
         </div>

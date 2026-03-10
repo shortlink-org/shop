@@ -80,9 +80,9 @@ export function Navbar() {
   };
 
   return (
-    <div className="relative border-b border-[var(--color-border)] bg-[linear-gradient(180deg,var(--color-background)_0%,color-mix(in_srgb,var(--color-surface)_78%,transparent)_100%)]">
+    <div className="shop-navbar relative border-b border-[var(--color-border)] bg-[linear-gradient(180deg,var(--color-background)_0%,color-mix(in_srgb,var(--color-surface)_78%,transparent)_100%)]">
       <AppHeader
-        className="mx-auto max-w-7xl px-3 pt-3 sm:px-4 lg:px-6"
+        className="shop-navbar__header mx-auto max-w-7xl px-3 pt-3 sm:px-4 lg:px-6"
         brand={{
           name: SITE_NAME || 'Shortlink Shop',
           href: '/',
@@ -158,7 +158,7 @@ export function Navbar() {
       <div className="mx-auto max-w-7xl px-3 pb-4 pt-2 sm:px-4 lg:px-6 md:hidden">
         <Suspense fallback={<SearchSkeleton />}>
           <Search
-            className="max-w-none"
+            className="max-w-md"
             inputClassName="rounded-full border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-3 text-[var(--color-foreground)] shadow-[0_16px_36px_-32px_rgba(15,23,42,0.24)] placeholder:text-[var(--color-muted-foreground)]"
           />
         </Suspense>
