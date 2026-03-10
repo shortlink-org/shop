@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "service": "Delivery",
+  "operationMappings": [
+    {
+      "type": "OPERATION_TYPE_QUERY",
+      "original": "randomAddress",
+      "mapped": "QueryRandomAddress",
+      "request": "QueryRandomAddressRequest",
+      "response": "QueryRandomAddressResponse"
+    }
+  ],
+  "entityMappings": [],
+  "typeFieldMappings": [
+    {
+      "type": "Query",
+      "fieldMappings": [
+        {
+          "original": "randomAddress",
+          "mapped": "random_address",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "RandomAddressResponse",
+      "fieldMappings": [
+        {
+          "original": "address",
+          "mapped": "address",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "Address",
+      "fieldMappings": [
+        {
+          "original": "street",
+          "mapped": "street",
+          "argumentMappings": []
+        },
+        {
+          "original": "city",
+          "mapped": "city",
+          "argumentMappings": []
+        },
+        {
+          "original": "postalCode",
+          "mapped": "postal_code",
+          "argumentMappings": []
+        },
+        {
+          "original": "country",
+          "mapped": "country",
+          "argumentMappings": []
+        },
+        {
+          "original": "latitude",
+          "mapped": "latitude",
+          "argumentMappings": []
+        },
+        {
+          "original": "longitude",
+          "mapped": "longitude",
+          "argumentMappings": []
+        }
+      ]
+    }
+  ],
+  "enumMappings": [],
+  "resolveMappings": []
+}

@@ -1,34 +1,53 @@
 # syntax=docker/dockerfile:1.21
-# delivery-graphql Dockerfile
-# Uses Tailcall for gRPC → GraphQL
 
-FROM ghcr.io/tailcallhq/tailcall/tc-server:latest
+ARG BUILDKIT_SBOM_SCAN_STAGE=true
+ARG BUILDKIT_SBOM_SCAN_CONTEXT=true
+
+FROM --platform=$BUILDPLATFORM golang:1.26.1-alpine AS builder
+
+ARG TARGETOS
+ARG TARGETARCH
+
+WORKDIR /app
+
+RUN apk add --no-cache git ca-certificates
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build \
+    -ldflags="-w -s" \
+    -o /delivery-graphql \
+    ./cmd/service
+
+FROM --platform=$TARGETPLATFORM alpine:3.23
 
 LABEL maintainer=batazor111@gmail.com
 LABEL org.opencontainers.image.title="shortlink-shop-delivery-graphql"
-LABEL org.opencontainers.image.description="Delivery GraphQL Subgraph - gRPC to GraphQL via Tailcall"
+LABEL org.opencontainers.image.description="Delivery GraphQL Subgraph - Cosmo Connect gRPC adapter for Delivery"
 LABEL org.opencontainers.image.authors="Login Viktor @batazor"
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.url="http://shortlink.best/"
 LABEL org.opencontainers.image.source="https://github.com/shortlink-org/shortlink"
 
-# Set working directory
+RUN apk add --no-cache ca-certificates tini
+
+EXPOSE 4013
+
 WORKDIR /app
 
-# Copy tailcall binary to /app so it works when container runs as non-root (e.g. Kubernetes runAsNonRoot)
-RUN mkdir -p /app/bin && cp /root/.tailcall/bin/tailcall /app/bin/tailcall && chmod 755 /app/bin/tailcall
+RUN addgroup -S app && adduser -S app -G app
 
-# Copy Tailcall configuration
-COPY config/ /app/config/
+COPY --from=builder /delivery-graphql /app/delivery-graphql
 
-# Environment variables
-ENV DELIVERY_GRPC_URL="http://localhost:50051"
+RUN chown -R app:app /app
 
-# Expose port
-EXPOSE 8080
+USER app
 
-# Health check (GET /graphql without query returns 500; /metrics returns 200)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/metrics || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:4013/healthz || exit 1
 
-CMD ["/app/bin/tailcall", "start", "/app/config/delivery.graphql"]
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["/app/delivery-graphql"]

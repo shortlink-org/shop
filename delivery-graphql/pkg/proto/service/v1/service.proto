@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package shop.delivery.v1;
+
+option go_package = "github.com/shortlink-org/shop/delivery-graphql/pkg/generated/service/v1";
+
+// Delivery subgraph Connect service (Cosmo federated contract)
+// Maps GraphQL Query/Mutation to RPCs.
+service Delivery {
+  // Query.randomAddress
+  rpc QueryRandomAddress(QueryRandomAddressRequest) returns (QueryRandomAddressResponse);
+}
+
+message QueryRandomAddressRequest {}
+
+message QueryRandomAddressResponse {
+  RandomAddressResponse random_address = 1;
+}
+
+message RandomAddressResponse {
+  Address address = 1;
+}
+
+message Address {
+  string street = 1;
+  string city = 2;
+  string postal_code = 3;
+  string country = 4;
+  double latitude = 5;
+  double longitude = 6;
+}

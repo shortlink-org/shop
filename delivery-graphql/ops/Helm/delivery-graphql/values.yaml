@@ -22,11 +22,9 @@ deploy:
   imagePullSecrets: []
 
   env:
-    # Delivery gRPC URL
-    DELIVERY_GRPC_URL: http://shortlink-shop-delivery.shortlink-shop:50051
-    # OTLP exporter URL (Grafana Tempo), OTLP HTTP on 4318
-    OTLP_URL: "http://grafana-tempo.grafana.svc.cluster.local:4318"
-    TC_LOG_LEVEL: "debug"
+    LISTEN_ADDR: "0.0.0.0:4013"
+    # Delivery gRPC URL (host:port, no scheme)
+    DELIVERY_GRPC_URL: "shortlink-shop-delivery.shortlink-shop:50051"
 
   resources:
     limits:
@@ -47,19 +45,19 @@ deploy:
     # Ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
     pullPolicy: Always
 
-  # -- define a liveness probe; GET /graphql without query returns 500, use /metrics
+  # -- Cosmo subgraph: gRPC/Connect on 4013, HTTP health on /healthz
   livenessProbe:
     enabled: true
     httpGet:
-      path: /metrics
-      port: 8080
+      path: /healthz
+      port: 4013
 
   # -- define a readiness probe
   readinessProbe:
     enabled: true
     httpGet:
-      path: /metrics
-      port: 8080
+      path: /healthz
+      port: 4013
 
   securityContext:
     readOnlyRootFilesystem: true
@@ -70,12 +68,13 @@ deploy:
       type: emptyDir
 
 # ==============================================================================
-# Service configuration
+# Service configuration (Cosmo Router connects via gRPC to port 4013)
 service:
   type: ClusterIP
   ports:
-    - name: http
-      port: 8080
+    - name: grpc
+      port: 4013
+      appProtocol: grpc
       protocol: TCP
       public: true
 
