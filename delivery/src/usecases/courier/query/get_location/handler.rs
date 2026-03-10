@@ -73,7 +73,10 @@ where
     }
 
     /// Get location from cache or repository
-    async fn get_location_for_courier(&self, courier_id: Uuid) -> Result<Response, GetLocationError> {
+    async fn get_location_for_courier(
+        &self,
+        courier_id: Uuid,
+    ) -> Result<Response, GetLocationError> {
         // 1. Try cache first (hot data)
         if let Some(location) = self.location_cache.get_location(courier_id).await? {
             return Ok(Response {
@@ -84,7 +87,11 @@ where
         }
 
         // 2. Fall back to repository (last known location)
-        if let Some(history_entry) = self.location_repository.get_last_location(courier_id).await? {
+        if let Some(history_entry) = self
+            .location_repository
+            .get_last_location(courier_id)
+            .await?
+        {
             // Convert history entry to CourierLocation
             let location = CourierLocation::from_stored(
                 history_entry.courier_id(),
@@ -184,11 +191,17 @@ mod tests {
             Ok(())
         }
 
-        async fn get_location(&self, courier_id: Uuid) -> Result<Option<CourierLocation>, LocationCacheError> {
+        async fn get_location(
+            &self,
+            courier_id: Uuid,
+        ) -> Result<Option<CourierLocation>, LocationCacheError> {
             Ok(self.locations.lock().unwrap().get(&courier_id).cloned())
         }
 
-        async fn get_locations(&self, courier_ids: &[Uuid]) -> Result<Vec<CourierLocation>, LocationCacheError> {
+        async fn get_locations(
+            &self,
+            courier_ids: &[Uuid],
+        ) -> Result<Vec<CourierLocation>, LocationCacheError> {
             let locations = self.locations.lock().unwrap();
             Ok(courier_ids
                 .iter()
@@ -238,7 +251,10 @@ mod tests {
             Ok(())
         }
 
-        async fn save_batch(&self, entries: &[LocationHistoryEntry]) -> Result<(), LocationRepositoryError> {
+        async fn save_batch(
+            &self,
+            entries: &[LocationHistoryEntry],
+        ) -> Result<(), LocationRepositoryError> {
             self.entries.lock().unwrap().extend(entries.iter().cloned());
             Ok(())
         }
@@ -308,7 +324,10 @@ mod tests {
             Ok(self.get_history(courier_id, time_range).await?.len() as u64)
         }
 
-        async fn delete_old_history(&self, _older_than_days: u32) -> Result<u64, LocationRepositoryError> {
+        async fn delete_old_history(
+            &self,
+            _older_than_days: u32,
+        ) -> Result<u64, LocationRepositoryError> {
             Ok(0)
         }
     }

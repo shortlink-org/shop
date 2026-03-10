@@ -48,7 +48,9 @@ where
 {
     /// Create a new handler instance
     pub fn new(location_repository: Arc<LR>) -> Self {
-        Self { location_repository }
+        Self {
+            location_repository,
+        }
     }
 }
 
@@ -125,7 +127,10 @@ mod tests {
             Ok(())
         }
 
-        async fn save_batch(&self, entries: &[LocationHistoryEntry]) -> Result<(), LocationRepositoryError> {
+        async fn save_batch(
+            &self,
+            entries: &[LocationHistoryEntry],
+        ) -> Result<(), LocationRepositoryError> {
             self.entries.lock().unwrap().extend(entries.iter().cloned());
             Ok(())
         }
@@ -195,7 +200,10 @@ mod tests {
             Ok(self.get_history(courier_id, time_range).await?.len() as u64)
         }
 
-        async fn delete_old_history(&self, _older_than_days: u32) -> Result<u64, LocationRepositoryError> {
+        async fn delete_old_history(
+            &self,
+            _older_than_days: u32,
+        ) -> Result<u64, LocationRepositoryError> {
             Ok(0)
         }
     }

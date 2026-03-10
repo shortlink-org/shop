@@ -98,5 +98,8 @@ pub trait LocationRepository: Send + Sync {
     ///
     /// Removes entries older than the specified number of days.
     /// Used for data retention policy.
-    async fn delete_old_history(&self, older_than_days: u32) -> Result<u64, LocationRepositoryError>;
+    async fn delete_old_history(
+        &self,
+        older_than_days: u32,
+    ) -> Result<u64, LocationRepositoryError>;
 }

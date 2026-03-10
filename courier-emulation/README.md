@@ -27,7 +27,7 @@ make run
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `OSRM_URL` | `http://localhost:5000` | OSRM routing server URL |
-| `KAFKA_BROKERS` | `localhost:9092` | Kafka broker addresses |
+| `WATERMILL_KAFKA_BROKERS` | `localhost:9092` | Kafka broker addresses for assignment, status, and location topics |
 | `SIMULATION_UPDATE_INTERVAL` | `5s` | Location update frequency |
 | `SIMULATION_SPEED_KMH` | `30.0` | Courier speed in km/h |
 | `SIMULATION_TIME_MULTIPLIER` | `1.0` | Time acceleration (2.0 = 2x speed) |

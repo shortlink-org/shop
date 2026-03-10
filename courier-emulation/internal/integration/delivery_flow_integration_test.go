@@ -184,7 +184,7 @@ func TestDeliveryFlowE2E(t *testing.T) {
 
 	deliver := deliveriesCopy[0]
 	assert.Equal(t, event.CourierID, deliver.CourierID, "deliver_order.courier_id should match")
-	assert.Equal(t, event.PackageID, deliver.OrderID, "deliver_order.order_id should match assigned package/order")
+	assert.Equal(t, event.PackageID, deliver.PackageID, "deliver_order.package_id should match assigned package")
 	assert.Contains(t, []string{string(kafka.DeliveryStatusDelivered), string(kafka.DeliveryStatusNotDelivered)}, deliver.Status,
 		"deliver_order.status must be DELIVERED or NOT_DELIVERED, got %q", deliver.Status)
 	if deliver.Status == string(kafka.DeliveryStatusNotDelivered) {
@@ -217,13 +217,13 @@ type locationMsg struct {
 }
 
 type pickUpMsg struct {
-	OrderID    string `json:"order_id"`
+	PackageID  string `json:"package_id"`
 	CourierID  string `json:"courier_id"`
 	PickedUpAt string `json:"picked_up_at"`
 }
 
 type deliverOrderMsg struct {
-	OrderID     string `json:"order_id"`
+	PackageID   string `json:"package_id"`
 	CourierID   string `json:"courier_id"`
 	Status      string `json:"status"`
 	Reason      string `json:"reason,omitempty"`

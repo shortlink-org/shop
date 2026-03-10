@@ -39,7 +39,7 @@ type DeliveryPeriod struct {
 	EndTime   time.Time `json:"end_time,omitempty"`
 }
 
-// OrderAssignedEvent represents an order assigned to a courier.
+// OrderAssignedEvent represents a package assigned to a courier.
 // Matches proto: domain.delivery.events.v1.PackageAssignedEvent
 type OrderAssignedEvent struct {
 	PackageID       string         `json:"package_id"`
@@ -191,7 +191,7 @@ func NewCourierEmulationHandler(deliverySimulator DeliverySimulatorInterface) *C
 	}
 }
 
-// HandleOrderAssigned handles an order assignment by starting a delivery simulation.
+// HandleOrderAssigned handles a package assignment by starting a delivery simulation.
 func (h *CourierEmulationHandler) HandleOrderAssigned(ctx context.Context, event OrderAssignedEvent) error {
 	// Extract coordinates from Address objects
 	pickup, err := vo.NewLocation(event.PickupAddress.Latitude, event.PickupAddress.Longitude)
@@ -204,9 +204,9 @@ func (h *CourierEmulationHandler) HandleOrderAssigned(ctx context.Context, event
 		return fmt.Errorf("delivery location: %w", err)
 	}
 
-	// PackageID is required in the new format
+	// courier-emulation only needs package-level identity for its outgoing events.
 	order := vo.NewDeliveryOrder(
-		event.PackageID, // Use PackageID as OrderID (they map 1:1 in this context)
+		event.PackageID,
 		event.PackageID,
 		pickup,
 		delivery,

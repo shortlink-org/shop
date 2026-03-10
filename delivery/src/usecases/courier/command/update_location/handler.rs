@@ -176,9 +176,9 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::domain::model::vo::location::Location;
-    use crate::domain::model::courier_location::TimeRange;
     use crate::domain::model::courier::{Courier, CourierStatus};
+    use crate::domain::model::courier_location::TimeRange;
+    use crate::domain::model::vo::location::Location;
     use crate::domain::ports::MockEventPublisher;
     use async_trait::async_trait;
     use chrono::Utc;
@@ -325,11 +325,17 @@ mod tests {
             Ok(())
         }
 
-        async fn get_location(&self, courier_id: Uuid) -> Result<Option<CourierLocation>, LocationCacheError> {
+        async fn get_location(
+            &self,
+            courier_id: Uuid,
+        ) -> Result<Option<CourierLocation>, LocationCacheError> {
             Ok(self.locations.lock().unwrap().get(&courier_id).cloned())
         }
 
-        async fn get_locations(&self, courier_ids: &[Uuid]) -> Result<Vec<CourierLocation>, LocationCacheError> {
+        async fn get_locations(
+            &self,
+            courier_ids: &[Uuid],
+        ) -> Result<Vec<CourierLocation>, LocationCacheError> {
             let locations = self.locations.lock().unwrap();
             Ok(courier_ids
                 .iter()
@@ -379,7 +385,10 @@ mod tests {
             Ok(())
         }
 
-        async fn save_batch(&self, entries: &[LocationHistoryEntry]) -> Result<(), LocationRepositoryError> {
+        async fn save_batch(
+            &self,
+            entries: &[LocationHistoryEntry],
+        ) -> Result<(), LocationRepositoryError> {
             self.entries.lock().unwrap().extend(entries.iter().cloned());
             Ok(())
         }
@@ -394,10 +403,7 @@ mod tests {
                 .lock()
                 .unwrap()
                 .iter()
-                .filter(|e| {
-                    e.courier_id() == courier_id
-                        && time_range.contains(e.timestamp())
-                })
+                .filter(|e| e.courier_id() == courier_id && time_range.contains(e.timestamp()))
                 .cloned()
                 .collect())
         }
@@ -452,7 +458,10 @@ mod tests {
             Ok(self.get_history(courier_id, time_range).await?.len() as u64)
         }
 
-        async fn delete_old_history(&self, _older_than_days: u32) -> Result<u64, LocationRepositoryError> {
+        async fn delete_old_history(
+            &self,
+            _older_than_days: u32,
+        ) -> Result<u64, LocationRepositoryError> {
             Ok(0)
         }
     }

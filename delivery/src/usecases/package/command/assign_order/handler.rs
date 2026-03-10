@@ -25,9 +25,8 @@ use crate::domain::model::domain::delivery::common::v1 as proto_common;
 use crate::domain::model::domain::delivery::events::v1::PackageAssignedEvent;
 use crate::domain::model::package::{PackageId, PackageStatus};
 use crate::domain::ports::{
-    CommandHandlerWithResult, CourierCache, CourierRepository, DomainEvent, EventPublisher,
-    LocationCache, NotificationService, OrderAssignedNotification, PackageRepository,
-    RepositoryError,
+    CommandHandlerWithResult, CourierCache, CourierRepository, DomainEvent, LocationCache,
+    NotificationService, OrderAssignedNotification, PackageRepository, RepositoryError,
 };
 use crate::domain::services::assignment_validation::{
     AssignmentValidationService, CourierAvailability, PackageForValidation,
@@ -72,10 +71,6 @@ pub enum AssignOrderError {
     #[error("Repository error: {0}")]
     RepositoryError(#[from] RepositoryError),
 
-    /// Event publishing error (non-fatal, logged as warning)
-    #[error("Event publishing error: {0}")]
-    EventPublishError(String),
-
     /// Notification error (non-fatal, logged as warning)
     #[error("Notification error: {0}")]
     NotificationError(String),
@@ -93,29 +88,26 @@ pub struct Response {
 }
 
 /// Assign Order Handler
-pub struct Handler<R, C, P, E, N, L>
+pub struct Handler<R, C, P, N, L>
 where
     R: CourierRepository,
     C: CourierCache,
     P: PackageRepository,
-    E: EventPublisher,
     N: NotificationService,
     L: LocationCache,
 {
     courier_repo: Arc<R>,
     courier_cache: Arc<C>,
     package_repo: Arc<P>,
-    event_publisher: Arc<E>,
     notification_service: Arc<N>,
     location_cache: Arc<L>,
 }
 
-impl<R, C, P, E, N, L> Handler<R, C, P, E, N, L>
+impl<R, C, P, N, L> Handler<R, C, P, N, L>
 where
     R: CourierRepository,
     C: CourierCache,
     P: PackageRepository,
-    E: EventPublisher,
     N: NotificationService,
     L: LocationCache,
 {
@@ -124,7 +116,6 @@ where
         courier_repo: Arc<R>,
         courier_cache: Arc<C>,
         package_repo: Arc<P>,
-        event_publisher: Arc<E>,
         notification_service: Arc<N>,
         location_cache: Arc<L>,
     ) -> Self {
@@ -132,7 +123,6 @@ where
             courier_repo,
             courier_cache,
             package_repo,
-            event_publisher,
             notification_service,
             location_cache,
         }
@@ -175,12 +165,11 @@ where
     }
 }
 
-impl<R, C, P, E, N, L> CommandHandlerWithResult<Command, Response> for Handler<R, C, P, E, N, L>
+impl<R, C, P, N, L> CommandHandlerWithResult<Command, Response> for Handler<R, C, P, N, L>
 where
     R: CourierRepository + Send + Sync,
     C: CourierCache + Send + Sync,
     P: PackageRepository + Send + Sync,
-    E: EventPublisher + Send + Sync,
     N: NotificationService + Send + Sync,
     L: LocationCache + Send + Sync,
 {
@@ -210,7 +199,9 @@ where
                     .get_free_couriers_in_zone(zone)
                     .await
                     .map_err(|e| {
-                        AssignOrderError::RepositoryError(RepositoryError::QueryError(e.to_string()))
+                        AssignOrderError::RepositoryError(RepositoryError::QueryError(
+                            e.to_string(),
+                        ))
                     })?;
 
                 if free_courier_ids.is_empty() {
@@ -221,7 +212,8 @@ where
                 let mut couriers_for_dispatch = Vec::new();
                 for id in free_courier_ids {
                     if let Some(courier) = self.courier_repo.find_by_id(id).await? {
-                        couriers_for_dispatch.push(self.courier_to_dispatch_with_location(&courier).await);
+                        couriers_for_dispatch
+                            .push(self.courier_to_dispatch_with_location(&courier).await);
                     }
                 }
 
@@ -230,7 +222,8 @@ where
                     id: package.id().0.to_string(),
                     pickup_location: package.pickup_address().location.clone(),
                     delivery_zone: zone.to_string(),
-                    is_urgent: package.priority() == crate::domain::model::package::Priority::Urgent,
+                    is_urgent: package.priority()
+                        == crate::domain::model::package::Priority::Urgent,
                 };
 
                 // Use DispatchService to find nearest courier
@@ -253,12 +246,13 @@ where
                     ))
                 })?;
 
-                (courier_uuid, dispatch_result.estimated_arrival_minutes as u32)
+                (
+                    courier_uuid,
+                    dispatch_result.estimated_arrival_minutes as u32,
+                )
             }
             AssignmentMode::Manual => {
-                let courier_id = cmd
-                    .courier_id
-                    .ok_or(AssignOrderError::CourierIdRequired)?;
+                let courier_id = cmd.courier_id.ok_or(AssignOrderError::CourierIdRequired)?;
 
                 // Load courier
                 let courier = self
@@ -277,7 +271,9 @@ where
 
                 // Get distance from location cache for validation
                 let distance_to_courier = match self.location_cache.get_location(courier_id).await {
-                    Ok(Some(loc)) => loc.location().distance_to(&package.pickup_address().location),
+                    Ok(Some(loc)) => loc
+                        .location()
+                        .distance_to(&package.pickup_address().location),
                     _ => 0.0, // Default to 0 if location not available
                 };
 
@@ -309,7 +305,11 @@ where
 
                 // Estimate delivery time based on transport type
                 let estimated = courier.transport_type().calculate_travel_time_minutes(
-                    if distance_to_courier > 0.0 { distance_to_courier } else { 5.0 }
+                    if distance_to_courier > 0.0 {
+                        distance_to_courier
+                    } else {
+                        5.0
+                    },
                 );
                 (courier_id, estimated as u32)
             }
@@ -334,12 +334,8 @@ where
                 AssignOrderError::RepositoryError(RepositoryError::QueryError(e.to_string()))
             })?;
 
-        // 6. Save package to repository
-        self.package_repo.save(&package).await?;
-
-        // 7. Publish PackageAssigned event
         let now = Utc::now();
-        let event = PackageAssignedEvent {
+        let events = vec![DomainEvent::PackageAssigned(PackageAssignedEvent {
             package_id: package.id().0.to_string(),
             courier_id: courier_id.to_string(),
             status: proto_common::PackageStatus::Assigned as i32,
@@ -351,7 +347,7 @@ where
                 street: package.pickup_address().street.clone(),
                 city: package.pickup_address().city.clone(),
                 postal_code: package.pickup_address().postal_code.clone(),
-                country: "DE".to_string(), // TODO: Add country to Address
+                country: String::new(),
                 latitude: package.pickup_address().location.latitude(),
                 longitude: package.pickup_address().location.longitude(),
             }),
@@ -359,7 +355,7 @@ where
                 street: package.delivery_address().street.clone(),
                 city: package.delivery_address().city.clone(),
                 postal_code: package.delivery_address().postal_code.clone(),
-                country: "DE".to_string(),
+                country: String::new(),
                 latitude: package.delivery_address().location.latitude(),
                 longitude: package.delivery_address().location.longitude(),
             }),
@@ -373,33 +369,24 @@ where
                     nanos: 0,
                 }),
             }),
-            customer_phone: package.customer_phone().unwrap_or_default().to_string(),
+            customer_phone: String::new(),
             occurred_at: Some(pbjson_types::Timestamp {
                 seconds: now.timestamp(),
                 nanos: now.timestamp_subsec_nanos() as i32,
             }),
-        };
+        })];
 
-        if let Err(e) = self
-            .event_publisher
-            .publish(DomainEvent::PackageAssigned(event))
-            .await
-        {
-            warn!(
-                package_id = %cmd.package_id,
-                courier_id = %courier_id,
-                error = %e,
-                "Failed to publish PackageAssigned event (non-fatal)"
-            );
-        } else {
-            info!(
-                package_id = %cmd.package_id,
-                courier_id = %courier_id,
-                "PackageAssigned event published"
-            );
-        }
+        // 6. Save package and outbox rows atomically.
+        self.package_repo
+            .save_with_events(&package, &events)
+            .await?;
+        info!(
+            package_id = %cmd.package_id,
+            courier_id = %courier_id,
+            "PackageAssigned event enqueued to outbox"
+        );
 
-        // 8. Send push notification to courier
+        // 7. Send push notification to courier
         if let Some(push_token) = courier.push_token() {
             let notification = OrderAssignedNotification {
                 package_id: package.id().0,
@@ -407,12 +394,16 @@ where
                 pickup_location: package.pickup_address().location.clone(),
                 delivery_address: package.delivery_address().street.clone(),
                 delivery_location: package.delivery_address().location.clone(),
-                customer_phone: package.customer_phone().unwrap_or_default().to_string(),
+                customer_phone: String::new(),
                 delivery_start: package.delivery_period().start().to_rfc3339(),
                 delivery_end: package.delivery_period().end().to_rfc3339(),
             };
 
-            if let Err(e) = self.notification_service.send_order_assigned(push_token, notification).await {
+            if let Err(e) = self
+                .notification_service
+                .send_order_assigned(push_token, notification)
+                .await
+            {
                 warn!(
                     package_id = %cmd.package_id,
                     courier_id = %courier_id,
@@ -446,7 +437,7 @@ mod tests {
     use crate::domain::model::CourierLocation;
     use crate::domain::ports::{
         CacheError, CachedCourierState, DeliveryStatusNotification, LocationCacheError,
-        MockEventPublisher, NotificationError, PackageFilter,
+        NotificationError, PackageFilter,
     };
     use async_trait::async_trait;
     use chrono::Utc;
@@ -560,7 +551,10 @@ mod tests {
             Ok(())
         }
 
-        async fn get_state(&self, _courier_id: Uuid) -> Result<Option<CachedCourierState>, CacheError> {
+        async fn get_state(
+            &self,
+            _courier_id: Uuid,
+        ) -> Result<Option<CachedCourierState>, CacheError> {
             Ok(None)
         }
 
@@ -614,19 +608,35 @@ mod tests {
             Ok(true)
         }
 
-        async fn update_status(&self, _courier_id: Uuid, _status: CourierStatus) -> Result<(), CacheError> {
+        async fn update_status(
+            &self,
+            _courier_id: Uuid,
+            _status: CourierStatus,
+        ) -> Result<(), CacheError> {
             Ok(())
         }
 
-        async fn update_max_load(&self, _courier_id: Uuid, _max_load: u32) -> Result<(), CacheError> {
+        async fn update_max_load(
+            &self,
+            _courier_id: Uuid,
+            _max_load: u32,
+        ) -> Result<(), CacheError> {
             Ok(())
         }
 
-        async fn add_to_free_pool(&self, _courier_id: Uuid, _work_zone: &str) -> Result<(), CacheError> {
+        async fn add_to_free_pool(
+            &self,
+            _courier_id: Uuid,
+            _work_zone: &str,
+        ) -> Result<(), CacheError> {
             Ok(())
         }
 
-        async fn remove_from_free_pool(&self, _courier_id: Uuid, _work_zone: &str) -> Result<(), CacheError> {
+        async fn remove_from_free_pool(
+            &self,
+            _courier_id: Uuid,
+            _work_zone: &str,
+        ) -> Result<(), CacheError> {
             Ok(())
         }
     }
@@ -661,7 +671,10 @@ mod tests {
             Ok(packages.get(&id.0).cloned())
         }
 
-        async fn find_by_order_id(&self, _order_id: Uuid) -> Result<Option<Package>, RepositoryError> {
+        async fn find_by_order_id(
+            &self,
+            _order_id: Uuid,
+        ) -> Result<Option<Package>, RepositoryError> {
             Ok(None)
         }
 
@@ -678,7 +691,10 @@ mod tests {
             Ok(0)
         }
 
-        async fn find_by_courier(&self, _courier_id: Uuid) -> Result<Vec<Package>, RepositoryError> {
+        async fn find_by_courier(
+            &self,
+            _courier_id: Uuid,
+        ) -> Result<Vec<Package>, RepositoryError> {
             Ok(vec![])
         }
 
@@ -693,10 +709,18 @@ mod tests {
 
     #[async_trait]
     impl NotificationService for MockNotificationService {
-        async fn send_order_assigned(&self, _push_token: &str, _notification: OrderAssignedNotification) -> Result<(), NotificationError> {
+        async fn send_order_assigned(
+            &self,
+            _push_token: &str,
+            _notification: OrderAssignedNotification,
+        ) -> Result<(), NotificationError> {
             Ok(())
         }
-        async fn send_delivery_status(&self, _push_token: &str, _notification: DeliveryStatusNotification) -> Result<(), NotificationError> {
+        async fn send_delivery_status(
+            &self,
+            _push_token: &str,
+            _notification: DeliveryStatusNotification,
+        ) -> Result<(), NotificationError> {
             Ok(())
         }
     }
@@ -707,13 +731,22 @@ mod tests {
 
     #[async_trait]
     impl LocationCache for MockLocationCache {
-        async fn set_location(&self, _location: &CourierLocation) -> Result<(), LocationCacheError> {
+        async fn set_location(
+            &self,
+            _location: &CourierLocation,
+        ) -> Result<(), LocationCacheError> {
             Ok(())
         }
-        async fn get_location(&self, _courier_id: Uuid) -> Result<Option<CourierLocation>, LocationCacheError> {
+        async fn get_location(
+            &self,
+            _courier_id: Uuid,
+        ) -> Result<Option<CourierLocation>, LocationCacheError> {
             Ok(None)
         }
-        async fn get_locations(&self, _courier_ids: &[Uuid]) -> Result<Vec<CourierLocation>, LocationCacheError> {
+        async fn get_locations(
+            &self,
+            _courier_ids: &[Uuid],
+        ) -> Result<Vec<CourierLocation>, LocationCacheError> {
             Ok(vec![])
         }
         async fn delete_location(&self, _courier_id: Uuid) -> Result<(), LocationCacheError> {
@@ -773,10 +806,13 @@ mod tests {
         use crate::domain::model::courier::WorkHours;
         use chrono::NaiveTime;
 
-        // 0:00–23:00 so hours 0–22 are valid (end exclusive); avoids flakiness when test runs at hour 18
+        let current_hour = Utc::now().time().hour();
+        let next_hour = (current_hour + 1) % 24;
+
+        // Keep the courier available for the current hour regardless of when the test runs.
         let work_hours = WorkHours::new(
-            NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
-            NaiveTime::from_hms_opt(23, 0, 0).unwrap(),
+            NaiveTime::from_hms_opt(current_hour, 0, 0).unwrap(),
+            NaiveTime::from_hms_opt(next_hour, 0, 0).unwrap(),
             vec![1, 2, 3, 4, 5],
         )
         .unwrap();
@@ -822,12 +858,17 @@ mod tests {
         courier_repo: Arc<MockCourierRepository>,
         courier_cache: Arc<MockCourierCache>,
         package_repo: Arc<MockPackageRepository>,
-    ) -> Handler<MockCourierRepository, MockCourierCache, MockPackageRepository, MockEventPublisher, MockNotificationService, MockLocationCache> {
+    ) -> Handler<
+        MockCourierRepository,
+        MockCourierCache,
+        MockPackageRepository,
+        MockNotificationService,
+        MockLocationCache,
+    > {
         Handler::new(
             courier_repo,
             courier_cache,
             package_repo,
-            Arc::new(MockEventPublisher),
             Arc::new(MockNotificationService),
             Arc::new(MockLocationCache),
         )
@@ -860,7 +901,10 @@ mod tests {
         assert_eq!(response.courier_id, courier_id);
 
         // Verify package status changed
-        let updated_package = package_repo.find_by_id(PackageId::from_uuid(package_id)).await.unwrap();
+        let updated_package = package_repo
+            .find_by_id(PackageId::from_uuid(package_id))
+            .await
+            .unwrap();
         assert!(updated_package.is_some());
         assert_eq!(updated_package.unwrap().status(), PackageStatus::Assigned);
     }
@@ -915,7 +959,10 @@ mod tests {
         let cmd = Command::auto_assign(package_id);
         let result = handler.handle(cmd).await;
 
-        assert!(matches!(result, Err(AssignOrderError::InvalidPackageStatus(_))));
+        assert!(matches!(
+            result,
+            Err(AssignOrderError::InvalidPackageStatus(_))
+        ));
     }
 
     #[tokio::test]
@@ -934,7 +981,10 @@ mod tests {
         let cmd = Command::auto_assign(package_id);
         let result = handler.handle(cmd).await;
 
-        assert!(matches!(result, Err(AssignOrderError::NoAvailableCourier(_))));
+        assert!(matches!(
+            result,
+            Err(AssignOrderError::NoAvailableCourier(_))
+        ));
     }
 
     #[tokio::test]

@@ -14,11 +14,11 @@ use std::sync::Arc;
 
 use thiserror::Error;
 
+use crate::domain::model::courier::{Courier, CourierError, CourierStatus};
 use crate::domain::ports::{
     CacheError, CachedCourierState, CommandHandlerWithResult, CourierCache, CourierRepository,
     RepositoryError,
 };
-use crate::domain::model::courier::{Courier, CourierError, CourierStatus};
 
 use super::Command;
 

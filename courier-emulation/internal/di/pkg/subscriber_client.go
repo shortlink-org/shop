@@ -63,8 +63,7 @@ func NewDeliverySubscriber(
 
 	subscriber, err := kafka.NewDeliverySubscriber(subscriberConfig, handler, wmLogger)
 	if err != nil {
-		log.Warn("Failed to create Kafka subscriber, running without event consumption")
-		return nil, func() {}, nil //nolint:nilerr // intentionally returning nil to continue without Kafka
+		return nil, func() {}, err
 	}
 
 	cleanup := func() {

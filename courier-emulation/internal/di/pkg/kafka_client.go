@@ -16,8 +16,7 @@ func NewLocationPublisher(cfg *config.Config, log logger.Logger) (*kafka.Locatio
 
 	publisher, err := sdkkafka.NewPublisherFromConfig(log, cfg)
 	if err != nil {
-		log.Warn("Failed to create Kafka publisher, running without Kafka")
-		return nil, func() {}, nil //nolint:nilerr // intentionally returning nil to continue without Kafka
+		return nil, func() {}, err
 	}
 
 	cleanup := func() {

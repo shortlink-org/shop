@@ -5,18 +5,20 @@
 use chrono::{DateTime, NaiveTime, Utc};
 use tonic::Status;
 
-use crate::domain::model::CourierLocation;
-use crate::domain::ports::CachedCourierState;
-use crate::domain::model::courier::{Courier, CourierStatus as DomainCourierStatus, WorkHours as DomainWorkHours};
+use crate::domain::model::courier::{
+    Courier, CourierStatus as DomainCourierStatus, WorkHours as DomainWorkHours,
+};
 use crate::domain::model::package::{
     Address as DomainAddress, Package, PackageStatus as DomainPackageStatus,
     Priority as DomainPriority,
 };
 use crate::domain::model::vo::TransportType as DomainTransportType;
+use crate::domain::model::CourierLocation;
+use crate::domain::ports::CachedCourierState;
 
 use super::{
-    Address as ProtoAddress, Courier as ProtoCourier, CourierStatus, DeliveryRecord,
-    PackageStatus, Priority, TransportType, WorkHours as ProtoWorkHours,
+    Address as ProtoAddress, Courier as ProtoCourier, CourierStatus, DeliveryRecord, PackageStatus,
+    Priority, TransportType, WorkHours as ProtoWorkHours,
 };
 
 /// Convert proto TransportType to domain

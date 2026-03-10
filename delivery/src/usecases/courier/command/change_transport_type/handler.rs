@@ -16,11 +16,11 @@ use chrono::{DateTime, Utc};
 use thiserror::Error;
 use uuid::Uuid;
 
+use crate::domain::model::courier::CourierStatus;
+use crate::domain::model::vo::TransportType;
 use crate::domain::ports::{
     CacheError, CommandHandlerWithResult, CourierCache, CourierRepository, RepositoryError,
 };
-use crate::domain::model::courier::CourierStatus;
-use crate::domain::model::vo::TransportType;
 
 use super::Command;
 
@@ -115,7 +115,9 @@ where
             // Cannot change transport type while having active deliveries
             // because max_load will change
             if state.current_load > 0 {
-                return Err(ChangeTransportTypeError::HasActiveDeliveries(cmd.courier_id));
+                return Err(ChangeTransportTypeError::HasActiveDeliveries(
+                    cmd.courier_id,
+                ));
             }
         }
 

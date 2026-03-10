@@ -201,7 +201,10 @@ where
         let repo_filter = Self::to_repo_filter(&query);
 
         // 2. Get total count for pagination
-        let total_count = self.package_repo.count_by_filter(repo_filter.clone()).await?;
+        let total_count = self
+            .package_repo
+            .count_by_filter(repo_filter.clone())
+            .await?;
 
         // 3. Calculate pagination
         let (limit, offset, pagination) =
@@ -284,7 +287,10 @@ mod tests {
             Ok(packages.get(&id.0).cloned())
         }
 
-        async fn find_by_order_id(&self, _order_id: Uuid) -> Result<Option<Package>, RepositoryError> {
+        async fn find_by_order_id(
+            &self,
+            _order_id: Uuid,
+        ) -> Result<Option<Package>, RepositoryError> {
             Ok(None)
         }
 
@@ -626,7 +632,10 @@ mod tests {
         };
         let result = handler.handle(query).await;
 
-        assert!(matches!(result, Err(GetPackagePoolError::InvalidPagination(_))));
+        assert!(matches!(
+            result,
+            Err(GetPackagePoolError::InvalidPagination(_))
+        ));
     }
 
     #[tokio::test]

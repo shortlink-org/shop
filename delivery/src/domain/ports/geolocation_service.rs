@@ -9,8 +9,8 @@ use chrono::{DateTime, Utc};
 use thiserror::Error;
 use uuid::Uuid;
 
-use crate::domain::model::{CourierLocation, CourierLocationError};
 use crate::domain::model::vo::location::Location;
+use crate::domain::model::{CourierLocation, CourierLocationError};
 
 /// Errors for geolocation operations
 #[derive(Debug, Error)]

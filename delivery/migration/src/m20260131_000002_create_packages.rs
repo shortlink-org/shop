@@ -70,11 +70,7 @@ impl MigrationTrait for Migration {
                             .string_len(20)
                             .not_null(),
                     )
-                    .col(
-                        ColumnDef::new(Packages::PickupLatitude)
-                            .double()
-                            .not_null(),
-                    )
+                    .col(ColumnDef::new(Packages::PickupLatitude).double().not_null())
                     .col(
                         ColumnDef::new(Packages::PickupLongitude)
                             .double()
@@ -136,11 +132,7 @@ impl MigrationTrait for Migration {
                             .default("accepted"),
                     )
                     .col(ColumnDef::new(Packages::CourierId).uuid())
-                    .col(
-                        ColumnDef::new(Packages::Zone)
-                            .string_len(100)
-                            .not_null(),
-                    )
+                    .col(ColumnDef::new(Packages::Zone).string_len(100).not_null())
                     // Timestamps
                     .col(
                         ColumnDef::new(Packages::CreatedAt)

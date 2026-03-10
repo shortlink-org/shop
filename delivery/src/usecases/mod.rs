@@ -22,7 +22,7 @@ pub mod package;
 // Re-export courier command types
 pub use courier::command::{
     RegisterCommand, RegisterCourierError, RegisterHandler, RegisterResponse,
-    UpdateLocationCommand, UpdateCourierLocationError, UpdateLocationHandler,
+    UpdateCourierLocationError, UpdateLocationCommand, UpdateLocationHandler,
 };
 
 // Re-export courier query types

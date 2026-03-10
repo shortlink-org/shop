@@ -9,6 +9,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"go.temporal.io/sdk/temporal"
+	"google.golang.org/grpc/codes"
+	grpcstatus "google.golang.org/grpc/status"
 
 	orderv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 	commonv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common"
@@ -36,18 +39,30 @@ type mockDeliveryClient struct {
 
 func (m *mockDeliveryClient) AcceptOrder(ctx context.Context, req ports.AcceptOrderRequest) (*ports.AcceptOrderResponse, error) {
 	args := m.Called(ctx, req)
-	err := args.Error(1)
+
+	var err error
+	switch value := args.Get(1).(type) {
+	case nil:
+	case func(context.Context, ports.AcceptOrderRequest) error:
+		err = value(ctx, req)
+	case error:
+		err = value
+	default:
+		panic("unexpected error return type from mockDeliveryClient.AcceptOrder")
+	}
 
 	if args.Get(0) == nil {
 		return nil, err
 	}
 
-	resp, ok := args.Get(0).(*ports.AcceptOrderResponse)
-	if !ok {
+	switch value := args.Get(0).(type) {
+	case func(context.Context, ports.AcceptOrderRequest) *ports.AcceptOrderResponse:
+		return value(ctx, req), err
+	case *ports.AcceptOrderResponse:
+		return value, err
+	default:
 		return nil, err
 	}
-
-	return resp, err
 }
 
 // mockCancelHandler is a mock implementation of CommandHandler for cancel command.
@@ -265,6 +280,10 @@ func TestActivities_RequestDelivery_DeliveryClientNotConfigured(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, response)
 	require.ErrorIs(t, err, ErrDeliveryClientNotConfigured)
+	var appErr *temporal.ApplicationError
+	require.ErrorAs(t, err, &appErr)
+	require.True(t, appErr.NonRetryable())
+	require.Equal(t, requestDeliveryConfigErrorType, appErr.Type())
 }
 
 func TestActivities_RequestDelivery_NoDeliveryInfo(t *testing.T) {
@@ -285,6 +304,10 @@ func TestActivities_RequestDelivery_NoDeliveryInfo(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, response)
 	require.ErrorIs(t, err, ErrOrderHasNoDeliveryInfo)
+	var appErr *temporal.ApplicationError
+	require.ErrorAs(t, err, &appErr)
+	require.True(t, appErr.NonRetryable())
+	require.Equal(t, requestDeliveryValidationErrorType, appErr.Type())
 	getHandler.AssertExpectations(t)
 	deliveryClient.AssertNotCalled(t, "AcceptOrder", mock.Anything, mock.Anything)
 	requestDeliveryHandler.AssertNotCalled(t, "Handle", mock.Anything, mock.Anything)
@@ -315,6 +338,64 @@ func TestActivities_RequestDelivery_AcceptOrderError(t *testing.T) {
 	requestDeliveryHandler.AssertNotCalled(t, "Handle", mock.Anything, mock.Anything)
 }
 
+func TestActivities_RequestDelivery_AcceptOrderInvalidArgumentIsNonRetryable(t *testing.T) {
+	cancelHandler := new(mockCancelHandler)
+	getHandler := new(mockGetHandler)
+	deliveryClient := new(mockDeliveryClient)
+	requestDeliveryHandler := new(mockRequestDeliveryHandler)
+	activities := New(cancelHandler, getHandler, requestDeliveryHandler, deliveryClient)
+	order := createOrderWithDeliveryInfo(t)
+
+	getHandler.On("Handle", mock.Anything, orderGet.NewQuery(testOrderID)).Return(order, nil)
+	deliveryClient.On("AcceptOrder", mock.Anything, mock.Anything).Return(
+		nil,
+		grpcstatus.Error(codes.InvalidArgument, "invalid delivery request"),
+	)
+
+	response, err := activities.RequestDelivery(context.Background(), RequestDeliveryRequest{
+		OrderID: testOrderID,
+	})
+
+	require.Error(t, err)
+	require.Nil(t, response)
+	var appErr *temporal.ApplicationError
+	require.ErrorAs(t, err, &appErr)
+	require.True(t, appErr.NonRetryable())
+	require.Equal(t, requestDeliveryValidationErrorType, appErr.Type())
+	getHandler.AssertExpectations(t)
+	deliveryClient.AssertExpectations(t)
+	requestDeliveryHandler.AssertNotCalled(t, "Handle", mock.Anything, mock.Anything)
+}
+
+func TestActivities_RequestDelivery_AcceptOrderAlreadyExistsIsNonRetryable(t *testing.T) {
+	cancelHandler := new(mockCancelHandler)
+	getHandler := new(mockGetHandler)
+	deliveryClient := new(mockDeliveryClient)
+	requestDeliveryHandler := new(mockRequestDeliveryHandler)
+	activities := New(cancelHandler, getHandler, requestDeliveryHandler, deliveryClient)
+	order := createOrderWithDeliveryInfo(t)
+
+	getHandler.On("Handle", mock.Anything, orderGet.NewQuery(testOrderID)).Return(order, nil)
+	deliveryClient.On("AcceptOrder", mock.Anything, mock.Anything).Return(
+		nil,
+		grpcstatus.Error(codes.AlreadyExists, "package for order already exists"),
+	)
+
+	response, err := activities.RequestDelivery(context.Background(), RequestDeliveryRequest{
+		OrderID: testOrderID,
+	})
+
+	require.Error(t, err)
+	require.Nil(t, response)
+	var appErr *temporal.ApplicationError
+	require.ErrorAs(t, err, &appErr)
+	require.True(t, appErr.NonRetryable())
+	require.Equal(t, requestDeliveryContractErrorType, appErr.Type())
+	getHandler.AssertExpectations(t)
+	deliveryClient.AssertExpectations(t)
+	requestDeliveryHandler.AssertNotCalled(t, "Handle", mock.Anything, mock.Anything)
+}
+
 func TestActivities_RequestDelivery_InvalidPackageID(t *testing.T) {
 	cancelHandler := new(mockCancelHandler)
 	getHandler := new(mockGetHandler)
@@ -336,6 +417,47 @@ func TestActivities_RequestDelivery_InvalidPackageID(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, response)
 	require.ErrorIs(t, err, ErrInvalidPackageID)
+	var appErr *temporal.ApplicationError
+	require.ErrorAs(t, err, &appErr)
+	require.True(t, appErr.NonRetryable())
+	require.Equal(t, requestDeliveryContractErrorType, appErr.Type())
+	getHandler.AssertExpectations(t)
+	deliveryClient.AssertExpectations(t)
+	requestDeliveryHandler.AssertNotCalled(t, "Handle", mock.Anything, mock.Anything)
+}
+
+func TestActivities_RequestDelivery_ContextCancelled(t *testing.T) {
+	cancelHandler := new(mockCancelHandler)
+	getHandler := new(mockGetHandler)
+	deliveryClient := new(mockDeliveryClient)
+	requestDeliveryHandler := new(mockRequestDeliveryHandler)
+	activities := New(cancelHandler, getHandler, requestDeliveryHandler, deliveryClient)
+	order := createOrderWithDeliveryInfo(t)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	getHandler.On("Handle", mock.Anything, orderGet.NewQuery(testOrderID)).Return(order, nil)
+	deliveryClient.On("AcceptOrder", mock.Anything, mock.Anything).Return(
+		func(callCtx context.Context, _ ports.AcceptOrderRequest) *ports.AcceptOrderResponse {
+			<-callCtx.Done()
+			return nil
+		},
+		func(callCtx context.Context, _ ports.AcceptOrderRequest) error {
+			return callCtx.Err()
+		},
+	)
+
+	go func() {
+		time.Sleep(10 * time.Millisecond)
+		cancel()
+	}()
+
+	response, err := activities.RequestDelivery(ctx, RequestDeliveryRequest{
+		OrderID: testOrderID,
+	})
+
+	require.Error(t, err)
+	require.Nil(t, response)
+	require.ErrorIs(t, err, context.Canceled)
 	getHandler.AssertExpectations(t)
 	deliveryClient.AssertExpectations(t)
 	requestDeliveryHandler.AssertNotCalled(t, "Handle", mock.Anything, mock.Anything)

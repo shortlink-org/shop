@@ -78,7 +78,10 @@ impl PackageStatus {
     }
 
     /// Transition to a new status, returning error if invalid
-    pub fn transition_to(self, target: PackageStatus) -> Result<PackageStatus, InvalidTransitionError> {
+    pub fn transition_to(
+        self,
+        target: PackageStatus,
+    ) -> Result<PackageStatus, InvalidTransitionError> {
         if self.can_transition_to(target) {
             Ok(target)
         } else {

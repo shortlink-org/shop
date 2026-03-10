@@ -100,7 +100,7 @@ mod tests {
     #[tokio::test]
     async fn test_send_order_assigned() {
         let service = StubNotificationService::new();
-        
+
         let notification = OrderAssignedNotification {
             package_id: Uuid::new_v4(),
             pickup_address: "123 Pickup St".to_string(),
@@ -112,20 +112,24 @@ mod tests {
             delivery_end: "2024-01-15T12:00:00Z".to_string(),
         };
 
-        let result = service.send_order_assigned("test_token", notification).await;
+        let result = service
+            .send_order_assigned("test_token", notification)
+            .await;
         assert!(result.is_ok());
     }
 
     #[tokio::test]
     async fn test_send_delivery_status() {
         let service = StubNotificationService::new();
-        
+
         let notification = DeliveryStatusNotification {
             package_id: Uuid::new_v4(),
             message: "Package delivered successfully".to_string(),
         };
 
-        let result = service.send_delivery_status("test_token", notification).await;
+        let result = service
+            .send_delivery_status("test_token", notification)
+            .await;
         assert!(result.is_ok());
     }
 }

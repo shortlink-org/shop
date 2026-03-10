@@ -52,7 +52,11 @@ pub struct Query {
 impl Query {
     /// Create a new GetCourierPool query
     pub fn new(filter: CourierFilter) -> Self {
-        Self { filter, limit: None, offset: None }
+        Self {
+            filter,
+            limit: None,
+            offset: None,
+        }
     }
 
     /// Create a query with no filters

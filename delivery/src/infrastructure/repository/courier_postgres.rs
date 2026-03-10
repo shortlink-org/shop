@@ -9,8 +9,8 @@ use sea_orm::{
 };
 use uuid::Uuid;
 
-use crate::domain::ports::{CourierFilter, CourierRepository, RepositoryError};
 use crate::domain::model::courier::Courier;
+use crate::domain::ports::{CourierFilter, CourierRepository, RepositoryError};
 use crate::infrastructure::repository::entities::courier::{
     self, ActiveModel, Entity as CourierEntity,
 };
@@ -55,23 +55,20 @@ impl CourierRepository for CourierPostgresRepository {
                 .map_err(|e| RepositoryError::QueryError(e.to_string()))?;
         } else {
             // Insert new courier
-            model
-                .insert(&self.db)
-                .await
-                .map_err(|e| {
-                    let err_str = e.to_string();
-                    if err_str.contains("duplicate") || err_str.contains("unique") {
-                        if err_str.contains("email") {
-                            RepositoryError::DuplicateEntry("email".to_string())
-                        } else if err_str.contains("phone") {
-                            RepositoryError::DuplicateEntry("phone".to_string())
-                        } else {
-                            RepositoryError::DuplicateEntry(err_str)
-                        }
+            model.insert(&self.db).await.map_err(|e| {
+                let err_str = e.to_string();
+                if err_str.contains("duplicate") || err_str.contains("unique") {
+                    if err_str.contains("email") {
+                        RepositoryError::DuplicateEntry("email".to_string())
+                    } else if err_str.contains("phone") {
+                        RepositoryError::DuplicateEntry("phone".to_string())
                     } else {
-                        RepositoryError::QueryError(err_str)
+                        RepositoryError::DuplicateEntry(err_str)
                     }
-                })?;
+                } else {
+                    RepositoryError::QueryError(err_str)
+                }
+            })?;
         }
 
         Ok(())
@@ -85,8 +82,8 @@ impl CourierRepository for CourierPostgresRepository {
 
         match result {
             Some(model) => {
-                let courier = Courier::try_from(model)
-                    .map_err(RepositoryError::SerializationError)?;
+                let courier =
+                    Courier::try_from(model).map_err(RepositoryError::SerializationError)?;
                 Ok(Some(courier))
             }
             None => Ok(None),
@@ -102,8 +99,8 @@ impl CourierRepository for CourierPostgresRepository {
 
         match result {
             Some(model) => {
-                let courier = Courier::try_from(model)
-                    .map_err(RepositoryError::SerializationError)?;
+                let courier =
+                    Courier::try_from(model).map_err(RepositoryError::SerializationError)?;
                 Ok(Some(courier))
             }
             None => Ok(None),
@@ -119,8 +116,8 @@ impl CourierRepository for CourierPostgresRepository {
 
         match result {
             Some(model) => {
-                let courier = Courier::try_from(model)
-                    .map_err(RepositoryError::SerializationError)?;
+                let courier =
+                    Courier::try_from(model).map_err(RepositoryError::SerializationError)?;
                 Ok(Some(courier))
             }
             None => Ok(None),
@@ -136,8 +133,7 @@ impl CourierRepository for CourierPostgresRepository {
 
         let mut couriers = Vec::with_capacity(results.len());
         for model in results {
-            let courier = Courier::try_from(model)
-                .map_err(RepositoryError::SerializationError)?;
+            let courier = Courier::try_from(model).map_err(RepositoryError::SerializationError)?;
             couriers.push(courier);
         }
 
@@ -212,8 +208,7 @@ impl CourierRepository for CourierPostgresRepository {
 
         let mut couriers = Vec::with_capacity(results.len());
         for model in results {
-            let courier =
-                Courier::try_from(model).map_err(RepositoryError::SerializationError)?;
+            let courier = Courier::try_from(model).map_err(RepositoryError::SerializationError)?;
             couriers.push(courier);
         }
 
@@ -245,8 +240,7 @@ impl CourierRepository for CourierPostgresRepository {
 
         let mut couriers = Vec::with_capacity(results.len());
         for model in results {
-            let courier =
-                Courier::try_from(model).map_err(RepositoryError::SerializationError)?;
+            let courier = Courier::try_from(model).map_err(RepositoryError::SerializationError)?;
             couriers.push(courier);
         }
 

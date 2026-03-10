@@ -109,7 +109,9 @@ impl DispatchService {
 
         let (idx, distance) = candidates[0];
         let courier = &couriers[idx];
-        let estimated_minutes = courier.transport_type.calculate_travel_time_minutes(distance);
+        let estimated_minutes = courier
+            .transport_type
+            .calculate_travel_time_minutes(distance);
 
         Ok(DispatchResult {
             courier_id: courier.id.clone(),
@@ -243,7 +245,10 @@ mod tests {
         assert!(result.is_err());
         let failure = result.unwrap_err();
         assert_eq!(failure.rejections.len(), 1);
-        assert_eq!(failure.rejections[0].reason, RejectionReason::TooFarFromPickup);
+        assert_eq!(
+            failure.rejections[0].reason,
+            RejectionReason::TooFarFromPickup
+        );
     }
 
     #[test]

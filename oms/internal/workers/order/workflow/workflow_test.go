@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"go.temporal.io/sdk/activity"
+	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/testsuite"
 
 	v2 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
@@ -124,6 +125,29 @@ func (s *OrderWorkflowTestSuite) Test_Workflow_WithDelivery_RequestDeliveryFailu
 	s.Error(s.env.GetWorkflowError())
 	s.ErrorContains(s.env.GetWorkflowError(), expectedErr.Error())
 	s.Equal(3, attempts)
+}
+
+func (s *OrderWorkflowTestSuite) Test_Workflow_WithDelivery_RequestDeliveryNonRetryableFailure() {
+	orderID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+	customerID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174100")
+	items := createTestItems()
+	attempts := 0
+
+	s.env.OnActivity("RequestDelivery", mock.Anything, activities.RequestDeliveryRequest{
+		OrderID: orderID,
+	}).Return(func(_ context.Context, _ activities.RequestDeliveryRequest) (*activities.RequestDeliveryResponse, error) {
+		attempts++
+		return nil, temporal.NewNonRetryableApplicationError("validation failed", "OrderRequestDeliveryValidationError", nil)
+	}).Once()
+	s.env.OnActivity(new(activities.Activities).CancelOrder, mock.Anything, activities.CancelOrderRequest{
+		OrderID: orderID,
+	}).Return(nil).Once()
+
+	s.env.ExecuteWorkflow(Workflow, orderID, customerID, items, true)
+
+	s.True(s.env.IsWorkflowCompleted())
+	s.Error(s.env.GetWorkflowError())
+	s.Equal(1, attempts)
 }
 
 // Test_Workflow_QueryStatus tests the query handler for order status.

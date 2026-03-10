@@ -17,21 +17,9 @@ impl MigrationTrait for Migration {
             .alter_table(
                 Table::alter()
                     .table((Delivery::Schema, Packages::Table))
-                    .add_column(
-                        ColumnDef::new(Packages::RecipientName)
-                            .text()
-                            .null(),
-                    )
-                    .add_column(
-                        ColumnDef::new(Packages::RecipientPhone)
-                            .text()
-                            .null(),
-                    )
-                    .add_column(
-                        ColumnDef::new(Packages::RecipientEmail)
-                            .text()
-                            .null(),
-                    )
+                    .add_column(ColumnDef::new(Packages::RecipientName).text().null())
+                    .add_column(ColumnDef::new(Packages::RecipientPhone).text().null())
+                    .add_column(ColumnDef::new(Packages::RecipientEmail).text().null())
                     .to_owned(),
             )
             .await?;

@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 use crate::domain::model::package::{Package, PackageId, PackageStatus};
 
-use super::RepositoryError;
+use super::{DomainEvent, RepositoryError};
 
 /// Filter criteria for querying packages
 #[derive(Debug, Clone, Default)]
@@ -71,6 +71,18 @@ pub trait PackageRepository: Send + Sync {
     /// If the package doesn't exist, it will be inserted.
     /// If it exists, it will be updated with optimistic locking.
     async fn save(&self, package: &Package) -> Result<(), RepositoryError>;
+
+    /// Save a package and persist domain events atomically.
+    ///
+    /// Default implementation falls back to plain save for test doubles that do not
+    /// model transactional outbox semantics.
+    async fn save_with_events(
+        &self,
+        package: &Package,
+        _events: &[DomainEvent],
+    ) -> Result<(), RepositoryError> {
+        self.save(package).await
+    }
 
     /// Find a package by ID
     async fn find_by_id(&self, id: PackageId) -> Result<Option<Package>, RepositoryError>;

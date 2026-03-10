@@ -87,6 +87,13 @@ type PaginationInfo {
 }
 
 """
+Response for random address query
+"""
+type RandomAddressResponse {
+  address: Address!
+}
+
+"""
 Courier entity representing a delivery person
 """
 type Courier {
@@ -197,6 +204,11 @@ type Query {
   Get courier's delivery history
   """
   courierDeliveries(courierId: String!, limit: Int): CourierDeliveriesResponse!
+
+  """
+  Get a random address within the configured region (e.g. Berlin bbox)
+  """
+  randomAddress: RandomAddressResponse!
 }
 
 type Mutation {

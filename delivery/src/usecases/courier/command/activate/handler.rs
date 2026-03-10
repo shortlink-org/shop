@@ -14,10 +14,10 @@ use chrono::{DateTime, Utc};
 use thiserror::Error;
 use uuid::Uuid;
 
+use crate::domain::model::courier::CourierStatus;
 use crate::domain::ports::{
     CacheError, CommandHandlerWithResult, CourierCache, CourierRepository, RepositoryError,
 };
-use crate::domain::model::courier::CourierStatus;
 
 use super::Command;
 

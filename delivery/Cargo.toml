@@ -39,6 +39,7 @@ rdkafka = { version = "0.39.0", features = ["tokio", "dynamic-linking"] }
 
 # Common utilities
 uuid = { version = "1.21.0", features = ["v4", "serde"] }
+rand = "0.8"
 chrono = { version = "0.4.44", features = ["serde"] }
 async-trait = "0.1.89"
 thiserror = "2.0.18"
@@ -52,12 +53,13 @@ tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 
 # Temporal SDK (pre-alpha, Git dependency)
-temporalio-sdk = { git = "https://github.com/temporalio/sdk-core", rev = "f837d73ec1908679573ced8734e9a778f89956aa", package = "temporalio-sdk" }
-temporalio-sdk-core = { git = "https://github.com/temporalio/sdk-core", rev = "f837d73ec1908679573ced8734e9a778f89956aa", package = "temporalio-sdk-core" }
-temporalio-common = { git = "https://github.com/temporalio/sdk-core", rev = "f837d73ec1908679573ced8734e9a778f89956aa", package = "temporalio-common" }
-temporalio-client = { git = "https://github.com/temporalio/sdk-core", rev = "f837d73ec1908679573ced8734e9a778f89956aa", package = "temporalio-client" }
+temporalio-sdk = { git = "https://github.com/temporalio/sdk-core", rev = "05077672867822042737bc44bd9b0c9aa6aee993", package = "temporalio-sdk" }
+temporalio-sdk-core = { git = "https://github.com/temporalio/sdk-core", rev = "05077672867822042737bc44bd9b0c9aa6aee993", package = "temporalio-sdk-core" }
+temporalio-common = { git = "https://github.com/temporalio/sdk-core", rev = "05077672867822042737bc44bd9b0c9aa6aee993", package = "temporalio-common" }
+temporalio-client = { git = "https://github.com/temporalio/sdk-core", rev = "05077672867822042737bc44bd9b0c9aa6aee993", package = "temporalio-client" }
 
 # Additional dependencies for Temporal
+futures = "0.3.32"
 futures-util = { version = "0.3.32", default-features = false }
 anyhow = "1.0.102"
 parking_lot = "0.12.5"

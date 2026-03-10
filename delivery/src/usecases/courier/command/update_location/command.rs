@@ -48,8 +48,7 @@ impl Command {
         speed: Option<f64>,
         heading: Option<f64>,
     ) -> Self {
-        let timestamp = DateTime::from_timestamp_millis(timestamp_ms)
-            .unwrap_or_else(Utc::now);
+        let timestamp = DateTime::from_timestamp_millis(timestamp_ms).unwrap_or_else(Utc::now);
         Self::new(courier_id, location, timestamp, speed, heading)
     }
 }

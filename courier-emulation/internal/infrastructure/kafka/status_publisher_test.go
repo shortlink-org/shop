@@ -18,7 +18,7 @@ func TestStatusPublisher_PublishPickUp(t *testing.T) {
 	ctx := context.Background()
 
 	event := PickUpOrderEvent{
-		OrderID:   "order-123",
+		PackageID: "pkg-123",
 		CourierID: "courier-456",
 		PickupLocation: Location{
 			Latitude:  52.5200,
@@ -42,13 +42,13 @@ func TestStatusPublisher_PublishPickUp(t *testing.T) {
 	err = json.Unmarshal(messages[0].Payload, &receivedEvent)
 	require.NoError(t, err)
 
-	assert.Equal(t, event.OrderID, receivedEvent.OrderID)
+	assert.Equal(t, event.PackageID, receivedEvent.PackageID)
 	assert.Equal(t, event.CourierID, receivedEvent.CourierID)
 	assert.Equal(t, event.PickupLocation.Latitude, receivedEvent.PickupLocation.Latitude)
 	assert.Equal(t, event.PickupLocation.Longitude, receivedEvent.PickupLocation.Longitude)
 
-	// Verify partition key (by order for lifecycle ordering)
-	assert.Equal(t, event.OrderID, messages[0].Metadata.Get("partition_key"))
+	// Verify partition key (by package for lifecycle ordering)
+	assert.Equal(t, event.PackageID, messages[0].Metadata.Get("partition_key"))
 }
 
 func TestStatusPublisher_PublishDelivery(t *testing.T) {
@@ -58,7 +58,7 @@ func TestStatusPublisher_PublishDelivery(t *testing.T) {
 	ctx := context.Background()
 
 	event := DeliverOrderEvent{
-		OrderID:   "order-123",
+		PackageID: "pkg-123",
 		CourierID: "courier-456",
 		Status:    DeliveryStatusDelivered,
 		CurrentLocation: Location{
@@ -83,12 +83,12 @@ func TestStatusPublisher_PublishDelivery(t *testing.T) {
 	err = json.Unmarshal(messages[0].Payload, &receivedEvent)
 	require.NoError(t, err)
 
-	assert.Equal(t, event.OrderID, receivedEvent.OrderID)
+	assert.Equal(t, event.PackageID, receivedEvent.PackageID)
 	assert.Equal(t, event.CourierID, receivedEvent.CourierID)
 	assert.Equal(t, DeliveryStatusDelivered, receivedEvent.Status)
 
-	// Verify partition key (by order for lifecycle ordering)
-	assert.Equal(t, event.OrderID, messages[0].Metadata.Get("partition_key"))
+	// Verify partition key (by package for lifecycle ordering)
+	assert.Equal(t, event.PackageID, messages[0].Metadata.Get("partition_key"))
 }
 
 func TestStatusPublisher_PublishDeliveryNotDelivered(t *testing.T) {
@@ -98,7 +98,7 @@ func TestStatusPublisher_PublishDeliveryNotDelivered(t *testing.T) {
 	ctx := context.Background()
 
 	event := DeliverOrderEvent{
-		OrderID:   "order-789",
+		PackageID: "pkg-789",
 		CourierID: "courier-101",
 		Status:    DeliveryStatusNotDelivered,
 		Reason:    ReasonCustomerNotAvailable,
@@ -134,7 +134,7 @@ func TestNewPickUpOrderEvent(t *testing.T) {
 
 	event := NewPickUpOrderEvent("courier-1", order, location)
 
-	assert.Equal(t, "order-1", event.OrderID)
+	assert.Equal(t, "pkg-1", event.PackageID)
 	assert.Equal(t, "courier-1", event.CourierID)
 	assert.Equal(t, location.Latitude(), event.PickupLocation.Latitude)
 	assert.Equal(t, location.Longitude(), event.PickupLocation.Longitude)
@@ -150,7 +150,7 @@ func TestNewDeliverOrderEvent_Delivered(t *testing.T) {
 	event, err := NewDeliverOrderEvent("courier-1", order, location, true, "")
 	require.NoError(t, err)
 
-	assert.Equal(t, "order-1", event.OrderID)
+	assert.Equal(t, "pkg-1", event.PackageID)
 	assert.Equal(t, "courier-1", event.CourierID)
 	assert.Equal(t, DeliveryStatusDelivered, event.Status)
 	assert.Empty(t, event.Reason)
@@ -166,7 +166,7 @@ func TestNewDeliverOrderEvent_NotDelivered(t *testing.T) {
 	event, err := NewDeliverOrderEvent("courier-1", order, location, false, ReasonCustomerRefused)
 	require.NoError(t, err)
 
-	assert.Equal(t, "order-1", event.OrderID)
+	assert.Equal(t, "pkg-1", event.PackageID)
 	assert.Equal(t, DeliveryStatusNotDelivered, event.Status)
 	assert.Equal(t, ReasonCustomerRefused, event.Reason)
 }

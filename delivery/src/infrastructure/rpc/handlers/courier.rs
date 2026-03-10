@@ -7,12 +7,12 @@ use std::sync::Arc;
 use tonic::{Response, Status};
 use tracing::{error, info};
 
-use crate::domain::ports::{
-    CommandHandlerWithResult, CourierCache, CourierRepository, GeolocationService,
-    PackageFilter, PackageRepository, QueryHandler,
-};
 use crate::di::AppState;
 use crate::domain::model::courier::CourierStatus as DomainCourierStatus;
+use crate::domain::ports::{
+    CommandHandlerWithResult, CourierCache, CourierRepository, GeolocationService, PackageFilter,
+    PackageRepository, QueryHandler,
+};
 use crate::usecases::courier::command::register::{
     Command as RegisterCommand, Handler as RegisterHandler,
 };
@@ -29,10 +29,10 @@ use crate::infrastructure::rpc::{
     ActivateCourierRequest, ActivateCourierResponse, ArchiveCourierRequest, ArchiveCourierResponse,
     ChangeTransportTypeRequest, ChangeTransportTypeResponse, CourierStatus,
     DeactivateCourierRequest, DeactivateCourierResponse, GetCourierDeliveriesRequest,
-    GetCourierDeliveriesResponse, GetCourierPoolRequest, GetCourierPoolResponse,
-    GetCourierRequest, GetCourierResponse, PaginationInfo, RegisterCourierRequest,
-    RegisterCourierResponse, TransportType, UpdateContactInfoRequest, UpdateContactInfoResponse,
-    UpdateWorkScheduleRequest, UpdateWorkScheduleResponse,
+    GetCourierDeliveriesResponse, GetCourierPoolRequest, GetCourierPoolResponse, GetCourierRequest,
+    GetCourierResponse, PaginationInfo, RegisterCourierRequest, RegisterCourierResponse,
+    TransportType, UpdateContactInfoRequest, UpdateContactInfoResponse, UpdateWorkScheduleRequest,
+    UpdateWorkScheduleResponse,
 };
 
 /// Handle RegisterCourier request
@@ -208,7 +208,8 @@ pub async fn get_courier(
         .ok()
         .flatten();
 
-    let proto_courier = courier_to_proto(&courier, cached_state.as_ref(), current_location.as_ref());
+    let proto_courier =
+        courier_to_proto(&courier, cached_state.as_ref(), current_location.as_ref());
 
     Ok(Response::new(GetCourierResponse {
         courier: Some(proto_courier),
@@ -820,7 +821,10 @@ mod tests {
             zone_filter: "".to_string(),
             available_only: false,
             include_location: false,
-            pagination: Some(Pagination { page: 3, page_size: 25 }),
+            pagination: Some(Pagination {
+                page: 3,
+                page_size: 25,
+            }),
         };
 
         let (limit, offset) = if let Some(p) = req.pagination {
@@ -845,7 +849,10 @@ mod tests {
             zone_filter: "".to_string(),
             available_only: false,
             include_location: false,
-            pagination: Some(Pagination { page: 1, page_size: 500 }), // Above max
+            pagination: Some(Pagination {
+                page: 1,
+                page_size: 500,
+            }), // Above max
         };
 
         let size = if let Some(p) = req.pagination {

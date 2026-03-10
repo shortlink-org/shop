@@ -58,9 +58,12 @@ mod tests {
 
     #[test]
     fn test_transport_speeds() {
-        assert!(TransportType::Car.average_speed_kmh() > TransportType::Walking.average_speed_kmh());
         assert!(
-            TransportType::Motorcycle.average_speed_kmh() > TransportType::Bicycle.average_speed_kmh()
+            TransportType::Car.average_speed_kmh() > TransportType::Walking.average_speed_kmh()
+        );
+        assert!(
+            TransportType::Motorcycle.average_speed_kmh()
+                > TransportType::Bicycle.average_speed_kmh()
         );
     }
 
@@ -106,13 +109,22 @@ mod tests {
         assert_eq!(TransportType::Car.calculate_travel_time_minutes(15.0), 30.0);
 
         // Walking: 5 km/h, 5 km distance = 60 minutes
-        assert_eq!(TransportType::Walking.calculate_travel_time_minutes(5.0), 60.0);
+        assert_eq!(
+            TransportType::Walking.calculate_travel_time_minutes(5.0),
+            60.0
+        );
 
         // Bicycle: 15 km/h, 15 km distance = 60 minutes
-        assert_eq!(TransportType::Bicycle.calculate_travel_time_minutes(15.0), 60.0);
+        assert_eq!(
+            TransportType::Bicycle.calculate_travel_time_minutes(15.0),
+            60.0
+        );
 
         // Motorcycle: 40 km/h, 20 km distance = 30 minutes
-        assert_eq!(TransportType::Motorcycle.calculate_travel_time_minutes(20.0), 30.0);
+        assert_eq!(
+            TransportType::Motorcycle.calculate_travel_time_minutes(20.0),
+            30.0
+        );
 
         // Zero distance = zero time
         assert_eq!(TransportType::Car.calculate_travel_time_minutes(0.0), 0.0);

@@ -12,8 +12,8 @@ use redis::aio::ConnectionManager;
 use redis::AsyncCommands;
 use uuid::Uuid;
 
-use crate::domain::ports::{CacheError, CachedCourierState, CourierCache};
 use crate::domain::model::courier::CourierStatus;
+use crate::domain::ports::{CacheError, CachedCourierState, CourierCache};
 
 /// Redis key prefix for courier state
 const COURIER_STATE_PREFIX: &str = "courier";
@@ -585,7 +585,10 @@ mod tests {
         let all_free = cache.get_all_free_couriers().await.unwrap();
         assert!(all_free.contains(&courier_id));
 
-        let zone_free = cache.get_free_couriers_in_zone("Berlin-Mitte").await.unwrap();
+        let zone_free = cache
+            .get_free_couriers_in_zone("Berlin-Mitte")
+            .await
+            .unwrap();
         assert!(zone_free.contains(&courier_id));
     }
 
@@ -609,7 +612,10 @@ mod tests {
         let all_free = cache.get_all_free_couriers().await.unwrap();
         assert!(!all_free.contains(&courier_id));
 
-        let zone_free = cache.get_free_couriers_in_zone("Berlin-Mitte").await.unwrap();
+        let zone_free = cache
+            .get_free_couriers_in_zone("Berlin-Mitte")
+            .await
+            .unwrap();
         assert!(!zone_free.contains(&courier_id));
     }
 

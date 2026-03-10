@@ -7,12 +7,12 @@ import (
 	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/domain/vo"
 )
 
-// NewPickUpOrderEvent creates an order picked up event from domain objects.
+// NewPickUpOrderEvent creates a package picked up event from domain objects.
 func NewPickUpOrderEvent(courierID string, order vo.DeliveryOrder, location vo.Location) PickUpOrderEvent {
 	now := time.Now().UTC()
 
 	return PickUpOrderEvent{
-		OrderID:   order.OrderID(),
+		PackageID: order.PackageID(),
 		CourierID: courierID,
 		PickupLocation: Location{
 			Latitude:  location.Latitude(),
@@ -24,7 +24,7 @@ func NewPickUpOrderEvent(courierID string, order vo.DeliveryOrder, location vo.L
 	}
 }
 
-// NewDeliverOrderEvent creates an order delivered event from domain objects.
+// NewDeliverOrderEvent creates a package delivery result event from domain objects.
 // Validates: when delivered is true, reason must be empty; when false, reason must be from whitelist (or OTHER).
 func NewDeliverOrderEvent(
 	courierID string,
@@ -55,7 +55,7 @@ func NewDeliverOrderEvent(
 	now := time.Now().UTC()
 
 	return DeliverOrderEvent{
-		OrderID:   order.OrderID(),
+		PackageID: order.PackageID(),
 		CourierID: courierID,
 		Status:    status,
 		Reason:    reason,

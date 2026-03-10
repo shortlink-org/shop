@@ -7,7 +7,7 @@ pub const MIN_LONGITUDE: f64 = -180.0;
 pub const MAX_LONGITUDE: f64 = 180.0;
 
 /// Location represents a GPS location as a value object.
-/// 
+///
 /// A value object is immutable and defined by its attributes.
 /// Two locations are considered equal if they have the same latitude and longitude.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -34,10 +34,18 @@ impl fmt::Display for LocationError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             LocationError::InvalidLatitude(lat) => {
-                write!(f, "Invalid latitude: {}. Must be between {} and {}", lat, MIN_LATITUDE, MAX_LATITUDE)
+                write!(
+                    f,
+                    "Invalid latitude: {}. Must be between {} and {}",
+                    lat, MIN_LATITUDE, MAX_LATITUDE
+                )
             }
             LocationError::InvalidLongitude(lon) => {
-                write!(f, "Invalid longitude: {}. Must be between {} and {}", lon, MIN_LONGITUDE, MAX_LONGITUDE)
+                write!(
+                    f,
+                    "Invalid longitude: {}. Must be between {} and {}",
+                    lon, MIN_LONGITUDE, MAX_LONGITUDE
+                )
             }
             LocationError::InvalidAccuracy(acc) => {
                 write!(f, "Invalid accuracy: {}. Must be positive", acc)
@@ -247,16 +255,16 @@ mod tests {
     fn test_special_coordinates() {
         // Equator (latitude = 0)
         assert!(Location::new(0.0, 0.0, 1.0).is_ok());
-        
+
         // Prime meridian (longitude = 0)
         assert!(Location::new(0.0, 0.0, 1.0).is_ok());
-        
+
         // North pole
         assert!(Location::new(90.0, 0.0, 1.0).is_ok());
-        
+
         // South pole
         assert!(Location::new(-90.0, 0.0, 1.0).is_ok());
-        
+
         // Date line (longitude = 180/-180)
         assert!(Location::new(0.0, 180.0, 1.0).is_ok());
         assert!(Location::new(0.0, -180.0, 1.0).is_ok());
@@ -275,7 +283,7 @@ mod tests {
         // (all fields matter for value object equality)
         let loc1 = Location::new(55.7558, 37.6173, 10.0).unwrap();
         let loc2 = Location::new(55.7558, 37.6173, 100.0).unwrap();
-        
+
         assert_ne!(loc1, loc2);
         assert_eq!(loc1.latitude(), loc2.latitude());
         assert_eq!(loc1.longitude(), loc2.longitude());
@@ -303,7 +311,7 @@ mod tests {
         let loc1 = Location::new(0.0, 0.0, 10.0).unwrap();
         let loc2 = Location::new(0.0, 180.0, 10.0).unwrap();
         let distance = loc1.distance_to(&loc2);
-        
+
         // Should be approximately half the Earth's circumference (~20,000 km)
         assert!((19000.0..21000.0).contains(&distance));
     }
@@ -313,7 +321,7 @@ mod tests {
         // Distance from A to B should equal distance from B to A
         let moscow = Location::new(55.7558, 37.6173, 10.0).unwrap();
         let spb = Location::new(59.9343, 30.3351, 10.0).unwrap();
-        
+
         assert_eq!(moscow.distance_to(&spb), spb.distance_to(&moscow));
     }
 
@@ -331,7 +339,7 @@ mod tests {
         // Test exact boundary case
         let loc1 = Location::new(55.7558, 37.6173, 10.0).unwrap();
         let loc2 = Location::new(55.7560, 37.6175, 10.0).unwrap();
-        
+
         let distance = loc1.distance_to(&loc2);
         assert!(loc1.is_within_distance(&loc2, distance));
         assert!(loc1.is_within_distance(&loc2, distance + 0.1));
@@ -371,7 +379,7 @@ mod tests {
     fn test_clone() {
         let loc1 = Location::new(55.7558, 37.6173, 10.0).unwrap();
         let loc2 = loc1.clone();
-        
+
         assert_eq!(loc1, loc2);
         assert_eq!(loc1.latitude(), loc2.latitude());
         assert_eq!(loc1.longitude(), loc2.longitude());
@@ -383,7 +391,7 @@ mod tests {
         // Test that Location implements Copy
         let loc1 = Location::new(55.7558, 37.6173, 10.0).unwrap();
         let loc2 = loc1; // This should copy, not move
-        
+
         // Both should be valid
         assert_eq!(loc1.latitude(), loc2.latitude());
         assert_eq!(loc1.longitude(), loc2.longitude());
@@ -400,10 +408,10 @@ mod tests {
     fn test_accuracy_edge_cases() {
         // Very small positive accuracy should be valid
         assert!(Location::new(0.0, 0.0, 0.0001).is_ok());
-        
+
         // Large accuracy should be valid
         assert!(Location::new(0.0, 0.0, 1_000_000.0).is_ok());
-        
+
         // Negative accuracy should be invalid
         assert!(matches!(
             Location::new(0.0, 0.0, -0.0001),
@@ -416,7 +424,7 @@ mod tests {
         // Test that distance calculation maintains reasonable precision
         let loc1 = Location::new(55.7558, 37.6173, 10.0).unwrap();
         let loc2 = Location::new(55.7558001, 37.6173001, 10.0).unwrap();
-        
+
         let distance = loc1.distance_to(&loc2);
         // Should be very small but non-zero
         assert!(distance > 0.0);
@@ -428,12 +436,11 @@ mod tests {
         let latitude = 55.7558;
         let longitude = 37.6173;
         let accuracy = 10.0;
-        
+
         let loc = Location::new(latitude, longitude, accuracy).unwrap();
-        
+
         assert_eq!(loc.latitude(), latitude);
         assert_eq!(loc.longitude(), longitude);
         assert_eq!(loc.accuracy(), accuracy);
     }
 }
-

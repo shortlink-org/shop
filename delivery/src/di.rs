@@ -4,23 +4,25 @@
 
 use std::sync::Arc;
 
-use redis::aio::ConnectionManager;
 use migration::{Migrator, MigratorTrait};
+use redis::aio::ConnectionManager;
 use sea_orm::{Database, DatabaseConnection};
 use thiserror::Error;
 use tokio::sync::broadcast;
 use tracing::info;
 
-use crate::config::{Config, TemporalConfig};
+use crate::config::{Config, RandomAddressBbox, TemporalConfig};
 use crate::infrastructure::cache::{CourierRedisCache, RedisLocationCache};
 use crate::infrastructure::geolocation::StubGeolocationService;
 use crate::infrastructure::messaging::{
-    kafka_publisher::KafkaPublisherConfig, KafkaEventPublisher, LocationConsumer,
-    location_consumer::LocationConsumerConfig,
+    emulation_consumer::EmulationConsumerConfig, kafka_publisher::KafkaPublisherConfig,
+    location_consumer::LocationConsumerConfig, outbox_forwarder::OutboxForwarderConfig,
+    EmulationConsumer, KafkaEventPublisher, LocationConsumer, OutboxForwarder,
 };
 use crate::infrastructure::notifications::StubNotificationService;
 use crate::infrastructure::repository::{
-    CourierPostgresRepository, LocationPostgresRepository, PackagePostgresRepository,
+    CourierPostgresRepository, LocationPostgresRepository, OutboxPostgresRepository,
+    PackagePostgresRepository,
 };
 use crate::usecases::courier::command::register::Handler as RegisterHandler;
 use crate::usecases::courier::query::get_pool::Handler as GetPoolHandler;
@@ -62,7 +64,8 @@ pub struct AppState {
     pub location_cache: Arc<RedisLocationCache>,
 
     /// Geolocation service (stub delegating to cache + repository)
-    pub geolocation_service: Arc<StubGeolocationService<RedisLocationCache, LocationPostgresRepository>>,
+    pub geolocation_service:
+        Arc<StubGeolocationService<RedisLocationCache, LocationPostgresRepository>>,
 
     /// Kafka event publisher
     pub event_publisher: Arc<KafkaEventPublisher>,
@@ -70,11 +73,17 @@ pub struct AppState {
     /// Notification service (stub for now)
     pub notification_service: Arc<StubNotificationService>,
 
+    /// Transactional outbox repository
+    pub outbox_repo: Arc<OutboxPostgresRepository>,
+
     /// Database connection (for migrations, etc.)
     pub db: DatabaseConnection,
 
     /// Shutdown signal sender
     pub shutdown_tx: broadcast::Sender<()>,
+
+    /// Bounding box for GetRandomAddress (optional)
+    pub random_address_bbox: Option<RandomAddressBbox>,
 }
 
 impl AppState {
@@ -118,6 +127,7 @@ impl AppState {
         let courier_repo = Arc::new(CourierPostgresRepository::new(db.clone()));
         let package_repo = Arc::new(PackagePostgresRepository::new(db.clone()));
         let location_repo = Arc::new(LocationPostgresRepository::new(db.clone()));
+        let outbox_repo = Arc::new(OutboxPostgresRepository::new(db.clone()));
         let courier_cache = Arc::new(CourierRedisCache::new(redis_conn.clone()));
         let location_cache = Arc::new(RedisLocationCache::new(redis_conn));
         let geolocation_service = Arc::new(StubGeolocationService::new(
@@ -142,13 +152,32 @@ impl AppState {
             geolocation_service,
             event_publisher,
             notification_service,
+            outbox_repo,
             db,
             shutdown_tx,
+            random_address_bbox: config.random_address_bbox.clone(),
         })
     }
 
     /// Start background consumers
     pub async fn start_consumers(&self) -> Result<(), DiError> {
+        info!("Starting delivery outbox forwarder...");
+
+        let outbox_forwarder = OutboxForwarder::new(
+            OutboxForwarderConfig::from_env(),
+            self.outbox_repo.clone(),
+            self.event_publisher.clone(),
+            self.shutdown_tx.subscribe(),
+        );
+
+        tokio::spawn(async move {
+            outbox_forwarder.run().await;
+        });
+
+        info!("Delivery outbox forwarder started");
+
+        let mut kafka_errors = Vec::new();
+
         info!("Starting location consumer...");
 
         let consumer_config = LocationConsumerConfig::from_env();
@@ -156,23 +185,43 @@ impl AppState {
         let location_repo = self.location_repo.clone();
         let shutdown_rx = self.shutdown_tx.subscribe();
 
-        // Create and start location consumer
-        let consumer = LocationConsumer::new(
-            consumer_config,
-            location_cache,
-            location_repo,
-            shutdown_rx,
-        )
-        .map_err(|e| DiError::KafkaError(e))?;
+        match LocationConsumer::new(consumer_config, location_cache, location_repo, shutdown_rx) {
+            Ok(consumer) => {
+                tokio::spawn(async move {
+                    consumer.run().await;
+                });
+                info!("Location consumer started");
+            }
+            Err(err) => kafka_errors.push(format!("location consumer: {err}")),
+        }
 
-        // Spawn consumer as background task
-        tokio::spawn(async move {
-            consumer.run().await;
-        });
+        info!("Starting courier-emulation consumer...");
 
-        info!("Location consumer started");
+        let emulation_consumer_config = EmulationConsumerConfig::from_env();
+        let emulation_shutdown_rx = self.shutdown_tx.subscribe();
 
-        Ok(())
+        match EmulationConsumer::new(
+            emulation_consumer_config,
+            self.courier_repo.clone(),
+            self.courier_cache.clone(),
+            self.package_repo.clone(),
+            self.geolocation_service.clone(),
+            emulation_shutdown_rx,
+        ) {
+            Ok(emulation_consumer) => {
+                tokio::spawn(async move {
+                    emulation_consumer.run().await;
+                });
+                info!("Courier-emulation consumer started");
+            }
+            Err(err) => kafka_errors.push(format!("courier-emulation consumer: {err}")),
+        }
+
+        if kafka_errors.is_empty() {
+            Ok(())
+        } else {
+            Err(DiError::KafkaError(kafka_errors.join("; ")))
+        }
     }
 
     /// Shutdown the application

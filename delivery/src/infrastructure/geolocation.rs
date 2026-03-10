@@ -8,8 +8,8 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 
-use crate::domain::model::{CourierLocation, LocationHistoryEntry};
 use crate::domain::model::vo::location::Location;
+use crate::domain::model::{CourierLocation, LocationHistoryEntry};
 use crate::domain::ports::{
     GeolocationService, GeolocationServiceError, LocationCache, LocationRepository,
 };

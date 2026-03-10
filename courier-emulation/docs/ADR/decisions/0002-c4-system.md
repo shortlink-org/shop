@@ -43,8 +43,9 @@ System_Ext(osrm, "OSRM", "Open Source Routing Machine — route generation")
 
 Rel(tester, emulation, "Runs scenarios", "gRPC")
 Rel(developer, emulation, "Manages emulation", "gRPC")
-Rel(emulation, delivery, "Receives assignments, confirms delivery", "gRPC")
-Rel(emulation, geolocation, "Updates courier locations", "gRPC")
+Rel(delivery, emulation, "Publishes package assignments", "Kafka")
+Rel(emulation, delivery, "Publishes pickup and delivery confirmations", "Kafka")
+Rel(emulation, delivery, "Publishes courier locations", "Kafka")
 Rel(emulation, osrm, "Generates routes", "HTTP")
 
 @enduml
@@ -80,8 +81,9 @@ Rel(simulator, route_gen, "Requests route")
 Rel(simulator, event_emitter, "Sends events")
 Rel(route_gen, osrm, "Generates route", "HTTP")
 Rel(route_gen, route_cache, "Caches routes")
-Rel(event_emitter, delivery, "Delivery statuses", "gRPC")
-Rel(event_emitter, geolocation, "Location updates", "gRPC")
+Rel(delivery, event_emitter, "Package assignments", "Kafka")
+Rel(event_emitter, delivery, "Pickup and delivery confirmations", "Kafka")
+Rel(event_emitter, delivery, "Location updates", "Kafka")
 
 @enduml
 ```

@@ -41,11 +41,7 @@ impl MigrationTrait for Migration {
                             .primary_key()
                             .extra("DEFAULT gen_random_uuid()"),
                     )
-                    .col(
-                        ColumnDef::new(Couriers::Name)
-                            .string_len(255)
-                            .not_null(),
-                    )
+                    .col(ColumnDef::new(Couriers::Name).string_len(255).not_null())
                     .col(
                         ColumnDef::new(Couriers::Phone)
                             .string_len(20)
@@ -73,16 +69,8 @@ impl MigrationTrait for Migration {
                             .string_len(100)
                             .not_null(),
                     )
-                    .col(
-                        ColumnDef::new(Couriers::WorkHoursStart)
-                            .time()
-                            .not_null(),
-                    )
-                    .col(
-                        ColumnDef::new(Couriers::WorkHoursEnd)
-                            .time()
-                            .not_null(),
-                    )
+                    .col(ColumnDef::new(Couriers::WorkHoursStart).time().not_null())
+                    .col(ColumnDef::new(Couriers::WorkHoursEnd).time().not_null())
                     .col(
                         ColumnDef::new(Couriers::WorkDays)
                             .array(ColumnType::Integer)

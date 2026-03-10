@@ -12,7 +12,9 @@ pub mod package;
 pub mod vo;
 
 // Re-exports for convenience
-pub use courier_location::{CourierLocation, CourierLocationError, LocationHistoryEntry, TimeRange};
+pub use courier_location::{
+    CourierLocation, CourierLocationError, LocationHistoryEntry, TimeRange,
+};
 
 // Proto-generated domain models organized as nested modules
 pub mod domain {

@@ -64,6 +64,20 @@ service DeliveryService {
   
   // GetCourierDeliveries retrieves recent deliveries for a courier
   rpc GetCourierDeliveries(GetCourierDeliveriesRequest) returns (GetCourierDeliveriesResponse);
+
+  // ==================== Random Address ====================
+  // GetRandomAddress returns a random address within the configured region (e.g. Berlin bbox)
+  rpc GetRandomAddress(GetRandomAddressRequest) returns (GetRandomAddressResponse);
+}
+
+// ==================== GetRandomAddress ====================
+
+// GetRandomAddressRequest is empty; bounds come from server config (env)
+message GetRandomAddressRequest {}
+
+// GetRandomAddressResponse returns one random address within configured bbox
+message GetRandomAddressResponse {
+  Address address = 1;
 }
 
 // ==================== Common Types ====================

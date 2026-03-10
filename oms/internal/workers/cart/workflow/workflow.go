@@ -8,7 +8,6 @@ import (
 	"go.temporal.io/sdk/workflow"
 
 	v2 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
-	itemv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/item/v1"
 	"github.com/shortlink-org/shop/oms/internal/workers/cart/activities"
 )
 
@@ -33,14 +32,6 @@ func Workflow(ctx workflow.Context, customerID uuid.UUID) error {
 			BackoffCoefficient: 2.0, //nolint:mnd // exponential backoff
 			MaximumInterval:    time.Minute,
 			MaximumAttempts:    3,
-			NonRetryableErrorTypes: []string{
-				itemv1.ErrItemGoodIdZero.Error(),
-				itemv1.ErrItemQuantityZero.Error(),
-				itemv1.ErrItemPriceNegative.Error(),
-				itemv1.ErrItemDiscountNegative.Error(),
-				itemv1.ErrItemTaxNegative.Error(),
-				itemv1.ErrItemDiscountExceedsPrice.Error(),
-			},
 		},
 	}
 	ctx = workflow.WithActivityOptions(ctx, ao)

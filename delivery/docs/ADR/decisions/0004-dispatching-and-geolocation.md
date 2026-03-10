@@ -38,21 +38,23 @@ Rejection reasons (RejectionReason) are: NotAvailable, AtFullCapacity, TooFarFro
 
 ### Events and consumers
 
-- **PackageAssigned** — published when a package is assigned to a courier. Consumers: push notification service (notify courier), OMS (optional if tracking assignment).
+- **PackageAssigned** — published when a package is assigned to a courier. Delivery emits it in two forms:
+  protobuf on `delivery.package.status.v1` for OMS lifecycle tracking, and JSON on `delivery.order.assigned.v1` for courier-emulation.
 - **PackageDelivered** / **PackageNotDelivered** — published when courier confirms delivery outcome. Consumer: OMS (update order delivery status via Kafka).
 - **PackageInTransit** — published when courier picks up the package. Consumer: OMS (update order delivery status).
+- **Courier-emulation confirmations** — courier-emulation publishes pickup and delivery confirmations to `delivery.order.order_picked_up.v1` and `delivery.order.order_delivered.v1`; Delivery consumes them and translates them into canonical package lifecycle events on `delivery.package.status.v1`.
 
 Event definitions live in [domain/model/delivery/events/v1/events.proto](../../src/domain/model/delivery/events/v1/events.proto). Publishing is done via EventPublisher (Kafka implementation in infrastructure).
 
-**Kafka event format (for OMS and other consumers):** Messages in `delivery.package.status.v1` are **protobuf**-encoded. Each message includes a Kafka header `event_type` with the proto message name (e.g. `PackageInTransitEvent`, `PackageDeliveredEvent`, `PackageNotDeliveredEvent`) so consumers can decode the payload with the correct type. OMS consumes these events via the same topic and uses the header for dispatch.
+**Kafka event format:** Messages in `delivery.package.status.v1` are **protobuf**-encoded. Each message includes a Kafka header `event_type` with the proto message name (e.g. `PackageAssignedEvent`, `PackageInTransitEvent`, `PackageDeliveredEvent`, `PackageNotDeliveredEvent`) so OMS can decode the payload with the correct type. `delivery.order.assigned.v1` remains a JSON topic for courier-emulation compatibility. `customer_phone` is intentionally omitted from the current assignment payload.
 
 ### Verification (event flow)
 
 To verify the OMS ↔ Delivery event flow:
 
-1. **Kafka config** — Both services must use the same topic (`delivery.package.status.v1`), brokers, and (for OMS) consumer group (e.g. `oms-delivery-consumer`). See Delivery `KafkaPublisherConfig` and OMS `DeliveryConsumerConfig`.
-2. **Flow** — When Delivery changes a package status (e.g. PickUpOrder → InTransit, DeliverOrder → Delivered/NotDelivered), it publishes a protobuf message with the `event_type` header. OMS consumer receives it, decodes via the event type, maps to `DeliveryStatusEvent`, and calls `HandleDeliveryStatus`; [on_delivery_status handler](../../../../oms/internal/usecases/order/event/on_delivery_status/handler.go) updates the order’s delivery status (IN_TRANSIT, DELIVERED, NOT_DELIVERED) and persists.
-3. **AcceptOrder errors** — Delivery returns gRPC `AlreadyExists` for duplicate `order_id` and `InvalidArgument` for invalid address/period; OMS should treat these as permanent failures (no retry) or handle retries according to policy.
+1. **Kafka config** — Delivery and OMS must share brokers and the protobuf lifecycle topic `delivery.package.status.v1`; courier-emulation consumes the JSON assignment topic `delivery.order.assigned.v1` and publishes confirmations back to `delivery.order.order_picked_up.v1` / `delivery.order.order_delivered.v1`.
+2. **Flow** — When Delivery changes a package status directly (AcceptOrder → Accepted, AssignOrder → Assigned) or indirectly from courier-emulation confirmations (PickUpOrder → InTransit, DeliverOrder → Delivered/NotDelivered), it publishes a protobuf message with the `event_type` header to `delivery.package.status.v1`. OMS consumer receives it, decodes via the event type, maps to `DeliveryStatusEvent`, and calls [on_delivery_status handler](../../../../oms/internal/usecases/order/event/on_delivery_status/handler.go), which updates the order lifecycle transactionally.
+3. **AcceptOrder idempotency** — Delivery treats repeated `AcceptOrder` with the same `order_id` as idempotent and returns the existing package instead of failing with `AlreadyExists`. OMS should still treat `InvalidArgument` and similar validation failures as permanent.
 
 ## References
 

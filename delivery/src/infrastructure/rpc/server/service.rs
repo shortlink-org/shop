@@ -7,16 +7,17 @@ use tonic::{Request, Response, Status};
 use tracing::instrument;
 
 use super::DeliveryServiceImpl;
-use crate::infrastructure::rpc::handlers::{courier, order};
+use crate::infrastructure::rpc::handlers::{courier, order, random_address};
 use crate::infrastructure::rpc::{
     AcceptOrderRequest, AcceptOrderResponse, ActivateCourierRequest, ActivateCourierResponse,
     ArchiveCourierRequest, ArchiveCourierResponse, AssignOrderRequest, AssignOrderResponse,
     ChangeTransportTypeRequest, ChangeTransportTypeResponse, DeactivateCourierRequest,
     DeactivateCourierResponse, DeliverOrderRequest, DeliverOrderResponse, DeliveryService,
     GetCourierDeliveriesRequest, GetCourierDeliveriesResponse, GetCourierPoolRequest,
-    GetCourierPoolResponse, GetCourierRequest, GetCourierResponse, PickUpOrderRequest,
-    PickUpOrderResponse, RegisterCourierRequest, RegisterCourierResponse, UpdateContactInfoRequest,
-    UpdateContactInfoResponse, UpdateWorkScheduleRequest, UpdateWorkScheduleResponse,
+    GetCourierPoolResponse, GetCourierRequest, GetCourierResponse, GetRandomAddressRequest,
+    GetRandomAddressResponse, PickUpOrderRequest, PickUpOrderResponse, RegisterCourierRequest,
+    RegisterCourierResponse, UpdateContactInfoRequest, UpdateContactInfoResponse,
+    UpdateWorkScheduleRequest, UpdateWorkScheduleResponse,
 };
 
 #[tonic::async_trait]
@@ -141,5 +142,15 @@ impl DeliveryService for DeliveryServiceImpl {
         request: Request<GetCourierDeliveriesRequest>,
     ) -> Result<Response<GetCourierDeliveriesResponse>, Status> {
         courier::get_courier_deliveries(&self.state, request.into_inner()).await
+    }
+
+    // ==================== Random Address ====================
+
+    #[instrument(skip(self, request))]
+    async fn get_random_address(
+        &self,
+        request: Request<GetRandomAddressRequest>,
+    ) -> Result<Response<GetRandomAddressResponse>, Status> {
+        random_address::get_random_address(&self.state, request.into_inner()).await
     }
 }

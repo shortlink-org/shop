@@ -47,6 +47,7 @@ deploy:
     USER: courier
     TRACER_URI: grafana-tempo.grafana:4317
     OSRM_URL: http://osrm.shortlink-shop.svc.cluster.local:5000
+    WATERMILL_KAFKA_BROKERS: shortlink-kafka-bootstrap.kafka.svc.cluster.local:9092
 
   # -- define a liveness probe that checks every 5 seconds, starting after 5 seconds
   livenessProbe:

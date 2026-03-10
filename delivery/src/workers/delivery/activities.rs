@@ -12,7 +12,7 @@ use uuid::Uuid;
 
 use crate::domain::ports::{CourierCache, CourierRepository, QueryHandler};
 use crate::domain::services::dispatch::{
-    CourierForDispatch, DispatchResult, DispatchFailure, DispatchService, PackageForDispatch,
+    CourierForDispatch, DispatchFailure, DispatchResult, DispatchService, PackageForDispatch,
 };
 use crate::usecases::courier::query::get_pool::{Handler as GetPoolHandler, Query as GetPoolQuery};
 
@@ -49,7 +49,10 @@ where
 {
     /// Create new delivery activities
     pub fn new(get_pool_handler: Arc<GetPoolHandler<R, C>>, cache: Arc<C>) -> Self {
-        Self { get_pool_handler, cache }
+        Self {
+            get_pool_handler,
+            cache,
+        }
     }
 
     // =========================================================================

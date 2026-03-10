@@ -13,10 +13,10 @@ use std::sync::Arc;
 use thiserror::Error;
 use uuid::Uuid;
 
+use crate::domain::model::courier::Courier;
 use crate::domain::ports::{
     CacheError, CachedCourierState, CourierCache, CourierRepository, QueryHandler, RepositoryError,
 };
-use crate::domain::model::courier::Courier;
 
 use super::Query;
 

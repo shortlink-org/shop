@@ -47,10 +47,7 @@ pub trait LocationCache: Send + Sync {
     /// Stores the location with a TTL (e.g., 5 minutes).
     /// If the courier doesn't report a new location within the TTL,
     /// the cached location will expire automatically.
-    async fn set_location(
-        &self,
-        location: &CourierLocation,
-    ) -> Result<(), LocationCacheError>;
+    async fn set_location(&self, location: &CourierLocation) -> Result<(), LocationCacheError>;
 
     /// Get courier's current location
     ///

@@ -57,7 +57,12 @@ impl From<&Courier> for ActiveModel {
             work_zone: Set(courier.work_zone().to_string()),
             work_hours_start: Set(courier.work_hours().start),
             work_hours_end: Set(courier.work_hours().end),
-            work_days: Set(courier.work_hours().days.iter().map(|&d| d as i32).collect()),
+            work_days: Set(courier
+                .work_hours()
+                .days
+                .iter()
+                .map(|&d| d as i32)
+                .collect()),
             push_token: Set(courier.push_token().map(String::from)),
             created_at: Set(courier.created_at()),
             updated_at: Set(courier.updated_at()),
@@ -142,14 +147,8 @@ mod tests {
 
     #[test]
     fn test_transport_type_conversion() {
-        assert_eq!(
-            transport_type_to_string(TransportType::Walking),
-            "walking"
-        );
-        assert_eq!(
-            transport_type_to_string(TransportType::Bicycle),
-            "bicycle"
-        );
+        assert_eq!(transport_type_to_string(TransportType::Walking), "walking");
+        assert_eq!(transport_type_to_string(TransportType::Bicycle), "bicycle");
         assert_eq!(
             transport_type_to_string(TransportType::Motorcycle),
             "motorcycle"

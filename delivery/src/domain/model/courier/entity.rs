@@ -62,9 +62,9 @@ impl WorkHours {
         end: chrono::NaiveTime,
         days: Vec<u8>,
     ) -> Result<Self, CourierError> {
-        if start >= end {
+        if start == end {
             return Err(CourierError::InvalidWorkHours(
-                "Start time must be before end time".to_string(),
+                "Start time must not equal end time".to_string(),
             ));
         }
         if days.is_empty() {
@@ -88,7 +88,15 @@ impl WorkHours {
         let weekday = time.weekday().number_from_monday() as u8;
         let time_of_day = time.time();
 
-        self.days.contains(&weekday) && time_of_day >= self.start && time_of_day <= self.end
+        if !self.days.contains(&weekday) {
+            return false;
+        }
+
+        if self.start < self.end {
+            time_of_day >= self.start && time_of_day <= self.end
+        } else {
+            time_of_day >= self.start || time_of_day <= self.end
+        }
     }
 }
 
@@ -106,7 +114,10 @@ pub enum CourierError {
     /// Capacity error
     CapacityError(CapacityError),
     /// Status transition not allowed
-    InvalidStatusTransition { from: CourierStatus, to: CourierStatus },
+    InvalidStatusTransition {
+        from: CourierStatus,
+        to: CourierStatus,
+    },
     /// Courier not available for assignment
     NotAvailable,
 }
@@ -722,10 +733,18 @@ mod tests {
 
     #[test]
     fn test_work_hours_validation() {
-        // Invalid: start >= end
+        // Valid: overnight shift
         let result = WorkHours::new(
             chrono::NaiveTime::from_hms_opt(18, 0, 0).unwrap(),
             chrono::NaiveTime::from_hms_opt(9, 0, 0).unwrap(),
+            vec![1],
+        );
+        assert!(result.is_ok());
+
+        // Invalid: start == end
+        let result = WorkHours::new(
+            chrono::NaiveTime::from_hms_opt(18, 0, 0).unwrap(),
+            chrono::NaiveTime::from_hms_opt(18, 0, 0).unwrap(),
             vec![1],
         );
         assert!(matches!(result, Err(CourierError::InvalidWorkHours(_))));
@@ -745,6 +764,33 @@ mod tests {
             vec![8], // Invalid day
         );
         assert!(matches!(result, Err(CourierError::InvalidWorkHours(_))));
+    }
+
+    #[test]
+    fn test_work_hours_is_working_at_overnight() {
+        let work_hours = WorkHours::new(
+            chrono::NaiveTime::from_hms_opt(22, 0, 0).unwrap(),
+            chrono::NaiveTime::from_hms_opt(6, 0, 0).unwrap(),
+            vec![1],
+        )
+        .unwrap();
+
+        let inside_evening = chrono::NaiveDate::from_ymd_opt(2026, 3, 9)
+            .unwrap()
+            .and_hms_opt(23, 0, 0)
+            .unwrap();
+        let inside_morning = chrono::NaiveDate::from_ymd_opt(2026, 3, 9)
+            .unwrap()
+            .and_hms_opt(5, 30, 0)
+            .unwrap();
+        let outside = chrono::NaiveDate::from_ymd_opt(2026, 3, 9)
+            .unwrap()
+            .and_hms_opt(12, 0, 0)
+            .unwrap();
+
+        assert!(work_hours.is_working_at(inside_evening));
+        assert!(work_hours.is_working_at(inside_morning));
+        assert!(!work_hours.is_working_at(outside));
     }
 
     #[test]

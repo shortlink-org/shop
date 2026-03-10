@@ -181,13 +181,8 @@ mod tests {
         let location = create_location();
         let timestamp = Utc::now();
 
-        let entry = LocationHistoryEntry::new(
-            courier_id,
-            location,
-            timestamp,
-            Some(35.0),
-            Some(180.0),
-        );
+        let entry =
+            LocationHistoryEntry::new(courier_id, location, timestamp, Some(35.0), Some(180.0));
 
         assert_eq!(entry.courier_id(), courier_id);
         assert_eq!(entry.latitude(), 52.52);

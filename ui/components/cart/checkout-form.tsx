@@ -5,7 +5,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useSession } from '@/contexts/SessionContext';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { getGraphqlEndpoint } from 'lib/shopify/config';
 
 const TIME_SLOTS = [
   { label: '09:00 - 12:00', start: '09:00', end: '12:00' },
@@ -160,6 +161,50 @@ export default function CheckoutForm({
   const recipientPhone = watch('recipientContacts.recipientPhone');
   const recipientEmail = watch('recipientContacts.recipientEmail');
   const tomorrowDate = getMinDate();
+  const [randomAddressLoading, setRandomAddressLoading] = useState(false);
+
+  const fetchRandomAddress = useCallback(async () => {
+    setRandomAddressLoading(true);
+    try {
+      const res = await fetch(getGraphqlEndpoint(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: `
+            query GetRandomAddress {
+              randomAddress {
+                address {
+                  street
+                  city
+                  postalCode
+                  country
+                }
+              }
+            }
+          `
+        })
+      });
+      const json = (await res.json()) as {
+        data?: { randomAddress?: { address?: { street?: string; city?: string; postalCode?: string; country?: string } } };
+        errors?: unknown[];
+      };
+      if (json.errors?.length) {
+        return;
+      }
+      const addr = json.data?.randomAddress?.address;
+      if (addr) {
+        setValue('deliveryAddress.street', addr.street ?? '', { shouldDirty: true, shouldTouch: true });
+        setValue('deliveryAddress.city', addr.city ?? '', { shouldDirty: true, shouldTouch: true });
+        setValue('deliveryAddress.postalCode', addr.postalCode ?? '', { shouldDirty: true, shouldTouch: true });
+        setValue('deliveryAddress.country', (addr.country ?? 'Germany') as CheckoutFormInput['deliveryAddress']['country'], {
+          shouldDirty: true,
+          shouldTouch: true
+        });
+      }
+    } finally {
+      setRandomAddressLoading(false);
+    }
+  }, [setValue]);
 
   useEffect(() => {
     const traits: Record<string, unknown> =
@@ -191,7 +236,17 @@ export default function CheckoutForm({
     >
       {/* Delivery Address Section */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-[var(--color-foreground)]">Delivery Address</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-[var(--color-foreground)]">Delivery Address</h3>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={fetchRandomAddress}
+            loading={randomAddressLoading}
+          >
+            Random address
+          </Button>
+        </div>
 
         <div>
           <label

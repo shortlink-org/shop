@@ -30,24 +30,21 @@ func main() {
 
 	defer func() {
 		if r := recover(); r != nil {
-			service.Log.Error(r.(string)) //nolint:forcetypeassert,errcheck // simple type assertion
+			service.Log.Error(fmt.Sprint(r))
 		}
 	}()
 
 	// Create context for subscriber that can be canceled on shutdown
 	ctx, cancel := context.WithCancelCause(context.Background())
 
-	// Start the delivery subscriber to consume order assignment events
-	if service.DeliverySubscriber != nil {
-		err := service.DeliverySubscriber.Start(ctx)
-		if err != nil {
-			service.Log.Error("Failed to start delivery subscriber", slog.String("error", err.Error()))
-		} else {
-			service.Log.Info("Delivery subscriber started, listening for order assignments")
-		}
-	} else {
-		service.Log.Warn("Delivery subscriber not available, running without event consumption")
+	// Start the delivery subscriber to consume package assignment events.
+	err = service.DeliverySubscriber.Start(ctx)
+	if err != nil {
+		service.Log.Error("Failed to start delivery subscriber", slog.String("error", err.Error()))
+		cleanup()
+		os.Exit(1)
 	}
+	service.Log.Info("Delivery subscriber started, listening for package assignments")
 
 	service.Log.Info("Courier Emulation Service running")
 

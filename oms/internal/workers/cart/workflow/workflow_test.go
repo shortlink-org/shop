@@ -10,6 +10,7 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/testsuite"
 
 	v2 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
@@ -250,6 +251,32 @@ func (s *CartWorkflowTestSuite) Test_Workflow_ActivityExecution() {
 	}, time.Millisecond*10)
 
 	// Cancel workflow after signal is processed
+	s.env.RegisterDelayedCallback(func() {
+		s.env.CancelWorkflow()
+	}, time.Millisecond*100)
+
+	s.env.ExecuteWorkflow(Workflow, testCustomerID)
+
+	s.True(s.env.IsWorkflowCompleted())
+}
+
+func (s *CartWorkflowTestSuite) Test_Workflow_AddItemNonRetryableFailure() {
+	addReq := activities.AddItemRequest{
+		CustomerID: testCustomerID,
+		GoodID:     testGoodID,
+		Quantity:   0,
+		Price:      decimal.NewFromFloat(9.99),
+		Discount:   decimal.Zero,
+	}
+
+	s.env.OnActivity("AddItem", mock.Anything, mock.Anything).Return(
+		temporal.NewNonRetryableApplicationError("invalid quantity", "CartValidationError", nil),
+	).Once()
+
+	s.env.RegisterDelayedCallback(func() {
+		s.env.SignalWorkflow(v2.Event_EVENT_ADD.String(), addReq)
+	}, time.Millisecond*10)
+
 	s.env.RegisterDelayedCallback(func() {
 		s.env.CancelWorkflow()
 	}, time.Millisecond*100)

@@ -4,7 +4,7 @@
 //!
 //! ## Flow
 //! 1. Validate command data
-//! 2. Check for duplicate order
+//! 2. Return existing package for duplicate order (idempotent)
 //! 3. Create Package aggregate
 //! 4. Move to IN_POOL status
 //! 5. Save to repository
@@ -15,14 +15,14 @@ use std::sync::Arc;
 
 use chrono::{DateTime, Utc};
 use thiserror::Error;
-use tracing::{info, warn};
+use tracing::info;
 use uuid::Uuid;
 
 use crate::domain::model::domain::delivery::common::v1 as proto_common;
 use crate::domain::model::domain::delivery::events::v1::PackageAcceptedEvent;
 use crate::domain::model::package::{Package, PackageStatus};
 use crate::domain::ports::{
-    CommandHandlerWithResult, DomainEvent, EventPublisher, PackageRepository, RepositoryError,
+    CommandHandlerWithResult, DomainEvent, PackageRepository, RepositoryError,
 };
 
 use super::Command;
@@ -30,10 +30,6 @@ use super::Command;
 /// Errors that can occur during order acceptance
 #[derive(Debug, Error)]
 pub enum AcceptOrderError {
-    /// Order already exists
-    #[error("Order already exists: {0}")]
-    DuplicateOrder(Uuid),
-
     /// Invalid request data
     #[error("Invalid request: {0}")]
     InvalidRequest(String),
@@ -65,26 +61,20 @@ pub struct Response {
 }
 
 /// Accept Order Handler
-pub struct Handler<R, E>
+pub struct Handler<R>
 where
     R: PackageRepository,
-    E: EventPublisher,
 {
     package_repo: Arc<R>,
-    event_publisher: Arc<E>,
 }
 
-impl<R, E> Handler<R, E>
+impl<R> Handler<R>
 where
     R: PackageRepository,
-    E: EventPublisher,
 {
     /// Create a new handler instance
-    pub fn new(package_repo: Arc<R>, event_publisher: Arc<E>) -> Self {
-        Self {
-            package_repo,
-            event_publisher,
-        }
+    pub fn new(package_repo: Arc<R>) -> Self {
+        Self { package_repo }
     }
 
     /// Derive work zone from delivery address (simplified)
@@ -100,10 +90,9 @@ where
     }
 }
 
-impl<R, E> CommandHandlerWithResult<Command, Response> for Handler<R, E>
+impl<R> CommandHandlerWithResult<Command, Response> for Handler<R>
 where
     R: PackageRepository + Send + Sync,
-    E: EventPublisher + Send + Sync,
 {
     type Error = AcceptOrderError;
 
@@ -112,13 +101,21 @@ where
         // 1. Validate command
         cmd.validate().map_err(AcceptOrderError::InvalidRequest)?;
 
-        // 2. Check for duplicate order
-        if let Some(_existing) = self
-            .package_repo
-            .find_by_order_id(cmd.order_id)
-            .await?
-        {
-            return Err(AcceptOrderError::DuplicateOrder(cmd.order_id));
+        // 2. Return existing package for duplicate order_id to keep AcceptOrder idempotent.
+        if let Some(existing) = self.package_repo.find_by_order_id(cmd.order_id).await? {
+            info!(
+                order_id = %cmd.order_id,
+                package_id = %existing.id(),
+                status = ?existing.status(),
+                "Package already exists for order, returning existing package"
+            );
+
+            return Ok(Response {
+                package_id: existing.id().0,
+                order_id: existing.order_id(),
+                status: existing.status(),
+                created_at: existing.created_at(),
+            });
         }
 
         // 3. Convert inputs to domain objects
@@ -138,7 +135,10 @@ where
             .map_err(AcceptOrderError::InvalidDeliveryPeriod)?;
 
         // 4. Derive zone from delivery address
-        let zone = Self::derive_zone(&cmd.delivery_address.city, &cmd.delivery_address.postal_code);
+        let zone = Self::derive_zone(
+            &cmd.delivery_address.city,
+            &cmd.delivery_address.postal_code,
+        );
 
         // 5. Create Package aggregate with ACCEPTED status
         let mut package = Package::new(
@@ -165,12 +165,8 @@ where
         let created_at = package.created_at();
         let status = package.status();
 
-        // 7. Save to repository
-        self.package_repo.save(&package).await?;
-
-        // 8. Publish PackageAccepted event
         let now = Utc::now();
-        let event = PackageAcceptedEvent {
+        let events = vec![DomainEvent::PackageAccepted(PackageAcceptedEvent {
             package_id: package_id.to_string(),
             order_id: cmd.order_id.to_string(),
             customer_id: cmd.customer_id.to_string(),
@@ -183,25 +179,17 @@ where
                 seconds: now.timestamp(),
                 nanos: now.timestamp_subsec_nanos() as i32,
             }),
-        };
-        if let Err(e) = self
-            .event_publisher
-            .publish(DomainEvent::PackageAccepted(event))
-            .await
-        {
-            warn!(
-                package_id = %package_id,
-                order_id = %cmd.order_id,
-                error = %e,
-                "Failed to publish PackageAccepted event (non-fatal)"
-            );
-        } else {
-            info!(
-                package_id = %package_id,
-                order_id = %cmd.order_id,
-                "PackageAccepted event published"
-            );
-        }
+        })];
+
+        // 7. Save package and outbox rows atomically.
+        self.package_repo
+            .save_with_events(&package, &events)
+            .await?;
+        info!(
+            package_id = %package_id,
+            order_id = %cmd.order_id,
+            "PackageAccepted event enqueued to outbox"
+        );
 
         Ok(Response {
             package_id: package_id.0,
@@ -216,7 +204,7 @@ where
 mod tests {
     use super::*;
     use crate::domain::model::package::{PackageId, Priority};
-    use crate::domain::ports::{MockEventPublisher, PackageFilter};
+    use crate::domain::ports::PackageFilter;
     use crate::usecases::package::command::accept_order::command::{
         AddressInput, DeliveryPeriodInput,
     };
@@ -255,7 +243,10 @@ mod tests {
             Ok(packages.get(&id.0).cloned())
         }
 
-        async fn find_by_order_id(&self, order_id: Uuid) -> Result<Option<Package>, RepositoryError> {
+        async fn find_by_order_id(
+            &self,
+            order_id: Uuid,
+        ) -> Result<Option<Package>, RepositoryError> {
             let order_packages = self.order_packages.lock().unwrap();
             let packages = self.packages.lock().unwrap();
             if let Some(package_id) = order_packages.get(&order_id) {
@@ -278,7 +269,10 @@ mod tests {
             Ok(0)
         }
 
-        async fn find_by_courier(&self, _courier_id: Uuid) -> Result<Vec<Package>, RepositoryError> {
+        async fn find_by_courier(
+            &self,
+            _courier_id: Uuid,
+        ) -> Result<Vec<Package>, RepositoryError> {
             Ok(vec![])
         }
 
@@ -325,8 +319,7 @@ mod tests {
     #[tokio::test]
     async fn test_accept_order_success() {
         let repo = Arc::new(MockPackageRepository::new());
-        let event_publisher = Arc::new(MockEventPublisher);
-        let handler = Handler::new(repo.clone(), event_publisher);
+        let handler = Handler::new(repo.clone());
 
         let cmd = create_valid_command();
         let order_id = cmd.order_id;
@@ -340,10 +333,9 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_accept_order_duplicate() {
+    async fn test_accept_order_duplicate_returns_existing_package() {
         let repo = Arc::new(MockPackageRepository::new());
-        let event_publisher = Arc::new(MockEventPublisher);
-        let handler = Handler::new(repo.clone(), event_publisher);
+        let handler = Handler::new(repo.clone());
 
         let cmd = create_valid_command();
         let order_id = cmd.order_id;
@@ -351,8 +343,9 @@ mod tests {
         // First accept should succeed
         let result = handler.handle(cmd.clone()).await;
         assert!(result.is_ok());
+        let initial_response = result.unwrap();
 
-        // Second accept with same order_id should fail
+        // Second accept with same order_id should return the existing package.
         let duplicate_cmd = Command::new(
             order_id, // Same order_id
             Uuid::new_v4(),
@@ -368,14 +361,19 @@ mod tests {
         );
 
         let result = handler.handle(duplicate_cmd).await;
-        assert!(matches!(result, Err(AcceptOrderError::DuplicateOrder(_))));
+        assert!(result.is_ok(), "Expected Ok, got: {:?}", result.err());
+
+        let duplicate_response = result.unwrap();
+
+        assert_eq!(duplicate_response.package_id, initial_response.package_id);
+        assert_eq!(duplicate_response.order_id, initial_response.order_id);
+        assert_eq!(duplicate_response.status, initial_response.status);
     }
 
     #[tokio::test]
     async fn test_accept_order_invalid_weight() {
         let repo = Arc::new(MockPackageRepository::new());
-        let event_publisher = Arc::new(MockEventPublisher);
-        let handler = Handler::new(repo, event_publisher);
+        let handler = Handler::new(repo);
 
         let cmd = Command::new(
             Uuid::new_v4(),

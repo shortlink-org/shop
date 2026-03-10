@@ -43,7 +43,11 @@ impl std::fmt::Display for CourierLocationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             CourierLocationError::InvalidSpeed(s) => {
-                write!(f, "Invalid speed: {}. Must be >= 0 and <= {}", s, MAX_SPEED_KMH)
+                write!(
+                    f,
+                    "Invalid speed: {}. Must be >= 0 and <= {}",
+                    s, MAX_SPEED_KMH
+                )
             }
             CourierLocationError::InvalidHeading(h) => {
                 write!(f, "Invalid heading: {}. Must be between 0 and 360", h)
@@ -98,12 +102,12 @@ impl CourierLocation {
         // Validate timestamp (not too far in future, not too old)
         let now = Utc::now();
         let diff_secs = (timestamp - now).num_seconds();
-        
+
         // Allow 60 seconds into the future (clock drift)
         if diff_secs > 60 {
             return Err(CourierLocationError::TimestampInFuture);
         }
-        
+
         // Reject locations older than 5 minutes
         if diff_secs < -300 {
             return Err(CourierLocationError::TimestampTooOld);
@@ -224,13 +228,7 @@ mod tests {
         let location = create_location();
         let now = Utc::now();
 
-        let courier_loc = CourierLocation::new(
-            courier_id,
-            location,
-            now,
-            Some(35.0),
-            Some(180.0),
-        );
+        let courier_loc = CourierLocation::new(courier_id, location, now, Some(35.0), Some(180.0));
 
         assert!(courier_loc.is_ok());
         let loc = courier_loc.unwrap();
@@ -278,11 +276,17 @@ mod tests {
 
         // Negative heading
         let result = CourierLocation::new(courier_id, location, now, None, Some(-1.0));
-        assert!(matches!(result, Err(CourierLocationError::InvalidHeading(_))));
+        assert!(matches!(
+            result,
+            Err(CourierLocationError::InvalidHeading(_))
+        ));
 
         // Heading > 360
         let result = CourierLocation::new(courier_id, location, now, None, Some(361.0));
-        assert!(matches!(result, Err(CourierLocationError::InvalidHeading(_))));
+        assert!(matches!(
+            result,
+            Err(CourierLocationError::InvalidHeading(_))
+        ));
     }
 
     #[test]
@@ -306,7 +310,8 @@ mod tests {
             Utc::now(),
             None,
             None,
-        ).unwrap();
+        )
+        .unwrap();
 
         let courier2 = CourierLocation::new(
             Uuid::new_v4(),
@@ -314,7 +319,8 @@ mod tests {
             Utc::now(),
             None,
             None,
-        ).unwrap();
+        )
+        .unwrap();
 
         let distance = courier1.distance_to(&courier2);
         // Berlin to Munich is approximately 504 km
@@ -330,7 +336,8 @@ mod tests {
             now,
             None,
             None,
-        ).unwrap();
+        )
+        .unwrap();
 
         let courier2 = CourierLocation::new(
             Uuid::new_v4(),
@@ -338,7 +345,8 @@ mod tests {
             now,
             None,
             None,
-        ).unwrap();
+        )
+        .unwrap();
 
         assert!(courier1.is_within(&courier2, 1.0)); // Within 1km
         assert!(!courier1.is_within(&courier2, 0.001)); // Not within 1 meter

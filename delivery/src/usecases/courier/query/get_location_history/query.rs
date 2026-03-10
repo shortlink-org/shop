@@ -32,12 +32,7 @@ impl Query {
     }
 
     /// Create query with pagination
-    pub fn paginated(
-        courier_id: Uuid,
-        time_range: TimeRange,
-        limit: u32,
-        offset: u32,
-    ) -> Self {
+    pub fn paginated(courier_id: Uuid, time_range: TimeRange, limit: u32, offset: u32) -> Self {
         Self {
             courier_id,
             time_range,

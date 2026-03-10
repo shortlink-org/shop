@@ -5,17 +5,17 @@ import "time"
 // defaultLocationAccuracy is the default accuracy radius in meters for Location in events.
 const defaultLocationAccuracy = 10.0
 
-// PickUpOrderEvent represents an order picked up event.
+// PickUpOrderEvent represents a package picked up event.
 type PickUpOrderEvent struct {
-	OrderID        string    `json:"order_id"`
+	PackageID      string    `json:"package_id"`
 	CourierID      string    `json:"courier_id"`
 	PickupLocation Location  `json:"pickup_location"`
 	PickedUpAt     time.Time `json:"picked_up_at"`
 }
 
-// DeliverOrderEvent represents an order delivered event.
+// DeliverOrderEvent represents a package delivery result event.
 type DeliverOrderEvent struct {
-	OrderID         string             `json:"order_id"`
+	PackageID       string             `json:"package_id"`
 	CourierID       string             `json:"courier_id"`
 	Status          DeliveryStatus     `json:"status"`
 	Reason          NotDeliveredReason `json:"reason,omitempty"`

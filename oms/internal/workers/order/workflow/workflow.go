@@ -12,6 +12,8 @@ import (
 	"github.com/shortlink-org/shop/oms/internal/workers/order/activities"
 )
 
+const requestDeliveryHeartbeatTimeout = 10 * time.Second
+
 // WorkflowInput contains all inputs for the order workflow.
 type WorkflowInput struct {
 	OrderID         uuid.UUID
@@ -56,18 +58,6 @@ func WorkflowWithDelivery(ctx workflow.Context, input WorkflowInput) error {
 			BackoffCoefficient: 2.0, //nolint:mnd // exponential backoff
 			MaximumInterval:    time.Minute,
 			MaximumAttempts:    3,
-			NonRetryableErrorTypes: []string{
-				v2.ErrOrderItemsEmpty.Error(),
-				v2.ErrOrderItemInvalid.Error(),
-				v2.ErrOrderItemQuantityZero.Error(),
-				v2.ErrOrderItemPriceNegative.Error(),
-				v2.ErrOrderItemPriceZero.Error(),
-				v2.ErrOrderItemsDuplicate.Error(),
-				v2.ErrOrderInvalidStateTransition.Error(),
-				v2.ErrInvalidOrderID.Error(),
-				v2.ErrInvalidGoodID.Error(),
-				v2.ErrInvalidOrderStatus.Error(),
-			},
 		},
 	}
 	ctx = workflow.WithActivityOptions(ctx, ao)
@@ -100,7 +90,14 @@ func WorkflowWithDelivery(ctx workflow.Context, input WorkflowInput) error {
 		cancelSaga = cancel
 		sagaReady.Send(ctx, struct{}{})
 
-		sagaErr := executeSagaWithDelivery(sagaCtx, input)
+		requestDeliveryCtx := workflow.WithActivityOptions(sagaCtx, workflow.ActivityOptions{
+			StartToCloseTimeout: ao.StartToCloseTimeout,
+			HeartbeatTimeout:    requestDeliveryHeartbeatTimeout,
+			RetryPolicy:         ao.RetryPolicy,
+			Summary:             "Request delivery",
+		})
+
+		sagaErr := executeSagaWithDelivery(sagaCtx, requestDeliveryCtx, input)
 		if sagaErr != nil {
 			orderStatus = "FAILED"
 			orderError = sagaErr
@@ -150,7 +147,7 @@ func WorkflowWithDelivery(ctx workflow.Context, input WorkflowInput) error {
 //
 //nolint:unused // reserved for workflows that do not use delivery
 func executeSaga(ctx workflow.Context, orderID, customerID uuid.UUID, items v2.Items) error {
-	return executeSagaWithDelivery(ctx, WorkflowInput{
+	return executeSagaWithDelivery(ctx, ctx, WorkflowInput{
 		OrderID:         orderID,
 		CustomerID:      customerID,
 		Items:           items,
@@ -160,7 +157,7 @@ func executeSaga(ctx workflow.Context, orderID, customerID uuid.UUID, items v2.I
 
 // executeSagaWithDelivery executes the order processing saga with optional delivery.
 // Returns error if any step fails (compensation should be handled).
-func executeSagaWithDelivery(ctx workflow.Context, input WorkflowInput) error {
+func executeSagaWithDelivery(ctx workflow.Context, requestDeliveryCtx workflow.Context, input WorkflowInput) error {
 	logger := workflow.GetLogger(ctx)
 	hasDelivery := input.RequestDelivery
 
@@ -186,7 +183,7 @@ func executeSagaWithDelivery(ctx workflow.Context, input WorkflowInput) error {
 
 		var deliveryResp activities.RequestDeliveryResponse
 
-		err := workflow.ExecuteActivity(ctx, "RequestDelivery", activities.RequestDeliveryRequest{
+		err := workflow.ExecuteActivity(requestDeliveryCtx, "RequestDelivery", activities.RequestDeliveryRequest{
 			OrderID: input.OrderID,
 		}).Get(ctx, &deliveryResp)
 		if err != nil {

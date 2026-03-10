@@ -16,8 +16,7 @@ func NewStatusPublisher(cfg *config.Config, log logger.Logger) (*kafka.KafkaStat
 
 	publisher, err := sdkkafka.NewPublisherFromConfig(log, cfg)
 	if err != nil {
-		log.Warn("Failed to create Kafka status publisher, running without Kafka")
-		return nil, func() {}, nil //nolint:nilerr // intentionally returning nil to continue without Kafka
+		return nil, func() {}, err
 	}
 
 	cleanup := func() {

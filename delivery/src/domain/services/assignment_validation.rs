@@ -15,9 +15,7 @@ pub enum AssignmentValidationError {
         expected: PackageStatus,
     },
     /// Courier is not available
-    CourierNotAvailable {
-        current: CourierStatus,
-    },
+    CourierNotAvailable { current: CourierStatus },
     /// Courier is outside working hours
     OutsideWorkingHours {
         current_hour: u8,
@@ -25,15 +23,9 @@ pub enum AssignmentValidationError {
         end_hour: u8,
     },
     /// Courier has reached maximum capacity
-    CourierAtCapacity {
-        current: u32,
-        max: u32,
-    },
+    CourierAtCapacity { current: u32, max: u32 },
     /// Distance exceeds courier's maximum
-    DistanceExceedsMax {
-        distance_km: f64,
-        max_km: f64,
-    },
+    DistanceExceedsMax { distance_km: f64, max_km: f64 },
 }
 
 impl std::fmt::Display for AssignmentValidationError {
@@ -61,13 +53,12 @@ impl std::fmt::Display for AssignmentValidationError {
                 )
             }
             AssignmentValidationError::CourierAtCapacity { current, max } => {
-                write!(
-                    f,
-                    "Courier at capacity: {}/{} packages",
-                    current, max
-                )
+                write!(f, "Courier at capacity: {}/{} packages", current, max)
             }
-            AssignmentValidationError::DistanceExceedsMax { distance_km, max_km } => {
+            AssignmentValidationError::DistanceExceedsMax {
+                distance_km,
+                max_km,
+            } => {
                 write!(
                     f,
                     "Distance {:.2} km exceeds courier's maximum {:.2} km",
@@ -128,7 +119,11 @@ impl AssignmentValidationService {
         }
 
         // Validate working hours
-        if !Self::is_within_working_hours(current_hour, courier.work_start_hour, courier.work_end_hour) {
+        if !Self::is_within_working_hours(
+            current_hour,
+            courier.work_start_hour,
+            courier.work_end_hour,
+        ) {
             errors.push(AssignmentValidationError::OutsideWorkingHours {
                 current_hour,
                 start_hour: courier.work_start_hour,
@@ -211,7 +206,9 @@ mod tests {
         let result = AssignmentValidationService::validate(&courier, &package, 12);
         assert!(result.is_err());
         let errors = result.unwrap_err();
-        assert!(errors.iter().any(|e| matches!(e, AssignmentValidationError::InvalidPackageStatus { .. })));
+        assert!(errors
+            .iter()
+            .any(|e| matches!(e, AssignmentValidationError::InvalidPackageStatus { .. })));
     }
 
     #[test]
@@ -223,7 +220,9 @@ mod tests {
         let result = AssignmentValidationService::validate(&courier, &package, 12);
         assert!(result.is_err());
         let errors = result.unwrap_err();
-        assert!(errors.iter().any(|e| matches!(e, AssignmentValidationError::CourierNotAvailable { .. })));
+        assert!(errors
+            .iter()
+            .any(|e| matches!(e, AssignmentValidationError::CourierNotAvailable { .. })));
     }
 
     #[test]
@@ -249,7 +248,9 @@ mod tests {
         let result = AssignmentValidationService::validate(&courier, &package, 12);
         assert!(result.is_err());
         let errors = result.unwrap_err();
-        assert!(errors.iter().any(|e| matches!(e, AssignmentValidationError::CourierAtCapacity { .. })));
+        assert!(errors
+            .iter()
+            .any(|e| matches!(e, AssignmentValidationError::CourierAtCapacity { .. })));
     }
 
     #[test]
@@ -261,7 +262,9 @@ mod tests {
         let result = AssignmentValidationService::validate(&courier, &package, 12);
         assert!(result.is_err());
         let errors = result.unwrap_err();
-        assert!(errors.iter().any(|e| matches!(e, AssignmentValidationError::DistanceExceedsMax { .. })));
+        assert!(errors
+            .iter()
+            .any(|e| matches!(e, AssignmentValidationError::DistanceExceedsMax { .. })));
     }
 
     #[test]

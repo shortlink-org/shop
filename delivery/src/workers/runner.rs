@@ -9,21 +9,282 @@
 use std::str::FromStr;
 use std::sync::Arc;
 
+use anyhow::anyhow;
+use async_trait::async_trait;
 use thiserror::Error;
 use tracing::info;
+use uuid::Uuid;
 
+use temporalio_client::{Client, ClientOptions, Connection, ConnectionOptions, TlsOptions};
 use temporalio_common::{
     telemetry::TelemetryOptions,
-    worker::{WorkerConfig, WorkerTaskTypes, WorkerVersioningStrategy},
+    worker::{WorkerDeploymentOptions, WorkerTaskTypes},
 };
-use temporalio_sdk::{sdk_client_options, ActContext, Worker};
-use temporalio_sdk_core::{init_worker, CoreRuntime, RuntimeOptions, Url};
+use temporalio_sdk::{
+    Worker, WorkerOptions,
+    activities::{ActivityContext, ActivityError, activities},
+};
+use temporalio_sdk_core::{CoreRuntime, RuntimeOptions, Url};
 
 use crate::config::TemporalConfig;
 use crate::domain::model::courier::CourierStatus;
+use crate::domain::ports::{CourierCache, CourierRepository};
 
 use super::courier::activities::CourierActivities;
 use super::delivery::activities::DeliveryActivities;
+
+#[async_trait]
+trait CourierTemporalActivityApi: Send + Sync {
+    async fn get_free_couriers(&self, zone: &str) -> Result<String, ActivityError>;
+    async fn update_courier_status(
+        &self,
+        courier_id: Uuid,
+        status: CourierStatus,
+    ) -> Result<String, ActivityError>;
+    async fn accept_package(&self, courier_id: Uuid) -> Result<String, ActivityError>;
+    async fn complete_courier_delivery(&self, courier_id: Uuid, success: bool)
+        -> Result<String, ActivityError>;
+}
+
+#[async_trait]
+impl<R, C> CourierTemporalActivityApi for CourierActivities<R, C>
+where
+    R: CourierRepository + Send + Sync + 'static,
+    C: CourierCache + Send + Sync + 'static,
+{
+    async fn get_free_couriers(&self, zone: &str) -> Result<String, ActivityError> {
+        self
+            .get_free_couriers_in_zone(&zone)
+            .await
+            .map(|couriers| {
+                couriers
+                    .iter()
+                    .map(|c| c.id().to_string())
+                    .collect::<Vec<_>>()
+                    .join(",")
+            })
+            .map_err(activity_err)
+    }
+
+    async fn update_courier_status(
+        &self,
+        courier_id: Uuid,
+        status: CourierStatus,
+    ) -> Result<String, ActivityError> {
+        self
+            .update_status(courier_id, status)
+            .await
+            .map(|_| "ok".to_string())
+            .map_err(activity_err)
+    }
+
+    async fn accept_package(&self, courier_id: Uuid) -> Result<String, ActivityError> {
+        self
+            .accept_package(courier_id)
+            .await
+            .map(|_| "ok".to_string())
+            .map_err(activity_err)
+    }
+
+    async fn complete_courier_delivery(
+        &self,
+        courier_id: Uuid,
+        success: bool,
+    ) -> Result<String, ActivityError> {
+        self
+            .complete_delivery(courier_id, success)
+            .await
+            .map(|_| "ok".to_string())
+            .map_err(activity_err)
+    }
+}
+
+struct CourierTemporalActivities {
+    inner: Arc<dyn CourierTemporalActivityApi>,
+}
+
+#[allow(dead_code)]
+#[activities]
+impl CourierTemporalActivities {
+    #[allow(dead_code)]
+    #[activity(name = "get_free_couriers")]
+    async fn get_free_couriers(
+        self: Arc<Self>,
+        _ctx: ActivityContext,
+        zone: String,
+    ) -> Result<String, ActivityError> {
+        self.inner.get_free_couriers(&zone).await
+    }
+
+    #[allow(dead_code)]
+    #[activity(name = "update_courier_status")]
+    async fn update_courier_status(
+        self: Arc<Self>,
+        _ctx: ActivityContext,
+        input: String,
+    ) -> Result<String, ActivityError> {
+        let parts: Vec<&str> = input.split(':').collect();
+        if parts.len() != 2 {
+            return Err(ActivityError::from(anyhow!(
+                "Invalid input format, expected 'id:status'"
+            )));
+        }
+
+        let courier_id = parse_uuid(parts[0], "courier")?;
+        let status = parse_courier_status(parts[1])?;
+        self.inner.update_courier_status(courier_id, status).await
+    }
+
+    #[allow(dead_code)]
+    #[activity(name = "accept_package")]
+    async fn accept_package(
+        self: Arc<Self>,
+        _ctx: ActivityContext,
+        courier_id: String,
+    ) -> Result<String, ActivityError> {
+        let courier_id = parse_uuid(&courier_id, "courier")?;
+        self.inner.accept_package(courier_id).await
+    }
+
+    #[allow(dead_code)]
+    #[activity(name = "complete_courier_delivery")]
+    async fn complete_courier_delivery(
+        self: Arc<Self>,
+        _ctx: ActivityContext,
+        input: String,
+    ) -> Result<String, ActivityError> {
+        let parts: Vec<&str> = input.split(':').collect();
+        if parts.len() != 2 {
+            return Err(ActivityError::from(anyhow!(
+                "Invalid input format, expected 'id:success'"
+            )));
+        }
+
+        let courier_id = parse_uuid(parts[0], "courier")?;
+        let success = parts[1] == "true";
+        self.inner.complete_courier_delivery(courier_id, success).await
+    }
+}
+
+#[async_trait]
+trait DeliveryTemporalActivityApi: Send + Sync {
+    async fn get_free_couriers_for_dispatch(&self, zone: &str) -> Result<String, ActivityError>;
+    async fn assign_order(&self, courier_id: Uuid, order_id: Uuid)
+        -> Result<String, ActivityError>;
+    async fn complete_delivery(
+        &self,
+        courier_id: Uuid,
+        order_id: Uuid,
+        success: bool,
+    ) -> Result<String, ActivityError>;
+}
+
+#[async_trait]
+impl<R, C> DeliveryTemporalActivityApi for DeliveryActivities<R, C>
+where
+    R: CourierRepository + Send + Sync + 'static,
+    C: CourierCache + Send + Sync + 'static,
+{
+    async fn get_free_couriers_for_dispatch(&self, zone: &str) -> Result<String, ActivityError> {
+        self
+            .get_free_couriers_for_dispatch(zone)
+            .await
+            .map(|couriers| {
+                couriers
+                    .iter()
+                    .map(|c| c.id.clone())
+                    .collect::<Vec<_>>()
+                    .join(",")
+            })
+            .map_err(activity_err)
+    }
+
+    async fn assign_order(
+        &self,
+        courier_id: Uuid,
+        order_id: Uuid,
+    ) -> Result<String, ActivityError> {
+        self
+            .assign_order(courier_id, order_id)
+            .await
+            .map(|_| "ok".to_string())
+            .map_err(activity_err)
+    }
+
+    async fn complete_delivery(
+        &self,
+        courier_id: Uuid,
+        order_id: Uuid,
+        success: bool,
+    ) -> Result<String, ActivityError> {
+        self
+            .complete_delivery(courier_id, order_id, success)
+            .await
+            .map(|_| "ok".to_string())
+            .map_err(activity_err)
+    }
+}
+
+struct DeliveryTemporalActivities {
+    inner: Arc<dyn DeliveryTemporalActivityApi>,
+}
+
+#[allow(dead_code)]
+#[activities]
+impl DeliveryTemporalActivities {
+    #[allow(dead_code)]
+    #[activity(name = "get_free_couriers_for_dispatch")]
+    async fn get_free_couriers_for_dispatch(
+        self: Arc<Self>,
+        _ctx: ActivityContext,
+        zone: String,
+    ) -> Result<String, ActivityError> {
+        self.inner.get_free_couriers_for_dispatch(&zone).await
+    }
+
+    #[allow(dead_code)]
+    #[activity(name = "assign_order")]
+    async fn assign_order(
+        self: Arc<Self>,
+        _ctx: ActivityContext,
+        input: String,
+    ) -> Result<String, ActivityError> {
+        let parts: Vec<&str> = input.split(':').collect();
+        if parts.len() != 2 {
+            return Err(ActivityError::from(anyhow!(
+                "Invalid input format, expected 'courier_id:order_id'"
+            )));
+        }
+
+        let courier_id = parse_uuid(parts[0], "courier")?;
+        let order_id = parse_uuid(parts[1], "order")?;
+
+        self.inner.assign_order(courier_id, order_id).await
+    }
+
+    #[allow(dead_code)]
+    #[activity(name = "complete_delivery")]
+    async fn complete_delivery(
+        self: Arc<Self>,
+        _ctx: ActivityContext,
+        input: String,
+    ) -> Result<String, ActivityError> {
+        let parts: Vec<&str> = input.split(':').collect();
+        if parts.len() != 3 {
+            return Err(ActivityError::from(anyhow!(
+                "Invalid input format, expected 'courier_id:order_id:success'"
+            )));
+        }
+
+        let courier_id = parse_uuid(parts[0], "courier")?;
+        let order_id = parse_uuid(parts[1], "order")?;
+        let success = parts[2] == "true";
+
+        self.inner
+            .complete_delivery(courier_id, order_id, success)
+            .await
+    }
+}
 
 /// Errors from worker initialization and runtime
 #[derive(Debug, Error)]
@@ -36,6 +297,9 @@ pub enum WorkerError {
 
     #[error("Failed to connect to Temporal: {0}")]
     ConnectionError(String),
+
+    #[error("Failed to create Temporal client: {0}")]
+    ClientError(String),
 
     #[error("Failed to create worker: {0}")]
     WorkerCreationError(String),
@@ -55,7 +319,6 @@ pub struct TemporalWorkerRunner {
 impl TemporalWorkerRunner {
     /// Create a new worker runner
     pub fn new(config: TemporalConfig) -> Result<Self, WorkerError> {
-        // Initialize telemetry
         let telemetry_options = TelemetryOptions::builder().build();
         let runtime_options = RuntimeOptions::builder()
             .telemetry_options(telemetry_options)
@@ -79,50 +342,29 @@ impl TemporalWorkerRunner {
         courier_activities: Arc<CourierActivities<R, C>>,
     ) -> Result<(), WorkerError>
     where
-        R: crate::domain::ports::CourierRepository + Send + Sync + 'static,
-        C: crate::domain::ports::CourierCache + Send + Sync + 'static,
+        R: CourierRepository + Send + Sync + 'static,
+        C: CourierCache + Send + Sync + 'static,
     {
         info!(
             "Starting courier worker on task queue: {}",
             self.config.task_queue_courier
         );
 
-        let url = Url::from_str(&self.config.server_url())
-            .map_err(|e| WorkerError::UrlParseError(e.to_string()))?;
-
-        let client_options = sdk_client_options(url).build();
-        let client = client_options
-            .connect(&self.config.namespace, None)
-            .await
-            .map_err(|e| WorkerError::ConnectionError(e.to_string()))?;
-
-        let worker_config = WorkerConfig::builder()
-            .namespace(&self.config.namespace)
-            .task_queue(&self.config.task_queue_courier)
-            .task_types(WorkerTaskTypes::activity_only())
-            .versioning_strategy(WorkerVersioningStrategy::None {
-                build_id: self.config.worker_build_id.clone(),
-            })
-            .build()
+        let client = self.connect_client().await?;
+        let worker_options = self.activity_worker_options(&self.config.task_queue_courier);
+        let mut worker = Worker::new(&self.runtime, client, worker_options)
             .map_err(|e| WorkerError::WorkerCreationError(e.to_string()))?;
 
-        let core_worker = init_worker(&self.runtime, worker_config, client)
-            .map_err(|e| WorkerError::WorkerCreationError(e.to_string()))?;
-
-        let mut worker =
-            Worker::new_from_core(Arc::new(core_worker), &self.config.task_queue_courier);
-
-        // Register courier activities
-        self.register_courier_activities(&mut worker, courier_activities);
+        worker.register_activities(CourierTemporalActivities {
+            inner: courier_activities,
+        });
 
         info!("Courier worker started, polling for tasks...");
 
         worker
             .run()
             .await
-            .map_err(|e| WorkerError::ExecutionError(e.to_string()))?;
-
-        Ok(())
+            .map_err(|e| WorkerError::ExecutionError(e.to_string()))
     }
 
     /// Run the delivery worker
@@ -135,269 +377,83 @@ impl TemporalWorkerRunner {
         delivery_activities: Arc<DeliveryActivities<R, C>>,
     ) -> Result<(), WorkerError>
     where
-        R: crate::domain::ports::CourierRepository + Send + Sync + 'static,
-        C: crate::domain::ports::CourierCache + Send + Sync + 'static,
+        R: CourierRepository + Send + Sync + 'static,
+        C: CourierCache + Send + Sync + 'static,
     {
         info!(
             "Starting delivery worker on task queue: {}",
             self.config.task_queue_delivery
         );
 
-        let url = Url::from_str(&self.config.server_url())
-            .map_err(|e| WorkerError::UrlParseError(e.to_string()))?;
-
-        let client_options = sdk_client_options(url).build();
-        let client = client_options
-            .connect(&self.config.namespace, None)
-            .await
-            .map_err(|e| WorkerError::ConnectionError(e.to_string()))?;
-
-        let worker_config = WorkerConfig::builder()
-            .namespace(&self.config.namespace)
-            .task_queue(&self.config.task_queue_delivery)
-            .task_types(WorkerTaskTypes::activity_only())
-            .versioning_strategy(WorkerVersioningStrategy::None {
-                build_id: self.config.worker_build_id.clone(),
-            })
-            .build()
+        let client = self.connect_client().await?;
+        let worker_options = self.activity_worker_options(&self.config.task_queue_delivery);
+        let mut worker = Worker::new(&self.runtime, client, worker_options)
             .map_err(|e| WorkerError::WorkerCreationError(e.to_string()))?;
 
-        let core_worker = init_worker(&self.runtime, worker_config, client)
-            .map_err(|e| WorkerError::WorkerCreationError(e.to_string()))?;
-
-        let mut worker =
-            Worker::new_from_core(Arc::new(core_worker), &self.config.task_queue_delivery);
-
-        // Register delivery activities
-        self.register_delivery_activities(&mut worker, delivery_activities);
+        worker.register_activities(DeliveryTemporalActivities {
+            inner: delivery_activities,
+        });
 
         info!("Delivery worker started, polling for tasks...");
 
         worker
             .run()
             .await
-            .map_err(|e| WorkerError::ExecutionError(e.to_string()))?;
-
-        Ok(())
+            .map_err(|e| WorkerError::ExecutionError(e.to_string()))
     }
 
-    /// Register courier activities with the worker
-    fn register_courier_activities<R, C>(
-        &self,
-        worker: &mut Worker,
-        activities: Arc<CourierActivities<R, C>>,
-    ) where
-        R: crate::domain::ports::CourierRepository + Send + Sync + 'static,
-        C: crate::domain::ports::CourierCache + Send + Sync + 'static,
-    {
-        use temporalio_sdk::ActivityError;
+    async fn connect_client(&self) -> Result<Client, WorkerError> {
+        let url = Url::from_str(&self.config.server_url())
+            .map_err(|e| WorkerError::UrlParseError(e.to_string()))?;
 
-        // Register get_free_couriers activity
-        let acts = activities.clone();
-        worker.register_activity(
-            "get_free_couriers",
-            move |_ctx: ActContext, zone: String| {
-                let acts = acts.clone();
-                async move {
-                    acts.get_free_couriers_in_zone(&zone)
-                        .await
-                        .map(|couriers| {
-                            couriers
-                                .iter()
-                                .map(|c| c.id().to_string())
-                                .collect::<Vec<_>>()
-                                .join(",")
-                        })
-                        .map_err(|e| ActivityError::from(anyhow::anyhow!("{}", e)))
-                }
-            },
-        );
+        let connection_options = if self.config.tls_enabled {
+            ConnectionOptions::new(url)
+                .tls_options(TlsOptions::default())
+                .build()
+        } else {
+            ConnectionOptions::new(url).build()
+        };
 
-        // Register update_status activity
-        let acts = activities.clone();
-        worker.register_activity(
-            "update_courier_status",
-            move |_ctx: ActContext, input: String| {
-                let acts = acts.clone();
-                async move {
-                    // Parse input as "courier_id:status"
-                    let parts: Vec<&str> = input.split(':').collect();
-                    if parts.len() != 2 {
-                        return Err(ActivityError::from(anyhow::anyhow!(
-                            "Invalid input format, expected 'id:status'"
-                        )));
-                    }
+        let connection = Connection::connect(connection_options)
+            .await
+            .map_err(|e| WorkerError::ConnectionError(e.to_string()))?;
 
-                    let courier_id = uuid::Uuid::parse_str(parts[0]).map_err(|e| {
-                        ActivityError::from(anyhow::anyhow!("Invalid courier ID: {}", e))
-                    })?;
-
-                    let status = match parts[1] {
-                        "free" => CourierStatus::Free,
-                        "busy" => CourierStatus::Busy,
-                        "unavailable" => CourierStatus::Unavailable,
-                        _ => {
-                            return Err(ActivityError::from(anyhow::anyhow!(
-                                "Invalid status: {}",
-                                parts[1]
-                            )))
-                        }
-                    };
-
-                    acts.update_status(courier_id, status)
-                        .await
-                        .map(|_| "ok".to_string())
-                        .map_err(|e| ActivityError::from(anyhow::anyhow!("{}", e)))
-                }
-            },
-        );
-
-        // Register accept_package activity
-        let acts = activities.clone();
-        worker.register_activity(
-            "accept_package",
-            move |_ctx: ActContext, courier_id: String| {
-                let acts = acts.clone();
-                async move {
-                    let id = uuid::Uuid::parse_str(&courier_id).map_err(|e| {
-                        ActivityError::from(anyhow::anyhow!("Invalid courier ID: {}", e))
-                    })?;
-                    acts.accept_package(id)
-                        .await
-                        .map(|_| "ok".to_string())
-                        .map_err(|e| ActivityError::from(anyhow::anyhow!("{}", e)))
-                }
-            },
-        );
-
-        // Register complete_delivery activity
-        let acts = activities.clone();
-        worker.register_activity(
-            "complete_courier_delivery",
-            move |_ctx: ActContext, input: String| {
-                let acts = acts.clone();
-                async move {
-                    // Parse input as "courier_id:success"
-                    let parts: Vec<&str> = input.split(':').collect();
-                    if parts.len() != 2 {
-                        return Err(ActivityError::from(anyhow::anyhow!(
-                            "Invalid input format, expected 'id:success'"
-                        )));
-                    }
-
-                    let courier_id = uuid::Uuid::parse_str(parts[0]).map_err(|e| {
-                        ActivityError::from(anyhow::anyhow!("Invalid courier ID: {}", e))
-                    })?;
-
-                    let success = parts[1] == "true";
-
-                    acts.complete_delivery(courier_id, success)
-                        .await
-                        .map(|_| "ok".to_string())
-                        .map_err(|e| ActivityError::from(anyhow::anyhow!("{}", e)))
-                }
-            },
-        );
-
-        info!("Registered courier activities");
+        Client::new(
+            connection,
+            ClientOptions::new(self.config.namespace.clone()).build(),
+        )
+        .map_err(|e| WorkerError::ClientError(e.to_string()))
     }
 
-    /// Register delivery activities with the worker
-    fn register_delivery_activities<R, C>(
-        &self,
-        worker: &mut Worker,
-        activities: Arc<DeliveryActivities<R, C>>,
-    ) where
-        R: crate::domain::ports::CourierRepository + Send + Sync + 'static,
-        C: crate::domain::ports::CourierCache + Send + Sync + 'static,
-    {
-        use temporalio_sdk::ActivityError;
-
-        // Register get_free_couriers_for_dispatch activity
-        let acts = activities.clone();
-        worker.register_activity(
-            "get_free_couriers_for_dispatch",
-            move |_ctx: ActContext, zone: String| {
-                let acts = acts.clone();
-                async move {
-                    acts.get_free_couriers_for_dispatch(&zone)
-                        .await
-                        .map(|couriers| {
-                            // Return courier IDs as comma-separated string
-                            couriers
-                                .iter()
-                                .map(|c| c.id.clone())
-                                .collect::<Vec<_>>()
-                                .join(",")
-                        })
-                        .map_err(|e| ActivityError::from(anyhow::anyhow!("{}", e)))
-                }
-            },
-        );
-
-        // Register assign_order activity
-        let acts = activities.clone();
-        worker.register_activity(
-            "assign_order",
-            move |_ctx: ActContext, input: String| {
-                let acts = acts.clone();
-                async move {
-                    // Parse input as "courier_id:order_id"
-                    let parts: Vec<&str> = input.split(':').collect();
-                    if parts.len() != 2 {
-                        return Err(ActivityError::from(anyhow::anyhow!(
-                            "Invalid input format, expected 'courier_id:order_id'"
-                        )));
-                    }
-
-                    let courier_id = uuid::Uuid::parse_str(parts[0]).map_err(|e| {
-                        ActivityError::from(anyhow::anyhow!("Invalid courier ID: {}", e))
-                    })?;
-                    let order_id = uuid::Uuid::parse_str(parts[1]).map_err(|e| {
-                        ActivityError::from(anyhow::anyhow!("Invalid order ID: {}", e))
-                    })?;
-
-                    acts.assign_order(courier_id, order_id)
-                        .await
-                        .map(|_| "ok".to_string())
-                        .map_err(|e| ActivityError::from(anyhow::anyhow!("{}", e)))
-                }
-            },
-        );
-
-        // Register complete_delivery activity
-        let acts = activities.clone();
-        worker.register_activity(
-            "complete_delivery",
-            move |_ctx: ActContext, input: String| {
-                let acts = acts.clone();
-                async move {
-                    // Parse input as "courier_id:order_id:success"
-                    let parts: Vec<&str> = input.split(':').collect();
-                    if parts.len() != 3 {
-                        return Err(ActivityError::from(anyhow::anyhow!(
-                            "Invalid input format, expected 'courier_id:order_id:success'"
-                        )));
-                    }
-
-                    let courier_id = uuid::Uuid::parse_str(parts[0]).map_err(|e| {
-                        ActivityError::from(anyhow::anyhow!("Invalid courier ID: {}", e))
-                    })?;
-                    let order_id = uuid::Uuid::parse_str(parts[1]).map_err(|e| {
-                        ActivityError::from(anyhow::anyhow!("Invalid order ID: {}", e))
-                    })?;
-                    let success = parts[2] == "true";
-
-                    acts.complete_delivery(courier_id, order_id, success)
-                        .await
-                        .map(|_| "ok".to_string())
-                        .map_err(|e| ActivityError::from(anyhow::anyhow!("{}", e)))
-                }
-            },
-        );
-
-        info!("Registered delivery activities");
+    fn activity_worker_options(&self, task_queue: &str) -> WorkerOptions {
+        WorkerOptions::new(task_queue.to_string())
+            .task_types(WorkerTaskTypes::activity_only())
+            .deployment_options(WorkerDeploymentOptions::from_build_id(
+                self.config.worker_build_id.clone(),
+            ))
+            .build()
     }
+}
+
+fn parse_uuid(value: &str, entity: &str) -> Result<Uuid, ActivityError> {
+    Uuid::parse_str(value)
+        .map_err(|e| ActivityError::from(anyhow!("Invalid {entity} ID: {e}")))
+}
+
+fn parse_courier_status(value: &str) -> Result<CourierStatus, ActivityError> {
+    match value {
+        "free" => Ok(CourierStatus::Free),
+        "busy" => Ok(CourierStatus::Busy),
+        "unavailable" => Ok(CourierStatus::Unavailable),
+        _ => Err(ActivityError::from(anyhow!("Invalid status: {value}"))),
+    }
+}
+
+fn activity_err<E>(error: E) -> ActivityError
+where
+    E: std::fmt::Display,
+{
+    ActivityError::from(anyhow!("{error}"))
 }
 
 // =============================================================================
@@ -406,19 +462,13 @@ impl TemporalWorkerRunner {
 // The Temporal Rust SDK is pre-alpha and the workflow API is unstable.
 // Workflow definitions are in courier/workflow.rs and delivery/workflow.rs.
 //
-// To register workflows, use:
-// ```rust
-// worker.register_wf("workflow_name", WorkflowFunction::new(|ctx: WfContext| async move {
-//     // Workflow logic here
-//     Ok(WfExitValue::Normal(result))
-// }));
-// ```
+// To register workflows, use the typed workflow API exposed by the current SDK.
 //
 // Workflows can:
-// - Call activities: ctx.activity(ActivityOptions { ... }).await
-// - Use timers: ctx.timer(duration).await
-// - Handle signals: ctx.make_signal_channel("name")
-// - Query state: via query handlers
+// - Call activities via typed activity handles
+// - Use timers
+// - Handle signals
+// - Query state via query handlers
 //
 // See the SDK documentation for the latest API.
 // =============================================================================

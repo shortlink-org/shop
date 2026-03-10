@@ -13,8 +13,12 @@ use uuid::Uuid;
 
 use crate::domain::model::courier::{Courier, CourierStatus, WorkHours};
 use crate::domain::model::vo::TransportType;
-use crate::domain::ports::{CommandHandlerWithResult, CourierCache, CourierRepository, QueryHandler};
-use crate::usecases::courier::command::register::{Command as RegisterCommand, Handler as RegisterHandler};
+use crate::domain::ports::{
+    CommandHandlerWithResult, CourierCache, CourierRepository, QueryHandler,
+};
+use crate::usecases::courier::command::register::{
+    Command as RegisterCommand, Handler as RegisterHandler,
+};
 use crate::usecases::courier::query::get_pool::{Handler as GetPoolHandler, Query as GetPoolQuery};
 
 /// Errors from courier activities

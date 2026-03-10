@@ -11,7 +11,7 @@ use tokio::sync::broadcast;
 use tracing::{error, info};
 use uuid::Uuid;
 
-use crate::domain::model::courier_location::{LocationHistoryEntry};
+use crate::domain::model::courier_location::LocationHistoryEntry;
 use crate::domain::model::vo::location::Location;
 use crate::domain::model::CourierLocation;
 use crate::domain::ports::{LocationCache, LocationRepository};
@@ -79,7 +79,8 @@ impl LocationConsumerConfig {
     /// Create config from environment variables
     pub fn from_env() -> Self {
         Self {
-            brokers: std::env::var("KAFKA_BROKERS").unwrap_or_else(|_| "localhost:9092".to_string()),
+            brokers: std::env::var("KAFKA_BROKERS")
+                .unwrap_or_else(|_| "localhost:9092".to_string()),
             group_id: std::env::var("KAFKA_CONSUMER_GROUP")
                 .unwrap_or_else(|_| CONSUMER_GROUP.to_string()),
             topic: std::env::var("KAFKA_LOCATION_TOPIC")
@@ -118,7 +119,7 @@ impl<C: LocationCache + 'static, R: LocationRepository + 'static> LocationConsum
         // Subscribe to topic
         let mut topics = TopicPartitionList::new();
         topics.add_partition(&config.topic, 0);
-        
+
         consumer
             .subscribe(&[&config.topic])
             .map_err(|e| format!("Failed to subscribe to topic {}: {}", config.topic, e))?;
@@ -136,7 +137,10 @@ impl<C: LocationCache + 'static, R: LocationRepository + 'static> LocationConsum
 
     /// Run the consumer loop
     pub async fn run(mut self) {
-        info!("Starting location consumer for topic: {}", self.config.topic);
+        info!(
+            "Starting location consumer for topic: {}",
+            self.config.topic
+        );
 
         loop {
             tokio::select! {
@@ -179,8 +183,9 @@ impl<C: LocationCache + 'static, R: LocationRepository + 'static> LocationConsum
             .map(|dt| dt.with_timezone(&chrono::Utc))
             .or_else(|_| {
                 // Try parsing as unix timestamp
-                event.timestamp.parse::<i64>()
-                    .map(|ts| chrono::DateTime::from_timestamp(ts, 0).unwrap_or_else(chrono::Utc::now))
+                event.timestamp.parse::<i64>().map(|ts| {
+                    chrono::DateTime::from_timestamp(ts, 0).unwrap_or_else(chrono::Utc::now)
+                })
             })
             .unwrap_or_else(|_| chrono::Utc::now());
 
@@ -205,13 +210,8 @@ impl<C: LocationCache + 'static, R: LocationRepository + 'static> LocationConsum
             .map_err(|e| format!("Failed to cache location: {}", e))?;
 
         // Store in PostgreSQL (history)
-        let history_entry = LocationHistoryEntry::new(
-            courier_id,
-            location,
-            timestamp,
-            event.speed,
-            event.heading,
-        );
+        let history_entry =
+            LocationHistoryEntry::new(courier_id, location, timestamp, event.speed, event.heading);
 
         self.location_repository
             .save(&history_entry)

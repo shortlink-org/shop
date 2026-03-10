@@ -136,33 +136,39 @@ mod tests {
     #[test]
     fn test_capacity_add_package() {
         let mut capacity = CourierCapacity::new(2);
-        
+
         assert!(capacity.add_package().is_ok());
         assert_eq!(capacity.current_load(), 1);
-        
+
         assert!(capacity.add_package().is_ok());
         assert_eq!(capacity.current_load(), 2);
         assert!(!capacity.can_accept());
-        
-        assert!(matches!(capacity.add_package(), Err(CapacityError::AtFullCapacity)));
+
+        assert!(matches!(
+            capacity.add_package(),
+            Err(CapacityError::AtFullCapacity)
+        ));
     }
 
     #[test]
     fn test_capacity_release_package() {
         let mut capacity = CourierCapacity::new(2);
         capacity.add_package().unwrap();
-        
+
         assert!(capacity.release_package().is_ok());
         assert_eq!(capacity.current_load(), 0);
-        
-        assert!(matches!(capacity.release_package(), Err(CapacityError::NoPackagesToRelease)));
+
+        assert!(matches!(
+            capacity.release_package(),
+            Err(CapacityError::NoPackagesToRelease)
+        ));
     }
 
     #[test]
     fn test_available_capacity() {
         let mut capacity = CourierCapacity::new(5);
         assert_eq!(capacity.available_capacity(), 5);
-        
+
         capacity.add_package().unwrap();
         assert_eq!(capacity.available_capacity(), 4);
     }

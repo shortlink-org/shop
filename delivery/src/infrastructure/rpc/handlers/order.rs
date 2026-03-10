@@ -20,12 +20,11 @@ use crate::usecases::package::command::accept_order::{
 use crate::usecases::package::command::assign_order::{
     AssignmentMode, Command as AssignCommand, Handler as AssignHandler,
 };
+use crate::usecases::package::command::deliver_order::{
+    Command as DeliverCommand, DeliverOrderError, Handler as DeliverHandler, NotDeliveredReason,
+};
 use crate::usecases::package::command::pick_up_order::{
     Command as PickUpCommand, Handler as PickUpHandler, PickUpOrderError,
-};
-use crate::usecases::package::command::deliver_order::{
-    Command as DeliverCommand, Handler as DeliverHandler, DeliverOrderError,
-    NotDeliveredReason,
 };
 
 use crate::infrastructure::rpc::converters::now_timestamp;
@@ -77,7 +76,10 @@ pub async fn accept_order(
     state: &Arc<AppState>,
     req: AcceptOrderRequest,
 ) -> Result<Response<AcceptOrderResponse>, Status> {
-    info!("AcceptOrder request received for order_id: {}", req.order_id);
+    info!(
+        "AcceptOrder request received for order_id: {}",
+        req.order_id
+    );
 
     // Parse UUIDs
     let order_id = uuid::Uuid::parse_str(&req.order_id)
@@ -128,39 +130,33 @@ pub async fn accept_order(
         .ok_or_else(|| Status::invalid_argument("package_info is required"))?;
 
     // Map recipient contacts from optional nested message
-    let (customer_phone, recipient_name, recipient_phone, recipient_email) =
-        req.recipient_contacts.as_ref().map_or(
-            (None, None, None, None),
-            |c| {
-                (
-                    if c.recipient_phone.is_empty() {
-                        None
-                    } else {
-                        Some(c.recipient_phone.clone())
-                    },
-                    if c.recipient_name.is_empty() {
-                        None
-                    } else {
-                        Some(c.recipient_name.clone())
-                    },
-                    if c.recipient_phone.is_empty() {
-                        None
-                    } else {
-                        Some(c.recipient_phone.clone())
-                    },
-                    if c.recipient_email.is_empty() {
-                        None
-                    } else {
-                        Some(c.recipient_email.clone())
-                    },
-                )
-            },
-        );
+    let (recipient_name, recipient_phone, recipient_email) = req
+        .recipient_contacts
+        .as_ref()
+        .map_or((None, None, None), |c| {
+            (
+                if c.recipient_name.is_empty() {
+                    None
+                } else {
+                    Some(c.recipient_name.clone())
+                },
+                if c.recipient_phone.is_empty() {
+                    None
+                } else {
+                    Some(c.recipient_phone.clone())
+                },
+                if c.recipient_email.is_empty() {
+                    None
+                } else {
+                    Some(c.recipient_email.clone())
+                },
+            )
+        });
 
     let cmd = AcceptCommand::new(
         order_id,
         customer_id,
-        customer_phone,
+        None,
         recipient_name,
         recipient_phone,
         recipient_email,
@@ -172,12 +168,11 @@ pub async fn accept_order(
     );
 
     // Execute handler
-    let handler = AcceptHandler::new(state.package_repo.clone(), state.event_publisher.clone());
+    let handler = AcceptHandler::new(state.package_repo.clone());
 
     let result = handler.handle(cmd).await.map_err(|e| {
         error!(error = %e, "Failed to accept order");
         match e {
-            AcceptOrderError::DuplicateOrder(_) => Status::already_exists(e.to_string()),
             AcceptOrderError::InvalidRequest(msg) => Status::invalid_argument(msg),
             AcceptOrderError::InvalidAddress(msg) => Status::invalid_argument(msg),
             AcceptOrderError::InvalidDeliveryPeriod(msg) => Status::invalid_argument(msg),
@@ -239,7 +234,6 @@ pub async fn assign_order(
         state.courier_repo.clone(),
         state.courier_cache.clone(),
         state.package_repo.clone(),
-        state.event_publisher.clone(),
         state.notification_service.clone(),
         state.location_cache.clone(),
     );
@@ -281,7 +275,10 @@ pub async fn pick_up_order(
     state: &Arc<AppState>,
     req: PickUpOrderRequest,
 ) -> Result<Response<PickUpOrderResponse>, Status> {
-    info!("PickUpOrder request received for package_id: {}", req.package_id);
+    info!(
+        "PickUpOrder request received for package_id: {}",
+        req.package_id
+    );
 
     // Parse UUIDs
     let package_id = uuid::Uuid::parse_str(&req.package_id)
@@ -304,7 +301,6 @@ pub async fn pick_up_order(
     // Execute handler
     let handler = PickUpHandler::new(
         state.package_repo.clone(),
-        state.event_publisher.clone(),
         state.geolocation_service.clone(),
     );
 
@@ -337,7 +333,9 @@ pub async fn pick_up_order(
 /// Convert proto NotDeliveredReason to domain NotDeliveredReason
 fn proto_to_domain_reason(proto: i32, description: String) -> Option<NotDeliveredReason> {
     match ProtoNotDeliveredReason::try_from(proto) {
-        Ok(ProtoNotDeliveredReason::CustomerUnavailable) => Some(NotDeliveredReason::CustomerUnavailable),
+        Ok(ProtoNotDeliveredReason::CustomerUnavailable) => {
+            Some(NotDeliveredReason::CustomerUnavailable)
+        }
         Ok(ProtoNotDeliveredReason::WrongAddress) => Some(NotDeliveredReason::WrongAddress),
         Ok(ProtoNotDeliveredReason::Refused) => Some(NotDeliveredReason::Refused),
         Ok(ProtoNotDeliveredReason::AccessDenied) => Some(NotDeliveredReason::AccessDenied),
@@ -351,7 +349,10 @@ pub async fn deliver_order(
     state: &Arc<AppState>,
     req: DeliverOrderRequest,
 ) -> Result<Response<DeliverOrderResponse>, Status> {
-    info!("DeliverOrder request received for package_id: {}", req.package_id);
+    info!(
+        "DeliverOrder request received for package_id: {}",
+        req.package_id
+    );
 
     // Parse UUIDs
     let package_id = uuid::Uuid::parse_str(&req.package_id)
@@ -386,10 +387,9 @@ pub async fn deliver_order(
             },
         )
     } else {
-        let details = req
-            .not_delivered_details
-            .as_ref()
-            .ok_or_else(|| Status::invalid_argument("not_delivered_details is required for failed delivery"))?;
+        let details = req.not_delivered_details.as_ref().ok_or_else(|| {
+            Status::invalid_argument("not_delivered_details is required for failed delivery")
+        })?;
         // OTHER requires non-empty description
         if ProtoNotDeliveredReason::try_from(details.reason) == Ok(ProtoNotDeliveredReason::Other)
             && details.description.trim().is_empty()
@@ -404,7 +404,11 @@ pub async fn deliver_order(
             courier_id,
             confirmation_location,
             reason,
-            if req.notes.is_empty() { None } else { Some(req.notes) },
+            if req.notes.is_empty() {
+                None
+            } else {
+                Some(req.notes)
+            },
         )
     };
 
@@ -413,7 +417,6 @@ pub async fn deliver_order(
         state.courier_repo.clone(),
         state.courier_cache.clone(),
         state.package_repo.clone(),
-        state.event_publisher.clone(),
         state.geolocation_service.clone(),
     );
 
@@ -423,9 +426,13 @@ pub async fn deliver_order(
             DeliverOrderError::PackageNotFound(_) => Status::not_found(e.to_string()),
             DeliverOrderError::CourierNotFound(_) => Status::not_found(e.to_string()),
             DeliverOrderError::CourierNotAssigned(_, _) => Status::permission_denied(e.to_string()),
-            DeliverOrderError::InvalidPackageStatus(_) => Status::failed_precondition(e.to_string()),
+            DeliverOrderError::InvalidPackageStatus(_) => {
+                Status::failed_precondition(e.to_string())
+            }
             DeliverOrderError::MissingNotDeliveredReason => Status::invalid_argument(e.to_string()),
-            DeliverOrderError::OtherReasonRequiresDescription => Status::invalid_argument(e.to_string()),
+            DeliverOrderError::OtherReasonRequiresDescription => {
+                Status::invalid_argument(e.to_string())
+            }
             DeliverOrderError::AlreadyDelivered(_) => Status::already_exists(e.to_string()),
             DeliverOrderError::RepositoryError(_) => Status::internal(e.to_string()),
         }

@@ -16,6 +16,19 @@ pub enum ConfigError {
     InvalidValue(String, String),
 }
 
+/// Bounding box for random address generation (e.g. Berlin)
+#[derive(Debug, Clone)]
+pub struct RandomAddressBbox {
+    pub min_lat: f64,
+    pub max_lat: f64,
+    pub min_lon: f64,
+    pub max_lon: f64,
+    /// Default city when reverse geocoding is not used (e.g. "Berlin")
+    pub default_city: String,
+    /// Default country (e.g. "Germany")
+    pub default_country: String,
+}
+
 /// Application configuration
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -33,6 +46,9 @@ pub struct Config {
 
     /// Temporal configuration
     pub temporal: TemporalConfig,
+
+    /// Bounding box and defaults for GetRandomAddress (optional; if not set, RPC returns error)
+    pub random_address_bbox: Option<RandomAddressBbox>,
 }
 
 /// Temporal workflow engine configuration
@@ -83,6 +99,15 @@ impl Config {
     /// - KAFKA_MESSAGE_TIMEOUT_MS: Message timeout (default: 5000)
     /// - KAFKA_REQUEST_TIMEOUT_MS: Request timeout (default: 5000)
     /// - KAFKA_LOCATION_TOPIC: Topic for location updates (default: courier.location.updates)
+    /// - KAFKA_PICKUP_TOPIC: Topic for pickup confirmations from courier-emulation
+    /// - KAFKA_DELIVERY_RESULT_TOPIC: Topic for delivery confirmations from courier-emulation
+    ///
+    /// Outbox env vars:
+    /// - OUTBOX_WORKER_ID: Forwarder worker identifier (default: delivery-{pid})
+    /// - OUTBOX_POLL_INTERVAL_MS: Forwarder poll interval (default: 1000)
+    /// - OUTBOX_BATCH_SIZE: Max claimed rows per poll (default: 100)
+    /// - OUTBOX_RETRY_DELAY_MS: Retry delay after publish failure (default: 5000)
+    /// - OUTBOX_LOCK_TIMEOUT_MS: Lease timeout for claimed rows (default: 30000)
     pub fn from_env() -> Result<Self, ConfigError> {
         // Load .env file if present (ignore errors)
         let _ = dotenvy::dotenv();
@@ -90,8 +115,8 @@ impl Config {
         let database_url = env::var("DATABASE_URL")
             .map_err(|_| ConfigError::MissingEnv("DATABASE_URL".to_string()))?;
 
-        let redis_url = env::var("REDIS_URL")
-            .map_err(|_| ConfigError::MissingEnv("REDIS_URL".to_string()))?;
+        let redis_url =
+            env::var("REDIS_URL").map_err(|_| ConfigError::MissingEnv("REDIS_URL".to_string()))?;
 
         let grpc_port = env::var("GRPC_PORT")
             .unwrap_or_else(|_| "50051".to_string())
@@ -103,12 +128,16 @@ impl Config {
         // Temporal configuration
         let temporal = TemporalConfig::from_env()?;
 
+        // Optional random address bbox (e.g. Berlin: RANDOM_ADDRESS_MIN_LAT, _MAX_LAT, _MIN_LON, _MAX_LON)
+        let random_address_bbox = RandomAddressBbox::from_env().ok();
+
         Ok(Self {
             database_url,
             redis_url,
             grpc_port,
             log_level,
             temporal,
+            random_address_bbox,
         })
     }
 
@@ -118,19 +147,53 @@ impl Config {
     }
 }
 
+impl RandomAddressBbox {
+    /// Load from env. Returns None if any required var is missing.
+    /// - RANDOM_ADDRESS_MIN_LAT, RANDOM_ADDRESS_MAX_LAT, RANDOM_ADDRESS_MIN_LON, RANDOM_ADDRESS_MAX_LON (required)
+    /// - RANDOM_ADDRESS_DEFAULT_CITY (default: Berlin), RANDOM_ADDRESS_DEFAULT_COUNTRY (default: Germany)
+    pub fn from_env() -> Result<Self, ConfigError> {
+        let min_lat = env::var("RANDOM_ADDRESS_MIN_LAT")
+            .map_err(|_| ConfigError::MissingEnv("RANDOM_ADDRESS_MIN_LAT".to_string()))?
+            .parse::<f64>()
+            .map_err(|e| ConfigError::InvalidValue("RANDOM_ADDRESS_MIN_LAT".to_string(), e.to_string()))?;
+        let max_lat = env::var("RANDOM_ADDRESS_MAX_LAT")
+            .map_err(|_| ConfigError::MissingEnv("RANDOM_ADDRESS_MAX_LAT".to_string()))?
+            .parse::<f64>()
+            .map_err(|e| ConfigError::InvalidValue("RANDOM_ADDRESS_MAX_LAT".to_string(), e.to_string()))?;
+        let min_lon = env::var("RANDOM_ADDRESS_MIN_LON")
+            .map_err(|_| ConfigError::MissingEnv("RANDOM_ADDRESS_MIN_LON".to_string()))?
+            .parse::<f64>()
+            .map_err(|e| ConfigError::InvalidValue("RANDOM_ADDRESS_MIN_LON".to_string(), e.to_string()))?;
+        let max_lon = env::var("RANDOM_ADDRESS_MAX_LON")
+            .map_err(|_| ConfigError::MissingEnv("RANDOM_ADDRESS_MAX_LON".to_string()))?
+            .parse::<f64>()
+            .map_err(|e| ConfigError::InvalidValue("RANDOM_ADDRESS_MAX_LON".to_string(), e.to_string()))?;
+        let default_city = env::var("RANDOM_ADDRESS_DEFAULT_CITY").unwrap_or_else(|_| "Berlin".to_string());
+        let default_country = env::var("RANDOM_ADDRESS_DEFAULT_COUNTRY").unwrap_or_else(|_| "Germany".to_string());
+        Ok(Self {
+            min_lat,
+            max_lat,
+            min_lon,
+            max_lon,
+            default_city,
+            default_country,
+        })
+    }
+}
+
 impl TemporalConfig {
     /// Load Temporal configuration from environment variables
     pub fn from_env() -> Result<Self, ConfigError> {
-        let host = env::var("TEMPORAL_HOST")
-            .unwrap_or_else(|_| "localhost:7233".to_string());
+        let host = env::var("TEMPORAL_HOST").unwrap_or_else(|_| "localhost:7233".to_string());
 
-        let namespace = env::var("TEMPORAL_NAMESPACE")
-            .unwrap_or_else(|_| "delivery".to_string());
+        let namespace = env::var("TEMPORAL_NAMESPACE").unwrap_or_else(|_| "delivery".to_string());
 
         let tls_enabled = env::var("TEMPORAL_TLS_ENABLED")
             .unwrap_or_else(|_| "false".to_string())
             .parse::<bool>()
-            .map_err(|e| ConfigError::InvalidValue("TEMPORAL_TLS_ENABLED".to_string(), e.to_string()))?;
+            .map_err(|e| {
+                ConfigError::InvalidValue("TEMPORAL_TLS_ENABLED".to_string(), e.to_string())
+            })?;
 
         let task_queue_courier = env::var("TEMPORAL_TASK_QUEUE_COURIER")
             .unwrap_or_else(|_| "COURIER_TASK_QUEUE".to_string());
@@ -138,8 +201,8 @@ impl TemporalConfig {
         let task_queue_delivery = env::var("TEMPORAL_TASK_QUEUE_DELIVERY")
             .unwrap_or_else(|_| "DELIVERY_TASK_QUEUE".to_string());
 
-        let worker_build_id = env::var("TEMPORAL_WORKER_BUILD_ID")
-            .unwrap_or_else(|_| "delivery-rust-v1".to_string());
+        let worker_build_id =
+            env::var("TEMPORAL_WORKER_BUILD_ID").unwrap_or_else(|_| "delivery-rust-v1".to_string());
 
         Ok(Self {
             host,

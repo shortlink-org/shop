@@ -51,10 +51,7 @@ impl RedisLocationCache {
 
 #[async_trait]
 impl LocationCache for RedisLocationCache {
-    async fn set_location(
-        &self,
-        location: &CourierLocation,
-    ) -> Result<(), LocationCacheError> {
+    async fn set_location(&self, location: &CourierLocation) -> Result<(), LocationCacheError> {
         let mut conn = self.conn.clone();
         let key = Self::location_key(location.courier_id());
         let courier_id_str = location.courier_id().to_string();

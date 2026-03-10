@@ -81,6 +81,11 @@ func (p *LocationPublisher) Close() error {
 }
 
 // StatusPublisher defines the interface for publishing delivery status events.
+type StatusPublisher interface {
+	PublishPickUp(ctx context.Context, event PickUpOrderEvent) error
+	PublishDelivery(ctx context.Context, event DeliverOrderEvent) error
+	Close() error
+}
 
 // KafkaStatusPublisher publishes delivery status events to Kafka.
 type KafkaStatusPublisher struct {
@@ -94,7 +99,7 @@ func NewStatusPublisher(publisher message.Publisher) *KafkaStatusPublisher {
 	}
 }
 
-// PublishPickUp publishes an order picked up event.
+// PublishPickUp publishes a package picked up event.
 func (p *KafkaStatusPublisher) PublishPickUp(ctx context.Context, event PickUpOrderEvent) error {
 	payload, err := json.Marshal(event)
 	if err != nil {
@@ -102,8 +107,8 @@ func (p *KafkaStatusPublisher) PublishPickUp(ctx context.Context, event PickUpOr
 	}
 
 	msg := message.NewMessage(watermill.NewUUID(), payload)
-	// Partition by order so lifecycle order is preserved (handover-safe).
-	msg.Metadata.Set(metadataKeyPartitionKey, event.OrderID)
+	// Partition by package so lifecycle order is preserved.
+	msg.Metadata.Set(metadataKeyPartitionKey, event.PackageID)
 
 	if err := p.publisher.Publish(TopicPickUpOrder, msg); err != nil {
 		return fmt.Errorf("publish pickup: %w", err)
@@ -112,7 +117,7 @@ func (p *KafkaStatusPublisher) PublishPickUp(ctx context.Context, event PickUpOr
 	return nil
 }
 
-// PublishDelivery publishes an order delivered event.
+// PublishDelivery publishes a package delivery result event.
 func (p *KafkaStatusPublisher) PublishDelivery(ctx context.Context, event DeliverOrderEvent) error {
 	payload, err := json.Marshal(event)
 	if err != nil {
@@ -120,8 +125,8 @@ func (p *KafkaStatusPublisher) PublishDelivery(ctx context.Context, event Delive
 	}
 
 	msg := message.NewMessage(watermill.NewUUID(), payload)
-	// Partition by order so lifecycle order is preserved (handover-safe).
-	msg.Metadata.Set(metadataKeyPartitionKey, event.OrderID)
+	// Partition by package so lifecycle order is preserved.
+	msg.Metadata.Set(metadataKeyPartitionKey, event.PackageID)
 
 	if err := p.publisher.Publish(TopicDeliverOrder, msg); err != nil {
 		return fmt.Errorf("publish delivery: %w", err)

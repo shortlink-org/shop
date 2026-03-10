@@ -4,3 +4,4 @@
 
 pub mod courier;
 pub mod order;
+pub mod random_address;

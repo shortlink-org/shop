@@ -114,6 +114,8 @@ deploy:
     KAFKA_MESSAGE_TIMEOUT_MS: "5000"
     KAFKA_REQUEST_TIMEOUT_MS: "5000"
     KAFKA_LOCATION_TOPIC: delivery.courier.location_received.v1
+    KAFKA_PICKUP_TOPIC: delivery.order.order_picked_up.v1
+    KAFKA_DELIVERY_RESULT_TOPIC: delivery.order.order_delivered.v1
 
     # Store configuration
     STORE_TYPE: postgres
@@ -121,6 +123,14 @@ deploy:
 
     # Redis cache connection
     REDIS_URL: redis://redis-master.shortlink-shop:6379
+
+    # Random address (GetRandomAddress) — Berlin bbox
+    RANDOM_ADDRESS_MIN_LAT: "52.338"
+    RANDOM_ADDRESS_MAX_LAT: "52.675"
+    RANDOM_ADDRESS_MIN_LON: "13.088"
+    RANDOM_ADDRESS_MAX_LON: "13.761"
+    RANDOM_ADDRESS_DEFAULT_CITY: "Berlin"
+    RANDOM_ADDRESS_DEFAULT_COUNTRY: "Germany"
 
   envSecret:
     # PostgreSQL connection (from Crunchy Data operator secret)
@@ -280,7 +290,7 @@ kafka:
           cleanup.policy: "delete"
 
       # Package assignment to courier (separate - business-critical)
-      # Consumed by: courier-emulation, OMS
+      # Consumed by: courier-emulation
       delivery.order.assigned.v1:
         partitions: 3
         replicas: 1
@@ -324,7 +334,7 @@ kafka:
       # EVENT TOPICS (from courier-emulation)
       # =============================================================
 
-      # Topic for order picked up events (from courier-emulation). Format: {domain}.{entity}.{event}.v1
+      # Topic for package pickup confirmations from courier-emulation. Format: {domain}.{entity}.{event}.v1
       delivery.order.order_picked_up.v1:
         partitions: 3
         replicas: 1
@@ -332,7 +342,7 @@ kafka:
           retention.ms: "604800000"
           cleanup.policy: "delete"
 
-      # Topic for order delivered events (from courier-emulation). Format: {domain}.{entity}.{event}.v1
+      # Topic for package delivery confirmations from courier-emulation. Format: {domain}.{entity}.{event}.v1
       delivery.order.order_delivered.v1:
         partitions: 3
         replicas: 1

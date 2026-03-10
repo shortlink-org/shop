@@ -38,7 +38,7 @@ To avoid forgetting how auth is wired end-to-end:
    - **UI → BFF**: the API route (`/api/graphql`) forwards only `Authorization` (and tracing headers) to the BFF. It does **not** forward `X-User-ID`.
    - **BFF → subgraphs**: in `bff/router.yaml` we propagate only `Authorization`, `Cookie`, `traceparent`, `trace-id`. We do **not** propagate `X-User-ID`.
 
-3. **Subgraphs** (e.g. oms-graphql, admin-graphql):
+3. **Subgraphs** (e.g. oms-graphql, delivery-graphql, admin-graphql):
    - Receive the request with `Authorization: Bearer <jwt>`.
    - **Istio** (RequestAuthentication) validates the JWT using Oathkeeper's JWKS (`http://oathkeeper-api.auth.svc.cluster.local:4456/.well-known/jwks.json`).
    - **Istio** (outputClaimToHeaders) sets the header **`x-user-id`** from the JWT claim **`sub`** before the request reaches the application.

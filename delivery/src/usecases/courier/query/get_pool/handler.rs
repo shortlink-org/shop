@@ -14,10 +14,10 @@ use std::sync::Arc;
 use thiserror::Error;
 use uuid::Uuid;
 
+use crate::domain::model::courier::{Courier, CourierStatus};
 use crate::domain::ports::{
     CacheError, CachedCourierState, CourierCache, CourierRepository, QueryHandler, RepositoryError,
 };
-use crate::domain::model::courier::{Courier, CourierStatus};
 
 use super::Query;
 
@@ -178,18 +178,17 @@ mod tests {
             .await
             .unwrap();
         let pg_port = pg_container.get_host_port_ipv4(5432).await.unwrap();
-        let pg_url = format!("postgres://postgres:postgres@localhost:{}/postgres", pg_port);
+        let pg_url = format!(
+            "postgres://postgres:postgres@localhost:{}/postgres",
+            pg_port
+        );
         let db: DatabaseConnection = Database::connect(&pg_url).await.unwrap();
 
         // Apply migrations
         Migrator::up(&db, None).await.unwrap();
 
         // Start Redis container
-        let redis_container = Redis::default()
-            .with_tag("7-alpine")
-            .start()
-            .await
-            .unwrap();
+        let redis_container = Redis::default().with_tag("7-alpine").start().await.unwrap();
         let redis_port = redis_container.get_host_port_ipv4(6379).await.unwrap();
         let redis_url = format!("redis://localhost:{}", redis_port);
         let redis_client = redis::Client::open(redis_url).unwrap();
@@ -293,10 +292,18 @@ mod tests {
         let env = setup_test_env().await;
 
         // Create couriers in different zones
-        let courier_berlin =
-            create_test_courier("Berlin Courier", "+49111000011", "berlin@test.de", "Berlin-Test");
-        let courier_munich =
-            create_test_courier("Munich Courier", "+49222000022", "munich@test.de", "Munich-Test");
+        let courier_berlin = create_test_courier(
+            "Berlin Courier",
+            "+49111000011",
+            "berlin@test.de",
+            "Berlin-Test",
+        );
+        let courier_munich = create_test_courier(
+            "Munich Courier",
+            "+49222000022",
+            "munich@test.de",
+            "Munich-Test",
+        );
 
         env.repository.save(&courier_berlin).await.unwrap();
         env.repository.save(&courier_munich).await.unwrap();

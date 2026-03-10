@@ -24,9 +24,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Initialize logging
     tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::try_from_default_env().unwrap_or_else(|_| {
-            EnvFilter::new(&config.log_level)
-        }))
+        .with_env_filter(
+            EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(&config.log_level)),
+        )
         .init();
 
     info!("Starting Delivery Service...");
@@ -37,15 +37,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         e
     })?);
 
-    // Start background consumers (location updates from Kafka)
+    // Start background Kafka integrations (consumers + outbox forwarder)
     if let Err(e) = state.start_consumers().await {
-        warn!(error = %e, "Failed to start Kafka consumers (continuing without real-time location updates)");
+        warn!(error = %e, "Failed to start Kafka integrations (continuing without Kafka-driven updates)");
     }
 
     // Start Temporal workers (courier and delivery workflows)
     if let Err(e) = state.start_temporal_workers(&config.temporal).await {
         warn!(error = %e, "Failed to start Temporal workers (continuing without workflow orchestration)");
-        warn!("Ensure Temporal server is running at: {}", config.temporal.server_url());
+        warn!(
+            "Ensure Temporal server is running at: {}",
+            config.temporal.server_url()
+        );
     }
 
     // Create gRPC health service
@@ -86,4 +89,3 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
-
