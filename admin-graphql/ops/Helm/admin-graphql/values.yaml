@@ -82,6 +82,7 @@ service:
 # Prometheus Operator ServiceMonitor configuration
 monitoring:
   enabled: true
+  port: grpc
 
 # ==============================================================================
 # PodDisruptionBudget
