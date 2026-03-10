@@ -47,10 +47,12 @@ export async function addItem(
   }
 
   const authHeader = (await headers()).get('authorization') ?? undefined;
+  const userId = await getHeaderCustomerId();
 
   try {
     await addToCart([{ goodId: selectedVariantId, quantity: 1 }], {
-      authorization: authHeader
+      authorization: authHeader,
+      userId
     });
     revalidateTag(TAGS.cart, 'max');
     return { ok: true, cartId };
@@ -93,11 +95,12 @@ export async function removeItem(prevState: any, merchandiseId: string) {
   }
 
   const authHeader = (await headers()).get('authorization') ?? undefined;
+  const userId = await getHeaderCustomerId();
 
   try {
     await updateCart(
       [{ id: merchandiseId, merchandiseId, quantity: 0 }],
-      { authorization: authHeader }
+      { authorization: authHeader, userId }
     );
     revalidateTag(TAGS.cart, 'max');
   } catch (e) {
@@ -120,10 +123,12 @@ export async function updateItemQuantity(
 
   const { merchandiseId, quantity } = payload;
   const authHeader = (await headers()).get('authorization') ?? undefined;
+  const userId = await getHeaderCustomerId();
 
   try {
     await updateCart([{ id: merchandiseId, merchandiseId, quantity }], {
-      authorization: authHeader
+      authorization: authHeader,
+      userId
     });
     revalidateTag(TAGS.cart, 'max');
   } catch (e) {

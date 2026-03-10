@@ -88,7 +88,24 @@ function buildCartFromState(
   });
 }
 
-export type RequestOptions = { authorization?: string };
+export type RequestOptions = {
+  authorization?: string;
+  userId?: string;
+};
+
+function buildHeaders(options?: RequestOptions): HeadersInit | undefined {
+  const headers: Record<string, string> = {};
+
+  if (options?.authorization) {
+    headers.Authorization = options.authorization;
+  }
+
+  if (options?.userId) {
+    headers['X-User-ID'] = options.userId;
+  }
+
+  return Object.keys(headers).length > 0 ? headers : undefined;
+}
 
 export async function addToCart(
   items: { goodId: string; quantity: number }[],
@@ -102,7 +119,7 @@ export async function addToCart(
       }
     },
     cache: 'no-store',
-    headers: options?.authorization ? { Authorization: options.authorization } : {}
+    headers: buildHeaders(options)
   });
 }
 
@@ -118,7 +135,7 @@ export async function removeFromCart(
       }
     },
     cache: 'no-store',
-    headers: options?.authorization ? { Authorization: options.authorization } : {}
+    headers: buildHeaders(options)
   });
 }
 
@@ -129,7 +146,7 @@ export async function updateCart(
   const res = await shopifyFetch<ShopifyCartOperation>({
     query: getCartQuery,
     cache: 'no-store',
-    headers: options?.authorization ? { Authorization: options.authorization } : {}
+    headers: buildHeaders(options)
   });
 
   const currentQuantities = new Map(
@@ -169,7 +186,7 @@ export async function getCart(
     const res = await shopifyFetch<ShopifyCartOperation>({
       query: getCartQuery,
       cache: 'no-store',
-      headers: options?.authorization ? { Authorization: options.authorization } : {}
+      headers: buildHeaders(options)
     });
 
     const state = res.body.data.getCart?.state;
@@ -189,7 +206,7 @@ export async function checkout(
       input
     },
     cache: 'no-store',
-    headers: options?.authorization ? { Authorization: options.authorization } : {}
+    headers: buildHeaders(options)
   });
 
   return res.body.data.checkout;
