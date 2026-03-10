@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@config '../tailwind.config.js';
 
 @theme {
   --font-family-sans: var(--font-geist-sans);

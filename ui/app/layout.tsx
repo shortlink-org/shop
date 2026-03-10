@@ -9,6 +9,7 @@ import { headers } from 'next/headers';
 import { ReactNode, ViewTransition } from 'react';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from 'next-themes';
+import '@shortlink-org/ui-kit/dist/assets/index.css';
 import './globals.css';
 
 // DOCS: https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#dynamic
