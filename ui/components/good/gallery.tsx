@@ -14,8 +14,7 @@ export function Gallery({ images }: { images: { src: string; altText: string }[]
   // Derive index from URL so big image and thumbnails always match (context can lag on hydration)
   const param = searchParams.get('image');
   const parsed = param !== null && param !== '' ? parseInt(param, 10) : 0;
-  const imageIndex =
-    Number.isFinite(parsed) && parsed >= 0 && parsed < images.length ? parsed : 0;
+  const imageIndex = Number.isFinite(parsed) && parsed >= 0 && parsed < images.length ? parsed : 0;
 
   const nextImageIndex = imageIndex + 1 < images.length ? imageIndex + 1 : 0;
   const previousImageIndex = imageIndex === 0 ? images.length - 1 : imageIndex - 1;

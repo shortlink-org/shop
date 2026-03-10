@@ -15,7 +15,7 @@ export default function OpenCart({
       />
 
       {quantity ? (
-        <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-semibold text-white shadow-sm">
+        <span className="absolute -top-0.5 -right-0.5 inline-flex min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-semibold text-white shadow-sm">
           {quantity > 9 ? '9+' : quantity}
         </span>
       ) : null}

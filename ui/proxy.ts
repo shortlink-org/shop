@@ -12,10 +12,9 @@ function normalizeTraceId(value: string): string {
 
 /** Generate 16 hex chars for W3C span-id. */
 function randomSpanId(): string {
-  return crypto.getRandomValues(new Uint8Array(8)).reduce(
-    (s, b) => s + b.toString(16).padStart(2, '0'),
-    ''
-  );
+  return crypto
+    .getRandomValues(new Uint8Array(8))
+    .reduce((s, b) => s + b.toString(16).padStart(2, '0'), '');
 }
 
 /**

@@ -15,7 +15,8 @@ export default function ProfileWidget() {
   const { session, hasSession, isLoading } = useSession();
   const loginUrl = process.env.NEXT_PUBLIC_LOGIN_URL || '/auth/login';
 
-  const traits: Record<string, unknown> = (session?.identity?.traits as Record<string, unknown>) ?? {};
+  const traits: Record<string, unknown> =
+    (session?.identity?.traits as Record<string, unknown>) ?? {};
   const nameTraits = traits?.name as Record<string, string> | undefined;
   const firstName = nameTraits?.first ?? '';
   const lastName = nameTraits?.last ?? '';
@@ -39,7 +40,9 @@ export default function ProfileWidget() {
   }, [hasSession]);
 
   if (isLoading) {
-    return <div className="h-8 w-8 animate-pulse rounded-full bg-neutral-200 dark:bg-neutral-700" />;
+    return (
+      <div className="h-8 w-8 animate-pulse rounded-full bg-neutral-200 dark:bg-neutral-700" />
+    );
   }
 
   if (!hasSession) {
@@ -57,23 +60,21 @@ export default function ProfileWidget() {
     {
       name: 'Your Profile',
       link: '/profile',
-      icon: UserIcon,
+      icon: UserIcon
     },
     {
       name: 'Orders',
       link: '/orders',
-      icon: ShoppingBagIcon,
+      icon: ShoppingBagIcon
     },
     {
       name: 'Sign out',
       link: '#',
       icon: ArrowRightOnRectangleIcon,
       onClick: () => {
-        ory
-          .updateLogoutFlow({ token: logoutToken })
-          .then(() => window.location.assign(loginUrl));
-      },
-    },
+        ory.updateLogoutFlow({ token: logoutToken }).then(() => window.location.assign(loginUrl));
+      }
+    }
   ];
 
   return (

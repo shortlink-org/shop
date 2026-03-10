@@ -1,14 +1,16 @@
 import type { BasketItem as BasketItemData } from '@shortlink-org/ui-kit';
 import { DEFAULT_OPTION } from 'lib/constants';
 import type { Cart, CartItem } from 'lib/shopify/types';
+import { getStorefrontArtwork, getStorefrontCategory } from 'lib/storefront-art';
 
-export const CART_ITEM_PLACEHOLDER_IMAGE = 'https://picsum.photos/200';
+export const CART_ITEM_PLACEHOLDER_IMAGE = getStorefrontArtwork('Shortlink goods', 'cart', {
+  width: 320,
+  height: 320,
+  eyebrow: 'cart preview',
+  subtitle: 'branded selection'
+});
 
-export function formatCartMoney(
-  amount: number,
-  currencyCode = 'USD',
-  locale = 'en-US'
-): string {
+export function formatCartMoney(amount: number, currencyCode = 'USD', locale = 'en-US'): string {
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: currencyCode
@@ -35,7 +37,14 @@ export function cartItemToBasketItem(item: CartItem): BasketItemData {
     color: variantTitle,
     price: formatCartMoney(getUnitPrice(item), item.cost.totalAmount.currencyCode),
     quantity: item.quantity,
-    imageSrc: productImage?.url ?? CART_ITEM_PLACEHOLDER_IMAGE,
+    imageSrc:
+      productImage?.url ??
+      getStorefrontArtwork(item.merchandise.product.title, item.merchandise.product.id, {
+        width: 320,
+        height: 320,
+        eyebrow: 'cart preview',
+        subtitle: getStorefrontCategory(item.merchandise.product.title)
+      }),
     imageAlt: productImage?.altText || `${item.merchandise.product.title} image`
   };
 }

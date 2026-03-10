@@ -87,18 +87,14 @@ export function Navbar() {
           name: SITE_NAME || 'Shortlink Shop',
           href: '/',
           render: ({ href, className }) => (
-            <Link
-              href={href}
-              prefetch={true}
-              className={className}
-            >
+            <Link href={href} prefetch={true} className={className}>
               <span className="inline-flex items-center gap-3 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2 shadow-[0_18px_44px_-36px_rgba(15,23,42,0.26)]">
                 <LogoSquare size="sm" />
                 <span className="min-w-0">
                   <span className="block text-sm font-semibold tracking-tight text-[var(--color-foreground)]">
                     {SITE_NAME || 'Shortlink Shop'}
                   </span>
-                  <span className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-muted-foreground)]">
+                  <span className="block text-[11px] font-semibold tracking-[0.18em] text-[var(--color-muted-foreground)] uppercase">
                     Curated storefront
                   </span>
                 </span>
@@ -155,7 +151,7 @@ export function Navbar() {
         sticky={false}
         fullWidth={true}
       />
-      <div className="mx-auto max-w-7xl px-3 pb-4 pt-2 sm:px-4 lg:px-6 md:hidden">
+      <div className="mx-auto max-w-7xl px-3 pt-2 pb-4 sm:px-4 md:hidden lg:px-6">
         <Suspense fallback={<SearchSkeleton />}>
           <Search
             className="max-w-md"

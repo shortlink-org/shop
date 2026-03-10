@@ -65,10 +65,7 @@ describe('cart actions auth propagation', () => {
         userId: '550e8400-e29b-41d4-a716-446655440000'
       }
     );
-    expect(cookiesSetMock).toHaveBeenCalledWith(
-      'cartId',
-      '550e8400-e29b-41d4-a716-446655440000'
-    );
+    expect(cookiesSetMock).toHaveBeenCalledWith('cartId', '550e8400-e29b-41d4-a716-446655440000');
     expect(revalidateTagMock).toHaveBeenCalled();
     expect(result).toEqual({
       ok: true,

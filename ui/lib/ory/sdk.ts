@@ -6,8 +6,8 @@ const ory = new FrontendApi(
   new Configuration({
     basePath: NEXT_PUBLIC_API_URI,
     baseOptions: {
-      withCredentials: true,
-    },
+      withCredentials: true
+    }
   })
 );
 

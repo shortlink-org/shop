@@ -2,11 +2,13 @@ import { TAGS } from 'lib/constants';
 import { shopifyFetch } from '../fetch';
 import { normalizeGood, reshapeCollection } from '../mappers';
 import { GOODS_UNAVAILABLE } from '../sentinels';
-import type { Collection, Good, ShopifyCollectionOperation, ShopifyCollectionProductsOperation } from '../types';
-import {
-  getCollectionProductsQuery,
-  getCollectionQuery
-} from '../queries/collection';
+import type {
+  Collection,
+  Good,
+  ShopifyCollectionOperation,
+  ShopifyCollectionProductsOperation
+} from '../types';
+import { getCollectionProductsQuery, getCollectionQuery } from '../queries/collection';
 
 /** Default "All" collection — BFF has no Collection type / collections query. */
 const DEFAULT_COLLECTIONS: Collection[] = [
@@ -16,8 +18,8 @@ const DEFAULT_COLLECTIONS: Collection[] = [
     description: 'All products',
     seo: { title: 'All', description: 'All products' },
     path: '/search',
-    updatedAt: new Date().toISOString(),
-  },
+    updatedAt: new Date().toISOString()
+  }
 ];
 
 export type RequestOptions = { authorization?: string };

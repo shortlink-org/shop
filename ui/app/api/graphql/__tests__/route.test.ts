@@ -8,14 +8,12 @@ describe('POST /api/graphql sanitize goods page variable', () => {
   });
 
   it('coerces UUID-like page value to 1 for GetGoodsList', async () => {
-    const fetchMock = vi
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ data: { goods: { results: [] } } }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        })
-      );
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ data: { goods: { results: [] } } }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    );
 
     const req = {
       headers: new Headers({ 'content-type': 'application/json' }),
@@ -35,14 +33,12 @@ describe('POST /api/graphql sanitize goods page variable', () => {
   });
 
   it('coerces numeric string page to integer for GetGoodsList', async () => {
-    const fetchMock = vi
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ data: { goods: { results: [] } } }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        })
-      );
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ data: { goods: { results: [] } } }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    );
 
     const req = {
       headers: new Headers({ 'content-type': 'application/json' }),
@@ -61,14 +57,12 @@ describe('POST /api/graphql sanitize goods page variable', () => {
   });
 
   it('sanitizes non-GetGoodsList queries when they include goods(page: $page)', async () => {
-    const fetchMock = vi
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ data: { goods: { results: [] } } }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        })
-      );
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ data: { goods: { results: [] } } }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    );
 
     const rawBody = JSON.stringify({
       query: 'query GetGoods($page: Int) { goods(page: $page) { count } }',
@@ -86,20 +80,18 @@ describe('POST /api/graphql sanitize goods page variable', () => {
     expect(body.variables.page).toBe(1);
   });
 
-  it('forwards x-user-id to the BFF as X-User-ID', async () => {
-    const fetchMock = vi
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ data: { getCart: { state: null } } }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        })
-      );
+  it('forwards Authorization to the BFF (x-user-id is set by Istio from JWT on subgraphs)', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ data: { getCart: { state: null } } }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    );
 
     const req = {
       headers: new Headers({
         'content-type': 'application/json',
-        'x-user-id': '550e8400-e29b-41d4-a716-446655440000'
+        authorization: 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTBlODQwMC1lMjllLTQxZDQtYTcxNi00NDY2NTU0NDAwMDAifQ.x'
       }),
       text: vi.fn().mockResolvedValue(
         JSON.stringify({
@@ -111,18 +103,17 @@ describe('POST /api/graphql sanitize goods page variable', () => {
     await POST(req);
 
     const forwardedHeaders = new Headers(fetchMock.mock.calls[0]?.[1]?.headers);
-    expect(forwardedHeaders.get('X-User-ID')).toBe('550e8400-e29b-41d4-a716-446655440000');
+    expect(forwardedHeaders.get('Authorization')).toMatch(/^Bearer /);
+    expect(forwardedHeaders.get('X-User-ID')).toBeNull();
   });
 
-  it('forwards Authorization and X-User-ID together to the BFF', async () => {
-    const fetchMock = vi
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ data: { addItem: { _: true } } }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        })
-      );
+  it('forwards Authorization to the BFF', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ data: { addItem: { _: true } } }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    );
 
     const req = {
       headers: new Headers({
@@ -132,7 +123,8 @@ describe('POST /api/graphql sanitize goods page variable', () => {
       }),
       text: vi.fn().mockResolvedValue(
         JSON.stringify({
-          query: 'mutation AddToCart($addRequest: ItemRequest!) { addItem(addRequest: $addRequest) { _ } }',
+          query:
+            'mutation AddToCart($addRequest: ItemRequest!) { addItem(addRequest: $addRequest) { _ } }',
           variables: { addRequest: { items: [{ goodId: '1', quantity: 1 }] } }
         })
       )
@@ -142,18 +134,16 @@ describe('POST /api/graphql sanitize goods page variable', () => {
 
     const forwardedHeaders = new Headers(fetchMock.mock.calls[0]?.[1]?.headers);
     expect(forwardedHeaders.get('Authorization')).toBe('Bearer token');
-    expect(forwardedHeaders.get('X-User-ID')).toBe('550e8400-e29b-41d4-a716-446655440000');
+    expect(forwardedHeaders.get('X-User-ID')).toBeNull();
   });
 
   it('forwards traceparent to the BFF and echoes trace-id in the response', async () => {
-    const fetchMock = vi
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ data: { goods: { results: [] } } }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        })
-      );
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ data: { goods: { results: [] } } }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    );
 
     const req = {
       headers: new Headers({

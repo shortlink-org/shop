@@ -1,8 +1,4 @@
-import {
-  addToCartMutation,
-  removeFromCartMutation,
-  checkoutMutation
-} from '../mutations/cart';
+import { addToCartMutation, removeFromCartMutation, checkoutMutation } from '../mutations/cart';
 import { getCartQuery } from '../queries/cart';
 import { shopifyFetch } from '../fetch';
 import { createEmptyCart, DEFAULT_CURRENCY } from '../mappers';
@@ -179,9 +175,7 @@ export async function updateCart(
   }
 }
 
-export async function getCart(
-  options?: RequestOptions
-): Promise<CartLoadResult> {
+export async function getCart(options?: RequestOptions): Promise<CartLoadResult> {
   try {
     const res = await shopifyFetch<ShopifyCartOperation>({
       query: getCartQuery,

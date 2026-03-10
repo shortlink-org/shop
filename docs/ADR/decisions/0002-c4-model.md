@@ -31,7 +31,7 @@ We will apply the C4 model to detail the architecture of the Shop Boundary Conte
 creating System Context, Container, and Component diagrams, and optionally, Class diagrams, 
 for each service within the boundary.
 
-Authentication flow: UI sends API and admin traffic to Oathkeeper; Oathkeeper validates JWT/session and forwards to BFF and Admin (see [ADR-0005](./0005-bff-behind-oathkeeper.md)).
+Authentication flow: UI sends API and admin traffic to Oathkeeper; Oathkeeper validates JWT/session and forwards to BFF and Admin (see [ADR-0005](./0005-oathkeeper-auth-shop.md)).
 
 ## Consequences
 

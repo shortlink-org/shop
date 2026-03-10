@@ -42,6 +42,16 @@ httpRoute:
           port: 4455
 
 # ==============================================================================
+# Istio RequestAuthentication: validate JWT and set x-user-id from claim "sub"
+# When request comes via Oathkeeper with Authorization: Bearer <jwt>, Istio adds x-user-id for Admin.
+# ref: https://istio.io/latest/docs/tasks/security/authentication/claim-to-header/
+requestAuthentication:
+  enabled: true
+  issuer: "https://shortlink.best"
+  jwksUri: "http://oathkeeper-api.auth.svc.cluster.local:4456/.well-known/jwks.json"
+  forwardOriginalToken: true
+
+# ==============================================================================
 deploy:
   name:
 

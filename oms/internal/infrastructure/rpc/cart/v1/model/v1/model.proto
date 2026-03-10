@@ -37,25 +37,23 @@ message CartState {
 }
 
 // AddRequest is the request message for adding an item to the cart.
+// Customer identity comes from request metadata (x-user-id set by Istio from JWT).
 message AddRequest {
-  // Cart ID
-  string customer_id = 1;
+  reserved 1;
   // Item to add
   repeated CartItem items = 2;
 }
 
 // RemoveRequest is the request message for removing an item from the cart.
 message RemoveRequest {
-  // Cart ID
-  string customer_id = 1;
+  reserved 1;
   // Item to remove
   repeated CartItem items = 2;
 }
 
 // GetRequest is the request message for getting the cart state.
 message GetRequest {
-  // Cart ID
-  string customer_id = 1;
+  reserved 1;
 }
 
 // GetResponse is the response message for getting the cart state.
@@ -66,6 +64,5 @@ message GetResponse {
 
 // ResetRequest is the request message for resetting the cart.
 message ResetRequest {
-  // Cart ID
-  string customer_id = 1;
+  reserved 1;
 }

@@ -3,27 +3,20 @@ package v1
 import (
 	"context"
 
-	"github.com/google/uuid"
-
 	order "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 	commonv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/dto"
 	v1 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/model/v1"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/rpcmeta"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/query/list"
 )
 
 func (o *OrderRPC) List(ctx context.Context, in *v1.ListRequest) (*v1.ListResponse, error) {
-	// Parse optional customer ID
-	var customerID *uuid.UUID
-
-	if in.GetCustomerId() != "" {
-		id, err := uuid.Parse(in.GetCustomerId())
-		if err != nil {
-			return nil, err
-		}
-
-		customerID = &id
+	id, err := rpcmeta.CustomerIDFromContext(ctx)
+	if err != nil {
+		return nil, err
 	}
+	customerID := &id
 
 	// Convert status filter
 	var statusFilter []order.OrderStatus

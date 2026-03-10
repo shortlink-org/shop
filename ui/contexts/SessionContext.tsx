@@ -49,7 +49,7 @@ export function SessionProvider({ children, session, isLoading = false }: Sessio
   const value: SessionContextValue = {
     session,
     hasSession: !!session,
-    isLoading,
+    isLoading
   };
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

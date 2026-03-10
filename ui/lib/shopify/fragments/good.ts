@@ -18,4 +18,3 @@ const goodFragment = /* GraphQL */ `
 `;
 
 export default goodFragment;
-

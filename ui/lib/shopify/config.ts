@@ -7,5 +7,4 @@ const domain =
 
 export { domain };
 
-export const getGraphqlEndpoint = (): string =>
-  domain ? `${domain}/api/graphql` : '/api/graphql';
+export const getGraphqlEndpoint = (): string => (domain ? `${domain}/api/graphql` : '/api/graphql');

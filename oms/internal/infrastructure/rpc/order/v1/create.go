@@ -10,18 +10,17 @@ import (
 	v2 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/dto"
 	v1 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/model/v1"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/rpcmeta"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/create"
 )
 
 func (o *OrderRPC) Create(ctx context.Context, in *v1.CreateRequest) (*emptypb.Empty, error) {
-	// parse order ID to UUID
 	orderId, err := uuid.Parse(in.GetOrder().GetId())
 	if err != nil {
 		return nil, err
 	}
 
-	// parse customer ID to UUID
-	customerId, err := uuid.Parse(in.GetOrder().GetCustomerId())
+	customerId, err := rpcmeta.CustomerIDFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}

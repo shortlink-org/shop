@@ -4,19 +4,17 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/uuid"
-
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/dto"
 	v1 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/model/v1"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/rpcmeta"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/create_order_from_cart"
 )
 
 // Checkout creates an order from customer's cart.
 func (o *OrderRPC) Checkout(ctx context.Context, in *v1.CheckoutRequest) (*v1.CheckoutResponse, error) {
-	// Parse customer ID to UUID
-	customerID, err := uuid.Parse(in.GetCustomerId())
+	customerID, err := rpcmeta.CustomerIDFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("invalid customer ID: %w", err)
+		return nil, fmt.Errorf("customer identity: %w", err)
 	}
 
 	// Convert proto delivery info to domain (can be nil for self-pickup)

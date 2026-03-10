@@ -36,7 +36,7 @@ GraphQL Federation Gateway powered by [WunderGraph Cosmo Router](https://cosmo-d
 
 - Node.js 18+
 - pnpm
-- Cosmo CLI (`wgc`, pinned to `0.107.1` in `package.json`)
+- Cosmo CLI (`wgc`, pinned to `0.109.0` in `package.json`)
 - All subgraphs running
 
 ## Installation
@@ -134,7 +134,7 @@ In your CI pipeline, compose the schema before building the Docker image:
 build:bff:
   script:
     - cd bff
-    - npm install -g wgc@0.107.1
+    - npm install -g wgc@0.109.0
     - wgc router compose -i graph-static.yaml -o router-config.json
     - docker build -f ops/dockerfile/Dockerfile -t bff:latest .
 ```

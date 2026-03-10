@@ -1,54 +1,54 @@
 # Delivery GraphQL Subgraph
 
-GraphQL subgraph для Delivery service. Проксирует gRPC API в GraphQL используя [Tailcall](https://tailcall.run/).
+GraphQL subgraph for the Delivery service. It currently proxies the gRPC API to GraphQL via [Tailcall](https://tailcall.run/) (Node). The target approach is the same pattern as **oms-graphql** and **admin-graphql**: a Go/Connect subgraph with typed calls to the Delivery gRPC API. Migration plan: [docs/MIGRATION-TO-CONNECT.md](./docs/MIGRATION-TO-CONNECT.md).
 
-## Архитектура
+## Architecture
 
 ```
 admin-ui → BFF (Cosmo Router) → delivery-graphql → Delivery Service (gRPC)
 ```
 
-## Запуск
+## Running
 
 ```bash
-# Установка зависимостей
+# Install dependencies
 pnpm install
 
-# Запуск (порт 8102)
+# Start (port 8080)
 pnpm start
 
-# Разработка с hot-reload
+# Development with hot-reload
 pnpm dev
 
-# Проверка конфигурации
+# Validate configuration
 pnpm check
 ```
 
-## Переменные окружения
+## Environment variables
 
-| Переменная | Описание | По умолчанию |
-|------------|----------|--------------|
-| `DELIVERY_GRPC_URL` | URL Delivery gRPC service | `http://localhost:50051` |
+| Variable           | Description              | Default                    |
+|--------------------|--------------------------|----------------------------|
+| `DELIVERY_GRPC_URL` | Delivery gRPC service URL | `http://localhost:50051`   |
 
 ## GraphQL API
 
 ### Queries
 
-- `couriers(filter, page, pageSize)` — список курьеров с фильтрацией
-- `courier(id)` — получить курьера по ID
-- `courierDeliveries(courierId, limit)` — история доставок курьера
+- `couriers(filter, pagination)` — list couriers with filtering and pagination
+- `courier(id, includeLocation)` — get a courier by ID
+- `courierDeliveries(courierId, limit)` — courier delivery history
 
 ### Mutations
 
-- `registerCourier(input)` — регистрация курьера
-- `activateCourier(id)` — активировать курьера
-- `deactivateCourier(id, reason)` — деактивировать курьера
-- `archiveCourier(id, reason)` — архивировать курьера
-- `updateCourierContact(id, input)` — обновить контакты
-- `updateCourierSchedule(id, input)` — обновить расписание
-- `changeCourierTransport(id, transportType)` — сменить транспорт
+- `registerCourier(input)` — register a courier
+- `activateCourier(id)` — activate courier
+- `deactivateCourier(id, reason)` — deactivate courier
+- `archiveCourier(id, reason)` — archive courier
+- `updateCourierContact(id, input)` — update contact info
+- `updateCourierSchedule(id, input)` — update schedule
+- `changeCourierTransport(id, transportType)` — change transport type
 
-## Ссылки
+## References
 
 - [Tailcall Documentation](https://tailcall.run/docs/)
 - Delivery Service proto: `delivery/src/infrastructure/rpc/delivery.proto`

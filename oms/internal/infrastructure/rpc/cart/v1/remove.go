@@ -14,7 +14,7 @@ import (
 
 // Remove removes items from the cart
 func (c *CartRPC) Remove(ctx context.Context, in *v1.RemoveRequest) (*emptypb.Empty, error) {
-	params, err := dto.RemoveRequestToDomain(in)
+	params, err := dto.RemoveRequestToDomain(ctx, in)
 	if err != nil {
 		return nil, grpcerr.ToStatus(ctx, c.log, "Cart.Remove", domain.WrapValidation("RemoveRequestToDomain", err))
 	}

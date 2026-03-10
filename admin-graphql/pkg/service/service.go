@@ -22,11 +22,13 @@ import (
 )
 
 const (
-	defaultListenAddr = "0.0.0.0:4012"
-	defaultAdminAPI   = "http://127.0.0.1:8000"
-	authHeader        = "Authorization"
-	cookieHeader      = "Cookie"
-	userIDHeader      = "X-User-ID"
+	defaultListenAddr  = "0.0.0.0:4012"
+	defaultAdminAPI    = "http://127.0.0.1:8000"
+	authHeader         = "Authorization"
+	cookieHeader       = "Cookie"
+	userIDHeader       = "X-User-ID"
+	traceparentHeader  = "traceparent"
+	traceIDHeader      = "trace-id"
 )
 
 type Service struct {
@@ -145,6 +147,8 @@ func (s *Service) getJSON(ctx context.Context, headers http.Header, path string,
 	propagateHeader(headers, request.Header, authHeader)
 	propagateHeader(headers, request.Header, cookieHeader)
 	propagateHeader(headers, request.Header, userIDHeader)
+	propagateHeader(headers, request.Header, traceparentHeader)
+	propagateHeader(headers, request.Header, traceIDHeader)
 
 	response, err := s.httpClient.Do(request)
 	if err != nil {

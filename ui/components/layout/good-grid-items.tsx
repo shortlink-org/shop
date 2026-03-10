@@ -17,7 +17,7 @@ export default function GoodGridItems({ goods }: { goods: Good[] }) {
               alt={good.name}
               label={{
                 title: good.name,
-                amount: good.price,
+                amount: good.price
               }}
               src="https://picsum.photos/400"
               fill

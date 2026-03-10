@@ -62,7 +62,12 @@ export function useCartBasket() {
     const merchandiseId = String(itemId);
     const currentItem = cart?.lines.find((item) => item.merchandise.id === merchandiseId);
 
-    if (!currentItem || pendingItemIds[merchandiseId] || quantity < 1 || quantity === currentItem.quantity) {
+    if (
+      !currentItem ||
+      pendingItemIds[merchandiseId] ||
+      quantity < 1 ||
+      quantity === currentItem.quantity
+    ) {
       return;
     }
 

@@ -25,6 +25,21 @@ declare module '@shortlink-org/ui-kit' {
 
   export const Button: FC<ButtonProps>;
 
+  export type StatCardTone = 'neutral' | 'accent' | 'success' | 'warning' | 'danger';
+
+  export interface StatCardProps {
+    label: ReactNode;
+    value: ReactNode;
+    change?: ReactNode;
+    tone?: StatCardTone;
+    className?: string;
+    labelClassName?: string;
+    valueClassName?: string;
+    changeClassName?: string;
+  }
+
+  export const StatCard: FC<StatCardProps>;
+
   export interface ToggleDarkModeProps {
     className?: string;
   }
@@ -36,11 +51,7 @@ declare module '@shortlink-org/ui-kit' {
     label: string;
     href: string;
     target?: '_blank' | '_self';
-    render?: (props: {
-      href: string;
-      children: ReactNode;
-      className?: string;
-    }) => ReactNode;
+    render?: (props: { href: string; children: ReactNode; className?: string }) => ReactNode;
   }
 
   export interface SocialLink {
@@ -107,9 +118,21 @@ declare module '@shortlink-org/ui-kit' {
     href: string;
     imageSrc: string;
     imageAlt: string;
-    price: string | { current: number; original?: number; currency?: string; locale?: string; discount?: number };
+    price:
+      | string
+      | {
+          current: number;
+          original?: number;
+          currency?: string;
+          locale?: string;
+          discount?: number;
+        };
     description?: string;
-    badges?: Array<{ label: string; tone?: 'info' | 'success' | 'warning' | 'error' | 'neutral'; icon?: ReactNode }>;
+    badges?: Array<{
+      label: string;
+      tone?: 'info' | 'success' | 'warning' | 'error' | 'neutral';
+      icon?: ReactNode;
+    }>;
     badge?: string;
     onSale?: boolean;
     inventory?: { status?: 'out_of_stock' | 'low_stock' | 'preorder' };
@@ -395,11 +418,7 @@ declare module '@shortlink-org/ui-kit' {
     name: string;
     logo?: ReactNode;
     href?: string;
-    render?: (props: {
-      href: string;
-      children: ReactNode;
-      className?: string;
-    }) => ReactNode;
+    render?: (props: { href: string; children: ReactNode; className?: string }) => ReactNode;
   }
 
   export interface AppHeaderNavigationItem {
@@ -432,10 +451,7 @@ declare module '@shortlink-org/ui-kit' {
       onClick?: () => void;
     }>;
     seeAllHref?: string;
-    render?: (props: {
-      count?: number;
-      items?: AppHeaderNotification['items'];
-    }) => ReactNode;
+    render?: (props: { count?: number; items?: AppHeaderNotification['items'] }) => ReactNode;
   }
 
   export interface AppHeaderProfile {
@@ -455,11 +471,7 @@ declare module '@shortlink-org/ui-kit' {
         variant?: 'default' | 'danger' | 'success';
       };
     }>;
-    render?: (props: {
-      avatar?: string;
-      name?: string;
-      email?: string;
-    }) => ReactNode;
+    render?: (props: { avatar?: string; name?: string; email?: string }) => ReactNode;
   }
 
   export interface AppHeaderProps {

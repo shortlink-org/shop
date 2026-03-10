@@ -79,10 +79,10 @@ message UpdateDeliveryInfoRequest {
   domain.order.common.v1.DeliveryInfo delivery_info = 2;
 }
 
-// Request message for checkout (creating order from cart)
+// Request message for checkout (creating order from cart).
+// Customer identity comes from request metadata (x-user-id set by Istio from JWT).
 message CheckoutRequest {
-  // ID of the customer whose cart should be converted to order
-  string customer_id = 1;
+  reserved 1;
   // Delivery information (optional, nil = self-pickup)
   domain.order.common.v1.DeliveryInfo delivery_info = 2;
 }
@@ -119,10 +119,10 @@ message PaginationResponse {
   int32 total_pages = 3;
 }
 
-// Request message for listing orders
+// Request message for listing orders.
+// Customer filter comes from request metadata (x-user-id); only that customer's orders are returned.
 message ListRequest {
-  // Optional filter by customer ID
-  string customer_id = 1;
+  reserved 1;
   // Optional filter by order status
   repeated domain.order.common.v1.OrderStatus status_filter = 2;
   // Pagination

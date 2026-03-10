@@ -325,19 +325,37 @@ export const leaderboardStats: Record<LeaderboardFilterId, LeaderboardStat[]> = 
   day: [
     { id: 'gmv', label: 'Tracked GMV', value: 1920000, change: '+18%', tone: 'accent' },
     { id: 'buyers', label: 'Active buyers', value: 14820, change: '+9%', tone: 'success' },
-    { id: 'conversion', label: 'Avg. conversion', value: '7.4%', change: '+0.6pp', tone: 'warning' },
+    {
+      id: 'conversion',
+      label: 'Avg. conversion',
+      value: '7.4%',
+      change: '+0.6pp',
+      tone: 'warning'
+    },
     { id: 'campaigns', label: 'Campaigns live', value: 27, change: 'today', tone: 'neutral' }
   ],
   week: [
     { id: 'gmv', label: 'Tracked GMV', value: 12400000, change: '+26%', tone: 'accent' },
     { id: 'buyers', label: 'Active buyers', value: 58240, change: '+13%', tone: 'success' },
-    { id: 'conversion', label: 'Avg. conversion', value: '6.8%', change: '+0.4pp', tone: 'warning' },
+    {
+      id: 'conversion',
+      label: 'Avg. conversion',
+      value: '6.8%',
+      change: '+0.4pp',
+      tone: 'warning'
+    },
     { id: 'campaigns', label: 'Campaigns live', value: 64, change: 'this week', tone: 'neutral' }
   ],
   month: [
     { id: 'gmv', label: 'Tracked GMV', value: 48600000, change: '+41%', tone: 'accent' },
     { id: 'buyers', label: 'Active buyers', value: 201400, change: '+22%', tone: 'success' },
-    { id: 'conversion', label: 'Avg. conversion', value: '6.4%', change: '+0.3pp', tone: 'warning' },
+    {
+      id: 'conversion',
+      label: 'Avg. conversion',
+      value: '6.4%',
+      change: '+0.3pp',
+      tone: 'warning'
+    },
     { id: 'campaigns', label: 'Campaigns live', value: 112, change: 'this month', tone: 'neutral' }
   ]
 };

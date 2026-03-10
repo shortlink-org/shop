@@ -1,9 +1,9 @@
 apiVersion: v2
-appVersion: "1.0.0"
+appVersion: '1.0.0'
 name: ui
 description: ShortLink Shop UI service
 version: 0.1.3
-kubeVersion: ">= 1.30.0 || >= v1.30.0-0"
+kubeVersion: '>= 1.30.0 || >= v1.30.0-0'
 keywords:
   - ui
   - shop

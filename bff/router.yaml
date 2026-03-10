@@ -76,9 +76,12 @@ cors:
     - "Content-Type"
     - "Authorization"
     - "X-Request-ID"
+    - "traceparent"
+    - "trace-id"
   allow_credentials: true
 
-# Forward auth headers from Oathkeeper/client to subgraphs (JWT, X-User-ID)
+# Forward auth and tracing. Only Authorization is required for identity: subgraphs
+# get x-user-id from JWT (Istio RequestAuthentication outputClaimToHeaders).
 # https://cosmo-docs.wundergraph.com/router/proxy-capabilities/request-headers-operations
 headers:
   all:
@@ -86,9 +89,11 @@ headers:
       - op: propagate
         named: Authorization
       - op: propagate
-        named: X-User-ID
-      - op: propagate
         named: Cookie
+      - op: propagate
+        named: traceparent
+      - op: propagate
+        named: trace-id
 
 # Telemetry configuration
 telemetry:

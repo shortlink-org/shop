@@ -34,11 +34,7 @@ export function BackButton({ goodId, className = '' }: BackButtonProps) {
   }
 
   return (
-    <Link
-      href="/search"
-      className={`${baseClassName} ${className}`}
-      aria-label="Back to search"
-    >
+    <Link href="/search" className={`${baseClassName} ${className}`} aria-label="Back to search">
       <ArrowLeftIcon className="h-4 w-4" />
       <span>Back</span>
     </Link>

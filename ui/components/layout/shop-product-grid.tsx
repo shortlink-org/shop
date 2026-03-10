@@ -8,11 +8,18 @@ import { addItem } from 'components/cart/actions';
 import { useCart } from 'components/cart/cart-context';
 import { DEFAULT_OPTION } from 'lib/constants';
 import { Good, GoodVariant } from 'lib/shopify/types';
+import { getStorefrontArtwork, getStorefrontCategory } from 'lib/storefront-art';
 import { toast } from 'sonner';
 import type { ProductGridProduct, ProductQuickViewProduct } from '@shortlink-org/ui-kit';
 
-function placeholderImage(goodId: string): string {
-  return `https://picsum.photos/seed/${encodeURIComponent(goodId)}/400/500`;
+function placeholderImage(good: Good, variant = 0): string {
+  return getStorefrontArtwork(good.name, good.id, {
+    width: 720,
+    height: 900,
+    variant,
+    eyebrow: 'shortlink goods',
+    subtitle: getStorefrontCategory(good.name)
+  });
 }
 const ADDING_BADGE = [{ label: 'Adding...', tone: 'info' as const }];
 
@@ -33,7 +40,7 @@ function goodToOptimisticVariant(good: Good): GoodVariant {
 function goodToQuickViewProduct(good: Good): ProductQuickViewProduct {
   return {
     name: good.name,
-    imageSrc: placeholderImage(good.id),
+    imageSrc: placeholderImage(good, 1),
     imageAlt: good.name,
     price: formatPrice(good.price),
     colors: [],
@@ -51,7 +58,7 @@ function goodToProduct(
     id: good.id,
     name: good.name,
     href: `/good/${good.id}`,
-    imageSrc: placeholderImage(good.id),
+    imageSrc: placeholderImage(good),
     imageAlt: good.name,
     price: {
       current: good.price,
@@ -63,7 +70,14 @@ function goodToProduct(
         ? `${good.description.slice(0, 120)}…`
         : good.description
       : undefined,
-    badges: isAdding ? ADDING_BADGE : undefined,
+    badges: isAdding
+      ? ADDING_BADGE
+      : [
+          {
+            label: good.price >= 30 ? 'Signature drop' : 'Quick pick',
+            tone: good.price >= 30 ? 'warning' : 'success'
+          }
+        ],
     onAddToCart: isAdding ? undefined : () => onAddToCart(good),
     cta: {
       onQuickView: () => onQuickView(good)

@@ -12,7 +12,7 @@ import { ThemeProvider } from 'next-themes';
 import './globals.css';
 
 // DOCS: https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#dynamic
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic';
 
 const { TWITTER_CREATOR, TWITTER_SITE, SITE_NAME } = process.env;
 const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL
@@ -46,6 +46,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const authHeader = requestHeaders.get('authorization') ?? undefined;
 
   // Pass cart promise that never rejects — when carts service is down we resolve with CART_UNAVAILABLE so UI can show "we'll display it later"
+  // Identity: only Authorization (JWT) is forwarded; oms-graphql gets x-user-id from Istio (RequestAuthentication outputClaimToHeaders).
   const cartPromise: Promise<CartLoadResult> = getCart({
     authorization: authHeader
   }).catch(() => CART_UNAVAILABLE);
@@ -54,12 +55,12 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: SITE_NAME,
-    url: baseUrl,
+    url: baseUrl
   };
 
   return (
     <html lang="en" className={GeistSans.variable} suppressHydrationWarning>
-      <body className="bg-neutral-50 text-black selection:bg-teal-300 dark:bg-neutral-900 dark:text-white dark:selection:bg-pink-500 dark:selection:text-white">
+      <body className="bg-[var(--color-background)] text-[var(--color-foreground)] selection:bg-sky-200 selection:text-slate-950 dark:selection:bg-sky-500 dark:selection:text-slate-950">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: sanitizeJsonLd(websiteJsonLd) }}
@@ -69,7 +70,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             <CartProvider cartPromise={cartPromise}>
               <a
                 href="#main"
-                className="focus-ring absolute left-4 top-4 z-[100] -translate-y-full rounded-md bg-[var(--color-foreground)] px-4 py-2 text-sm font-medium text-[var(--color-background)] transition-transform focus:translate-y-0"
+                className="focus-ring absolute top-4 left-4 z-[100] -translate-y-full rounded-md bg-[var(--color-foreground)] px-4 py-2 text-sm font-medium text-[var(--color-background)] transition-transform focus:translate-y-0"
               >
                 Skip to main content
               </a>

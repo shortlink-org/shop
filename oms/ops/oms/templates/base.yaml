@@ -14,6 +14,4 @@
 
 {{ include "shortlink-common.NetworkPolicy" . }}
 
-{{ include "shortlink-common.RequestAuthentication" . }}
-
-{{ include "shortlink-common.AuthorizationPolicy" . }}
+{{/* RequestAuthentication with outputClaimToHeaders (sub → x-user-id) for OMS; see ADR-0005. Replaces shortlink-common.RequestAuthentication so we can set x-user-id from JWT. */}}

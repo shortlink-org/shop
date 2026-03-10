@@ -14,7 +14,7 @@ import (
 
 // Add adds items to the cart
 func (c *CartRPC) Add(ctx context.Context, in *v1.AddRequest) (*emptypb.Empty, error) {
-	params, err := dto.AddRequestToDomain(in)
+	params, err := dto.AddRequestToDomain(ctx, in)
 	if err != nil {
 		return nil, grpcerr.ToStatus(ctx, c.log, "Cart.Add", domain.WrapValidation("AddRequestToDomain", err))
 	}

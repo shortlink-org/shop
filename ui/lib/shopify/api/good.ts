@@ -2,7 +2,12 @@ import { TAGS } from 'lib/constants';
 import { shopifyFetch } from '../fetch';
 import { normalizeGood } from '../mappers';
 import { GOODS_UNAVAILABLE } from '../sentinels';
-import type { Good, ShopifyProductOperation, ShopifyProductRecommendationsOperation, ShopifyProductsOperation } from '../types';
+import type {
+  Good,
+  ShopifyProductOperation,
+  ShopifyProductRecommendationsOperation,
+  ShopifyProductsOperation
+} from '../types';
 import { getGoodQuery, getGoodRecommendationsQuery, getGoodsQuery } from '../queries/good';
 
 export type RequestOptions = { authorization?: string };
@@ -49,14 +54,9 @@ function sortGoods(
   if (sortKey === 'PRICE') {
     sorted.sort((a, b) => a.price - b.price);
   } else if (sortKey === 'CREATED_AT') {
-    sorted.sort(
-      (a, b) =>
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-    );
+    sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   } else if (sortKey === 'RELEVANCE' && normalizedQuery) {
-    sorted.sort(
-      (a, b) => relevanceScore(b, normalizedQuery) - relevanceScore(a, normalizedQuery)
-    );
+    sorted.sort((a, b) => relevanceScore(b, normalizedQuery) - relevanceScore(a, normalizedQuery));
   }
 
   if (reverse) {
@@ -74,7 +74,7 @@ export async function getGood(
     const res = await shopifyFetch<ShopifyProductOperation>({
       query: getGoodQuery,
       variables: {
-        id,
+        id
       },
       headers: options?.authorization ? { Authorization: options.authorization } : {}
     });

@@ -41,10 +41,7 @@ export const validateEnvironmentVariables = () => {
     );
   }
 
-  if (
-    process.env.API_URI?.includes('[') ||
-    process.env.API_URI?.includes(']')
-  ) {
+  if (process.env.API_URI?.includes('[') || process.env.API_URI?.includes(']')) {
     throw new Error(
       'Your `API_URI` environment variable includes brackets (ie. `[` and / or `]`). Your site will not work with them there. Please remove them.'
     );

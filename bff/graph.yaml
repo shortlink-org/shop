@@ -20,7 +20,8 @@ subgraphs:
       proto_file: ../admin-graphql/pkg/proto/service/v1/service.proto
       mapping_file: ../admin-graphql/pkg/proto/service/v1/mapping.json
 
-  # Delivery API (gRPC -> GraphQL via Tailcall) - couriers, deliveries
+  # Delivery API. Target: Connect subgraph (Go) like oms-graphql, dns:///...:4013 + grpc schema/proto/mapping.
+  # Current: Tailcall HTTP GraphQL (port 8080).
   - name: delivery
     routing_url: http://localhost:8080/graphql
     introspection:

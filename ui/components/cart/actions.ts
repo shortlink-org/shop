@@ -6,9 +6,7 @@ import { revalidateTag } from 'next/cache';
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-export type AddItemResult =
-  | { ok: true; cartId: string }
-  | { ok: false; message: string };
+export type AddItemResult = { ok: true; cartId: string } | { ok: false; message: string };
 
 async function getHeaderCustomerId() {
   const requestHeaders = await headers();
@@ -64,12 +62,17 @@ export async function addItem(
         ? msgRaw
         : msgRaw != null
           ? JSON.stringify(msgRaw)
-          : (err?.error != null && typeof (err.error as Record<string, unknown>)?.message === 'string')
+          : err?.error != null &&
+              typeof (err.error as Record<string, unknown>)?.message === 'string'
             ? (err.error as { message: string }).message
             : null;
     const serialized =
       typeof e === 'object' && e !== null
-        ? JSON.stringify(e, (_, v) => (v instanceof Error ? { name: v.name, message: v.message } : v), 2)
+        ? JSON.stringify(
+            e,
+            (_, v) => (v instanceof Error ? { name: v.name, message: v.message } : v),
+            2
+          )
         : String(e);
     console.error('[addItem] addToCart failed', {
       cartId,
@@ -80,9 +83,7 @@ export async function addItem(
     });
     return {
       ok: false,
-      message: typeof message === 'string' && message.trim()
-        ? message
-        : 'Error adding item to cart'
+      message: typeof message === 'string' && message.trim() ? message : 'Error adding item to cart'
     };
   }
 }
@@ -98,10 +99,10 @@ export async function removeItem(prevState: any, merchandiseId: string) {
   const userId = await getHeaderCustomerId();
 
   try {
-    await updateCart(
-      [{ id: merchandiseId, merchandiseId, quantity: 0 }],
-      { authorization: authHeader, userId }
-    );
+    await updateCart([{ id: merchandiseId, merchandiseId, quantity: 0 }], {
+      authorization: authHeader,
+      userId
+    });
     revalidateTag(TAGS.cart, 'max');
   } catch (e) {
     return 'Error removing item from cart';

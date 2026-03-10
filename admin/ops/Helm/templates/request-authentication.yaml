@@ -1,0 +1,19 @@
+{{- if .Values.requestAuthentication.enabled }}
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: {{ .Release.Name }}-jwt
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Chart.Name }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  jwtRules:
+    - issuer: {{ .Values.requestAuthentication.issuer | quote }}
+      jwksUri: {{ .Values.requestAuthentication.jwksUri | quote }}
+      forwardOriginalToken: {{ .Values.requestAuthentication.forwardOriginalToken | default true }}
+      outputClaimToHeaders:
+        - header: "x-user-id"
+          claim: "sub"
+{{- end }}

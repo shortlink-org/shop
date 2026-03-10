@@ -1,11 +1,13 @@
 package dto //nolint:dupl // Add and Remove DTOs intentionally share structure
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/google/uuid"
 
 	itemv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/item/v1"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/rpcmeta"
 	v2 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1/model/v1"
 )
 
@@ -16,11 +18,10 @@ type AddRequestParams struct {
 }
 
 // AddRequestToDomain converts an AddRequest to domain parameters
-func AddRequestToDomain(r *v2.AddRequest) (*AddRequestParams, error) {
-	// string to uuid
-	customerID, err := uuid.Parse(r.GetCustomerId())
+func AddRequestToDomain(ctx context.Context, r *v2.AddRequest) (*AddRequestParams, error) {
+	customerID, err := rpcmeta.CustomerIDFromContext(ctx)
 	if err != nil {
-		return nil, ErrInvalidCustomerId
+		return nil, err
 	}
 
 	items := make([]itemv1.Item, 0, len(r.GetItems()))

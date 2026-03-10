@@ -24,6 +24,7 @@ import (
 	grpcstatus "google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
+	"github.com/shortlink-org/shop/oms-graphql/pkg/dto"
 	cartgrpc "github.com/shortlink-org/shop/oms-graphql/pkg/generated/oms/infrastructure/rpc/cart/v1"
 	cartmodel "github.com/shortlink-org/shop/oms-graphql/pkg/generated/oms/infrastructure/rpc/cart/v1/model/v1"
 	ordergrpc "github.com/shortlink-org/shop/oms-graphql/pkg/generated/oms/infrastructure/rpc/order/v1"
@@ -31,10 +32,11 @@ import (
 )
 
 const (
-	defaultListenAddr = "0.0.0.0:4011"
-	defaultOMSGRPCURL = "http://localhost:50051"
-	userIDHeader      = "X-User-ID"
+	defaultListenAddr  = "0.0.0.0:4011"
+	defaultOMSGRPCURL  = "http://localhost:50051"
 	authHeader        = "Authorization"
+	traceparentHeader = "traceparent"
+	traceIDHeader     = "trace-id"
 )
 
 type Service struct {
@@ -110,21 +112,19 @@ func (s *Service) QueryGetCart(
 	ctx context.Context,
 	req *connect.Request[servicepb.QueryGetCartRequest],
 ) (*connect.Response[servicepb.QueryGetCartResponse], error) {
-	userID, outboundCtx, err := s.authorizedContext(ctx, req)
+	_, outboundCtx, err := s.authorizedContext(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
-	response, err := s.cartClient.Get(outboundCtx, &cartmodel.GetRequest{
-		CustomerId: userID,
-	})
+	response, err := s.cartClient.Get(outboundCtx, &cartmodel.GetRequest{})
 	if err != nil {
 		return nil, grpcError(err)
 	}
 
 	return connect.NewResponse(&servicepb.QueryGetCartResponse{
 		GetCart: &servicepb.GetCartResponse{
-			State: mapCartState(response.GetState()),
+			State: dto.CartStateToService(response.GetState()),
 		},
 	}), nil
 }
@@ -147,7 +147,7 @@ func (s *Service) QueryGetOrder(
 
 	return connect.NewResponse(&servicepb.QueryGetOrderResponse{
 		GetOrder: &servicepb.GetOrderResponse{
-			Order: mapOrderState(response.GetOrder()),
+			Order: dto.OrderStateToService(response.GetOrder()),
 		},
 	}), nil
 }
@@ -156,14 +156,13 @@ func (s *Service) MutationAddItem(
 	ctx context.Context,
 	req *connect.Request[servicepb.MutationAddItemRequest],
 ) (*connect.Response[servicepb.MutationAddItemResponse], error) {
-	userID, outboundCtx, err := s.authorizedContext(ctx, req)
+	_, outboundCtx, err := s.authorizedContext(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
 	_, err = s.cartClient.Add(outboundCtx, &cartmodel.AddRequest{
-		CustomerId: userID,
-		Items:      mapCartItemInputs(req.Msg.GetAddRequest()),
+		Items: dto.CartItemInputsToOMS(req.Msg.GetAddRequest()),
 	})
 	if err != nil {
 		return nil, grpcError(err)
@@ -178,14 +177,13 @@ func (s *Service) MutationRemoveItem(
 	ctx context.Context,
 	req *connect.Request[servicepb.MutationRemoveItemRequest],
 ) (*connect.Response[servicepb.MutationRemoveItemResponse], error) {
-	userID, outboundCtx, err := s.authorizedContext(ctx, req)
+	_, outboundCtx, err := s.authorizedContext(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
 	_, err = s.cartClient.Remove(outboundCtx, &cartmodel.RemoveRequest{
-		CustomerId: userID,
-		Items:      mapCartItemInputs(req.Msg.GetRemoveRequest()),
+		Items: dto.CartItemInputsToOMS(req.Msg.GetRemoveRequest()),
 	})
 	if err != nil {
 		return nil, grpcError(err)
@@ -200,14 +198,12 @@ func (s *Service) MutationResetCart(
 	ctx context.Context,
 	req *connect.Request[servicepb.MutationResetCartRequest],
 ) (*connect.Response[servicepb.MutationResetCartResponse], error) {
-	userID, outboundCtx, err := s.authorizedContext(ctx, req)
+	_, outboundCtx, err := s.authorizedContext(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = s.cartClient.Reset(outboundCtx, &cartmodel.ResetRequest{
-		CustomerId: userID,
-	})
+	_, err = s.cartClient.Reset(outboundCtx, &cartmodel.ResetRequest{})
 	if err != nil {
 		return nil, grpcError(err)
 	}
@@ -221,12 +217,12 @@ func (s *Service) MutationCreateOrder(
 	ctx context.Context,
 	req *connect.Request[servicepb.MutationCreateOrderRequest],
 ) (*connect.Response[servicepb.MutationCreateOrderResponse], error) {
-	userID, outboundCtx, err := s.authorizedContext(ctx, req)
+	_, outboundCtx, err := s.authorizedContext(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
-	createRequest, err := mapCreateOrderRequest(userID, req.Msg.GetInput())
+	createRequest, err := dto.CreateOrderRequestFromInput(req.Msg.GetInput())
 	if err != nil {
 		return nil, err
 	}
@@ -276,7 +272,7 @@ func (s *Service) MutationUpdateDeliveryInfo(
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("input is required"))
 	}
 
-	deliveryInfo, err := mapDeliveryInfoInput(input.GetDeliveryInfo())
+	deliveryInfo, err := dto.DeliveryInfoFromInput(input.GetDeliveryInfo())
 	if err != nil {
 		return nil, err
 	}
@@ -298,7 +294,7 @@ func (s *Service) MutationCheckout(
 	ctx context.Context,
 	req *connect.Request[servicepb.MutationCheckoutRequest],
 ) (*connect.Response[servicepb.MutationCheckoutResponse], error) {
-	userID, outboundCtx, err := s.authorizedContext(ctx, req)
+	_, outboundCtx, err := s.authorizedContext(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -309,13 +305,12 @@ func (s *Service) MutationCheckout(
 		deliveryInfoInput = input.GetDeliveryInfo()
 	}
 
-	deliveryInfo, err := mapDeliveryInfoInput(deliveryInfoInput)
+	deliveryInfo, err := dto.DeliveryInfoFromInput(deliveryInfoInput)
 	if err != nil {
 		return nil, err
 	}
 
 	response, err := s.orderClient.Checkout(outboundCtx, &ordermodel.CheckoutRequest{
-		CustomerId:   userID,
 		DeliveryInfo: deliveryInfo,
 	})
 	if err != nil {
@@ -333,17 +328,20 @@ func (s *Service) authorizedContext(
 	ctx context.Context,
 	req interface{ Header() http.Header },
 ) (string, context.Context, error) {
-	userID := strings.TrimSpace(req.Header().Get(userIDHeader))
-	if userID == "" {
-		return "", nil, connect.NewError(connect.CodeUnauthenticated, errors.New("missing required X-User-ID header"))
+	authorization := strings.TrimSpace(req.Header().Get(authHeader))
+	if authorization == "" {
+		return "", nil, connect.NewError(connect.CodeUnauthenticated, errors.New("missing required Authorization header"))
 	}
 
-	mdPairs := []string{"x-user-id", userID}
-	if authorization := strings.TrimSpace(req.Header().Get(authHeader)); authorization != "" {
-		mdPairs = append(mdPairs, "authorization", authorization)
+	mdPairs := []string{"authorization", authorization}
+	if v := strings.TrimSpace(req.Header().Get(traceparentHeader)); v != "" {
+		mdPairs = append(mdPairs, "traceparent", v)
+	}
+	if v := strings.TrimSpace(req.Header().Get(traceIDHeader)); v != "" {
+		mdPairs = append(mdPairs, "trace-id", v)
 	}
 
-	return userID, metadata.NewOutgoingContext(ctx, metadata.Pairs(mdPairs...)), nil
+	return "", metadata.NewOutgoingContext(ctx, metadata.Pairs(mdPairs...)), nil
 }
 
 func grpcError(err error) error {

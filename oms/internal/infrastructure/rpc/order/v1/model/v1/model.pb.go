@@ -492,11 +492,10 @@ func (x *UpdateDeliveryInfoRequest) GetDeliveryInfo() *common.DeliveryInfo {
 	return nil
 }
 
-// Request message for checkout (creating order from cart)
+// Request message for checkout (creating order from cart).
+// Customer identity comes from request metadata (x-user-id set by Istio from JWT).
 type CheckoutRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// ID of the customer whose cart should be converted to order
-	CustomerId string `protobuf:"bytes,1,opt,name=customer_id,json=customerId,proto3" json:"customer_id,omitempty"`
 	// Delivery information (optional, nil = self-pickup)
 	DeliveryInfo  *common.DeliveryInfo `protobuf:"bytes,2,opt,name=delivery_info,json=deliveryInfo,proto3" json:"delivery_info,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -531,13 +530,6 @@ func (x *CheckoutRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use CheckoutRequest.ProtoReflect.Descriptor instead.
 func (*CheckoutRequest) Descriptor() ([]byte, []int) {
 	return file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{8}
-}
-
-func (x *CheckoutRequest) GetCustomerId() string {
-	if x != nil {
-		return x.CustomerId
-	}
-	return ""
 }
 
 func (x *CheckoutRequest) GetDeliveryInfo() *common.DeliveryInfo {
@@ -748,11 +740,10 @@ func (x *PaginationResponse) GetTotalPages() int32 {
 	return 0
 }
 
-// Request message for listing orders
+// Request message for listing orders.
+// Customer filter comes from request metadata (x-user-id); only that customer's orders are returned.
 type ListRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Optional filter by customer ID
-	CustomerId string `protobuf:"bytes,1,opt,name=customer_id,json=customerId,proto3" json:"customer_id,omitempty"`
 	// Optional filter by order status
 	StatusFilter []common.OrderStatus `protobuf:"varint,2,rep,packed,name=status_filter,json=statusFilter,proto3,enum=domain.order.common.v1.OrderStatus" json:"status_filter,omitempty"`
 	// Pagination
@@ -789,13 +780,6 @@ func (x *ListRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use ListRequest.ProtoReflect.Descriptor instead.
 func (*ListRequest) Descriptor() ([]byte, []int) {
 	return file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{12}
-}
-
-func (x *ListRequest) GetCustomerId() string {
-	if x != nil {
-		return x.CustomerId
-	}
-	return ""
 }
 
 func (x *ListRequest) GetStatusFilter() []common.OrderStatus {
@@ -913,11 +897,9 @@ const file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\x81\x01\n" +
 	"\x19UpdateDeliveryInfoRequest\x12\x19\n" +
 	"\border_id\x18\x01 \x01(\tR\aorderId\x12I\n" +
-	"\rdelivery_info\x18\x02 \x01(\v2$.domain.order.common.v1.DeliveryInfoR\fdeliveryInfo\"}\n" +
-	"\x0fCheckoutRequest\x12\x1f\n" +
-	"\vcustomer_id\x18\x01 \x01(\tR\n" +
-	"customerId\x12I\n" +
-	"\rdelivery_info\x18\x02 \x01(\v2$.domain.order.common.v1.DeliveryInfoR\fdeliveryInfo\"\xae\x01\n" +
+	"\rdelivery_info\x18\x02 \x01(\v2$.domain.order.common.v1.DeliveryInfoR\fdeliveryInfo\"b\n" +
+	"\x0fCheckoutRequest\x12I\n" +
+	"\rdelivery_info\x18\x02 \x01(\v2$.domain.order.common.v1.DeliveryInfoR\fdeliveryInfoJ\x04\b\x01\x10\x02\"\xae\x01\n" +
 	"\x10CheckoutResponse\x12\x19\n" +
 	"\border_id\x18\x01 \x01(\tR\aorderId\x12\x1a\n" +
 	"\bsubtotal\x18\x02 \x01(\x01R\bsubtotal\x12%\n" +
@@ -933,14 +915,12 @@ const file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDesc = "" +
 	"\fcurrent_page\x18\x01 \x01(\x05R\vcurrentPage\x12\x1b\n" +
 	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\x12\x1f\n" +
 	"\vtotal_pages\x18\x03 \x01(\x05R\n" +
-	"totalPages\"\xca\x01\n" +
-	"\vListRequest\x12\x1f\n" +
-	"\vcustomer_id\x18\x01 \x01(\tR\n" +
-	"customerId\x12H\n" +
+	"totalPages\"\xaf\x01\n" +
+	"\vListRequest\x12H\n" +
 	"\rstatus_filter\x18\x02 \x03(\x0e2#.domain.order.common.v1.OrderStatusR\fstatusFilter\x12P\n" +
 	"\n" +
 	"pagination\x18\x03 \x01(\v20.infrastructure.rpc.order.v1.model.v1.PaginationR\n" +
-	"pagination\"\xd3\x01\n" +
+	"paginationJ\x04\b\x01\x10\x02\"\xd3\x01\n" +
 	"\fListResponse\x12H\n" +
 	"\x06orders\x18\x01 \x03(\v20.infrastructure.rpc.order.v1.model.v1.OrderStateR\x06orders\x12\x1f\n" +
 	"\vtotal_count\x18\x02 \x01(\x05R\n" +

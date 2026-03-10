@@ -4,7 +4,7 @@ import type { Session } from '@ory/client';
 import { fetchSession } from './api';
 
 export const queryKeys = {
-  session: ['session'] as const,
+  session: ['session'] as const
 };
 
 export function useSessionQuery(): UseQueryResult<Session> {
@@ -12,7 +12,7 @@ export function useSessionQuery(): UseQueryResult<Session> {
     queryKey: queryKeys.session,
     queryFn: () => fetchSession(),
     staleTime: 5 * 60 * 1000,
-    retry: 1,
+    retry: 1
   }) as UseQueryResult<Session>;
 }
 
@@ -27,6 +27,6 @@ export function useOptionalSessionQuery(): UseQueryResult<Session | null> {
       }
     },
     staleTime: 5 * 60 * 1000,
-    retry: false,
+    retry: false
   }) as UseQueryResult<Session | null>;
 }

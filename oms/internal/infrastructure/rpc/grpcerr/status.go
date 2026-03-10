@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/shortlink-org/shop/oms/internal/domain"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/rpcmeta"
 )
 
 // Logger is the minimal interface for logging unexpected errors (Op + Unwrap).
@@ -31,6 +32,9 @@ func ToStatus(ctx context.Context, log Logger, op string, err error) error {
 	switch {
 	case errors.Is(err, domain.ErrValidation):
 		code = codes.InvalidArgument
+		msg = err.Error()
+	case errors.Is(err, rpcmeta.ErrMissingCustomerID):
+		code = codes.Unauthenticated
 		msg = err.Error()
 	case errors.Is(err, domain.ErrNotFound):
 		code = codes.NotFound

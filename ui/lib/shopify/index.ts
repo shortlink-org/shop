@@ -10,23 +10,13 @@ export {
 export { shopifyFetch } from './fetch';
 
 // Cart API
-export {
-  addToCart,
-  checkout,
-  getCart,
-  removeFromCart,
-  updateCart
-} from './api/cart';
+export { addToCart, checkout, getCart, removeFromCart, updateCart } from './api/cart';
 
 // Good API
 export { getGood, getGoodRecommendations, getGoods } from './api/good';
 
 // Collection API
-export {
-  getCollection,
-  getCollectionProducts,
-  getCollections
-} from './api/collection';
+export { getCollection, getCollectionProducts, getCollections } from './api/collection';
 
 // Menu API
 export { getMenu } from './api/menu';

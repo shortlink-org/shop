@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const BFF_GRAPHQL_URL =
   process.env.BFF_GRAPHQL_URL ??
-  (process.env.NODE_ENV === 'development'
-    ? 'http://localhost:9991/graphql'
-    : 'http://shortlink-shop-bff.shortlink-shop.svc.cluster.local:9991/graphql');
+  'http://shortlink-shop-bff.shortlink-shop.svc.cluster.local:9991/graphql';
 const TRACE_ID_HEADER = 'trace-id';
 const TRACEPARENT_HEADER = 'traceparent';
 
@@ -44,7 +42,8 @@ function sanitizeGetGoodsListBody(rawBody: string): string {
     const query = typeof payload.query === 'string' ? payload.query : '';
     // Sanitize for any operation that calls goods(page: ...), not only GetGoodsList.
     if (!/goods\s*\(\s*page\s*:/.test(query)) return rawBody;
-    const variables = payload.variables && typeof payload.variables === 'object' ? { ...payload.variables } : {};
+    const variables =
+      payload.variables && typeof payload.variables === 'object' ? { ...payload.variables } : {};
     const page = variables.page;
     const safePage = normalizePage(page);
     if (page !== safePage) variables.page = safePage;
@@ -56,7 +55,6 @@ function sanitizeGetGoodsListBody(rawBody: string): string {
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const authorization = req.headers.get('authorization') ?? undefined;
-  const userId = req.headers.get('x-user-id') ?? undefined;
   const contentType = req.headers.get('content-type') ?? 'application/json';
   const { traceId, traceparent } = getTraceContext(req);
 
@@ -64,10 +62,22 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     body = await req.text();
   } catch {
-    return NextResponse.json(
-      { errors: [{ message: 'Invalid request body' }] },
-      { status: 400 }
-    );
+    return NextResponse.json({ errors: [{ message: 'Invalid request body' }] }, { status: 400 });
+  }
+
+  let operationName: string | null = null;
+  try {
+    const payload = JSON.parse(body) as {
+      query?: string;
+      operationName?: string;
+      variables?: Record<string, unknown>;
+    };
+    operationName =
+      typeof payload.operationName === 'string' && payload.operationName
+        ? payload.operationName
+        : (payload.query?.match(/(?:query|mutation)\s+(\w+)/)?.[1] ?? null);
+  } catch {
+    // ignore
   }
 
   const sanitizedBody = sanitizeGetGoodsListBody(body);
@@ -95,9 +105,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (authorization) {
     headers['Authorization'] = authorization;
   }
-  if (userId) {
-    headers['X-User-ID'] = userId;
-  }
   if (traceparent) {
     headers[TRACEPARENT_HEADER] = traceparent;
   }
@@ -112,6 +119,27 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   });
 
   const text = await res.text();
+
+  // Log incoming request and outgoing response (with errors when present)
+  const logPayload: Record<string, unknown> = {
+    operation: operationName ?? '(anonymous)',
+    traceId: traceId ?? null,
+    status: res.status
+  };
+  if (res.status >= 400) {
+    logPayload.responseError = text.slice(0, 500);
+  } else {
+    try {
+      const parsed = JSON.parse(text) as { errors?: Array<{ message?: string }> };
+      if (Array.isArray(parsed?.errors) && parsed.errors.length > 0) {
+        logPayload.graphqlErrors = parsed.errors.map((e) => e?.message ?? String(e));
+      }
+    } catch {
+      // not JSON or no errors
+    }
+  }
+  console.info('[api/graphql]', logPayload);
+
   return new NextResponse(text, {
     status: res.status,
     headers: {

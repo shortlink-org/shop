@@ -15,12 +15,12 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@bufbuild/protobuf": "1.10.0",
-    "wgc": "0.107.1"
+    "@bufbuild/protobuf": "2.11.0",
+    "wgc": "0.109.0"
   },
   "pnpm": {
     "overrides": {
-      "@bufbuild/protobuf": "1.10.0"
+      "@bufbuild/protobuf": "2.11.0"
     }
   }
 }

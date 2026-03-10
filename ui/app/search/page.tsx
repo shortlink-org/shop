@@ -47,8 +47,8 @@ export default async function SearchPage(props: {
             '@type': 'ListItem',
             position: index + 1,
             url: `${getBaseUrl()}/good/${good.id}`,
-            name: good.name,
-          })),
+            name: good.name
+          }))
         }
       : null;
 
@@ -68,9 +68,7 @@ export default async function SearchPage(props: {
           <span className="font-bold">&quot;{searchValue}&quot;</span>
         </p>
       ) : null}
-      {goods.length > 0 ? (
-        <ShopProductGrid goods={goods} />
-      ) : null}
+      {goods.length > 0 ? <ShopProductGrid goods={goods} /> : null}
     </>
   );
 }

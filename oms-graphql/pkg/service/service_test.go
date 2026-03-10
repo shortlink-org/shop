@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"connectrpc.com/connect"
+
+	"github.com/shortlink-org/shop/oms-graphql/pkg/dto"
 	servicepb "github.com/shortlink-org/shop/oms-graphql/pkg/generated/service/v1"
 )
 
@@ -24,10 +26,10 @@ func TestQueryGetCartRequiresUserID(t *testing.T) {
 	}
 }
 
-func TestMapCreateOrderRequestUsesUserIDAndGeneratesOrderID(t *testing.T) {
+func TestMapCreateOrderRequestGeneratesOrderID(t *testing.T) {
 	t.Parallel()
 
-	req, err := mapCreateOrderRequest("user-123", &servicepb.CreateOrderInput{
+	req, err := dto.CreateOrderRequestFromInput(&servicepb.CreateOrderInput{
 		Items: []*servicepb.OrderItemInput{
 			{
 				Id:       "good-1",
@@ -38,10 +40,6 @@ func TestMapCreateOrderRequestUsesUserIDAndGeneratesOrderID(t *testing.T) {
 	})
 	if err != nil {
 		t.Fatalf("mapCreateOrderRequest returned error: %v", err)
-	}
-
-	if req.GetOrder().GetCustomerId() != "user-123" {
-		t.Fatalf("expected customer id user-123, got %q", req.GetOrder().GetCustomerId())
 	}
 
 	if req.GetOrder().GetId() == "" {

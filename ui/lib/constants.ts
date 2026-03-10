@@ -29,8 +29,7 @@ export const sorting: SortFilterItem[] = [
 
 export const HTTP_STATUS_RATE_LIMIT = 429;
 
-export const RATE_LIMIT_MESSAGE =
-  'Too many requests. Please try again in a moment.';
+export const RATE_LIMIT_MESSAGE = 'Too many requests. Please try again in a moment.';
 
 export const TAGS = {
   collections: 'collections',

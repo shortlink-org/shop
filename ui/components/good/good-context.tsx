@@ -79,4 +79,3 @@ export function useUpdateURL() {
     router.push(`?${newParams.toString()}`, { scroll: false });
   };
 }
-

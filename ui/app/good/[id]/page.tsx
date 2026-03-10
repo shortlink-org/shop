@@ -7,12 +7,13 @@ import { GoodProductPage } from 'components/good/good-product-page';
 import { GoodProvider } from 'components/good/good-context';
 import { getGood, getGoodRecommendations, GOODS_UNAVAILABLE } from 'lib/shopify';
 import { Image } from 'lib/shopify/types';
+import { getStorefrontArtwork, getStorefrontCategory } from 'lib/storefront-art';
 import { getBaseUrl, sanitizeJsonLd } from 'lib/utils';
 import Link from 'next/link';
 import { Suspense } from 'react';
 
 // DOCS: https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#dynamic
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(props: {
   params: Promise<{ id: string }>;
@@ -32,7 +33,7 @@ export async function generateMetadata(props: {
 
   return {
     title: good.name,
-    description: good.description,
+    description: good.description
   };
 }
 
@@ -59,14 +60,18 @@ export default async function GoodPage(props: { params: Promise<{ id: string }> 
   }
   if (!good) return notFound();
 
-  // Mock images for demo (stable per product via seed)
-  const images: Image[] = [
-    { url: `https://picsum.photos/seed/${encodeURIComponent(id)}-1/600/600`, altText: good.name, width: 600, height: 600 },
-    { url: `https://picsum.photos/seed/${encodeURIComponent(id)}-2/600/600`, altText: good.name, width: 600, height: 600 },
-    { url: `https://picsum.photos/seed/${encodeURIComponent(id)}-3/600/600`, altText: good.name, width: 600, height: 600 },
-    { url: `https://picsum.photos/seed/${encodeURIComponent(id)}-4/600/600`, altText: good.name, width: 600, height: 600 },
-    { url: `https://picsum.photos/seed/${encodeURIComponent(id)}-5/600/600`, altText: good.name, width: 600, height: 600 },
-  ];
+  const images: Image[] = Array.from({ length: 5 }, (_, index) => ({
+    url: getStorefrontArtwork(good.name, `${id}:${index}`, {
+      width: 1200,
+      height: 1200,
+      variant: index,
+      eyebrow: 'shortlink goods',
+      subtitle: getStorefrontCategory(good.name)
+    }),
+    altText: `${good.name} artwork ${index + 1}`,
+    width: 1200,
+    height: 1200
+  }));
 
   const galleryImages = images.slice(0, 5).map((image: Image) => ({
     src: image.url,
@@ -83,8 +88,8 @@ export default async function GoodPage(props: { params: Promise<{ id: string }> 
     offers: {
       '@type': 'Offer',
       priceCurrency: 'USD',
-      price: good.price,
-    },
+      price: good.price
+    }
   };
 
   return (
@@ -92,7 +97,7 @@ export default async function GoodPage(props: { params: Promise<{ id: string }> 
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: sanitizeJsonLd(goodJsonLd),
+          __html: sanitizeJsonLd(goodJsonLd)
         }}
       />
       <div className="mx-auto max-w-screen-2xl px-4 pb-16">
@@ -114,26 +119,27 @@ async function RelatedGoods({ id }: { id: string }) {
   if (relatedGoods === GOODS_UNAVAILABLE || !relatedGoods.length) return null;
 
   return (
-    <div className='py-8'>
-      <h2 className='mb-4 text-2xl font-bold'>Related Goods</h2>
+    <div className="py-8">
+      <h2 className="mb-4 text-2xl font-bold">Related Goods</h2>
       <ul className="flex w-full gap-4 overflow-x-auto pt-1">
         {relatedGoods.map((good) => (
           <li
             key={good.id}
             className="aspect-square w-full flex-none min-[475px]:w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5"
           >
-            <Link
-              className="relative h-full w-full"
-              href={`/good/${good.id}`}
-              prefetch={true}
-            >
+            <Link className="relative h-full w-full" href={`/good/${good.id}`} prefetch={true}>
               <GridTileImage
                 alt={good.name}
                 label={{
                   title: good.name,
-                  amount: good.price,
+                  amount: good.price
                 }}
-                src={"https://picsum.photos/200"}
+                src={getStorefrontArtwork(good.name, `related:${good.id}`, {
+                  width: 400,
+                  height: 400,
+                  eyebrow: 'related',
+                  subtitle: getStorefrontCategory(good.name)
+                })}
                 fill
                 sizes="(min-width: 1024px) 20vw, (min-width: 768px) 25vw, (min-width: 640px) 33vw, (min-width: 475px) 50vw, 100vw"
               />

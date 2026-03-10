@@ -76,7 +76,7 @@ function createOrUpdateCartItem(
       product: {
         id: good.id,
         handle: good.name,
-        title: good.name,
+        title: good.name
       }
     }
   };

@@ -81,7 +81,7 @@ export async function shopifyFetch<T>({
         ...(query && { query }),
         ...(variables && { variables })
       }),
-      cache,
+      cache
     });
     traceId = result.headers.get('trace-id') ?? undefined;
 
@@ -107,10 +107,9 @@ export async function shopifyFetch<T>({
       body = JSON.parse(text) as typeof body;
     } catch {
       const rawMessage = text?.trim() || 'Invalid response from server';
-      const message =
-        rawMessage.toLowerCase().includes('no healthy upstream')
-          ? upstreamUnavailableMessage
-          : rawMessage;
+      const message = rawMessage.toLowerCase().includes('no healthy upstream')
+        ? upstreamUnavailableMessage
+        : rawMessage;
       throw {
         cause: 'unknown',
         status: result.status || 500,
@@ -133,7 +132,7 @@ export async function shopifyFetch<T>({
       throw {
         ...normalizeGraphqlError(body.error, query, result.status, traceId),
         status: result.status || 500,
-        message: upstreamUnavailableMessage,
+        message: upstreamUnavailableMessage
       };
     }
     if (body.error) {
@@ -160,13 +159,7 @@ export async function shopifyFetch<T>({
       };
     }
 
-    if (
-      typeof e === 'object' &&
-      e !== null &&
-      'status' in e &&
-      'message' in e &&
-      'query' in e
-    ) {
+    if (typeof e === 'object' && e !== null && 'status' in e && 'message' in e && 'query' in e) {
       throw {
         ...e,
         ...(traceId && !('traceId' in e) ? { traceId } : {})

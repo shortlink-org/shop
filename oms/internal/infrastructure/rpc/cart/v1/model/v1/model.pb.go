@@ -180,10 +180,9 @@ func (x *CartState) GetUpdatedAt() *timestamppb.Timestamp {
 }
 
 // AddRequest is the request message for adding an item to the cart.
+// Customer identity comes from request metadata (x-user-id set by Istio from JWT).
 type AddRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Cart ID
-	CustomerId string `protobuf:"bytes,1,opt,name=customer_id,json=customerId,proto3" json:"customer_id,omitempty"`
 	// Item to add
 	Items         []*CartItem `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -220,13 +219,6 @@ func (*AddRequest) Descriptor() ([]byte, []int) {
 	return file_infrastructure_rpc_cart_v1_model_v1_model_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *AddRequest) GetCustomerId() string {
-	if x != nil {
-		return x.CustomerId
-	}
-	return ""
-}
-
 func (x *AddRequest) GetItems() []*CartItem {
 	if x != nil {
 		return x.Items
@@ -237,8 +229,6 @@ func (x *AddRequest) GetItems() []*CartItem {
 // RemoveRequest is the request message for removing an item from the cart.
 type RemoveRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Cart ID
-	CustomerId string `protobuf:"bytes,1,opt,name=customer_id,json=customerId,proto3" json:"customer_id,omitempty"`
 	// Item to remove
 	Items         []*CartItem `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -275,13 +265,6 @@ func (*RemoveRequest) Descriptor() ([]byte, []int) {
 	return file_infrastructure_rpc_cart_v1_model_v1_model_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *RemoveRequest) GetCustomerId() string {
-	if x != nil {
-		return x.CustomerId
-	}
-	return ""
-}
-
 func (x *RemoveRequest) GetItems() []*CartItem {
 	if x != nil {
 		return x.Items
@@ -291,9 +274,7 @@ func (x *RemoveRequest) GetItems() []*CartItem {
 
 // GetRequest is the request message for getting the cart state.
 type GetRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Cart ID
-	CustomerId    string `protobuf:"bytes,1,opt,name=customer_id,json=customerId,proto3" json:"customer_id,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -326,13 +307,6 @@ func (x *GetRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use GetRequest.ProtoReflect.Descriptor instead.
 func (*GetRequest) Descriptor() ([]byte, []int) {
 	return file_infrastructure_rpc_cart_v1_model_v1_model_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *GetRequest) GetCustomerId() string {
-	if x != nil {
-		return x.CustomerId
-	}
-	return ""
 }
 
 // GetResponse is the response message for getting the cart state.
@@ -383,9 +357,7 @@ func (x *GetResponse) GetState() *CartState {
 
 // ResetRequest is the request message for resetting the cart.
 type ResetRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Cart ID
-	CustomerId    string `protobuf:"bytes,1,opt,name=customer_id,json=customerId,proto3" json:"customer_id,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -420,13 +392,6 @@ func (*ResetRequest) Descriptor() ([]byte, []int) {
 	return file_infrastructure_rpc_cart_v1_model_v1_model_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *ResetRequest) GetCustomerId() string {
-	if x != nil {
-		return x.CustomerId
-	}
-	return ""
-}
-
 var File_infrastructure_rpc_cart_v1_model_v1_model_proto protoreflect.FileDescriptor
 
 const file_infrastructure_rpc_cart_v1_model_v1_model_proto_rawDesc = "" +
@@ -447,25 +412,17 @@ const file_infrastructure_rpc_cart_v1_model_v1_model_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"r\n" +
+	"updated_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"W\n" +
 	"\n" +
-	"AddRequest\x12\x1f\n" +
-	"\vcustomer_id\x18\x01 \x01(\tR\n" +
-	"customerId\x12C\n" +
-	"\x05items\x18\x02 \x03(\v2-.infrastructure.rpc.cart.v1.model.v1.CartItemR\x05items\"u\n" +
-	"\rRemoveRequest\x12\x1f\n" +
-	"\vcustomer_id\x18\x01 \x01(\tR\n" +
-	"customerId\x12C\n" +
-	"\x05items\x18\x02 \x03(\v2-.infrastructure.rpc.cart.v1.model.v1.CartItemR\x05items\"-\n" +
+	"AddRequest\x12C\n" +
+	"\x05items\x18\x02 \x03(\v2-.infrastructure.rpc.cart.v1.model.v1.CartItemR\x05itemsJ\x04\b\x01\x10\x02\"Z\n" +
+	"\rRemoveRequest\x12C\n" +
+	"\x05items\x18\x02 \x03(\v2-.infrastructure.rpc.cart.v1.model.v1.CartItemR\x05itemsJ\x04\b\x01\x10\x02\"\x12\n" +
 	"\n" +
-	"GetRequest\x12\x1f\n" +
-	"\vcustomer_id\x18\x01 \x01(\tR\n" +
-	"customerId\"S\n" +
+	"GetRequestJ\x04\b\x01\x10\x02\"S\n" +
 	"\vGetResponse\x12D\n" +
-	"\x05state\x18\x01 \x01(\v2..infrastructure.rpc.cart.v1.model.v1.CartStateR\x05state\"/\n" +
-	"\fResetRequest\x12\x1f\n" +
-	"\vcustomer_id\x18\x01 \x01(\tR\n" +
-	"customerIdB\xb8\x02\n" +
+	"\x05state\x18\x01 \x01(\v2..infrastructure.rpc.cart.v1.model.v1.CartStateR\x05state\"\x14\n" +
+	"\fResetRequestJ\x04\b\x01\x10\x02B\xb8\x02\n" +
 	"'com.infrastructure.rpc.cart.v1.model.v1B\n" +
 	"ModelProtoP\x01ZNgithub.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1/model/v1\xa2\x02\x05IRCVM\xaa\x02#Infrastructure.Rpc.Cart.V1.Model.V1\xca\x02#Infrastructure\\Rpc\\Cart\\V1\\Model\\V1\xe2\x02/Infrastructure\\Rpc\\Cart\\V1\\Model\\V1\\GPBMetadata\xea\x02(Infrastructure::Rpc::Cart::V1::Model::V1b\x06proto3"
 

@@ -22,7 +22,5 @@ export async function getPages(options?: RequestOptions): Promise<Page[]> {
     headers: options?.authorization ? { Authorization: options.authorization } : {}
   });
 
-  return res.body?.data?.pages
-    ? res.body.data.pages.edges.map((edge) => edge.node)
-    : [];
+  return res.body?.data?.pages ? res.body.data.pages.edges.map((edge) => edge.node) : [];
 }

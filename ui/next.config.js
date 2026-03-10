@@ -1,9 +1,9 @@
 // ENVIRONMENT VARIABLE ================================================================================================
-const isProd = process.env.NODE_ENV === 'production'
+const isProd = process.env.NODE_ENV === 'production';
 
-const API_URI = process.env.API_URI || 'http://127.0.0.1:7070'
+const API_URI = process.env.API_URI || 'http://127.0.0.1:7070';
 
-console.info('API_URI', API_URI)
+console.info('API_URI', API_URI);
 
 /** @type {import('next').NextConfig} */
 module.exports = {
@@ -11,30 +11,26 @@ module.exports = {
   cacheHandler: require.resolve('./cache-handler.js'),
   cacheMaxMemorySize: 0,
   reactStrictMode: true,
+  reactCompiler: true,
   env: {
     // ShortLink API
     NEXT_PUBLIC_SERVICE_NAME: 'shortlink-shop-ui',
-    NEXT_PUBLIC_GIT_TAG: process.env.CI_COMMIT_TAG,
+    NEXT_PUBLIC_GIT_TAG: process.env.CI_COMMIT_TAG
   },
   generateEtags: isProd,
-  compiler: {},
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'picsum.photos',
-      },
+        hostname: 'picsum.photos'
+      }
     ]
   },
   trailingSlash: false,
-  logging: {
-    fetches: {
-      fullUrl: true,
-    },
-  },
   experimental: {
+    turbopackFileSystemCacheForBuild: true,
     webVitalsAttribution: ['CLS', 'FCP', 'FID', 'INP', 'LCP', 'TTFB'],
     viewTransition: true,
-    webpackMemoryOptimizations: true,
-  },
+    webpackMemoryOptimizations: true
+  }
 };

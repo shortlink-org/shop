@@ -23,9 +23,9 @@ export function Providers({ children }: { children: ReactNode }) {
               }
               return DEFAULT_RETRY_DELAY_MS;
             },
-            refetchOnWindowFocus: false,
-          },
-        },
+            refetchOnWindowFocus: false
+          }
+        }
       })
   );
 

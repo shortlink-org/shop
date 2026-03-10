@@ -43,14 +43,23 @@ const timeSlotLabelSchema = z.enum(TIME_SLOT_LABELS as unknown as [string, ...st
 const checkoutFormInputSchema = z
   .object({
     deliveryAddress: z.object({
-      street: z.string().min(1, 'Street address is required').transform((s) => s.trim()),
-      city: z.string().min(1, 'City is required').transform((s) => s.trim()),
+      street: z
+        .string()
+        .min(1, 'Street address is required')
+        .transform((s) => s.trim()),
+      city: z
+        .string()
+        .min(1, 'City is required')
+        .transform((s) => s.trim()),
       postalCode: z.string().default(''),
       country: countrySchema
     }),
     recipientContacts: z.object({
       recipientName: z.string().default(''),
-      recipientPhone: z.string().min(1, 'Phone number is required for delivery').transform((s) => s.trim()),
+      recipientPhone: z
+        .string()
+        .min(1, 'Phone number is required for delivery')
+        .transform((s) => s.trim()),
       recipientEmail: z
         .string()
         .default('')
@@ -78,16 +87,15 @@ const checkoutFormInputSchema = z
       date.setHours(12, 0, 0, 0);
       return date >= tomorrow && date <= max;
     },
-    { message: 'Delivery date must be between tomorrow and 14 days from now', path: ['deliveryDate'] }
+    {
+      message: 'Delivery date must be between tomorrow and 14 days from now',
+      path: ['deliveryDate']
+    }
   )
   .transform((data) => {
     const slot = TIME_SLOTS.find((s) => s.label === data.selectedTimeSlot);
-    const startTime = slot
-      ? new Date(`${data.deliveryDate}T${slot.start}:00`).toISOString()
-      : '';
-    const endTime = slot
-      ? new Date(`${data.deliveryDate}T${slot.end}:00`).toISOString()
-      : '';
+    const startTime = slot ? new Date(`${data.deliveryDate}T${slot.start}:00`).toISOString() : '';
+    const endTime = slot ? new Date(`${data.deliveryDate}T${slot.end}:00`).toISOString() : '';
     return {
       deliveryAddress: {
         ...data.deliveryAddress,
@@ -196,7 +204,7 @@ export default function CheckoutForm({
             type="text"
             id="street"
             {...register('deliveryAddress.street')}
-            className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] bg-[var(--color-surface)] text-[var(--color-foreground)] ${
+            className={`mt-1 block w-full rounded-md border bg-[var(--color-surface)] px-3 py-2 text-[var(--color-foreground)] shadow-sm focus:ring-2 focus:ring-[var(--color-primary)] focus:outline-none ${
               errors.deliveryAddress?.street
                 ? 'border-[var(--color-destructive)]'
                 : 'border-[var(--color-border)]'
@@ -204,7 +212,9 @@ export default function CheckoutForm({
             placeholder="123 Main Street, Apt 4"
           />
           {errors.deliveryAddress?.street && (
-            <p className="mt-1 text-sm text-[var(--color-destructive)]">{errors.deliveryAddress.street.message}</p>
+            <p className="mt-1 text-sm text-[var(--color-destructive)]">
+              {errors.deliveryAddress.street.message}
+            </p>
           )}
         </div>
 
@@ -212,15 +222,15 @@ export default function CheckoutForm({
           <div>
             <label
               htmlFor="city"
-            className="block text-sm font-medium text-[var(--color-muted-foreground)]"
-          >
-            City *
+              className="block text-sm font-medium text-[var(--color-muted-foreground)]"
+            >
+              City *
             </label>
             <input
               type="text"
               id="city"
               {...register('deliveryAddress.city')}
-              className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] bg-[var(--color-surface)] text-[var(--color-foreground)] ${
+              className={`mt-1 block w-full rounded-md border bg-[var(--color-surface)] px-3 py-2 text-[var(--color-foreground)] shadow-sm focus:ring-2 focus:ring-[var(--color-primary)] focus:outline-none ${
                 errors.deliveryAddress?.city
                   ? 'border-[var(--color-destructive)]'
                   : 'border-[var(--color-border)]'
@@ -228,22 +238,24 @@ export default function CheckoutForm({
               placeholder="Berlin"
             />
             {errors.deliveryAddress?.city && (
-              <p className="mt-1 text-sm text-[var(--color-destructive)]">{errors.deliveryAddress.city.message}</p>
+              <p className="mt-1 text-sm text-[var(--color-destructive)]">
+                {errors.deliveryAddress.city.message}
+              </p>
             )}
           </div>
 
           <div>
             <label
               htmlFor="postalCode"
-            className="block text-sm font-medium text-[var(--color-muted-foreground)]"
-          >
-            Postal Code
+              className="block text-sm font-medium text-[var(--color-muted-foreground)]"
+            >
+              Postal Code
             </label>
             <input
               type="text"
               id="postalCode"
               {...register('deliveryAddress.postalCode')}
-              className="mt-1 block w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[var(--color-foreground)] shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+              className="mt-1 block w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[var(--color-foreground)] shadow-sm focus:ring-2 focus:ring-[var(--color-primary)] focus:outline-none"
               placeholder="10115"
             />
           </div>
@@ -259,7 +271,7 @@ export default function CheckoutForm({
           <select
             id="country"
             {...register('deliveryAddress.country')}
-            className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] bg-[var(--color-surface)] text-[var(--color-foreground)] ${
+            className={`mt-1 block w-full rounded-md border bg-[var(--color-surface)] px-3 py-2 text-[var(--color-foreground)] shadow-sm focus:ring-2 focus:ring-[var(--color-primary)] focus:outline-none ${
               errors.deliveryAddress?.country
                 ? 'border-[var(--color-destructive)]'
                 : 'border-[var(--color-border)]'
@@ -273,7 +285,9 @@ export default function CheckoutForm({
             <option value="France">France</option>
           </select>
           {errors.deliveryAddress?.country && (
-            <p className="mt-1 text-sm text-[var(--color-destructive)]">{errors.deliveryAddress.country.message}</p>
+            <p className="mt-1 text-sm text-[var(--color-destructive)]">
+              {errors.deliveryAddress.country.message}
+            </p>
           )}
         </div>
       </div>
@@ -293,7 +307,7 @@ export default function CheckoutForm({
             type="text"
             id="recipientName"
             {...register('recipientContacts.recipientName')}
-            className="mt-1 block w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[var(--color-foreground)] shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+            className="mt-1 block w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[var(--color-foreground)] shadow-sm focus:ring-2 focus:ring-[var(--color-primary)] focus:outline-none"
             placeholder="John Doe"
           />
         </div>
@@ -309,11 +323,11 @@ export default function CheckoutForm({
             type="tel"
             id="recipientPhone"
             {...register('recipientContacts.recipientPhone')}
-            className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] bg-[var(--color-surface)] text-[var(--color-foreground)] ${
-                errors.recipientContacts?.recipientPhone
-                  ? 'border-[var(--color-destructive)]'
-                  : 'border-[var(--color-border)]'
-              }`}
+            className={`mt-1 block w-full rounded-md border bg-[var(--color-surface)] px-3 py-2 text-[var(--color-foreground)] shadow-sm focus:ring-2 focus:ring-[var(--color-primary)] focus:outline-none ${
+              errors.recipientContacts?.recipientPhone
+                ? 'border-[var(--color-destructive)]'
+                : 'border-[var(--color-border)]'
+            }`}
             placeholder="+49 123 456 7890"
           />
           {errors.recipientContacts?.recipientPhone && (
@@ -334,11 +348,11 @@ export default function CheckoutForm({
             type="email"
             id="recipientEmail"
             {...register('recipientContacts.recipientEmail')}
-            className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] bg-[var(--color-surface)] text-[var(--color-foreground)] ${
-                errors.recipientContacts?.recipientEmail
-                  ? 'border-[var(--color-destructive)]'
-                  : 'border-[var(--color-border)]'
-              }`}
+            className={`mt-1 block w-full rounded-md border bg-[var(--color-surface)] px-3 py-2 text-[var(--color-foreground)] shadow-sm focus:ring-2 focus:ring-[var(--color-primary)] focus:outline-none ${
+              errors.recipientContacts?.recipientEmail
+                ? 'border-[var(--color-destructive)]'
+                : 'border-[var(--color-border)]'
+            }`}
             placeholder="recipient@example.com"
           />
           {errors.recipientContacts?.recipientEmail && (
@@ -385,14 +399,16 @@ export default function CheckoutForm({
             {...register('deliveryDate')}
             min={tomorrowDate}
             max={getMaxDate()}
-            className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] bg-[var(--color-surface)] text-[var(--color-foreground)] ${
-                errors.deliveryDate
-                  ? 'border-[var(--color-destructive)]'
-                  : 'border-[var(--color-border)]'
+            className={`mt-1 block w-full rounded-md border bg-[var(--color-surface)] px-3 py-2 text-[var(--color-foreground)] shadow-sm focus:ring-2 focus:ring-[var(--color-primary)] focus:outline-none ${
+              errors.deliveryDate
+                ? 'border-[var(--color-destructive)]'
+                : 'border-[var(--color-border)]'
             }`}
           />
           {errors.deliveryDate && (
-            <p className="mt-1 text-sm text-[var(--color-destructive)]">{errors.deliveryDate.message}</p>
+            <p className="mt-1 text-sm text-[var(--color-destructive)]">
+              {errors.deliveryDate.message}
+            </p>
           )}
         </div>
 
@@ -417,7 +433,9 @@ export default function CheckoutForm({
             ))}
           </div>
           {errors.selectedTimeSlot && (
-            <p className="mt-1 text-sm text-[var(--color-destructive)]">{errors.selectedTimeSlot.message}</p>
+            <p className="mt-1 text-sm text-[var(--color-destructive)]">
+              {errors.selectedTimeSlot.message}
+            </p>
           )}
         </div>
       </div>

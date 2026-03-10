@@ -11,9 +11,7 @@ export default async function Image(props: { params: Promise<{ collection: strin
     authorization: authHeader
   });
   const title =
-    collection === GOODS_UNAVAILABLE
-      ? 'Collection'
-      : collection?.seo?.title || collection?.title;
+    collection === GOODS_UNAVAILABLE ? 'Collection' : collection?.seo?.title || collection?.title;
 
   return await OpengraphImage({ title });
 }

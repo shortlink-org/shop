@@ -92,7 +92,7 @@ module.exports = class CacheHandler {
     const entry = {
       value: data,
       lastModified: Date.now(),
-      tags,
+      tags
     };
     const raw = serialize(entry);
 

@@ -17,9 +17,7 @@ export default async function OrderConfirmationPage({ params }: OrderConfirmatio
           <CheckCircleIcon className="h-10 w-10 text-green-600 dark:text-green-400" />
         </div>
 
-        <h1 className="mt-6 text-3xl font-bold text-black dark:text-white">
-          Order Confirmed!
-        </h1>
+        <h1 className="mt-6 text-3xl font-bold text-black dark:text-white">Order Confirmed!</h1>
 
         <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400">
           Thank you for your order. We&apos;ve received your order and will begin processing it
