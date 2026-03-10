@@ -82,7 +82,7 @@ export function Navbar() {
   return (
     <div className="shop-navbar relative border-b border-[var(--color-border)] bg-[linear-gradient(180deg,var(--color-background)_0%,color-mix(in_srgb,var(--color-surface)_78%,transparent)_100%)]">
       <AppHeader
-        className="shop-navbar__header mx-auto max-w-7xl px-3 pt-3 sm:px-4 lg:px-6"
+        className="shop-navbar__header mx-auto max-w-7xl px-3 py-3 sm:px-4 lg:px-6"
         brand={{
           name: SITE_NAME || 'Shortlink Shop',
           href: '/',

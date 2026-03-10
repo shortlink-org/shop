@@ -18,7 +18,7 @@ export function BackButton({ goodId, className = '' }: BackButtonProps) {
   const imageParam = searchParams.get('image');
 
   const baseClassName =
-    'inline-flex items-center gap-2 text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 transition-colors';
+    'inline-flex items-center gap-2 py-1 ml-2 text-sm text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 transition-colors';
 
   if (imageParam != null) {
     return (

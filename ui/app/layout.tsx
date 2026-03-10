@@ -71,7 +71,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             <CartProvider cartPromise={cartPromise}>
               <a
                 href="#main"
-                className="focus-ring absolute top-4 left-4 z-[100] -translate-y-full rounded-md bg-[var(--color-foreground)] px-4 py-2 text-sm font-medium text-[var(--color-background)] transition-transform focus:translate-y-0"
+                className="focus-ring absolute left-4 top-4 z-[100] -translate-y-full rounded-md bg-[var(--color-foreground)] px-4 py-2.5 text-sm font-medium text-[var(--color-background)] transition-transform focus:translate-y-0 focus:outline-2 focus:outline-offset-2"
               >
                 Skip to main content
               </a>

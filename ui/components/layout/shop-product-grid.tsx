@@ -158,7 +158,7 @@ export function ShopProductGrid({
     <>
       <ProductGrid
         className={clsx('shop-productgrid', 'shop-productgrid--with-add-to-cart', className)}
-        gridClassName={clsx('gap-4 sm:gap-6 lg:gap-8', gridClassName)}
+        gridClassName={clsx('gap-3 sm:gap-4 lg:gap-6', gridClassName)}
         productClassName="shop-productgrid__card"
         spacingX="lg"
         spacingY="lg"

@@ -33,30 +33,30 @@ export function StorefrontHero({ goods }: { goods: Good[] }) {
   }
 
   const artwork = getStorefrontArtwork(featuredGood.name, featuredGood.id, {
-    width: 780,
-    height: 920,
+    width: 520,
+    height: 400,
     eyebrow: 'featured drop',
     subtitle: getStorefrontCategory(featuredGood.name)
   });
 
   return (
-    <section className="shop-hero relative overflow-hidden rounded-[2rem] border border-[var(--color-border)] bg-[linear-gradient(135deg,rgba(255,255,255,0.92),rgba(226,232,240,0.72))] p-5 shadow-[0_40px_100px_-58px_rgba(15,23,42,0.45)] backdrop-blur-xl sm:p-6 lg:p-8 dark:bg-[linear-gradient(135deg,rgba(15,23,42,0.92),rgba(15,23,42,0.72))]">
+    <section className="shop-hero relative overflow-hidden rounded-[2rem] border border-[var(--color-border)] bg-[linear-gradient(135deg,rgba(255,255,255,0.92),rgba(226,232,240,0.72))] p-4 shadow-[0_40px_100px_-58px_rgba(15,23,42,0.45)] backdrop-blur-xl sm:p-5 lg:p-6 dark:bg-[linear-gradient(135deg,rgba(15,23,42,0.92),rgba(15,23,42,0.72))]">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.16),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(251,191,36,0.12),transparent_24%)]" />
-      <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.78fr)] lg:items-stretch">
-        <div className="flex flex-col justify-between">
+      <div className="relative grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.72fr)] lg:items-start lg:gap-5">
+        <div className="flex flex-col gap-4 sm:gap-5">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_82%,transparent)] px-3 py-1 text-[11px] font-semibold tracking-[0.22em] text-[var(--color-muted-foreground)] uppercase">
-              <SparklesIcon className="size-4 text-sky-500" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_82%,transparent)] px-2.5 py-1 text-[10px] font-semibold tracking-[0.2em] text-[var(--color-muted-foreground)] uppercase">
+              <SparklesIcon className="size-3.5 text-sky-500" />
               Curated storefront
             </div>
-            <h1 className="mt-5 max-w-3xl text-4xl font-semibold tracking-[-0.04em] text-[var(--color-foreground)] sm:text-5xl lg:text-6xl">
+            <h1 className="mt-3 max-w-2xl text-2xl font-semibold tracking-[-0.03em] text-[var(--color-foreground)] sm:text-3xl lg:text-4xl">
               Merch that reads like a campaign, not a commodity shelf.
             </h1>
-            <p className="mt-5 max-w-2xl text-base leading-8 text-[var(--color-muted-foreground)] sm:text-lg">
+            <p className="mt-2 max-w-xl text-sm leading-6 text-[var(--color-muted-foreground)] sm:text-base sm:leading-7">
               The shop now leans into the visual language from `ui-kit`: editorial surfaces,
               stronger hierarchy and a cleaner path from discovery to checkout.
             </p>
-            <div className="mt-6 flex flex-wrap items-center gap-3">
+            <div className="mt-4 flex flex-wrap items-center gap-2">
               <Button as={Link} asProps={{ href: '/search' }}>
                 Explore catalog
               </Button>
@@ -66,7 +66,7 @@ export function StorefrontHero({ goods }: { goods: Good[] }) {
             </div>
           </div>
 
-          <div className="mt-8 grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-2 sm:grid-cols-3">
             <StatCard
               label="Featured goods"
               value={goods.length.toString().padStart(2, '0')}
@@ -88,68 +88,66 @@ export function StorefrontHero({ goods }: { goods: Good[] }) {
           </div>
         </div>
 
-        <div className="grid gap-4">
-          <div className="rounded-[1.75rem] border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_90%,transparent)] p-4 shadow-[0_28px_70px_-52px_rgba(15,23,42,0.45)]">
+        <div className="grid gap-3">
+          <div className="rounded-[1.5rem] border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_90%,transparent)] p-3 shadow-[0_28px_70px_-52px_rgba(15,23,42,0.45)]">
             <img
               src={artwork}
               alt={`${featuredGood.name} artwork`}
-              className="aspect-[4/5] w-full rounded-[1.35rem] border border-white/10 object-cover shadow-[0_24px_64px_-40px_rgba(15,23,42,0.62)]"
+              className="aspect-[4/3] max-h-[200px] w-full rounded-[1.15rem] border border-white/10 object-cover shadow-[0_24px_64px_-40px_rgba(15,23,42,0.62)] sm:max-h-[220px]"
             />
-            <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
-                <p className="text-[11px] font-semibold tracking-[0.2em] text-[var(--color-muted-foreground)] uppercase">
+                <p className="text-[10px] font-semibold tracking-[0.18em] text-[var(--color-muted-foreground)] uppercase">
                   Featured drop
                 </p>
-                <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--color-foreground)]">
+                <h2 className="mt-1 text-lg font-semibold tracking-tight text-[var(--color-foreground)]">
                   {featuredGood.name}
                 </h2>
-                <p className="mt-2 text-sm leading-7 text-[var(--color-muted-foreground)]">
-                  {truncateDescription(featuredGood.description)}
+                <p className="mt-1 line-clamp-2 text-xs leading-5 text-[var(--color-muted-foreground)]">
+                  {truncateDescription(featuredGood.description, 90)}
                 </p>
               </div>
-              <Button as={Link} asProps={{ href: `/good/${featuredGood.id}` }} variant="outline">
+              <Button as={Link} asProps={{ href: `/good/${featuredGood.id}` }} variant="outline" className="shrink-0">
                 View item
               </Button>
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-[1.5rem] border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_88%,transparent)] p-4">
-              <div className="flex items-center gap-3">
-                <div className="flex size-11 items-center justify-center rounded-2xl bg-sky-100 text-sky-700 dark:bg-sky-950/40 dark:text-sky-200">
-                  <ArrowTrendingUpIcon className="size-5" />
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div className="rounded-xl border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_88%,transparent)] p-3">
+              <div className="flex items-center gap-2">
+                <div className="flex size-9 items-center justify-center rounded-xl bg-sky-100 text-sky-700 dark:bg-sky-950/40 dark:text-sky-200">
+                  <ArrowTrendingUpIcon className="size-4" />
                 </div>
                 <div>
-                  <p className="text-[11px] font-semibold tracking-[0.18em] text-[var(--color-muted-foreground)] uppercase">
+                  <p className="text-[10px] font-semibold tracking-[0.14em] text-[var(--color-muted-foreground)] uppercase">
                     Momentum
                   </p>
-                  <p className="text-sm font-semibold text-[var(--color-foreground)]">
+                  <p className="text-xs font-semibold text-[var(--color-foreground)]">
                     Trending shelf
                   </p>
                 </div>
               </div>
-              <p className="mt-3 text-sm leading-7 text-[var(--color-muted-foreground)]">
-                Showcase the fastest-moving items first and keep the leaderboard close to the buy
-                flow.
+              <p className="mt-2 line-clamp-2 text-xs leading-5 text-[var(--color-muted-foreground)]">
+                Showcase the fastest-moving items first and keep the leaderboard close to the buy flow.
               </p>
             </div>
-            <div className="rounded-[1.5rem] border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_88%,transparent)] p-4">
-              <div className="flex items-center gap-3">
-                <div className="flex size-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
-                  <SwatchIcon className="size-5" />
+            <div className="rounded-xl border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_88%,transparent)] p-3">
+              <div className="flex items-center gap-2">
+                <div className="flex size-9 items-center justify-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
+                  <SwatchIcon className="size-4" />
                 </div>
                 <div>
-                  <p className="text-[11px] font-semibold tracking-[0.18em] text-[var(--color-muted-foreground)] uppercase">
+                  <p className="text-[10px] font-semibold tracking-[0.14em] text-[var(--color-muted-foreground)] uppercase">
                     Brand system
                   </p>
-                  <p className="text-sm font-semibold text-[var(--color-foreground)]">
+                  <p className="text-xs font-semibold text-[var(--color-foreground)]">
                     Cohesive product art
                   </p>
                 </div>
               </div>
-              <p className="mt-3 text-sm leading-7 text-[var(--color-muted-foreground)]">
-                Random placeholders are replaced with consistent poster-style visuals, so the
-                catalog feels designed even without uploaded media.
+              <p className="mt-2 line-clamp-2 text-xs leading-5 text-[var(--color-muted-foreground)]">
+                Consistent poster-style visuals so the catalog feels designed even without uploaded media.
               </p>
             </div>
           </div>
