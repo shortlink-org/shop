@@ -19,7 +19,7 @@ import (
 // Handler handles StockChangedEvent by adjusting affected carts.
 type Handler struct {
 	log        logger.Logger
-	uow        ports.UnitOfWork
+	unitOfWork ports.UnitOfWork
 	cartRepo   ports.CartRepository
 	goodsIndex ports.CartGoodsIndex
 	notifier   *websocket.Notifier
@@ -28,13 +28,13 @@ type Handler struct {
 // NewHandler creates a new on_stock_changed event handler.
 func NewHandler(
 	log logger.Logger,
-	uow ports.UnitOfWork,
+	unitOfWork ports.UnitOfWork,
 	cartRepo ports.CartRepository,
 	goodsIndex ports.CartGoodsIndex,
 ) (*Handler, error) {
 	return &Handler{
 		log:        log,
-		uow:        uow,
+		unitOfWork: unitOfWork,
 		cartRepo:   cartRepo,
 		goodsIndex: goodsIndex,
 		notifier:   nil,
@@ -88,13 +88,13 @@ func (h *Handler) Handle(ctx context.Context, event Event) error {
 // processCart handles removing the out-of-stock item from a single cart.
 func (h *Handler) processCart(ctx context.Context, customerID, goodID uuid.UUID) error {
 	// Begin transaction
-	ctx, err := h.uow.Begin(ctx)
+	ctx, err := h.unitOfWork.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 
 	defer func() {
-		rollbackErr := h.uow.Rollback(ctx)
+		rollbackErr := h.unitOfWork.Rollback(ctx)
 		if rollbackErr != nil {
 			h.log.Warn("transaction rollback failed", slog.Any("error", rollbackErr))
 		}
@@ -162,7 +162,7 @@ func (h *Handler) processCart(ctx context.Context, customerID, goodID uuid.UUID)
 	}
 
 	// Commit transaction
-	if err := h.uow.Commit(ctx); err != nil {
+	if err := h.unitOfWork.Commit(ctx); err != nil {
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 

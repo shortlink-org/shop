@@ -27,10 +27,10 @@ func Workflow(ctx workflow.Context, customerID uuid.UUID) error {
 
 	// Activity options
 	ao := workflow.ActivityOptions{
-		StartToCloseTimeout: 10 * time.Second,
+		StartToCloseTimeout: 10 * time.Second, //nolint:mnd // activity timeout
 		RetryPolicy: &temporal.RetryPolicy{
 			InitialInterval:    time.Second,
-			BackoffCoefficient: 2.0,
+			BackoffCoefficient: 2.0, //nolint:mnd // exponential backoff
 			MaximumInterval:    time.Minute,
 			MaximumAttempts:    3,
 			NonRetryableErrorTypes: []string{
@@ -51,7 +51,7 @@ func Workflow(ctx workflow.Context, customerID uuid.UUID) error {
 	resetChannel := workflow.GetSignalChannel(ctx, v2.Event_EVENT_RESET.String())
 
 	// Cart session timeout (e.g., 24 hours)
-	sessionTimeout := workflow.NewTimerWithOptions(ctx, 24*time.Hour, workflow.TimerOptions{
+	sessionTimeout := workflow.NewTimerWithOptions(ctx, 24*time.Hour, workflow.TimerOptions{ //nolint:mnd
 		Summary: "Cart session TTL - auto-reset after 24 hours of inactivity",
 	})
 
@@ -65,7 +65,7 @@ func Workflow(ctx workflow.Context, customerID uuid.UUID) error {
 		logger.Info("Adding item to cart via activity", "customerID", customerID, "goodID", req.GoodID)
 
 		addItemCtx := workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
-			StartToCloseTimeout: 10 * time.Second,
+			StartToCloseTimeout: 10 * time.Second, //nolint:mnd
 			Summary:             "Add item to cart",
 			RetryPolicy:         ao.RetryPolicy,
 		})
@@ -84,7 +84,7 @@ func Workflow(ctx workflow.Context, customerID uuid.UUID) error {
 		logger.Info("Removing item from cart via activity", "customerID", customerID, "goodID", req.GoodID)
 
 		removeItemCtx := workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
-			StartToCloseTimeout: 10 * time.Second,
+			StartToCloseTimeout: 10 * time.Second, //nolint:mnd
 			Summary:             "Remove item from cart",
 			RetryPolicy:         ao.RetryPolicy,
 		})
@@ -124,9 +124,10 @@ func Workflow(ctx workflow.Context, customerID uuid.UUID) error {
 			Summary:             "Reset cart after session timeout",
 			RetryPolicy:         ao.RetryPolicy,
 		})
+		//nolint:errcheck // best-effort reset on timeout, ignore activity result
 		_ = workflow.ExecuteActivity(timeoutResetCtx, "ResetCart", activities.ResetCartRequest{
 			CustomerID: customerID,
-		}).Get(ctx, nil) //nolint:errcheck // best-effort reset on timeout
+		}).Get(ctx, nil)
 	})
 
 	// Process signals until timeout

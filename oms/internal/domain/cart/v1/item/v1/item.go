@@ -2,6 +2,7 @@ package v1
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
@@ -133,7 +134,7 @@ func (i Item) WithPricePolicy(policy pricing.PricePolicy) (Item, error) {
 
 	quote, err := policy.Quote(i.goodId, i.quantity)
 	if err != nil {
-		return Item{}, err
+		return Item{}, fmt.Errorf("price quote: %w", err)
 	}
 
 	return NewItemWithPricing(i.goodId, i.quantity, quote.UnitPrice, quote.Discount, quote.Tax)

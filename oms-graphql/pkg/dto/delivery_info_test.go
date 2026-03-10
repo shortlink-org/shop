@@ -1,10 +1,11 @@
-package dto
+package dto //nolint:testpackage // testing exported API only
 
 import (
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
@@ -16,10 +17,13 @@ func TestDeliveryInfoToService(t *testing.T) {
 	t.Parallel()
 
 	t.Run("nil returns nil", func(t *testing.T) {
+		t.Parallel()
 		assert.Nil(t, DeliveryInfoToService(nil))
 	})
 
 	t.Run("maps delivery info", func(t *testing.T) {
+		t.Parallel()
+
 		ts := timestamppb.New(time.Now())
 		in := &commonpb.DeliveryInfo{
 			PickupAddress: &commonpb.DeliveryAddress{Street: "s1", City: "c1", Country: "RU"},
@@ -32,9 +36,9 @@ func TestDeliveryInfoToService(t *testing.T) {
 		}
 		out := DeliveryInfoToService(in)
 		assert.NotNil(t, out)
-		assert.NotNil(t, out.PickupAddress)
-		assert.Equal(t, "s1", out.PickupAddress.Street.GetValue())
-		assert.Equal(t, 2.5, out.PackageInfo.WeightKg.GetValue())
+		assert.NotNil(t, out.GetPickupAddress())
+		assert.Equal(t, "s1", out.GetPickupAddress().GetStreet().GetValue())
+		assert.InEpsilon(t, 2.5, out.GetPackageInfo().GetWeightKg().GetValue(), 1e-9)
 	})
 }
 
@@ -43,7 +47,7 @@ func TestDeliveryInfoFromInput(t *testing.T) {
 
 	t.Run("nil returns nil", func(t *testing.T) {
 		out, err := DeliveryInfoFromInput(nil)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Nil(t, out)
 	})
 
@@ -57,12 +61,14 @@ func TestDeliveryInfoFromInput(t *testing.T) {
 			Priority:    wrapperspb.String("NORMAL"),
 		}
 		out, err := DeliveryInfoFromInput(in)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, out)
-		assert.Equal(t, 1.0, out.PackageInfo.GetWeightKg())
+		assert.InEpsilon(t, 1.0, out.GetPackageInfo().GetWeightKg(), 1e-9)
 	})
 
 	t.Run("invalid timestamp returns error", func(t *testing.T) {
+		t.Parallel()
+
 		in := &servicepb.DeliveryInfoInput{
 			DeliveryPeriod: &servicepb.DeliveryPeriodInput{
 				StartTime: "not-a-date",

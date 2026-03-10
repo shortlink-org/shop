@@ -107,7 +107,9 @@ func (w Weight) Multiply(factor int) (Weight, error) {
 
 	resultGrams := w.grams * factor
 	if resultGrams > MaxWeightGrams {
-		return Weight{}, fmt.Errorf("multiplied weight %d grams exceeds maximum allowed %d grams: %w", resultGrams, MaxWeightGrams, ErrWeightMultipliedExceedsMax)
+		return Weight{}, fmt.Errorf(
+			"multiplied weight %d grams exceeds maximum allowed %d grams: %w",
+			resultGrams, MaxWeightGrams, ErrWeightMultipliedExceedsMax)
 	}
 
 	return Weight{grams: resultGrams}, nil

@@ -1,4 +1,4 @@
-package service
+package service //nolint:testpackage // testing exported API only
 
 import (
 	"context"

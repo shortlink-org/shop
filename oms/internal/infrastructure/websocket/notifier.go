@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"sync"
@@ -104,7 +105,7 @@ func (n *Notifier) NotifyStockDepleted(customerId, goodId uuid.UUID) error {
 
 	data, err := json.Marshal(notification)
 	if err != nil {
-		return err
+		return fmt.Errorf("marshal notification: %w", err)
 	}
 
 	n.mu.Lock()
@@ -130,7 +131,12 @@ func (n *Notifier) NotifyStockDepleted(customerId, goodId uuid.UUID) error {
 
 // Upgrade upgrades HTTP connection to websocket
 func (n *Notifier) Upgrade(w http.ResponseWriter, r *http.Request) (*websocket.Conn, error) {
-	return n.upgrader.Upgrade(w, r, nil)
+	conn, err := n.upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		return nil, fmt.Errorf("upgrade: %w", err)
+	}
+
+	return conn, nil
 }
 
 // handleConnection handles ping/pong and connection cleanup

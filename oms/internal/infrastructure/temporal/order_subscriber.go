@@ -81,7 +81,7 @@ func (s *OrderEventSubscriber) OnOrderCreated(ctx context.Context, event *events
 	_, err = s.temporalClient.ExecuteWorkflow(ctx, client.StartWorkflowOptions{
 		ID:                       workflowID,
 		TaskQueue:                GetQueueName(queuev1.OrderTaskQueue),
-		WorkflowExecutionTimeout: 24 * time.Hour, // Maximum order processing time
+		WorkflowExecutionTimeout: 24 * time.Hour, //nolint:mnd // max order processing time
 		StaticSummary:            fmt.Sprintf("Order %s for customer %s", orderID.String()[:8], customerID.String()[:8]),
 		StaticDetails: fmt.Sprintf(`**Order Processing Workflow**
 

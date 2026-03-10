@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
+	"github.com/shortlink-org/shop/oms/internal/domain"
 	cart "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart/dto"
@@ -46,13 +47,13 @@ func (s *Store) Load(ctx context.Context, customerID uuid.UUID) (*cart.State, er
 			return nil, ports.ErrNotFound
 		}
 
-		return nil, err
+		return nil, domain.WrapUnavailable("GetCart", err)
 	}
 
 	// Get cart items
 	items, err := qtx.GetCartItems(ctx, customerID)
 	if err != nil {
-		return nil, err
+		return nil, domain.WrapUnavailable("GetCartItems", err)
 	}
 
 	result := dto.ToDomain(row, items)

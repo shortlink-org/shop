@@ -13,6 +13,8 @@ import (
 )
 
 // NewDeliveryClient creates a new Delivery gRPC client.
+//
+//nolint:ireturn // DI returns port interface for testability
 func NewDeliveryClient(
 	cfg *config.Config,
 	log logger.Logger,
@@ -27,7 +29,7 @@ func NewDeliveryClient(
 
 	timeout, err := time.ParseDuration(cfg.GetString("DELIVERY_GRPC_TIMEOUT"))
 	if err != nil {
-		timeout = 10 * time.Second
+		timeout = 10 * time.Second //nolint:mnd // default connection timeout
 	}
 
 	clientCfg := delivery.Config{

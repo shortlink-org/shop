@@ -2,6 +2,7 @@ package dto
 
 import (
 	"github.com/google/uuid"
+
 	ordermodel "github.com/shortlink-org/shop/oms-graphql/pkg/generated/oms/infrastructure/rpc/order/v1/model/v1"
 	servicepb "github.com/shortlink-org/shop/oms-graphql/pkg/generated/service/v1"
 )

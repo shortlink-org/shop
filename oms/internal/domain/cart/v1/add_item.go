@@ -25,23 +25,24 @@ func (s *State) AddItem(item itemv1.Item) error {
 
 	// Check if the item already exists in the cart
 	for i, cartItem := range s.items {
-		if cartItem.GetGoodId() == item.GetGoodId() {
-			// Create a new item with updated quantity (immutable update)
-			updatedItem, err := cartItem.WithQuantity(cartItem.GetQuantity() + item.GetQuantity())
-			if err != nil {
-				return fmt.Errorf("failed to update item quantity: %w", err)
-			}
-
-			s.items[i] = updatedItem
-			// Generate domain event for item added/updated
-			s.addDomainEvent(&eventsv1.ItemAddedEvent{
-				CustomerID: s.customerId,
-				Item:       updatedItem,
-				OccurredAt: time.Now(),
-			})
-
-			return nil
+		if cartItem.GetGoodId() != item.GetGoodId() {
+			continue
 		}
+		// Create a new item with updated quantity (immutable update)
+		updatedItem, err := cartItem.WithQuantity(cartItem.GetQuantity() + item.GetQuantity())
+		if err != nil {
+			return fmt.Errorf("failed to update item quantity: %w", err)
+		}
+
+		s.items[i] = updatedItem
+		// Generate domain event for item added/updated
+		s.addDomainEvent(&eventsv1.ItemAddedEvent{
+			CustomerID: s.customerId,
+			Item:       updatedItem,
+			OccurredAt: time.Now(),
+		})
+
+		return nil
 	}
 
 	// Item doesn't exist, add it

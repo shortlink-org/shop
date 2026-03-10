@@ -54,7 +54,6 @@ func MapInfraErr(op string, err error) error {
 
 	if errors.Is(err, ErrNotFound) || errors.Is(err, ErrVersionConflict) || errors.Is(err, ErrConflict) ||
 		errors.Is(err, ErrValidation) || errors.Is(err, ErrUnavailable) {
-
 		return err
 	}
 

@@ -14,11 +14,6 @@ type Event struct {
 	OccurredAt  time.Time
 }
 
-// EventType returns the event type name for the event publisher.
-func (e Event) EventType() string {
-	return "StockChanged"
-}
-
 // NewEvent creates a new StockChangedEvent.
 func NewEvent(goodID uuid.UUID, newQuantity uint32) Event {
 	return Event{
@@ -26,4 +21,9 @@ func NewEvent(goodID uuid.UUID, newQuantity uint32) Event {
 		NewQuantity: newQuantity,
 		OccurredAt:  time.Now(),
 	}
+}
+
+// EventType returns the event type name for the event publisher.
+func (e Event) EventType() string {
+	return "StockChanged"
 }

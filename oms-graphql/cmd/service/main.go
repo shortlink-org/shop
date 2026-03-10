@@ -11,9 +11,12 @@ import (
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
 
-	if err := service.Start(ctx); err != nil {
+	err := service.Start(ctx)
+	if err != nil {
+		stop()
 		log.Fatal(err)
 	}
+
+	stop()
 }

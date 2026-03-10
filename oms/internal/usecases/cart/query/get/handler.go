@@ -53,7 +53,7 @@ func (h *Handler) Handle(ctx context.Context, q Query) (Result, error) {
 			return v1.New(q.CustomerID), nil
 		}
 
-		return nil, err
+		return nil, domain.MapInfraErr("Load", err)
 	}
 
 	// Commit transaction (read-only, but still needs to close tx)

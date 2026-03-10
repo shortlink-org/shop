@@ -66,11 +66,10 @@ func TestAddItemRequest_ItemCreation(t *testing.T) {
 
 	t.Run("NegativePrice", func(t *testing.T) {
 		req := AddItemRequest{
-			CustomerID: testCustomerID,
-			GoodID:     testGoodID,
-			Quantity:   1,
-			Price:      decimal.NewFromFloat(-10.00), // Invalid
-			Discount:   decimal.Zero,
+			GoodID:   testGoodID,
+			Quantity: 1,
+			Price:    decimal.NewFromFloat(-10.00), // Invalid
+			Discount: decimal.Zero,
 		}
 
 		_, err := itemv1.NewItemWithPricing(req.GoodID, req.Quantity, req.Price, req.Discount, decimal.Zero)
@@ -80,11 +79,10 @@ func TestAddItemRequest_ItemCreation(t *testing.T) {
 
 	t.Run("NegativeDiscount", func(t *testing.T) {
 		req := AddItemRequest{
-			CustomerID: testCustomerID,
-			GoodID:     testGoodID,
-			Quantity:   1,
-			Price:      decimal.NewFromFloat(10.00),
-			Discount:   decimal.NewFromFloat(-2.00), // Invalid
+			GoodID:   testGoodID,
+			Quantity: 1,
+			Price:    decimal.NewFromFloat(10.00),
+			Discount: decimal.NewFromFloat(-2.00), // Invalid
 		}
 
 		_, err := itemv1.NewItemWithPricing(req.GoodID, req.Quantity, req.Price, req.Discount, decimal.Zero)
@@ -94,11 +92,10 @@ func TestAddItemRequest_ItemCreation(t *testing.T) {
 
 	t.Run("DiscountExceedsPrice", func(t *testing.T) {
 		req := AddItemRequest{
-			CustomerID: testCustomerID,
-			GoodID:     testGoodID,
-			Quantity:   1,
-			Price:      decimal.NewFromFloat(10.00),
-			Discount:   decimal.NewFromFloat(15.00), // Invalid - exceeds price
+			GoodID:   testGoodID,
+			Quantity: 1,
+			Price:    decimal.NewFromFloat(10.00),
+			Discount: decimal.NewFromFloat(15.00), // Invalid - exceeds price
 		}
 
 		_, err := itemv1.NewItemWithPricing(req.GoodID, req.Quantity, req.Price, req.Discount, decimal.Zero)
@@ -110,9 +107,8 @@ func TestAddItemRequest_ItemCreation(t *testing.T) {
 func TestRemoveItemRequest_ItemCreation(t *testing.T) {
 	t.Run("ValidRequest", func(t *testing.T) {
 		req := RemoveItemRequest{
-			CustomerID: testCustomerID,
-			GoodID:     testGoodID,
-			Quantity:   1,
+			GoodID:   testGoodID,
+			Quantity: 1,
 		}
 
 		// Simulate what the activity does internally
@@ -124,9 +120,8 @@ func TestRemoveItemRequest_ItemCreation(t *testing.T) {
 
 	t.Run("InvalidGoodID", func(t *testing.T) {
 		req := RemoveItemRequest{
-			CustomerID: testCustomerID,
-			GoodID:     uuid.Nil, // Invalid
-			Quantity:   1,
+			GoodID:   uuid.Nil, // Invalid
+			Quantity: 1,
 		}
 
 		_, err := itemv1.NewItem(req.GoodID, req.Quantity)
@@ -136,9 +131,8 @@ func TestRemoveItemRequest_ItemCreation(t *testing.T) {
 
 	t.Run("InvalidQuantity", func(t *testing.T) {
 		req := RemoveItemRequest{
-			CustomerID: testCustomerID,
-			GoodID:     testGoodID,
-			Quantity:   -1, // Invalid
+			GoodID:   testGoodID,
+			Quantity: -1, // Invalid
 		}
 
 		_, err := itemv1.NewItem(req.GoodID, req.Quantity)

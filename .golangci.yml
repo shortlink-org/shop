@@ -16,6 +16,7 @@ linters:
     - gochecknoglobals
     - wsl # deprecated
     - gomoddirectives # monorepo boundaries rely on replace directives
+    - testpackage # package foo_test vs foo is a naming choice; we use same package for unit tests
 
   exclusions:
     paths:
@@ -205,6 +206,14 @@ linters:
     whitespace:
       multi-if: true
       multi-func: true
+
+    # Return values from these are already wrapped or are intentional (gRPC status).
+    wrapcheck:
+      ignoreSigs:
+        - domain.MapInfraErr
+        - domain.WrapValidation
+        - grpcerr.ToStatus
+        - status.Error
 
 formatters:
   enable: [gci, gofmt, gofumpt, goimports]

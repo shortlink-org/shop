@@ -14,7 +14,7 @@ import (
 
 // Logger is the minimal interface for logging unexpected errors (Op + Unwrap).
 type Logger interface {
-	Warn(string, ...slog.Attr)
+	Warn(msg string, attrs ...slog.Attr)
 }
 
 // ToStatus maps a usecase/domain error to a gRPC status and logs Op + Unwrap for diagnostics.
@@ -54,5 +54,5 @@ func ToStatus(ctx context.Context, log Logger, op string, err error) error {
 		}
 	}
 
-	return status.Error(code, msg)
+	return status.Error(code, msg) //nolint:wrapcheck // intentional gRPC status for handler response
 }

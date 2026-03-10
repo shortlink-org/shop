@@ -11,5 +11,5 @@ func Run(runRPCServer *grpc.Server) (*Response, error) {
 		go runRPCServer.Run()
 	}
 
-	return nil, nil
+	return &Response{}, nil
 }

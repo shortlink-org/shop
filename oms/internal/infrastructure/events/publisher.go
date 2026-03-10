@@ -34,6 +34,7 @@ func (p *InMemoryPublisher) Publish(ctx context.Context, event any) error {
 	p.mu.RUnlock()
 
 	var firstErr error
+
 	for _, handler := range handlers {
 		err := handler(ctx, e)
 		if err != nil && firstErr == nil {

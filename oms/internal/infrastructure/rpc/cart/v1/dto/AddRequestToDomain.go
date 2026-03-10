@@ -7,8 +7,8 @@ import (
 	"github.com/google/uuid"
 
 	itemv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/item/v1"
-	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/rpcmeta"
 	v2 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1/model/v1"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/rpcmeta"
 )
 
 // AddRequestParams holds parsed parameters from AddRequest

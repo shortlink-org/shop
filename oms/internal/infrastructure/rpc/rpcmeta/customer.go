@@ -22,13 +22,16 @@ func CustomerIDFromContext(ctx context.Context) (uuid.UUID, error) {
 	if !ok {
 		return uuid.Nil, fmt.Errorf("%w: missing metadata", ErrMissingCustomerID)
 	}
+
 	vals := md.Get(XUserIDKey)
 	if len(vals) == 0 || vals[0] == "" {
 		return uuid.Nil, fmt.Errorf("%w: missing %s", ErrMissingCustomerID, XUserIDKey)
 	}
+
 	id, err := uuid.Parse(vals[0])
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("%w: invalid %s: %w", ErrMissingCustomerID, XUserIDKey, err)
 	}
+
 	return id, nil
 }

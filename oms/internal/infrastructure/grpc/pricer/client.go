@@ -71,7 +71,10 @@ func NewClient(cfg Config) (*Client, error) {
 // Close closes the gRPC connection.
 func (c *Client) Close() error {
 	if c.conn != nil {
-		return c.conn.Close()
+		err := c.conn.Close()
+		if err != nil {
+			return fmt.Errorf("close pricer conn: %w", err)
+		}
 	}
 
 	return nil
@@ -134,6 +137,8 @@ func (c *Client) CalculateTotal(ctx context.Context, req ports.CalculateTotalReq
 }
 
 // loadTLSCredentials loads TLS credentials from a CA certificate file.
+//
+//nolint:ireturn // returns gRPC interface by design
 func loadTLSCredentials(certPath string) (credentials.TransportCredentials, error) {
 	certPool := x509.NewCertPool()
 

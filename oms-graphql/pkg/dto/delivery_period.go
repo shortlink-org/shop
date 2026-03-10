@@ -3,9 +3,10 @@ package dto
 import (
 	"time"
 
+	"google.golang.org/protobuf/types/known/wrapperspb"
+
 	commonpb "github.com/shortlink-org/shop/oms-graphql/pkg/generated/oms/domain/order/v1/common"
 	servicepb "github.com/shortlink-org/shop/oms-graphql/pkg/generated/service/v1"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 // DeliveryPeriodToService maps OMS delivery period to Connect response.
@@ -13,6 +14,7 @@ func DeliveryPeriodToService(period *commonpb.DeliveryPeriod) *servicepb.Deliver
 	if period == nil {
 		return nil
 	}
+
 	return &servicepb.DeliveryPeriod{
 		StartTime: wrapperspb.String(period.GetStartTime().AsTime().Format(time.RFC3339)),
 		EndTime:   wrapperspb.String(period.GetEndTime().AsTime().Format(time.RFC3339)),
@@ -25,5 +27,6 @@ func ParseTimestamp(value string) (time.Time, error) {
 	if err == nil {
 		return parsed, nil
 	}
+
 	return time.Time{}, InvalidArgument("deliveryPeriod values must be RFC3339 timestamps")
 }

@@ -21,6 +21,8 @@ func (q Quote) FinalUnitPrice() decimal.Decimal {
 }
 
 // PricePolicy is responsible for providing pricing information for a good.
+//
+//nolint:iface // contract type used by domain and adapters
 type PricePolicy interface {
 	Quote(goodID uuid.UUID, quantity int32) (Quote, error)
 }

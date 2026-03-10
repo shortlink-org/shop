@@ -19,6 +19,7 @@ func mustNewItem(goodId uuid.UUID, quantity int32) item.Item {
 	return i
 }
 
+//nolint:funlen,maintidx // table-driven test; many cases for coverage
 func TestValidateAddItemsWithStock(t *testing.T) {
 	tests := []struct {
 		name        string

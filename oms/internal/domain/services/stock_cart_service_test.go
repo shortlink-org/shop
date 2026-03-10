@@ -11,10 +11,12 @@ import (
 
 func createCartWithItem(customerId, goodId uuid.UUID, quantity int32) *cart.State {
 	state := cart.New(customerId)
+
 	i, err := item.NewItem(goodId, quantity)
 	if err != nil {
 		panic(err)
 	}
+
 	if err := state.AddItem(i); err != nil {
 		panic(err)
 	}

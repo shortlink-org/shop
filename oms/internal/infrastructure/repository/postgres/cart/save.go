@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/shortlink-org/shop/oms/internal/domain"
 	cart "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart/schema/queries"
@@ -47,14 +48,14 @@ func (s *Store) Save(ctx context.Context, state *cart.State) error {
 		// New cart - insert
 		err := qtx.InsertCart(ctx, customerID)
 		if err != nil {
-			return err
+			return domain.WrapUnavailable("InsertCart", err)
 		}
 	}
 
 	// Delete existing items and insert new ones
 	err := qtx.DeleteCartItems(ctx, customerID)
 	if err != nil {
-		return err
+		return domain.WrapUnavailable("DeleteCartItems", err)
 	}
 
 	for _, item := range state.GetItems() {
@@ -66,7 +67,7 @@ func (s *Store) Save(ctx context.Context, state *cart.State) error {
 			Discount: item.GetDiscount(),
 		})
 		if err != nil {
-			return err
+			return domain.WrapUnavailable("InsertCartItem", err)
 		}
 	}
 

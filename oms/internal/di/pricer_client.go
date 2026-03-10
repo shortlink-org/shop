@@ -13,6 +13,8 @@ import (
 )
 
 // NewPricerClient creates a new Pricer gRPC client.
+//
+//nolint:ireturn // DI returns port interface for testability
 func NewPricerClient(
 	cfg *config.Config,
 	log logger.Logger,

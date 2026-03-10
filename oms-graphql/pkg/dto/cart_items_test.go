@@ -1,4 +1,4 @@
-package dto
+package dto //nolint:testpackage // testing exported API only
 
 import (
 	"testing"
@@ -12,10 +12,13 @@ func TestCartItemInputsToOMS(t *testing.T) {
 	t.Parallel()
 
 	t.Run("nil returns nil", func(t *testing.T) {
+		t.Parallel()
 		assert.Nil(t, CartItemInputsToOMS(nil))
 	})
 
 	t.Run("maps items", func(t *testing.T) {
+		t.Parallel()
+
 		in := &servicepb.ItemRequest{
 			Items: []*servicepb.CartItemInput{
 				{GoodId: "g1", Quantity: 3},

@@ -8,6 +8,8 @@ import (
 )
 
 // PricerClient is the interface for the pricing service client.
+//
+//nolint:iface // port interface used by usecases and DI
 type PricerClient interface {
 	CalculateTotal(ctx context.Context, req CalculateTotalRequest) (*CalculateTotalResponse, error)
 }

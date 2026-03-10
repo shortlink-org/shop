@@ -1,9 +1,10 @@
 package dto
 
 import (
+	"google.golang.org/protobuf/types/known/wrapperspb"
+
 	commonpb "github.com/shortlink-org/shop/oms-graphql/pkg/generated/oms/domain/order/v1/common"
 	servicepb "github.com/shortlink-org/shop/oms-graphql/pkg/generated/service/v1"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 // DeliveryAddressToService maps OMS delivery address to Connect response.
@@ -11,6 +12,7 @@ func DeliveryAddressToService(address *commonpb.DeliveryAddress) *servicepb.Deli
 	if address == nil {
 		return nil
 	}
+
 	return &servicepb.DeliveryAddress{
 		Street:     wrapperspb.String(address.GetStreet()),
 		City:       wrapperspb.String(address.GetCity()),
@@ -26,6 +28,7 @@ func DeliveryAddressFromInput(input *servicepb.DeliveryAddressInput) *commonpb.D
 	if input == nil {
 		return nil
 	}
+
 	address := &commonpb.DeliveryAddress{
 		Street:  input.GetStreet(),
 		City:    input.GetCity(),
@@ -34,11 +37,14 @@ func DeliveryAddressFromInput(input *servicepb.DeliveryAddressInput) *commonpb.D
 	if input.GetPostalCode() != nil {
 		address.PostalCode = input.GetPostalCode().GetValue()
 	}
+
 	if input.GetLatitude() != nil {
 		address.Latitude = input.GetLatitude().GetValue()
 	}
+
 	if input.GetLongitude() != nil {
 		address.Longitude = input.GetLongitude().GetValue()
 	}
+
 	return address
 }

@@ -1,9 +1,10 @@
 package dto
 
 import (
+	"google.golang.org/protobuf/types/known/wrapperspb"
+
 	cartmodel "github.com/shortlink-org/shop/oms-graphql/pkg/generated/oms/infrastructure/rpc/cart/v1/model/v1"
 	servicepb "github.com/shortlink-org/shop/oms-graphql/pkg/generated/service/v1"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 // CartStateToService maps OMS cart state to Connect/GraphQL service response.

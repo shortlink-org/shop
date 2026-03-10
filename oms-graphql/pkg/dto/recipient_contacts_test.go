@@ -1,4 +1,4 @@
-package dto
+package dto //nolint:testpackage // testing exported API only
 
 import (
 	"testing"
@@ -13,15 +13,18 @@ import (
 func TestRecipientContactsToService(t *testing.T) {
 	t.Parallel()
 	t.Run("nil returns nil", func(t *testing.T) {
+		t.Parallel()
 		assert.Nil(t, RecipientContactsToService(nil))
 	})
 	t.Run("maps contacts", func(t *testing.T) {
+		t.Parallel()
+
 		in := &commonpb.RecipientContacts{
 			RecipientName: "n", RecipientPhone: "p", RecipientEmail: "e",
 		}
 		out := RecipientContactsToService(in)
-		assert.Equal(t, "n", out.RecipientName.GetValue())
-		assert.Equal(t, "p", out.RecipientPhone.GetValue())
+		assert.Equal(t, "n", out.GetRecipientName().GetValue())
+		assert.Equal(t, "p", out.GetRecipientPhone().GetValue())
 	})
 }
 
@@ -35,12 +38,14 @@ func TestRecipientContactsFromInput(t *testing.T) {
 		assert.Nil(t, out)
 	})
 	t.Run("maps input", func(t *testing.T) {
+		t.Parallel()
+
 		in := &servicepb.RecipientContactsInput{
 			RecipientName:  wrapperspb.String("name"),
 			RecipientPhone: wrapperspb.String("+1"),
 		}
 		out := RecipientContactsFromInput(in)
-		assert.Equal(t, "name", out.RecipientName)
-		assert.Equal(t, "+1", out.RecipientPhone)
+		assert.Equal(t, "name", out.GetRecipientName())
+		assert.Equal(t, "+1", out.GetRecipientPhone())
 	})
 }

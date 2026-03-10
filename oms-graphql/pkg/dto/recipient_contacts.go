@@ -1,9 +1,10 @@
 package dto
 
 import (
+	"google.golang.org/protobuf/types/known/wrapperspb"
+
 	commonpb "github.com/shortlink-org/shop/oms-graphql/pkg/generated/oms/domain/order/v1/common"
 	servicepb "github.com/shortlink-org/shop/oms-graphql/pkg/generated/service/v1"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 // RecipientContactsToService maps OMS recipient contacts to Connect response.
@@ -11,6 +12,7 @@ func RecipientContactsToService(contacts *commonpb.RecipientContacts) *servicepb
 	if contacts == nil {
 		return nil
 	}
+
 	return &servicepb.RecipientContacts{
 		RecipientName:  wrapperspb.String(contacts.GetRecipientName()),
 		RecipientPhone: wrapperspb.String(contacts.GetRecipientPhone()),
@@ -23,18 +25,23 @@ func RecipientContactsFromInput(input *servicepb.RecipientContactsInput) *common
 	if input == nil {
 		return nil
 	}
+
 	contacts := &commonpb.RecipientContacts{}
 	if input.GetRecipientName() != nil {
 		contacts.RecipientName = input.GetRecipientName().GetValue()
 	}
+
 	if input.GetRecipientPhone() != nil {
 		contacts.RecipientPhone = input.GetRecipientPhone().GetValue()
 	}
+
 	if input.GetRecipientEmail() != nil {
 		contacts.RecipientEmail = input.GetRecipientEmail().GetValue()
 	}
-	if contacts.RecipientName == "" && contacts.RecipientPhone == "" && contacts.RecipientEmail == "" {
+
+	if contacts.GetRecipientName() == "" && contacts.GetRecipientPhone() == "" && contacts.GetRecipientEmail() == "" {
 		return nil
 	}
+
 	return contacts
 }

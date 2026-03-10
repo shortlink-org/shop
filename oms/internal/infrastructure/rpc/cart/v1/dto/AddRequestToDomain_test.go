@@ -11,10 +11,11 @@ import (
 
 	domain "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
 	itemv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/item/v1"
-	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/rpcmeta"
 	model "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1/model/v1"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/rpcmeta"
 )
 
+//nolint:maintidx // table-driven test with many cases
 func TestAddRequestToDomain(t *testing.T) {
 	validCustomerID := "e2c8ba97-1a6b-4c5c-9a2a-3f4c9b9d65a1"
 	ctxValid := metadata.NewIncomingContext(context.Background(), metadata.Pairs("x-user-id", validCustomerID))
@@ -23,7 +24,7 @@ func TestAddRequestToDomain(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		ctx           context.Context
+		ctx           context.Context //nolint:containedctx // table-driven test input
 		request       *model.AddRequest
 		expectedError error
 		expectedState *domain.State
@@ -43,27 +44,36 @@ func TestAddRequestToDomain(t *testing.T) {
 				if err != nil {
 					panic(err)
 				}
+
 				goodId1, err := uuid.Parse("c5f5d6d6-98e6-4f57-b34a-48a3997f28d4")
 				if err != nil {
 					panic(err)
 				}
+
 				goodId2, err := uuid.Parse("da3f3a3e-784d-4a9a-8cfa-6321d555d6a3")
 				if err != nil {
 					panic(err)
 				}
+
 				state := domain.New(customerId)
+
 				item1, err := itemv1.NewItem(goodId1, 1)
 				if err != nil {
 					panic(err)
 				}
-				if addErr := state.AddItem(item1); addErr != nil {
+
+				addErr := state.AddItem(item1)
+				if addErr != nil {
 					panic(addErr)
 				}
+
 				item2, err := itemv1.NewItem(goodId2, 2)
 				if err != nil {
 					panic(err)
 				}
-				if addErr := state.AddItem(item2); addErr != nil {
+
+				addErr = state.AddItem(item2)
+				if addErr != nil {
 					panic(addErr)
 				}
 
@@ -105,12 +115,19 @@ func TestAddRequestToDomain(t *testing.T) {
 			actualParams, err := AddRequestToDomain(tt.ctx, tt.request)
 			if tt.expectedError != nil {
 				assert.Error(t, err)
+
 				if errors.Is(err, rpcmeta.ErrMissingCustomerID) {
-					assert.True(t, errors.Is(err, tt.expectedError), "got %v", err)
+					assert.ErrorIs(t, err, tt.expectedError, "got %v", err)
 				} else {
 					var parseErr ParseItemError
-					assert.True(t, errors.As(err, &parseErr), "expected ParseItemError, got %v", err)
-					assert.Equal(t, tt.expectedError.(ParseItemError).item, parseErr.item)
+					assert.ErrorAs(t, err, &parseErr, "expected ParseItemError, got %v", err)
+					assert.Equal(t, func() ParseItemError {
+						var target ParseItemError
+
+						_ = errors.As(tt.expectedError, &target)
+
+						return target
+					}().item, parseErr.item)
 				}
 			} else {
 				assert.NoError(t, err)

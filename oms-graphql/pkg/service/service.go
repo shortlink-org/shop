@@ -13,8 +13,6 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	servicepb "github.com/shortlink-org/shop/oms-graphql/pkg/generated/service/v1"
-	serviceconnect "github.com/shortlink-org/shop/oms-graphql/pkg/generated/service/v1/v1connect"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
@@ -29,14 +27,16 @@ import (
 	cartmodel "github.com/shortlink-org/shop/oms-graphql/pkg/generated/oms/infrastructure/rpc/cart/v1/model/v1"
 	ordergrpc "github.com/shortlink-org/shop/oms-graphql/pkg/generated/oms/infrastructure/rpc/order/v1"
 	ordermodel "github.com/shortlink-org/shop/oms-graphql/pkg/generated/oms/infrastructure/rpc/order/v1/model/v1"
+	servicepb "github.com/shortlink-org/shop/oms-graphql/pkg/generated/service/v1"
+	serviceconnect "github.com/shortlink-org/shop/oms-graphql/pkg/generated/service/v1/v1connect"
 )
 
 const (
-	defaultListenAddr  = "0.0.0.0:4011"
-	defaultOMSGRPCURL  = "http://localhost:50051"
+	defaultListenAddr = "0.0.0.0:4011"
+	defaultOMSGRPCURL = "http://localhost:50051"
 	authHeader        = "Authorization"
-	traceparentHeader = "traceparent"
-	traceIDHeader     = "trace-id"
+	traceparentHeader = "Traceparent"
+	traceIDHeader     = "Trace-Id"
 )
 
 type Service struct {
@@ -60,6 +60,7 @@ func New(logger *slog.Logger, cartClient cartgrpc.CartServiceClient, orderClient
 func Start(ctx context.Context) error {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	listenAddr := envOrDefault("LISTEN_ADDR", defaultListenAddr)
+
 	omsTarget, err := normalizeGRPCTarget(envOrDefault("OMS_GRPC_URL", defaultOMSGRPCURL))
 	if err != nil {
 		return fmt.Errorf("normalize OMS_GRPC_URL: %w", err)
@@ -72,7 +73,8 @@ func Start(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("create oms grpc client: %w", err)
 	}
-	defer conn.Close()
+
+	defer func() { _ = conn.Close() }() //nolint:errcheck // best-effort on shutdown
 
 	svc := New(logger, cartgrpc.NewCartServiceClient(conn), ordergrpc.NewOrderServiceClient(conn))
 
@@ -81,28 +83,33 @@ func Start(ctx context.Context) error {
 	mux.Handle(path, handler)
 	mux.Handle("/healthz", http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("ok"))
+		_, _ = w.Write([]byte("ok")) //nolint:errcheck // healthz best-effort
 	}))
 	mux.Handle("/metrics", promhttp.Handler())
 
 	server := &http.Server{
-		Addr:    listenAddr,
-		Handler: h2c.NewHandler(mux, &http2.Server{}),
+		Addr:              listenAddr,
+		Handler:           h2c.NewHandler(mux, &http2.Server{}),
+		ReadHeaderTimeout: 5 * time.Second,
 	}
 
 	logger.Info("starting oms-graphql grpc subgraph", "listen_addr", listenAddr, "oms_target", omsTarget)
 
 	go func() {
 		<-ctx.Done()
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+
+		shutdownCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
-		if err := server.Shutdown(shutdownCtx); err != nil {
-			logger.Error("shutdown oms-graphql grpc subgraph", "error", err)
+
+		shutdownErr := server.Shutdown(shutdownCtx)
+		if shutdownErr != nil {
+			logger.Error("shutdown oms-graphql grpc subgraph", "error", shutdownErr)
 		}
 	}()
 
-	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		return err
+	err = server.ListenAndServe()
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return fmt.Errorf("listen and serve: %w", err)
 	}
 
 	return nil
@@ -111,8 +118,8 @@ func Start(ctx context.Context) error {
 func (s *Service) QueryGetCart(
 	ctx context.Context,
 	req *connect.Request[servicepb.QueryGetCartRequest],
-) (*connect.Response[servicepb.QueryGetCartResponse], error) {
-	_, outboundCtx, err := s.authorizedContext(ctx, req)
+) (*connect.Response[servicepb.QueryGetCartResponse], error) { //nolint:whitespace // multi-line signature
+	outboundCtx, err := s.authorizedContext(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -132,8 +139,8 @@ func (s *Service) QueryGetCart(
 func (s *Service) QueryGetOrder(
 	ctx context.Context,
 	req *connect.Request[servicepb.QueryGetOrderRequest],
-) (*connect.Response[servicepb.QueryGetOrderResponse], error) {
-	_, outboundCtx, err := s.authorizedContext(ctx, req)
+) (*connect.Response[servicepb.QueryGetOrderResponse], error) { //nolint:whitespace // multi-line signature
+	outboundCtx, err := s.authorizedContext(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -155,8 +162,8 @@ func (s *Service) QueryGetOrder(
 func (s *Service) MutationAddItem(
 	ctx context.Context,
 	req *connect.Request[servicepb.MutationAddItemRequest],
-) (*connect.Response[servicepb.MutationAddItemResponse], error) {
-	_, outboundCtx, err := s.authorizedContext(ctx, req)
+) (*connect.Response[servicepb.MutationAddItemResponse], error) { //nolint:whitespace // multi-line signature
+	outboundCtx, err := s.authorizedContext(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -176,8 +183,8 @@ func (s *Service) MutationAddItem(
 func (s *Service) MutationRemoveItem(
 	ctx context.Context,
 	req *connect.Request[servicepb.MutationRemoveItemRequest],
-) (*connect.Response[servicepb.MutationRemoveItemResponse], error) {
-	_, outboundCtx, err := s.authorizedContext(ctx, req)
+) (*connect.Response[servicepb.MutationRemoveItemResponse], error) { //nolint:whitespace // multi-line signature
+	outboundCtx, err := s.authorizedContext(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -197,8 +204,8 @@ func (s *Service) MutationRemoveItem(
 func (s *Service) MutationResetCart(
 	ctx context.Context,
 	req *connect.Request[servicepb.MutationResetCartRequest],
-) (*connect.Response[servicepb.MutationResetCartResponse], error) {
-	_, outboundCtx, err := s.authorizedContext(ctx, req)
+) (*connect.Response[servicepb.MutationResetCartResponse], error) { //nolint:whitespace // multi-line signature
+	outboundCtx, err := s.authorizedContext(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -216,15 +223,15 @@ func (s *Service) MutationResetCart(
 func (s *Service) MutationCreateOrder(
 	ctx context.Context,
 	req *connect.Request[servicepb.MutationCreateOrderRequest],
-) (*connect.Response[servicepb.MutationCreateOrderResponse], error) {
-	_, outboundCtx, err := s.authorizedContext(ctx, req)
+) (*connect.Response[servicepb.MutationCreateOrderResponse], error) { //nolint:whitespace // multi-line signature
+	outboundCtx, err := s.authorizedContext(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
 	createRequest, err := dto.CreateOrderRequestFromInput(req.Msg.GetInput())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create order request: %w", err)
 	}
 
 	_, err = s.orderClient.Create(outboundCtx, createRequest)
@@ -240,8 +247,8 @@ func (s *Service) MutationCreateOrder(
 func (s *Service) MutationCancelOrder(
 	ctx context.Context,
 	req *connect.Request[servicepb.MutationCancelOrderRequest],
-) (*connect.Response[servicepb.MutationCancelOrderResponse], error) {
-	_, outboundCtx, err := s.authorizedContext(ctx, req)
+) (*connect.Response[servicepb.MutationCancelOrderResponse], error) { //nolint:whitespace // multi-line signature
+	outboundCtx, err := s.authorizedContext(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -261,20 +268,20 @@ func (s *Service) MutationCancelOrder(
 func (s *Service) MutationUpdateDeliveryInfo(
 	ctx context.Context,
 	req *connect.Request[servicepb.MutationUpdateDeliveryInfoRequest],
-) (*connect.Response[servicepb.MutationUpdateDeliveryInfoResponse], error) {
-	_, outboundCtx, err := s.authorizedContext(ctx, req)
+) (*connect.Response[servicepb.MutationUpdateDeliveryInfoResponse], error) { //nolint:whitespace // multi-line signature
+	outboundCtx, err := s.authorizedContext(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
 	input := req.Msg.GetInput()
 	if input == nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("input is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, errInputRequired)
 	}
 
 	deliveryInfo, err := dto.DeliveryInfoFromInput(input.GetDeliveryInfo())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("delivery info: %w", err)
 	}
 
 	_, err = s.orderClient.UpdateDeliveryInfo(outboundCtx, &ordermodel.UpdateDeliveryInfoRequest{
@@ -293,13 +300,14 @@ func (s *Service) MutationUpdateDeliveryInfo(
 func (s *Service) MutationCheckout(
 	ctx context.Context,
 	req *connect.Request[servicepb.MutationCheckoutRequest],
-) (*connect.Response[servicepb.MutationCheckoutResponse], error) {
-	_, outboundCtx, err := s.authorizedContext(ctx, req)
+) (*connect.Response[servicepb.MutationCheckoutResponse], error) { //nolint:whitespace // multi-line signature
+	outboundCtx, err := s.authorizedContext(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
 	input := req.Msg.GetInput()
+
 	var deliveryInfoInput *servicepb.DeliveryInfoInput
 	if input != nil {
 		deliveryInfoInput = input.GetDeliveryInfo()
@@ -307,7 +315,7 @@ func (s *Service) MutationCheckout(
 
 	deliveryInfo, err := dto.DeliveryInfoFromInput(deliveryInfoInput)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("delivery info: %w", err)
 	}
 
 	response, err := s.orderClient.Checkout(outboundCtx, &ordermodel.CheckoutRequest{
@@ -324,24 +332,32 @@ func (s *Service) MutationCheckout(
 	}), nil
 }
 
+var (
+	errMissingAuthorization = errors.New("missing required Authorization header")
+	errInputRequired        = errors.New("input is required")
+	errEmptyGRPCTarget      = errors.New("empty grpc target")
+	errMissingHost          = errors.New("missing host in URL")
+)
+
 func (s *Service) authorizedContext(
 	ctx context.Context,
 	req interface{ Header() http.Header },
-) (string, context.Context, error) {
+) (context.Context, error) { //nolint:whitespace // multi-line signature
 	authorization := strings.TrimSpace(req.Header().Get(authHeader))
 	if authorization == "" {
-		return "", nil, connect.NewError(connect.CodeUnauthenticated, errors.New("missing required Authorization header"))
+		return nil, connect.NewError(connect.CodeUnauthenticated, errMissingAuthorization)
 	}
 
 	mdPairs := []string{"authorization", authorization}
 	if v := strings.TrimSpace(req.Header().Get(traceparentHeader)); v != "" {
 		mdPairs = append(mdPairs, "traceparent", v)
 	}
+
 	if v := strings.TrimSpace(req.Header().Get(traceIDHeader)); v != "" {
 		mdPairs = append(mdPairs, "trace-id", v)
 	}
 
-	return "", metadata.NewOutgoingContext(ctx, metadata.Pairs(mdPairs...)), nil
+	return metadata.NewOutgoingContext(ctx, metadata.Pairs(mdPairs...)), nil
 }
 
 func grpcError(err error) error {
@@ -392,7 +408,7 @@ func mapGRPCCode(code grpccodes.Code) connect.Code {
 	}
 }
 
-func envOrDefault(key string, fallback string) string {
+func envOrDefault(key, fallback string) string {
 	if value := strings.TrimSpace(os.Getenv(key)); value != "" {
 		return value
 	}
@@ -402,16 +418,17 @@ func envOrDefault(key string, fallback string) string {
 
 func normalizeGRPCTarget(raw string) (string, error) {
 	if raw == "" {
-		return "", errors.New("empty grpc target")
+		return "", errEmptyGRPCTarget
 	}
 
 	if strings.Contains(raw, "://") {
 		parsed, err := url.Parse(raw)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("parse grpc target: %w", err)
 		}
+
 		if parsed.Host == "" {
-			return "", fmt.Errorf("missing host in %q", raw)
+			return "", fmt.Errorf("%w: %q", errMissingHost, raw)
 		}
 
 		return parsed.Host, nil
