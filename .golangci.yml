@@ -17,6 +17,8 @@ linters:
     - wsl # deprecated
     - gomoddirectives # monorepo boundaries rely on replace directives
     - testpackage # package foo_test vs foo is a naming choice; we use same package for unit tests
+    - funcorder # method order is a style choice; we group by logic
+    - tagliatelle # json snake_case is API contract; we keep existing tags
 
   exclusions:
     paths:

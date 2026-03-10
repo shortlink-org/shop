@@ -62,7 +62,6 @@ func (p Polyline) Decode() ([]Location, error) {
 		result := 0
 
 		for index < len(p.encoded) {
-
 			b := int(p.encoded[index]) - 63
 			index++
 			result |= (b & 0x1f) << shift
@@ -84,7 +83,6 @@ func (p Polyline) Decode() ([]Location, error) {
 		result = 0
 
 		for index < len(p.encoded) {
-
 			b := int(p.encoded[index]) - 63
 			index++
 			result |= (b & 0x1f) << shift

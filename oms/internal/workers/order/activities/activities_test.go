@@ -4,12 +4,15 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	orderv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
+	commonv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common"
+	"github.com/shortlink-org/shop/oms/internal/domain/order/v1/vo/address"
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	orderCancel "github.com/shortlink-org/shop/oms/internal/usecases/order/command/cancel"
 	orderRequestDelivery "github.com/shortlink-org/shop/oms/internal/usecases/order/command/request_delivery"
@@ -83,6 +86,38 @@ var (
 	testOrderID    = uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
 	testCustomerID = uuid.MustParse("123e4567-e89b-12d3-a456-426614174100")
 )
+
+func createOrderWithDeliveryInfo(t *testing.T) *orderv1.OrderState {
+	t.Helper()
+
+	pickupAddr, err := address.NewAddress("123 Warehouse St", "Moscow", "101000", "Russia")
+	require.NoError(t, err)
+
+	deliveryAddr, err := address.NewAddress("456 Customer St", "Moscow", "102000", "Russia")
+	require.NoError(t, err)
+
+	startTime := time.Now().Add(24 * time.Hour)
+	endTime := startTime.Add(2 * time.Hour)
+	deliveryInfo := orderv1.NewDeliveryInfo(
+		pickupAddr,
+		deliveryAddr,
+		orderv1.NewDeliveryPeriod(startTime, endTime),
+		orderv1.NewPackageInfo(2.5),
+		orderv1.DeliveryPriorityNormal,
+		nil,
+	)
+
+	return orderv1.NewOrderStateFromPersisted(
+		testOrderID,
+		testCustomerID,
+		nil,
+		orderv1.OrderStatus_ORDER_STATUS_PROCESSING,
+		0,
+		&deliveryInfo,
+		commonv1.DeliveryStatus_DELIVERY_STATUS_UNSPECIFIED,
+		nil,
+	)
+}
 
 func TestActivities_CancelOrder_Success(t *testing.T) {
 	cancelHandler := new(mockCancelHandler)
@@ -215,4 +250,156 @@ func TestActivities_New(t *testing.T) {
 	activities := New(cancelHandler, getHandler, requestDeliveryHandler, deliveryClient)
 
 	require.NotNil(t, activities)
+}
+
+func TestActivities_RequestDelivery_DeliveryClientNotConfigured(t *testing.T) {
+	cancelHandler := new(mockCancelHandler)
+	getHandler := new(mockGetHandler)
+	requestDeliveryHandler := new(mockRequestDeliveryHandler)
+	activities := New(cancelHandler, getHandler, requestDeliveryHandler, nil)
+
+	response, err := activities.RequestDelivery(context.Background(), RequestDeliveryRequest{
+		OrderID: testOrderID,
+	})
+
+	require.Error(t, err)
+	require.Nil(t, response)
+	require.ErrorIs(t, err, ErrDeliveryClientNotConfigured)
+}
+
+func TestActivities_RequestDelivery_NoDeliveryInfo(t *testing.T) {
+	cancelHandler := new(mockCancelHandler)
+	getHandler := new(mockGetHandler)
+	deliveryClient := new(mockDeliveryClient)
+	requestDeliveryHandler := new(mockRequestDeliveryHandler)
+	activities := New(cancelHandler, getHandler, requestDeliveryHandler, deliveryClient)
+	order := orderv1.NewOrderState(testCustomerID)
+	order.SetID(testOrderID)
+
+	getHandler.On("Handle", mock.Anything, orderGet.NewQuery(testOrderID)).Return(order, nil)
+
+	response, err := activities.RequestDelivery(context.Background(), RequestDeliveryRequest{
+		OrderID: testOrderID,
+	})
+
+	require.Error(t, err)
+	require.Nil(t, response)
+	require.ErrorIs(t, err, ErrOrderHasNoDeliveryInfo)
+	getHandler.AssertExpectations(t)
+	deliveryClient.AssertNotCalled(t, "AcceptOrder", mock.Anything, mock.Anything)
+	requestDeliveryHandler.AssertNotCalled(t, "Handle", mock.Anything, mock.Anything)
+}
+
+func TestActivities_RequestDelivery_AcceptOrderError(t *testing.T) {
+	cancelHandler := new(mockCancelHandler)
+	getHandler := new(mockGetHandler)
+	deliveryClient := new(mockDeliveryClient)
+	requestDeliveryHandler := new(mockRequestDeliveryHandler)
+	activities := New(cancelHandler, getHandler, requestDeliveryHandler, deliveryClient)
+	order := createOrderWithDeliveryInfo(t)
+	expectedErr := errors.New("delivery backend unavailable")
+
+	getHandler.On("Handle", mock.Anything, orderGet.NewQuery(testOrderID)).Return(order, nil)
+	deliveryClient.On("AcceptOrder", mock.Anything, mock.Anything).Return(nil, expectedErr)
+
+	response, err := activities.RequestDelivery(context.Background(), RequestDeliveryRequest{
+		OrderID: testOrderID,
+	})
+
+	require.Error(t, err)
+	require.Nil(t, response)
+	require.ErrorContains(t, err, "failed to request delivery")
+	require.ErrorContains(t, err, expectedErr.Error())
+	getHandler.AssertExpectations(t)
+	deliveryClient.AssertExpectations(t)
+	requestDeliveryHandler.AssertNotCalled(t, "Handle", mock.Anything, mock.Anything)
+}
+
+func TestActivities_RequestDelivery_InvalidPackageID(t *testing.T) {
+	cancelHandler := new(mockCancelHandler)
+	getHandler := new(mockGetHandler)
+	deliveryClient := new(mockDeliveryClient)
+	requestDeliveryHandler := new(mockRequestDeliveryHandler)
+	activities := New(cancelHandler, getHandler, requestDeliveryHandler, deliveryClient)
+	order := createOrderWithDeliveryInfo(t)
+
+	getHandler.On("Handle", mock.Anything, orderGet.NewQuery(testOrderID)).Return(order, nil)
+	deliveryClient.On("AcceptOrder", mock.Anything, mock.Anything).Return(&ports.AcceptOrderResponse{
+		PackageID: "not-a-uuid",
+		Status:    "ACCEPTED",
+	}, nil)
+
+	response, err := activities.RequestDelivery(context.Background(), RequestDeliveryRequest{
+		OrderID: testOrderID,
+	})
+
+	require.Error(t, err)
+	require.Nil(t, response)
+	require.ErrorIs(t, err, ErrInvalidPackageID)
+	getHandler.AssertExpectations(t)
+	deliveryClient.AssertExpectations(t)
+	requestDeliveryHandler.AssertNotCalled(t, "Handle", mock.Anything, mock.Anything)
+}
+
+func TestActivities_RequestDelivery_PersistError(t *testing.T) {
+	cancelHandler := new(mockCancelHandler)
+	getHandler := new(mockGetHandler)
+	deliveryClient := new(mockDeliveryClient)
+	requestDeliveryHandler := new(mockRequestDeliveryHandler)
+	activities := New(cancelHandler, getHandler, requestDeliveryHandler, deliveryClient)
+	order := createOrderWithDeliveryInfo(t)
+	packageID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174777")
+	expectedErr := errors.New("cannot persist request")
+
+	getHandler.On("Handle", mock.Anything, orderGet.NewQuery(testOrderID)).Return(order, nil)
+	deliveryClient.On("AcceptOrder", mock.Anything, mock.Anything).Return(&ports.AcceptOrderResponse{
+		PackageID: packageID.String(),
+		Status:    "ACCEPTED",
+	}, nil)
+	requestDeliveryHandler.On("Handle", mock.Anything, mock.MatchedBy(func(cmd orderRequestDelivery.Command) bool {
+		return cmd.OrderID == testOrderID && cmd.PackageID == packageID && !cmd.RequestedAt.IsZero()
+	})).Return(expectedErr)
+
+	response, err := activities.RequestDelivery(context.Background(), RequestDeliveryRequest{
+		OrderID: testOrderID,
+	})
+
+	require.Error(t, err)
+	require.Nil(t, response)
+	require.ErrorContains(t, err, "failed to persist delivery request")
+	require.ErrorContains(t, err, expectedErr.Error())
+	getHandler.AssertExpectations(t)
+	deliveryClient.AssertExpectations(t)
+	requestDeliveryHandler.AssertExpectations(t)
+}
+
+func TestActivities_RequestDelivery_Success(t *testing.T) {
+	cancelHandler := new(mockCancelHandler)
+	getHandler := new(mockGetHandler)
+	deliveryClient := new(mockDeliveryClient)
+	requestDeliveryHandler := new(mockRequestDeliveryHandler)
+	activities := New(cancelHandler, getHandler, requestDeliveryHandler, deliveryClient)
+	order := createOrderWithDeliveryInfo(t)
+	packageID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174888")
+
+	getHandler.On("Handle", mock.Anything, orderGet.NewQuery(testOrderID)).Return(order, nil)
+	deliveryClient.On("AcceptOrder", mock.Anything, mock.Anything).Return(&ports.AcceptOrderResponse{
+		PackageID: packageID.String(),
+		Status:    "ACCEPTED",
+	}, nil)
+	requestDeliveryHandler.On("Handle", mock.Anything, mock.MatchedBy(func(cmd orderRequestDelivery.Command) bool {
+		return cmd.OrderID == testOrderID && cmd.PackageID == packageID && !cmd.RequestedAt.IsZero()
+	})).Return(nil)
+
+	response, err := activities.RequestDelivery(context.Background(), RequestDeliveryRequest{
+		OrderID: testOrderID,
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, response)
+	require.Equal(t, packageID.String(), response.PackageID)
+	require.Equal(t, "ACCEPTED", response.Status)
+	getHandler.AssertExpectations(t)
+	deliveryClient.AssertExpectations(t)
+	requestDeliveryHandler.AssertExpectations(t)
 }

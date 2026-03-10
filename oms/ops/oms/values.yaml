@@ -111,6 +111,8 @@ deploy:
     TEMPORAL_NAMESPACE: oms
     TEMPORAL_TLS_ENABLED: "false"
 
+    WATERMILL_KAFKA_BROKERS: shortlink-kafka-bootstrap.kafka.svc.cluster.local:9092
+
     # -- Default store config
     STORE_TYPE: postgres
     STORE_REDIS_URI: redis-master.shortlink-shop:6379

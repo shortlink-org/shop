@@ -45,6 +45,7 @@ func TestNewEventBus_Integration_ForwardsOutboxToKafka(t *testing.T) {
 	cfg, err := config.New()
 	require.NoError(t, err)
 	cfg.Reset()
+	cfg.Set("SERVICE_NAME", "oms-event-bus-integration")
 	cfg.Set("WATERMILL_KAFKA_BROKERS", brokers)
 
 	logCfg := logger.Default()

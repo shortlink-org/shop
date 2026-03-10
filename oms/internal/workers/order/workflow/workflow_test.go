@@ -1,15 +1,20 @@
 package order_workflow
 
 import (
+	"context"
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
+	"go.temporal.io/sdk/activity"
 	"go.temporal.io/sdk/testsuite"
 
 	v2 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
+	"github.com/shortlink-org/shop/oms/internal/workers/order/activities"
 )
 
 // OrderWorkflowTestSuite is the test suite for Order Workflow.
@@ -23,6 +28,18 @@ type OrderWorkflowTestSuite struct {
 // SetupTest sets up a new test environment before each test.
 func (s *OrderWorkflowTestSuite) SetupTest() {
 	s.env = s.NewTestWorkflowEnvironment()
+	s.env.RegisterActivityWithOptions(
+		func(context.Context, activities.RequestDeliveryRequest) (*activities.RequestDeliveryResponse, error) {
+			return nil, nil
+		},
+		activity.RegisterOptions{Name: "RequestDelivery"},
+	)
+	s.env.RegisterActivityWithOptions(
+		func(context.Context, activities.CancelOrderRequest) error {
+			return nil
+		},
+		activity.RegisterOptions{Name: "CancelOrder"},
+	)
 }
 
 // AfterTest asserts that all mocks were called as expected.
@@ -53,6 +70,60 @@ func (s *OrderWorkflowTestSuite) Test_Workflow_Success() {
 
 	s.True(s.env.IsWorkflowCompleted())
 	s.NoError(s.env.GetWorkflowError())
+}
+
+// Test_Workflow_WithDelivery_Success verifies the delivery branch completes without compensation.
+func (s *OrderWorkflowTestSuite) Test_Workflow_WithDelivery_Success() {
+	orderID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+	customerID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174100")
+	items := createTestItems()
+
+	s.env.OnActivity("RequestDelivery", mock.Anything, activities.RequestDeliveryRequest{
+		OrderID: orderID,
+	}).Return(&activities.RequestDeliveryResponse{
+		PackageID: uuid.MustParse("123e4567-e89b-12d3-a456-426614174999").String(),
+		Status:    "ACCEPTED",
+	}, nil).Once()
+	s.env.OnActivity(new(activities.Activities).CancelOrder, mock.Anything, mock.Anything).Never()
+
+	s.env.ExecuteWorkflow(Workflow, orderID, customerID, items, true)
+
+	s.True(s.env.IsWorkflowCompleted())
+	s.NoError(s.env.GetWorkflowError())
+
+	res, err := s.env.QueryWorkflow(v2.WorkflowQueryGet)
+	s.NoError(err)
+
+	var status string
+	err = res.Get(&status)
+	s.NoError(err)
+	s.Equal("COMPLETED", status)
+}
+
+// Test_Workflow_WithDelivery_RequestDeliveryFailure verifies compensation is executed after retries.
+func (s *OrderWorkflowTestSuite) Test_Workflow_WithDelivery_RequestDeliveryFailure() {
+	orderID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+	customerID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174100")
+	items := createTestItems()
+	expectedErr := errors.New("delivery service unavailable")
+	attempts := 0
+
+	s.env.OnActivity("RequestDelivery", mock.Anything, activities.RequestDeliveryRequest{
+		OrderID: orderID,
+	}).Return(func(_ context.Context, _ activities.RequestDeliveryRequest) (*activities.RequestDeliveryResponse, error) {
+		attempts++
+		return nil, expectedErr
+	}).Times(3)
+	s.env.OnActivity(new(activities.Activities).CancelOrder, mock.Anything, activities.CancelOrderRequest{
+		OrderID: orderID,
+	}).Return(nil).Once()
+
+	s.env.ExecuteWorkflow(Workflow, orderID, customerID, items, true)
+
+	s.True(s.env.IsWorkflowCompleted())
+	s.Error(s.env.GetWorkflowError())
+	s.ErrorContains(s.env.GetWorkflowError(), expectedErr.Error())
+	s.Equal(3, attempts)
 }
 
 // Test_Workflow_QueryStatus tests the query handler for order status.

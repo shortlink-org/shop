@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"time"
 
-	wmkafka "github.com/ThreeDotsLabs/watermill-kafka/v3/pkg/kafka"
 	wmsql "github.com/ThreeDotsLabs/watermill-sql/v4/pkg/sql"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/shortlink-org/go-sdk/config"
@@ -16,6 +15,7 @@ import (
 	logger "github.com/shortlink-org/go-sdk/logger"
 	"github.com/shortlink-org/go-sdk/observability/metrics"
 	sdkwatermill "github.com/shortlink-org/go-sdk/watermill"
+	sdkkafka "github.com/shortlink-org/go-sdk/watermill/backends/kafka"
 )
 
 const (
@@ -39,18 +39,11 @@ func newEventBus(
 		return nil, nil, db.ErrGetConnection
 	}
 
-	brokers := cfg.GetStringSlice("WATERMILL_KAFKA_BROKERS")
-	if len(brokers) == 0 {
-		brokers = []string{"localhost:9092"}
-	}
-
 	wmLogger := sdkwatermill.NewWatermillLogger(log)
 	namer := cqrsmessage.NewShortlinkNamer("oms")
 	marshaler := cqrsmessage.NewJSONMarshaler(namer)
 
-	realPublisher, err := wmkafka.NewPublisher(wmkafka.PublisherConfig{
-		Brokers: brokers,
-	}, wmLogger)
+	realPublisher, err := sdkkafka.NewPublisherFromConfig(log, cfg)
 	if err != nil {
 		return nil, nil, fmt.Errorf("create kafka outbox publisher: %w", err)
 	}

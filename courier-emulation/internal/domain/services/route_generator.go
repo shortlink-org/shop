@@ -137,6 +137,7 @@ func (rg *RouteGenerator) fetchRouteFromOSRM(ctx context.Context, origin, destin
 	}
 
 	var osrmResp OSRMResponse
+
 	decodeErr := json.NewDecoder(resp.Body).Decode(&osrmResp)
 	if decodeErr != nil {
 		return vo.Route{}, fmt.Errorf("%w: %w", ErrInvalidResponse, decodeErr)

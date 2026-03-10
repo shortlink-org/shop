@@ -7,9 +7,6 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/IBM/sarama"
-	"github.com/ThreeDotsLabs/watermill"
-	"github.com/ThreeDotsLabs/watermill-kafka/v3/pkg/kafka"
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/shortlink-org/go-sdk/logger"
 	"google.golang.org/protobuf/proto"
@@ -60,96 +57,36 @@ type DeliveryEventHandler interface {
 	HandleDeliveryStatus(ctx context.Context, event DeliveryStatusEvent) error
 }
 
-// DeliveryConsumerConfig contains configuration for the delivery consumer.
-type DeliveryConsumerConfig struct {
-	Brokers []string
-	GroupID string
-	Topic   string
-}
-
-// DefaultDeliveryConsumerConfig returns default configuration.
-func DefaultDeliveryConsumerConfig() DeliveryConsumerConfig {
-	return DeliveryConsumerConfig{
-		Brokers: []string{"localhost:9092"},
-		GroupID: ConsumerGroupOMSDelivery,
-		Topic:   TopicDeliveryPackageStatus,
-	}
-}
-
-// watermillLoggerAdapter adapts go-sdk logger to Watermill logger interface.
-type watermillLoggerAdapter struct {
-	log logger.Logger
-}
-
-func (w *watermillLoggerAdapter) Error(msg string, err error, fields watermill.LogFields) {
-	w.log.Error(fmt.Sprintf("%s: %v", msg, err), slog.String("error", err.Error()))
-}
-
-func (w *watermillLoggerAdapter) Info(msg string, fields watermill.LogFields) {
-	w.log.Info(msg)
-}
-
-func (w *watermillLoggerAdapter) Debug(msg string, fields watermill.LogFields) {
-	w.log.Debug(msg)
-}
-
-func (w *watermillLoggerAdapter) Trace(msg string, fields watermill.LogFields) {
-	w.log.Debug(msg)
-}
-
-//nolint:ireturn // implements watermill.LoggerAdapter
-func (w *watermillLoggerAdapter) With(fields watermill.LogFields) watermill.LoggerAdapter {
-	return w
-}
-
 // DeliveryConsumer consumes delivery status events from Kafka using Watermill.
 type DeliveryConsumer struct {
-	config     DeliveryConsumerConfig
+	topic      string
 	handler    DeliveryEventHandler
 	log        logger.Logger
-	subscriber *kafka.Subscriber
+	subscriber message.Subscriber
 	cancel     context.CancelCauseFunc
 }
 
 // NewDeliveryConsumer creates a new delivery consumer.
 func NewDeliveryConsumer(
-	config DeliveryConsumerConfig,
+	topic string,
+	subscriber message.Subscriber,
 	handler DeliveryEventHandler,
 	log logger.Logger,
-) (*DeliveryConsumer, error) {
-	saramaConfig := kafka.DefaultSaramaSubscriberConfig()
-	saramaConfig.Consumer.Offsets.Initial = sarama.OffsetNewest
-
-	wmLogger := &watermillLoggerAdapter{log: log}
-
-	subscriber, err := kafka.NewSubscriber(
-		kafka.SubscriberConfig{
-			Brokers:               config.Brokers,
-			Unmarshaler:           kafka.DefaultMarshaler{},
-			ConsumerGroup:         config.GroupID,
-			OverwriteSaramaConfig: saramaConfig,
-		},
-		wmLogger,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create Kafka subscriber: %w", err)
-	}
-
+) *DeliveryConsumer {
 	return &DeliveryConsumer{
-		config:     config,
+		topic:      topic,
 		handler:    handler,
 		log:        log,
 		subscriber: subscriber,
-	}, nil
+	}
 }
 
 // Start starts consuming messages in a goroutine.
 func (c *DeliveryConsumer) Start(ctx context.Context) error {
 	c.log.Info("Starting delivery consumer",
-		slog.String("topic", c.config.Topic),
-		slog.String("group_id", c.config.GroupID))
+		slog.String("topic", c.topic))
 
-	messages, err := c.subscriber.Subscribe(ctx, c.config.Topic)
+	messages, err := c.subscriber.Subscribe(ctx, c.topic)
 	if err != nil {
 		return fmt.Errorf("failed to subscribe to topic: %w", err)
 	}

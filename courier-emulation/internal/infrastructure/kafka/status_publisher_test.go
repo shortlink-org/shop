@@ -3,7 +3,6 @@ package kafka
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"testing"
 	"time"
 
@@ -181,20 +180,20 @@ func TestNewDeliverOrderEvent_Validation(t *testing.T) {
 	t.Run("delivered_with_reason_returns_error", func(t *testing.T) {
 		_, err := NewDeliverOrderEvent("c1", order, location, true, ReasonCustomerRefused)
 		require.Error(t, err)
-		assert.True(t, errors.Is(err, ErrReasonMustBeEmpty))
+		assert.ErrorIs(t, err, ErrReasonMustBeEmpty)
 		assert.Contains(t, err.Error(), "got=\"CUSTOMER_REFUSED\"")
 	})
 
 	t.Run("not_delivered_empty_reason_returns_error", func(t *testing.T) {
 		_, err := NewDeliverOrderEvent("c1", order, location, false, "")
 		require.Error(t, err)
-		assert.True(t, errors.Is(err, ErrReasonRequired))
+		assert.ErrorIs(t, err, ErrReasonRequired)
 	})
 
 	t.Run("not_delivered_invalid_reason_returns_error", func(t *testing.T) {
 		_, err := NewDeliverOrderEvent("c1", order, location, false, NotDeliveredReason("INVALID_REASON"))
 		require.Error(t, err)
-		assert.True(t, errors.Is(err, ErrInvalidReason))
+		assert.ErrorIs(t, err, ErrInvalidReason)
 		assert.Contains(t, err.Error(), "got=\"INVALID_REASON\"")
 	})
 

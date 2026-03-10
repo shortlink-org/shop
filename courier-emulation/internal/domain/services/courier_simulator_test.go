@@ -125,6 +125,7 @@ func TestCourierSimulator_StopCourier(t *testing.T) {
 	polyline := vo.MustNewPolyline("_c`|IgpvpAaB{A")
 	route, err := vo.NewRoute("route", origin, destination, polyline, 150, 30*time.Second)
 	require.NoError(t, err)
+
 	ctx := context.Background()
 	err = simulator.StartCourierWithRoute(ctx, "courier-1", route)
 	require.NoError(t, err)

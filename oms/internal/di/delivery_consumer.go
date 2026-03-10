@@ -6,7 +6,7 @@ import (
 
 	"github.com/shortlink-org/go-sdk/config"
 	"github.com/shortlink-org/go-sdk/logger"
-	"github.com/spf13/viper"
+	sdkkafka "github.com/shortlink-org/go-sdk/watermill/backends/kafka"
 
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/kafka"
@@ -22,18 +22,7 @@ func NewDeliveryConsumer(
 	orderRepo ports.OrderRepository,
 	publisher ports.EventPublisher,
 ) (*kafka.DeliveryConsumer, func(), error) {
-	viper.SetDefault("WATERMILL_KAFKA_BROKERS", []string{"localhost:9092"})
-
-	brokers := cfg.GetStringSlice("WATERMILL_KAFKA_BROKERS")
-	if len(brokers) == 0 {
-		brokers = []string{"localhost:9092"}
-	}
-
-	consumerConfig := kafka.DeliveryConsumerConfig{
-		Brokers: brokers,
-		GroupID: kafka.ConsumerGroupOMSDelivery,
-		Topic:   kafka.TopicDeliveryPackageStatus,
-	}
+	cfg.SetDefault("WATERMILL_KAFKA_CONSUMER_GROUP", kafka.ConsumerGroupOMSDelivery)
 
 	// Create event handler
 	handler, err := on_delivery_status.NewHandler(log, uow, orderRepo, publisher)
@@ -41,11 +30,13 @@ func NewDeliveryConsumer(
 		return nil, func() {}, err
 	}
 
-	consumer, err := kafka.NewDeliveryConsumer(consumerConfig, handler, log)
+	subscriber, err := sdkkafka.NewSubscriberFromConfig(log, cfg)
 	if err != nil {
-		log.Warn("Failed to create Kafka delivery consumer, running without event consumption")
+		log.Warn("Failed to create Kafka delivery subscriber, running without event consumption")
 		return nil, func() {}, nil //nolint:nilerr // intentionally returning nil to continue without Kafka
 	}
+
+	consumer := kafka.NewDeliveryConsumer(kafka.TopicDeliveryPackageStatus, subscriber, handler, log)
 
 	// Start consuming in background
 	if err := consumer.Start(ctx); err != nil {

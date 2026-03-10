@@ -56,6 +56,7 @@ func TestRoute_String(t *testing.T) {
 
 	route, err := NewRoute("route-1", origin, destination, polyline, 1500.0, 3*time.Minute)
 	require.NoError(t, err)
+
 	str := route.String()
 
 	assert.Contains(t, str, "route-1")

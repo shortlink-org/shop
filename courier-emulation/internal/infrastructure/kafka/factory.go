@@ -10,6 +10,7 @@ import (
 // NewPickUpOrderEvent creates an order picked up event from domain objects.
 func NewPickUpOrderEvent(courierID string, order vo.DeliveryOrder, location vo.Location) PickUpOrderEvent {
 	now := time.Now().UTC()
+
 	return PickUpOrderEvent{
 		OrderID:   order.OrderID(),
 		CourierID: courierID,
@@ -35,10 +36,12 @@ func NewDeliverOrderEvent(
 	if delivered && reason != "" {
 		return DeliverOrderEvent{}, fmt.Errorf("%w: got=%q", ErrReasonMustBeEmpty, reason)
 	}
+
 	if !delivered {
 		if reason == "" {
 			return DeliverOrderEvent{}, fmt.Errorf("%w", ErrReasonRequired)
 		}
+
 		if _, ok := validNotDeliveredReasons[reason]; !ok {
 			return DeliverOrderEvent{}, fmt.Errorf("%w: got=%q", ErrInvalidReason, reason)
 		}

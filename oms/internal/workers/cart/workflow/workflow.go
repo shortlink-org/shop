@@ -50,88 +50,114 @@ func Workflow(ctx workflow.Context, customerID uuid.UUID) error {
 	removeChannel := workflow.GetSignalChannel(ctx, v2.Event_EVENT_REMOVE.String())
 	resetChannel := workflow.GetSignalChannel(ctx, v2.Event_EVENT_RESET.String())
 
-	// Cart session timeout (e.g., 24 hours)
-	sessionTimeout := workflow.NewTimerWithOptions(ctx, 24*time.Hour, workflow.TimerOptions{ //nolint:mnd
-		Summary: "Cart session TTL - auto-reset after 24 hours of inactivity",
-	})
+	var (
+		sessionTimeout       workflow.Future
+		sessionTimeoutCtx    workflow.Context
+		cancelSessionTimeout workflow.CancelFunc
+	)
 
-	selector := workflow.NewSelector(ctx)
-
-	// Handle add item signal
-	selector.AddReceive(addChannel, func(c workflow.ReceiveChannel, _ bool) {
-		var req activities.AddItemRequest
-		c.Receive(ctx, &req)
-
-		logger.Info("Adding item to cart via activity", "customerID", customerID, "goodID", req.GoodID)
-
-		addItemCtx := workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
-			StartToCloseTimeout: 10 * time.Second, //nolint:mnd
-			Summary:             "Add item to cart",
-			RetryPolicy:         ao.RetryPolicy,
-		})
-
-		err := workflow.ExecuteActivity(addItemCtx, "AddItem", req).Get(ctx, nil)
-		if err != nil {
-			logger.Error("Failed to add item", "error", err)
+	resetSessionTimeout := func() {
+		if cancelSessionTimeout != nil {
+			cancelSessionTimeout()
 		}
-	})
 
-	// Handle remove item signal
-	selector.AddReceive(removeChannel, func(c workflow.ReceiveChannel, _ bool) {
-		var req activities.RemoveItemRequest
-		c.Receive(ctx, &req)
-
-		logger.Info("Removing item from cart via activity", "customerID", customerID, "goodID", req.GoodID)
-
-		removeItemCtx := workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
-			StartToCloseTimeout: 10 * time.Second, //nolint:mnd
-			Summary:             "Remove item from cart",
-			RetryPolicy:         ao.RetryPolicy,
+		sessionTimeoutCtx, cancelSessionTimeout = workflow.WithCancel(ctx)
+		sessionTimeout = workflow.NewTimerWithOptions(sessionTimeoutCtx, 24*time.Hour, workflow.TimerOptions{ //nolint:mnd
+			Summary: "Cart session TTL - auto-reset after 24 hours of inactivity",
 		})
+	}
 
-		err := workflow.ExecuteActivity(removeItemCtx, "RemoveItem", req).Get(ctx, nil)
-		if err != nil {
-			logger.Error("Failed to remove item", "error", err)
-		}
-	})
-
-	// Handle reset signal
-	selector.AddReceive(resetChannel, func(c workflow.ReceiveChannel, _ bool) {
-		c.Receive(ctx, nil)
-
-		logger.Info("Resetting cart via activity", "customerID", customerID)
-
-		resetCartCtx := workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
-			StartToCloseTimeout: 10 * time.Second,
-			Summary:             "Reset cart (clear all items)",
-			RetryPolicy:         ao.RetryPolicy,
-		})
-
-		err := workflow.ExecuteActivity(resetCartCtx, "ResetCart", activities.ResetCartRequest{
-			CustomerID: customerID,
-		}).Get(ctx, nil)
-		if err != nil {
-			logger.Error("Failed to reset cart", "error", err)
-		}
-	})
-
-	// Handle session timeout
-	selector.AddFuture(sessionTimeout, func(f workflow.Future) {
-		logger.Info("Cart session timed out, resetting cart", "customerID", customerID)
-
-		timeoutResetCtx := workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
-			StartToCloseTimeout: 10 * time.Second,
-			Summary:             "Reset cart after session timeout",
-			RetryPolicy:         ao.RetryPolicy,
-		})
-		//nolint:errcheck // best-effort reset on timeout, ignore activity result
-		_ = workflow.ExecuteActivity(timeoutResetCtx, "ResetCart", activities.ResetCartRequest{
-			CustomerID: customerID,
-		}).Get(ctx, nil)
-	})
+	resetSessionTimeout()
 
 	// Process signals until timeout
 	for {
+		selector := workflow.NewSelector(ctx)
+
+		// Handle add item signal.
+		selector.AddReceive(addChannel, func(c workflow.ReceiveChannel, _ bool) {
+			var req activities.AddItemRequest
+			c.Receive(ctx, &req)
+
+			logger.Info("Adding item to cart via activity", "customerID", customerID, "goodID", req.GoodID)
+
+			addItemCtx := workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+				StartToCloseTimeout: 10 * time.Second, //nolint:mnd
+				Summary:             "Add item to cart",
+				RetryPolicy:         ao.RetryPolicy,
+			})
+
+			err := workflow.ExecuteActivity(addItemCtx, "AddItem", req).Get(ctx, nil)
+			if err != nil {
+				logger.Error("Failed to add item", "error", err)
+			}
+
+			resetSessionTimeout()
+		})
+
+		// Handle remove item signal.
+		selector.AddReceive(removeChannel, func(c workflow.ReceiveChannel, _ bool) {
+			var req activities.RemoveItemRequest
+			c.Receive(ctx, &req)
+
+			logger.Info("Removing item from cart via activity", "customerID", customerID, "goodID", req.GoodID)
+
+			removeItemCtx := workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+				StartToCloseTimeout: 10 * time.Second, //nolint:mnd
+				Summary:             "Remove item from cart",
+				RetryPolicy:         ao.RetryPolicy,
+			})
+
+			err := workflow.ExecuteActivity(removeItemCtx, "RemoveItem", req).Get(ctx, nil)
+			if err != nil {
+				logger.Error("Failed to remove item", "error", err)
+			}
+
+			resetSessionTimeout()
+		})
+
+		// Handle reset signal.
+		selector.AddReceive(resetChannel, func(c workflow.ReceiveChannel, _ bool) {
+			c.Receive(ctx, nil)
+
+			logger.Info("Resetting cart via activity", "customerID", customerID)
+
+			resetCartCtx := workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+				StartToCloseTimeout: 10 * time.Second,
+				Summary:             "Reset cart (clear all items)",
+				RetryPolicy:         ao.RetryPolicy,
+			})
+
+			err := workflow.ExecuteActivity(resetCartCtx, "ResetCart", activities.ResetCartRequest{
+				CustomerID: customerID,
+			}).Get(ctx, nil)
+			if err != nil {
+				logger.Error("Failed to reset cart", "error", err)
+			}
+
+			resetSessionTimeout()
+		})
+
+		// Handle session timeout.
+		selector.AddFuture(sessionTimeout, func(f workflow.Future) {
+			if err := f.Get(ctx, nil); err != nil {
+				return
+			}
+
+			logger.Info("Cart session timed out, resetting cart", "customerID", customerID)
+
+			timeoutResetCtx := workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+				StartToCloseTimeout: 10 * time.Second,
+				Summary:             "Reset cart after session timeout",
+				RetryPolicy:         ao.RetryPolicy,
+			})
+			//nolint:errcheck // best-effort reset on timeout, ignore activity result
+			_ = workflow.ExecuteActivity(timeoutResetCtx, "ResetCart", activities.ResetCartRequest{
+				CustomerID: customerID,
+			}).Get(ctx, nil)
+
+			resetSessionTimeout()
+		})
+
 		selector.Select(ctx)
 	}
 }

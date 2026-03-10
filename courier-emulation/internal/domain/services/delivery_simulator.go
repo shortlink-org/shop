@@ -143,7 +143,7 @@ func (ds *DeliverySimulator) StartDelivery(ctx context.Context, courierID string
 // when from == to (e.g. start at pickup, route "to pickup" in tests without OSRM).
 const (
 	minRouteDistanceMeters = 1.0
-	minRouteDuration      = time.Second
+	minRouteDuration       = time.Second
 )
 
 // createMinimalRoute creates a minimal route between two points.
@@ -151,14 +151,13 @@ func (ds *DeliverySimulator) createMinimalRoute(from, to vo.Location) (vo.Route,
 	// Create a simple polyline with just two points
 	polyline := vo.MustNewPolyline(encodePolyline([]vo.Location{from, to}))
 	distanceKm := from.DistanceTo(to)
+
 	distanceMeters := distanceKm * 1000
 	if distanceMeters < minRouteDistanceMeters {
 		distanceMeters = minRouteDistanceMeters
 	}
-	duration := time.Duration(distanceKm/ds.config.SpeedKmH*3600) * time.Second
-	if duration < minRouteDuration {
-		duration = minRouteDuration
-	}
+
+	duration := max(time.Duration(distanceKm/ds.config.SpeedKmH*3600)*time.Second, minRouteDuration)
 
 	route, err := vo.NewRoute(
 		fmt.Sprintf("minimal_%d", time.Now().UnixNano()),
@@ -186,6 +185,7 @@ func encodePolyline(points []vo.Location) string {
 	prevLat, prevLon := int64(0), int64(0)
 
 	var resultSb170 strings.Builder
+
 	for _, p := range points {
 		lat := int64(p.Latitude() * 1e5)
 		lon := int64(p.Longitude() * 1e5)
@@ -195,6 +195,7 @@ func encodePolyline(points []vo.Location) string {
 
 		prevLat, prevLon = lat, lon
 	}
+
 	result += resultSb170.String()
 
 	return result
@@ -208,11 +209,13 @@ func encodeNumber(num int64) string {
 	}
 
 	result := ""
+
 	var resultSb191 strings.Builder
 	for num >= 0x20 {
-		resultSb191.WriteString(string(rune((0x20 | (num & 0x1f)) + 63)))
+		resultSb191.WriteRune(rune((0x20 | (num & 0x1f)) + 63))
 		num >>= 5
 	}
+
 	result += resultSb191.String()
 
 	result += string(rune(num + 63))
@@ -416,6 +419,7 @@ func (ds *DeliverySimulator) transitionPhase(ctx context.Context, courierID stri
 		// Publish pickup event
 		if ds.statusPub != nil && order != nil {
 			pickupEvent := kafka.NewPickUpOrderEvent(courierID, *order, state.CurrentLocation)
+
 			err := ds.statusPub.PublishPickUp(ctx, pickupEvent)
 			if err != nil {
 				return false, fmt.Errorf("failed to publish pickup event: %w", err)
@@ -468,6 +472,7 @@ func (ds *DeliverySimulator) transitionPhase(ctx context.Context, courierID stri
 
 		// Determine if delivery was successful (based on failure rate)
 		delivered := ds.rng.Float64() >= ds.config.FailureRate
+
 		var reason kafka.NotDeliveredReason
 
 		if !delivered {
@@ -486,6 +491,7 @@ func (ds *DeliverySimulator) transitionPhase(ctx context.Context, courierID stri
 			if err != nil {
 				return false, fmt.Errorf("build delivery event: %w", err)
 			}
+
 			err = ds.statusPub.PublishDelivery(ctx, deliverEvent)
 			if err != nil {
 				return false, fmt.Errorf("failed to publish delivery event: %w", err)

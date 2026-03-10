@@ -2,11 +2,13 @@ package cart_workflow
 
 import (
 	"context"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"go.temporal.io/sdk/testsuite"
 
@@ -131,12 +133,65 @@ func (s *CartWorkflowTestSuite) Test_Workflow_ResetSignal() {
 // Test_Workflow_SessionTimeout tests the 24-hour session timeout.
 // Uses time skipping to avoid waiting the full 24 hours.
 func (s *CartWorkflowTestSuite) Test_Workflow_SessionTimeout() {
-	// Wait for timeout (24 hours) - time skipping makes this instant
+	var resetCalls atomic.Int32
+
+	s.env.OnActivity("ResetCart", mock.Anything, activities.ResetCartRequest{
+		CustomerID: testCustomerID,
+	}).Return(func(_ context.Context, _ activities.ResetCartRequest) error {
+		resetCalls.Add(1)
+		return nil
+	}).Once()
+
+	// Wait for timeout (24 hours) - time skipping makes this instant.
 	s.env.RegisterDelayedCallback(func() {
-		// After 24 hours + a bit, the timer should have fired
-		// and ResetCart should have been called
+		s.EqualValues(1, resetCalls.Load())
 		s.env.CancelWorkflow()
 	}, 24*time.Hour+time.Millisecond*100)
+
+	s.env.ExecuteWorkflow(Workflow, testCustomerID)
+
+	s.True(s.env.IsWorkflowCompleted())
+	s.EqualValues(1, resetCalls.Load())
+}
+
+// Test_Workflow_SessionTimeoutResetsAfterActivity verifies timeout is based on inactivity, not workflow start time.
+func (s *CartWorkflowTestSuite) Test_Workflow_SessionTimeoutResetsAfterActivity() {
+	var resetCalled atomic.Bool
+
+	addReq := activities.AddItemRequest{
+		CustomerID: testCustomerID,
+		GoodID:     testGoodID,
+		Quantity:   1,
+		Price:      decimal.NewFromFloat(9.99),
+		Discount:   decimal.Zero,
+	}
+
+	s.env.OnActivity("AddItem", mock.Anything, mock.MatchedBy(func(req activities.AddItemRequest) bool {
+		return req.CustomerID == addReq.CustomerID &&
+			req.GoodID == addReq.GoodID &&
+			req.Quantity == addReq.Quantity &&
+			req.Price.Equal(addReq.Price) &&
+			req.Discount.Equal(addReq.Discount)
+	})).Return(nil).Once()
+	s.env.OnActivity("ResetCart", mock.Anything, activities.ResetCartRequest{
+		CustomerID: testCustomerID,
+	}).Return(func(_ context.Context, _ activities.ResetCartRequest) error {
+		resetCalled.Store(true)
+		return nil
+	}).Once()
+
+	s.env.RegisterDelayedCallback(func() {
+		s.env.SignalWorkflow(v2.Event_EVENT_ADD.String(), addReq)
+	}, 23*time.Hour)
+
+	s.env.RegisterDelayedCallback(func() {
+		s.False(resetCalled.Load())
+	}, 24*time.Hour+time.Millisecond*100)
+
+	s.env.RegisterDelayedCallback(func() {
+		s.True(resetCalled.Load())
+		s.env.CancelWorkflow()
+	}, 47*time.Hour+time.Millisecond*100)
 
 	s.env.ExecuteWorkflow(Workflow, testCustomerID)
 

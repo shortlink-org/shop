@@ -81,11 +81,6 @@ func (p *LocationPublisher) Close() error {
 }
 
 // StatusPublisher defines the interface for publishing delivery status events.
-type StatusPublisher interface {
-	PublishPickUp(ctx context.Context, event PickUpOrderEvent) error
-	PublishDelivery(ctx context.Context, event DeliverOrderEvent) error
-	Close() error
-}
 
 // KafkaStatusPublisher publishes delivery status events to Kafka.
 type KafkaStatusPublisher struct {

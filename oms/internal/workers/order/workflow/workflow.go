@@ -90,12 +90,16 @@ func WorkflowWithDelivery(ctx workflow.Context, input WorkflowInput) error {
 	cancelChannel := workflow.GetSignalChannel(ctx, v2.WorkflowSignalCancel)
 	completeChannel := workflow.GetSignalChannel(ctx, v2.WorkflowSignalComplete)
 
-	// Create a cancellable context for the saga
-	sagaCtx, cancelSaga := workflow.WithCancel(ctx)
-
-	// Run saga in a goroutine so we can handle signals
+	// Run saga in a goroutine so we can handle signals.
+	// The cancellable context must be created inside the coroutine that blocks on it.
 	sagaDone := workflow.NewChannel(ctx)
+	sagaReady := workflow.NewChannel(ctx)
+	var cancelSaga workflow.CancelFunc
 	workflow.Go(ctx, func(ctx workflow.Context) {
+		sagaCtx, cancel := workflow.WithCancel(ctx)
+		cancelSaga = cancel
+		sagaReady.Send(ctx, struct{}{})
+
 		sagaErr := executeSagaWithDelivery(sagaCtx, input)
 		if sagaErr != nil {
 			orderStatus = "FAILED"
@@ -106,6 +110,7 @@ func WorkflowWithDelivery(ctx workflow.Context, input WorkflowInput) error {
 
 		sagaDone.Send(ctx, sagaErr)
 	})
+	sagaReady.Receive(ctx, nil)
 
 	// Wait for saga completion or signals
 	selector := workflow.NewSelector(ctx)

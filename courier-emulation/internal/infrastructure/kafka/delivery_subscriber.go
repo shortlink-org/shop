@@ -140,6 +140,7 @@ func (s *DeliverySubscriber) processMessages(ctx context.Context, messages <-cha
 			}
 
 			var event OrderAssignedEvent
+
 			err := json.Unmarshal(msg.Payload, &event)
 			if err != nil {
 				s.logger.Error("Failed to unmarshal order assigned event", err, nil)
@@ -164,6 +165,7 @@ func (s *DeliverySubscriber) processMessages(ctx context.Context, messages <-cha
 // Stop stops the subscriber.
 func (s *DeliverySubscriber) Stop() error {
 	close(s.stopCh)
+
 	err := s.subscriber.Close()
 	if err != nil {
 		return fmt.Errorf("subscriber close: %w", err)
