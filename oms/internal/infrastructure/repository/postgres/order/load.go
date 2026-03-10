@@ -3,10 +3,13 @@ package postgres
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 
+	"github.com/shortlink-org/shop/oms/internal/domain"
 	order "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order/dto"
@@ -20,6 +23,7 @@ func cloneOrderDeliveryInfo(info *order.DeliveryInfo) *order.DeliveryInfo {
 	}
 
 	var recipientContacts *order.RecipientContacts
+
 	if rc := info.GetRecipientContacts(); rc != nil {
 		clone := order.NewRecipientContacts(rc.GetName(), rc.GetPhone(), rc.GetEmail())
 		recipientContacts = &clone
@@ -41,6 +45,16 @@ func cloneOrderDeliveryInfo(info *order.DeliveryInfo) *order.DeliveryInfo {
 	return &cloned
 }
 
+func cloneTimePointer(value *time.Time) *time.Time {
+	if value == nil {
+		return nil
+	}
+
+	cloned := *value
+
+	return &cloned
+}
+
 func cloneOrderState(state *order.OrderState) *order.OrderState {
 	if state == nil {
 		return nil
@@ -53,7 +67,34 @@ func cloneOrderState(state *order.OrderState) *order.OrderState {
 		state.GetStatus(),
 		state.GetVersion(),
 		cloneOrderDeliveryInfo(state.GetDeliveryInfo()),
+		state.GetDeliveryStatus(),
+		cloneTimePointer(state.GetDeliveryRequestedAt()),
 	)
+}
+
+func (s *Store) loadOrderAggregate(ctx context.Context, qtx *queries.Queries, row queries.OmsOrder) (*order.OrderState, error) {
+	items, err := qtx.GetOrderItems(ctx, row.ID)
+	if err != nil {
+		return nil, domain.WrapUnavailable("GetOrderItems", err)
+	}
+
+	var deliveryInfoRow *queries.GetOrderDeliveryInfoRow
+
+	deliveryRow, err := qtx.GetOrderDeliveryInfo(ctx, row.ID)
+	if err != nil {
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.WrapUnavailable("GetOrderDeliveryInfo", err)
+		}
+	} else {
+		deliveryInfoRow = &deliveryRow
+	}
+
+	result := (&dto.OrderRow{Order: row, Items: items, Delivery: deliveryInfoRow}).ToDomain()
+
+	cost := int64(200 + len(items)*50) //nolint:mnd // ristretto cost formula
+	s.cache.SetWithTTL(row.ID.String(), cloneOrderState(result), cost, cacheTTL)
+
+	return result, nil
 }
 
 // Load retrieves an order by ID.
@@ -81,35 +122,31 @@ func (s *Store) Load(ctx context.Context, orderID uuid.UUID) (*order.OrderState,
 			return nil, ports.ErrNotFound
 		}
 
-		return nil, err
+		return nil, domain.WrapUnavailable("GetOrder", err)
 	}
 
-	// Get order items
-	items, err := qtx.GetOrderItems(ctx, orderID)
-	if err != nil {
-		return nil, err
+	return s.loadOrderAggregate(ctx, qtx, row)
+}
+
+// LoadByPackageID retrieves an order by delivery package ID.
+// Requires transaction in context (use UnitOfWork.Begin()).
+func (s *Store) LoadByPackageID(ctx context.Context, packageID uuid.UUID) (*order.OrderState, error) {
+	pgxTx := uow.FromContext(ctx)
+	if pgxTx == nil {
+		return nil, ErrTransactionRequired
 	}
 
-	// Get delivery info (optional)
-	var deliveryInfoRow *queries.OmsOrderDeliveryInfo
-
-	deliveryRow, err := qtx.GetOrderDeliveryInfo(ctx, orderID)
+	qtx := s.query.WithTx(pgxTx)
+	row, err := qtx.GetOrderByPackageID(ctx, pgtype.UUID{Bytes: packageID, Valid: true})
 	if err != nil {
-		if !errors.Is(err, pgx.ErrNoRows) {
-			return nil, err
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ports.ErrNotFound
 		}
-		// No delivery info - that's OK (self-pickup)
-	} else {
-		deliveryInfoRow = &deliveryRow
+
+		return nil, domain.WrapUnavailable("GetOrderByPackageID", err)
 	}
 
-	result := (&dto.OrderRow{Order: row, Items: items, Delivery: deliveryInfoRow}).ToDomain()
-
-	// Store in L1 cache: cost = base + items * per-item cost
-	cost := int64(200 + len(items)*50)
-	s.cache.SetWithTTL(cacheKey, cloneOrderState(result), cost, cacheTTL)
-
-	return result, nil
+	return s.loadOrderAggregate(ctx, qtx, row)
 }
 
 // ListByCustomer retrieves all orders for a customer.
@@ -124,7 +161,7 @@ func (s *Store) ListByCustomer(ctx context.Context, customerID uuid.UUID) ([]*or
 
 	rows, err := qtx.ListOrdersByCustomer(ctx, customerID)
 	if err != nil {
-		return nil, err
+		return nil, domain.WrapUnavailable("ListOrdersByCustomer", err)
 	}
 
 	orders := make([]*order.OrderState, 0, len(rows))
@@ -132,16 +169,16 @@ func (s *Store) ListByCustomer(ctx context.Context, customerID uuid.UUID) ([]*or
 		// Get items for each order
 		items, err := qtx.GetOrderItems(ctx, row.ID)
 		if err != nil {
-			return nil, err
+			return nil, domain.WrapUnavailable("GetOrderItems", err)
 		}
 
 		// Get delivery info (optional)
-		var deliveryInfoRow *queries.OmsOrderDeliveryInfo
+		var deliveryInfoRow *queries.GetOrderDeliveryInfoRow
 
 		deliveryRow, err := qtx.GetOrderDeliveryInfo(ctx, row.ID)
 		if err != nil {
 			if !errors.Is(err, pgx.ErrNoRows) {
-				return nil, err
+				return nil, domain.WrapUnavailable("GetOrderDeliveryInfo", err)
 			}
 		} else {
 			deliveryInfoRow = &deliveryRow

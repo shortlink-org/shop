@@ -4,6 +4,7 @@ package testhelpers
 
 import (
 	"context"
+	"os/exec"
 	"testing"
 	"time"
 
@@ -24,6 +25,7 @@ type PostgresContainer struct {
 // It returns a PostgresContainer with an active connection pool and a cleanup function.
 func SetupPostgresContainer(t *testing.T) *PostgresContainer {
 	t.Helper()
+	skipIfDockerUnavailable(t)
 
 	ctx := context.Background()
 
@@ -78,6 +80,17 @@ func SetupPostgresContainer(t *testing.T) *PostgresContainer {
 	})
 
 	return pc
+}
+
+func skipIfDockerUnavailable(t *testing.T) {
+	t.Helper()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := exec.CommandContext(ctx, "docker", "info").Run(); err != nil {
+		t.Skipf("docker daemon is not available for integration tests: %v", err)
+	}
 }
 
 // RunMigrations executes the provided SQL migration statements.

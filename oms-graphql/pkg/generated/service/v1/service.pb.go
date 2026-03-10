@@ -9,6 +9,7 @@ package v1
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 	reflect "reflect"
 	sync "sync"
@@ -1823,13 +1824,16 @@ func (x *DeliveryInfo) GetRecipientContacts() *RecipientContacts {
 }
 
 type OrderState struct {
-	state         protoimpl.MessageState  `protogen:"open.v1"`
-	Id            *wrapperspb.StringValue `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Items         *ListOfOrderItem        `protobuf:"bytes,2,opt,name=items,proto3" json:"items,omitempty"`
-	Status        *wrapperspb.StringValue `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
-	DeliveryInfo  *DeliveryInfo           `protobuf:"bytes,4,opt,name=delivery_info,json=deliveryInfo,proto3" json:"delivery_info,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState  `protogen:"open.v1"`
+	Id             *wrapperspb.StringValue `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Items          *ListOfOrderItem        `protobuf:"bytes,2,opt,name=items,proto3" json:"items,omitempty"`
+	Status         *wrapperspb.StringValue `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
+	DeliveryInfo   *DeliveryInfo           `protobuf:"bytes,4,opt,name=delivery_info,json=deliveryInfo,proto3" json:"delivery_info,omitempty"`
+	DeliveryStatus *wrapperspb.StringValue `protobuf:"bytes,5,opt,name=delivery_status,json=deliveryStatus,proto3" json:"delivery_status,omitempty"`
+	PackageId      *wrapperspb.StringValue `protobuf:"bytes,6,opt,name=package_id,json=packageId,proto3" json:"package_id,omitempty"`
+	RequestedAt    *timestamppb.Timestamp  `protobuf:"bytes,7,opt,name=requested_at,json=requestedAt,proto3" json:"requested_at,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *OrderState) Reset() {
@@ -1886,6 +1890,27 @@ func (x *OrderState) GetStatus() *wrapperspb.StringValue {
 func (x *OrderState) GetDeliveryInfo() *DeliveryInfo {
 	if x != nil {
 		return x.DeliveryInfo
+	}
+	return nil
+}
+
+func (x *OrderState) GetDeliveryStatus() *wrapperspb.StringValue {
+	if x != nil {
+		return x.DeliveryStatus
+	}
+	return nil
+}
+
+func (x *OrderState) GetPackageId() *wrapperspb.StringValue {
+	if x != nil {
+		return x.PackageId
+	}
+	return nil
+}
+
+func (x *OrderState) GetRequestedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.RequestedAt
 	}
 	return nil
 }
@@ -2374,7 +2399,7 @@ var File_service_v1_service_proto protoreflect.FileDescriptor
 
 const file_service_v1_service_proto_rawDesc = "" +
 	"\n" +
-	"\x18service/v1/service.proto\x12\rshop.carts.v1\x1a\x1egoogle/protobuf/wrappers.proto\"\x7f\n" +
+	"\x18service/v1/service.proto\x12\rshop.carts.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/wrappers.proto\"\x7f\n" +
 	"\x0eListOfCartItem\x126\n" +
 	"\x04list\x18\x01 \x01(\v2\".shop.carts.v1.ListOfCartItem.ListR\x04list\x1a5\n" +
 	"\x04List\x12-\n" +
@@ -2478,13 +2503,17 @@ const file_service_v1_service_proto_rawDesc = "" +
 	"\x0fdelivery_period\x18\x03 \x01(\v2\x1d.shop.carts.v1.DeliveryPeriodR\x0edeliveryPeriod\x12=\n" +
 	"\fpackage_info\x18\x04 \x01(\v2\x1a.shop.carts.v1.PackageInfoR\vpackageInfo\x128\n" +
 	"\bpriority\x18\x05 \x01(\v2\x1c.google.protobuf.StringValueR\bpriority\x12O\n" +
-	"\x12recipient_contacts\x18\x06 \x01(\v2 .shop.carts.v1.RecipientContactsR\x11recipientContacts\"\xe8\x01\n" +
+	"\x12recipient_contacts\x18\x06 \x01(\v2 .shop.carts.v1.RecipientContactsR\x11recipientContacts\"\xab\x03\n" +
 	"\n" +
 	"OrderState\x12,\n" +
 	"\x02id\x18\x01 \x01(\v2\x1c.google.protobuf.StringValueR\x02id\x124\n" +
 	"\x05items\x18\x02 \x01(\v2\x1e.shop.carts.v1.ListOfOrderItemR\x05items\x124\n" +
 	"\x06status\x18\x03 \x01(\v2\x1c.google.protobuf.StringValueR\x06status\x12@\n" +
-	"\rdelivery_info\x18\x04 \x01(\v2\x1b.shop.carts.v1.DeliveryInfoR\fdeliveryInfo\"\x91\x02\n" +
+	"\rdelivery_info\x18\x04 \x01(\v2\x1b.shop.carts.v1.DeliveryInfoR\fdeliveryInfo\x12E\n" +
+	"\x0fdelivery_status\x18\x05 \x01(\v2\x1c.google.protobuf.StringValueR\x0edeliveryStatus\x12;\n" +
+	"\n" +
+	"package_id\x18\x06 \x01(\v2\x1c.google.protobuf.StringValueR\tpackageId\x12=\n" +
+	"\frequested_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\vrequestedAt\"\x91\x02\n" +
 	"\x14DeliveryAddressInput\x12\x16\n" +
 	"\x06street\x18\x01 \x01(\tR\x06street\x12\x12\n" +
 	"\x04city\x18\x02 \x01(\tR\x04city\x12=\n" +
@@ -2592,6 +2621,7 @@ var file_service_v1_service_proto_goTypes = []any{
 	(*wrapperspb.StringValue)(nil),             // 47: google.protobuf.StringValue
 	(*wrapperspb.Int32Value)(nil),              // 48: google.protobuf.Int32Value
 	(*wrapperspb.DoubleValue)(nil),             // 49: google.protobuf.DoubleValue
+	(*timestamppb.Timestamp)(nil),              // 50: google.protobuf.Timestamp
 }
 var file_service_v1_service_proto_depIdxs = []int32{
 	44, // 0: shop.carts.v1.ListOfCartItem.list:type_name -> shop.carts.v1.ListOfCartItem.List
@@ -2649,43 +2679,46 @@ var file_service_v1_service_proto_depIdxs = []int32{
 	1,  // 52: shop.carts.v1.OrderState.items:type_name -> shop.carts.v1.ListOfOrderItem
 	47, // 53: shop.carts.v1.OrderState.status:type_name -> google.protobuf.StringValue
 	36, // 54: shop.carts.v1.OrderState.delivery_info:type_name -> shop.carts.v1.DeliveryInfo
-	47, // 55: shop.carts.v1.DeliveryAddressInput.postal_code:type_name -> google.protobuf.StringValue
-	49, // 56: shop.carts.v1.DeliveryAddressInput.latitude:type_name -> google.protobuf.DoubleValue
-	49, // 57: shop.carts.v1.DeliveryAddressInput.longitude:type_name -> google.protobuf.DoubleValue
-	47, // 58: shop.carts.v1.RecipientContactsInput.recipient_name:type_name -> google.protobuf.StringValue
-	47, // 59: shop.carts.v1.RecipientContactsInput.recipient_phone:type_name -> google.protobuf.StringValue
-	47, // 60: shop.carts.v1.RecipientContactsInput.recipient_email:type_name -> google.protobuf.StringValue
-	38, // 61: shop.carts.v1.DeliveryInfoInput.pickup_address:type_name -> shop.carts.v1.DeliveryAddressInput
-	38, // 62: shop.carts.v1.DeliveryInfoInput.delivery_address:type_name -> shop.carts.v1.DeliveryAddressInput
-	39, // 63: shop.carts.v1.DeliveryInfoInput.delivery_period:type_name -> shop.carts.v1.DeliveryPeriodInput
-	40, // 64: shop.carts.v1.DeliveryInfoInput.package_info:type_name -> shop.carts.v1.PackageInfoInput
-	47, // 65: shop.carts.v1.DeliveryInfoInput.priority:type_name -> google.protobuf.StringValue
-	41, // 66: shop.carts.v1.DeliveryInfoInput.recipient_contacts:type_name -> shop.carts.v1.RecipientContactsInput
-	28, // 67: shop.carts.v1.ListOfCartItem.List.items:type_name -> shop.carts.v1.CartItem
-	31, // 68: shop.carts.v1.ListOfOrderItem.List.items:type_name -> shop.carts.v1.OrderItem
-	6,  // 69: shop.carts.v1.Shop.MutationAddItem:input_type -> shop.carts.v1.MutationAddItemRequest
-	14, // 70: shop.carts.v1.Shop.MutationCancelOrder:input_type -> shop.carts.v1.MutationCancelOrderRequest
-	18, // 71: shop.carts.v1.Shop.MutationCheckout:input_type -> shop.carts.v1.MutationCheckoutRequest
-	12, // 72: shop.carts.v1.Shop.MutationCreateOrder:input_type -> shop.carts.v1.MutationCreateOrderRequest
-	8,  // 73: shop.carts.v1.Shop.MutationRemoveItem:input_type -> shop.carts.v1.MutationRemoveItemRequest
-	10, // 74: shop.carts.v1.Shop.MutationResetCart:input_type -> shop.carts.v1.MutationResetCartRequest
-	16, // 75: shop.carts.v1.Shop.MutationUpdateDeliveryInfo:input_type -> shop.carts.v1.MutationUpdateDeliveryInfoRequest
-	2,  // 76: shop.carts.v1.Shop.QueryGetCart:input_type -> shop.carts.v1.QueryGetCartRequest
-	4,  // 77: shop.carts.v1.Shop.QueryGetOrder:input_type -> shop.carts.v1.QueryGetOrderRequest
-	7,  // 78: shop.carts.v1.Shop.MutationAddItem:output_type -> shop.carts.v1.MutationAddItemResponse
-	15, // 79: shop.carts.v1.Shop.MutationCancelOrder:output_type -> shop.carts.v1.MutationCancelOrderResponse
-	19, // 80: shop.carts.v1.Shop.MutationCheckout:output_type -> shop.carts.v1.MutationCheckoutResponse
-	13, // 81: shop.carts.v1.Shop.MutationCreateOrder:output_type -> shop.carts.v1.MutationCreateOrderResponse
-	9,  // 82: shop.carts.v1.Shop.MutationRemoveItem:output_type -> shop.carts.v1.MutationRemoveItemResponse
-	11, // 83: shop.carts.v1.Shop.MutationResetCart:output_type -> shop.carts.v1.MutationResetCartResponse
-	17, // 84: shop.carts.v1.Shop.MutationUpdateDeliveryInfo:output_type -> shop.carts.v1.MutationUpdateDeliveryInfoResponse
-	3,  // 85: shop.carts.v1.Shop.QueryGetCart:output_type -> shop.carts.v1.QueryGetCartResponse
-	5,  // 86: shop.carts.v1.Shop.QueryGetOrder:output_type -> shop.carts.v1.QueryGetOrderResponse
-	78, // [78:87] is the sub-list for method output_type
-	69, // [69:78] is the sub-list for method input_type
-	69, // [69:69] is the sub-list for extension type_name
-	69, // [69:69] is the sub-list for extension extendee
-	0,  // [0:69] is the sub-list for field type_name
+	47, // 55: shop.carts.v1.OrderState.delivery_status:type_name -> google.protobuf.StringValue
+	47, // 56: shop.carts.v1.OrderState.package_id:type_name -> google.protobuf.StringValue
+	50, // 57: shop.carts.v1.OrderState.requested_at:type_name -> google.protobuf.Timestamp
+	47, // 58: shop.carts.v1.DeliveryAddressInput.postal_code:type_name -> google.protobuf.StringValue
+	49, // 59: shop.carts.v1.DeliveryAddressInput.latitude:type_name -> google.protobuf.DoubleValue
+	49, // 60: shop.carts.v1.DeliveryAddressInput.longitude:type_name -> google.protobuf.DoubleValue
+	47, // 61: shop.carts.v1.RecipientContactsInput.recipient_name:type_name -> google.protobuf.StringValue
+	47, // 62: shop.carts.v1.RecipientContactsInput.recipient_phone:type_name -> google.protobuf.StringValue
+	47, // 63: shop.carts.v1.RecipientContactsInput.recipient_email:type_name -> google.protobuf.StringValue
+	38, // 64: shop.carts.v1.DeliveryInfoInput.pickup_address:type_name -> shop.carts.v1.DeliveryAddressInput
+	38, // 65: shop.carts.v1.DeliveryInfoInput.delivery_address:type_name -> shop.carts.v1.DeliveryAddressInput
+	39, // 66: shop.carts.v1.DeliveryInfoInput.delivery_period:type_name -> shop.carts.v1.DeliveryPeriodInput
+	40, // 67: shop.carts.v1.DeliveryInfoInput.package_info:type_name -> shop.carts.v1.PackageInfoInput
+	47, // 68: shop.carts.v1.DeliveryInfoInput.priority:type_name -> google.protobuf.StringValue
+	41, // 69: shop.carts.v1.DeliveryInfoInput.recipient_contacts:type_name -> shop.carts.v1.RecipientContactsInput
+	28, // 70: shop.carts.v1.ListOfCartItem.List.items:type_name -> shop.carts.v1.CartItem
+	31, // 71: shop.carts.v1.ListOfOrderItem.List.items:type_name -> shop.carts.v1.OrderItem
+	6,  // 72: shop.carts.v1.Shop.MutationAddItem:input_type -> shop.carts.v1.MutationAddItemRequest
+	14, // 73: shop.carts.v1.Shop.MutationCancelOrder:input_type -> shop.carts.v1.MutationCancelOrderRequest
+	18, // 74: shop.carts.v1.Shop.MutationCheckout:input_type -> shop.carts.v1.MutationCheckoutRequest
+	12, // 75: shop.carts.v1.Shop.MutationCreateOrder:input_type -> shop.carts.v1.MutationCreateOrderRequest
+	8,  // 76: shop.carts.v1.Shop.MutationRemoveItem:input_type -> shop.carts.v1.MutationRemoveItemRequest
+	10, // 77: shop.carts.v1.Shop.MutationResetCart:input_type -> shop.carts.v1.MutationResetCartRequest
+	16, // 78: shop.carts.v1.Shop.MutationUpdateDeliveryInfo:input_type -> shop.carts.v1.MutationUpdateDeliveryInfoRequest
+	2,  // 79: shop.carts.v1.Shop.QueryGetCart:input_type -> shop.carts.v1.QueryGetCartRequest
+	4,  // 80: shop.carts.v1.Shop.QueryGetOrder:input_type -> shop.carts.v1.QueryGetOrderRequest
+	7,  // 81: shop.carts.v1.Shop.MutationAddItem:output_type -> shop.carts.v1.MutationAddItemResponse
+	15, // 82: shop.carts.v1.Shop.MutationCancelOrder:output_type -> shop.carts.v1.MutationCancelOrderResponse
+	19, // 83: shop.carts.v1.Shop.MutationCheckout:output_type -> shop.carts.v1.MutationCheckoutResponse
+	13, // 84: shop.carts.v1.Shop.MutationCreateOrder:output_type -> shop.carts.v1.MutationCreateOrderResponse
+	9,  // 85: shop.carts.v1.Shop.MutationRemoveItem:output_type -> shop.carts.v1.MutationRemoveItemResponse
+	11, // 86: shop.carts.v1.Shop.MutationResetCart:output_type -> shop.carts.v1.MutationResetCartResponse
+	17, // 87: shop.carts.v1.Shop.MutationUpdateDeliveryInfo:output_type -> shop.carts.v1.MutationUpdateDeliveryInfoResponse
+	3,  // 88: shop.carts.v1.Shop.QueryGetCart:output_type -> shop.carts.v1.QueryGetCartResponse
+	5,  // 89: shop.carts.v1.Shop.QueryGetOrder:output_type -> shop.carts.v1.QueryGetOrderResponse
+	81, // [81:90] is the sub-list for method output_type
+	72, // [72:81] is the sub-list for method input_type
+	72, // [72:72] is the sub-list for extension type_name
+	72, // [72:72] is the sub-list for extension extendee
+	0,  // [0:72] is the sub-list for field type_name
 }
 
 func init() { file_service_v1_service_proto_init() }

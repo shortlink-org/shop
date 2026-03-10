@@ -25,6 +25,12 @@ message OrderState {
   google.protobuf.Timestamp updated_at = 6;
   // Delivery information (optional, nil = self-pickup)
   domain.order.common.v1.DeliveryInfo delivery_info = 7;
+  // Delivery lifecycle status from delivery Kafka events
+  domain.order.common.v1.DeliveryStatus delivery_status = 8;
+  // Package ID returned by Delivery service
+  string package_id = 9;
+  // Timestamp when OMS successfully requested delivery
+  google.protobuf.Timestamp requested_at = 10;
 }
 
 // Define the OrderItem message

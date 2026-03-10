@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	orderv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
+	commonv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common"
 	"github.com/shortlink-org/shop/oms/internal/domain/order/v1/vo/address"
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	"github.com/shortlink-org/shop/oms/internal/workers/order/activities/dto"
@@ -33,7 +34,14 @@ func TestAcceptOrderRequestFromOrder(t *testing.T) {
 	)
 
 	order := orderv1.NewOrderStateFromPersisted(
-		orderID, customerID, nil, orderv1.OrderStatus_ORDER_STATUS_PROCESSING, 0, &deliveryInfo,
+		orderID,
+		customerID,
+		nil,
+		orderv1.OrderStatus_ORDER_STATUS_PROCESSING,
+		0,
+		&deliveryInfo,
+		commonv1.DeliveryStatus_DELIVERY_STATUS_UNSPECIFIED,
+		nil,
 	)
 
 	req, err := dto.AcceptOrderRequestFromOrder(order)
@@ -62,7 +70,14 @@ func TestAcceptOrderRequestFromOrder_NoDeliveryInfo(t *testing.T) {
 	orderID := uuid.New()
 	customerID := uuid.New()
 	order := orderv1.NewOrderStateFromPersisted(
-		orderID, customerID, nil, orderv1.OrderStatus_ORDER_STATUS_PENDING, 0, nil,
+		orderID,
+		customerID,
+		nil,
+		orderv1.OrderStatus_ORDER_STATUS_PENDING,
+		0,
+		nil,
+		commonv1.DeliveryStatus_DELIVERY_STATUS_UNSPECIFIED,
+		nil,
 	)
 
 	_, err := dto.AcceptOrderRequestFromOrder(order)

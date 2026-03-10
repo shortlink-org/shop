@@ -10,6 +10,8 @@ import (
 // Re-export go-sdk/uow so OMS and cqrs share the same context key for pgx.Tx.
 
 // FromContext returns the pgx.Tx from ctx, or nil if not set.
+//
+//nolint:ireturn // returns interface by design (pgx.Tx)
 func FromContext(ctx context.Context) pgx.Tx {
 	return sdkuow.FromContext(ctx)
 }

@@ -15,8 +15,11 @@ import (
 //   - Only Load and Save operations (no business operations like Cancel/Complete)
 //   - UseCase orchestrates: Load -> domain method(s) -> Save
 //   - Domain aggregate contains behavior and invariants
+//
+//nolint:iface // port interface used by usecases and DI
 type OrderRepository interface {
 	Load(ctx context.Context, orderID uuid.UUID) (*order.OrderState, error)
+	LoadByPackageID(ctx context.Context, packageID uuid.UUID) (*order.OrderState, error)
 	Save(ctx context.Context, state *order.OrderState) error
 	List(ctx context.Context, filter ListFilter) ([]*order.OrderState, error)
 	ListByCustomer(ctx context.Context, customerID uuid.UUID) ([]*order.OrderState, error)

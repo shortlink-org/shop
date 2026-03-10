@@ -94,6 +94,8 @@ func (b *OrderStateBuilder) SetStatus(targetStatus OrderStatus) *OrderStateBuild
 
 // replayEventsToStatus replays the sequence of FSM events needed to transition from current to target status
 // Domain layer uses context.Background() internally for FSM, keeping domain pure
+//
+//nolint:funcorder // unexported helper used by Build
 func (b *OrderStateBuilder) replayEventsToStatus(currentStatus, targetStatus OrderStatus) error {
 	// Define the transition path
 	switch targetStatus {
@@ -106,11 +108,11 @@ func (b *OrderStateBuilder) replayEventsToStatus(currentStatus, targetStatus Ord
 			}
 		}
 
-	case OrderStatus_ORDER_STATUS_CANCELLED:
-		// PENDING/PROCESSING + CANCEL => CANCELLED
+	case OrderStatus_ORDER_STATUS_CANCELED:
+		// PENDING/PROCESSING + CANCEL => CANCELED
 		err := b.orderState.fsm.TriggerEvent(context.Background(), fsm.Event(commonv1.OrderTransitionEvent_ORDER_TRANSITION_EVENT_CANCEL.String()))
 		if err != nil {
-			return fmt.Errorf("failed to transition to CANCELLED: %w", err)
+			return fmt.Errorf("failed to transition to CANCELED: %w", err)
 		}
 
 	case OrderStatus_ORDER_STATUS_COMPLETED:

@@ -59,6 +59,8 @@ func NewHandler(
 
 // Handle executes the CreateOrderFromCart command.
 // Atomically creates an order from cart and clears cart.
+//
+//nolint:maintidx // orchestration flow; splitting would obscure transaction scope
 func (h *Handler) Handle(ctx context.Context, cmd Command) (Result, error) {
 	// 1. Begin transaction
 	ctx, err := h.uow.Begin(ctx)
@@ -66,7 +68,12 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (Result, error) {
 		return Result{}, fmt.Errorf("failed to begin transaction: %w", err)
 	}
 
+	committed := false
 	defer func() {
+		if committed {
+			return
+		}
+
 		rollbackErr := h.uow.Rollback(ctx)
 		if rollbackErr != nil {
 			h.log.Warn("rollback failed", slog.Any("error", rollbackErr))
@@ -115,6 +122,7 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (Result, error) {
 
 	// 7. Create order from lines (domain keeps invariants)
 	order := orderDomain.NewOrderState(cmd.CustomerID)
+
 	err = order.CreateFromLines(ctx, lines)
 	if err != nil {
 		return Result{}, fmt.Errorf("failed to create order: %w", err)
@@ -152,12 +160,13 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (Result, error) {
 		}
 	}
 
-	order.ClearDomainEvents()
-
 	// 13. Commit transaction
 	if err := h.uow.Commit(ctx); err != nil {
 		return Result{}, fmt.Errorf("failed to commit transaction: %w", err)
 	}
+	committed = true
+
+	order.ClearDomainEvents()
 
 	// 14. Build result with pricing info
 	return Result{

@@ -203,6 +203,65 @@ func (_c *MockOrderRepository_Load_Call) RunAndReturn(run func(context.Context, 
 	return _c
 }
 
+// LoadByPackageID provides a mock function with given fields: ctx, packageID
+func (_m *MockOrderRepository) LoadByPackageID(ctx context.Context, packageID uuid.UUID) (*v1.OrderState, error) {
+	ret := _m.Called(ctx, packageID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for LoadByPackageID")
+	}
+
+	var r0 *v1.OrderState
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) (*v1.OrderState, error)); ok {
+		return rf(ctx, packageID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) *v1.OrderState); ok {
+		r0 = rf(ctx, packageID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*v1.OrderState)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = rf(ctx, packageID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockOrderRepository_LoadByPackageID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'LoadByPackageID'
+type MockOrderRepository_LoadByPackageID_Call struct {
+	*mock.Call
+}
+
+// LoadByPackageID is a helper method to define mock.On call
+//   - ctx context.Context
+//   - packageID uuid.UUID
+func (_e *MockOrderRepository_Expecter) LoadByPackageID(ctx interface{}, packageID interface{}) *MockOrderRepository_LoadByPackageID_Call {
+	return &MockOrderRepository_LoadByPackageID_Call{Call: _e.mock.On("LoadByPackageID", ctx, packageID)}
+}
+
+func (_c *MockOrderRepository_LoadByPackageID_Call) Run(run func(ctx context.Context, packageID uuid.UUID)) *MockOrderRepository_LoadByPackageID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *MockOrderRepository_LoadByPackageID_Call) Return(_a0 *v1.OrderState, _a1 error) *MockOrderRepository_LoadByPackageID_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockOrderRepository_LoadByPackageID_Call) RunAndReturn(run func(context.Context, uuid.UUID) (*v1.OrderState, error)) *MockOrderRepository_LoadByPackageID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Save provides a mock function with given fields: ctx, state
 func (_m *MockOrderRepository) Save(ctx context.Context, state *v1.OrderState) error {
 	ret := _m.Called(ctx, state)

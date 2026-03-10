@@ -12,8 +12,19 @@ import (
 	orderv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	orderCancel "github.com/shortlink-org/shop/oms/internal/usecases/order/command/cancel"
+	orderRequestDelivery "github.com/shortlink-org/shop/oms/internal/usecases/order/command/request_delivery"
 	orderGet "github.com/shortlink-org/shop/oms/internal/usecases/order/query/get"
 )
+
+// mockRequestDeliveryHandler is a mock for RequestDelivery command (used in RequestDelivery activity).
+type mockRequestDeliveryHandler struct {
+	mock.Mock
+}
+
+func (m *mockRequestDeliveryHandler) Handle(ctx context.Context, cmd orderRequestDelivery.Command) error {
+	args := m.Called(ctx, cmd)
+	return args.Error(0)
+}
 
 // mockDeliveryClient is a mock for ports.DeliveryClient (used in RequestDelivery activity).
 type mockDeliveryClient struct {
@@ -22,11 +33,18 @@ type mockDeliveryClient struct {
 
 func (m *mockDeliveryClient) AcceptOrder(ctx context.Context, req ports.AcceptOrderRequest) (*ports.AcceptOrderResponse, error) {
 	args := m.Called(ctx, req)
+	err := args.Error(1)
+
 	if args.Get(0) == nil {
-		return nil, args.Error(1)
+		return nil, err
 	}
 
-	return args.Get(0).(*ports.AcceptOrderResponse), args.Error(1)
+	resp, ok := args.Get(0).(*ports.AcceptOrderResponse)
+	if !ok {
+		return nil, err
+	}
+
+	return resp, err
 }
 
 // mockCancelHandler is a mock implementation of CommandHandler for cancel command.
@@ -46,11 +64,18 @@ type mockGetHandler struct {
 
 func (m *mockGetHandler) Handle(ctx context.Context, query orderGet.Query) (orderGet.Result, error) {
 	args := m.Called(ctx, query)
+	err := args.Error(1)
+
 	if args.Get(0) == nil {
-		return nil, args.Error(1)
+		return nil, err
 	}
 
-	return args.Get(0).(*orderv1.OrderState), args.Error(1)
+	res, ok := args.Get(0).(*orderv1.OrderState)
+	if !ok {
+		return nil, err
+	}
+
+	return res, err
 }
 
 // Fixed UUIDs for consistent testing
@@ -64,7 +89,8 @@ func TestActivities_CancelOrder_Success(t *testing.T) {
 	getHandler := new(mockGetHandler)
 	deliveryClient := new(mockDeliveryClient)
 
-	activities := New(cancelHandler, getHandler, deliveryClient)
+	requestDeliveryHandler := new(mockRequestDeliveryHandler)
+	activities := New(cancelHandler, getHandler, requestDeliveryHandler, deliveryClient)
 
 	// Set up expectation
 	cancelHandler.On("Handle", mock.Anything, orderCancel.NewCommand(testOrderID)).Return(nil)
@@ -84,7 +110,8 @@ func TestActivities_CancelOrder_HandlerError(t *testing.T) {
 	getHandler := new(mockGetHandler)
 	deliveryClient := new(mockDeliveryClient)
 
-	activities := New(cancelHandler, getHandler, deliveryClient)
+	requestDeliveryHandler := new(mockRequestDeliveryHandler)
+	activities := New(cancelHandler, getHandler, requestDeliveryHandler, deliveryClient)
 
 	// Set up expectation with error
 	expectedErr := errors.New("order not found")
@@ -106,7 +133,8 @@ func TestActivities_GetOrder_Success(t *testing.T) {
 	getHandler := new(mockGetHandler)
 	deliveryClient := new(mockDeliveryClient)
 
-	activities := New(cancelHandler, getHandler, deliveryClient)
+	requestDeliveryHandler := new(mockRequestDeliveryHandler)
+	activities := New(cancelHandler, getHandler, requestDeliveryHandler, deliveryClient)
 
 	// Create expected order state
 	expectedOrder := orderv1.NewOrderState(testCustomerID)
@@ -132,7 +160,8 @@ func TestActivities_GetOrder_NotFound(t *testing.T) {
 	getHandler := new(mockGetHandler)
 	deliveryClient := new(mockDeliveryClient)
 
-	activities := New(cancelHandler, getHandler, deliveryClient)
+	requestDeliveryHandler := new(mockRequestDeliveryHandler)
+	activities := New(cancelHandler, getHandler, requestDeliveryHandler, deliveryClient)
 
 	// Set up expectation with error
 	expectedErr := errors.New("order not found")
@@ -155,7 +184,8 @@ func TestActivities_GetOrder_ContextCancelled(t *testing.T) {
 	getHandler := new(mockGetHandler)
 	deliveryClient := new(mockDeliveryClient)
 
-	activities := New(cancelHandler, getHandler, deliveryClient)
+	requestDeliveryHandler := new(mockRequestDeliveryHandler)
+	activities := New(cancelHandler, getHandler, requestDeliveryHandler, deliveryClient)
 
 	// Create canceled context
 	ctx, cancel := context.WithCancelCause(context.Background())
@@ -181,7 +211,8 @@ func TestActivities_New(t *testing.T) {
 	getHandler := new(mockGetHandler)
 	deliveryClient := new(mockDeliveryClient)
 
-	activities := New(cancelHandler, getHandler, deliveryClient)
+	requestDeliveryHandler := new(mockRequestDeliveryHandler)
+	activities := New(cancelHandler, getHandler, requestDeliveryHandler, deliveryClient)
 
 	require.NotNil(t, activities)
 }

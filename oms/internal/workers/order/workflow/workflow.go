@@ -53,7 +53,7 @@ func WorkflowWithDelivery(ctx workflow.Context, input WorkflowInput) error {
 		StartToCloseTimeout: 30 * time.Second,
 		RetryPolicy: &temporal.RetryPolicy{
 			InitialInterval:    time.Second,
-			BackoffCoefficient: 2.0,
+			BackoffCoefficient: 2.0, //nolint:mnd // exponential backoff
 			MaximumInterval:    time.Minute,
 			MaximumAttempts:    3,
 			NonRetryableErrorTypes: []string{
@@ -74,7 +74,7 @@ func WorkflowWithDelivery(ctx workflow.Context, input WorkflowInput) error {
 
 	// Track order status for queries
 	var (
-		orderStatus string = "PROCESSING"
+		orderStatus = "PROCESSING"
 		orderError  error
 	)
 
@@ -142,6 +142,8 @@ func WorkflowWithDelivery(ctx workflow.Context, input WorkflowInput) error {
 
 // executeSaga executes the order processing saga (legacy version without delivery).
 // Returns error if any step fails (compensation should be handled).
+//
+//nolint:unused // reserved for workflows that do not use delivery
 func executeSaga(ctx workflow.Context, orderID, customerID uuid.UUID, items v2.Items) error {
 	return executeSagaWithDelivery(ctx, WorkflowInput{
 		OrderID:         orderID,

@@ -54,7 +54,7 @@ func OrderStateToDomain(in *v3.OrderState) (*v1.OrderState, error) {
 	// Build the OrderState
 	orderState, err := builder.Build()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("build order state: %w", err)
 	}
 
 	return orderState, nil

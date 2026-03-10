@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
@@ -19,7 +20,8 @@ type Querier interface {
 	DeleteOrderDeliveryInfo(ctx context.Context, orderID uuid.UUID) error
 	DeleteOrderItems(ctx context.Context, orderID uuid.UUID) error
 	GetOrder(ctx context.Context, id uuid.UUID) (OmsOrder, error)
-	GetOrderDeliveryInfo(ctx context.Context, orderID uuid.UUID) (OmsOrderDeliveryInfo, error)
+	GetOrderByPackageID(ctx context.Context, packageID pgtype.UUID) (OmsOrder, error)
+	GetOrderDeliveryInfo(ctx context.Context, orderID uuid.UUID) (GetOrderDeliveryInfoRow, error)
 	GetOrderItems(ctx context.Context, orderID uuid.UUID) ([]GetOrderItemsRow, error)
 	InsertOrder(ctx context.Context, arg InsertOrderParams) error
 	InsertOrderDeliveryInfo(ctx context.Context, arg InsertOrderDeliveryInfoParams) error

@@ -3,13 +3,15 @@ package v1
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	commonv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common"
 )
 
 // Sentinel domain errors for order aggregate. Handlers can use errors.Is/As to map to gRPC/HTTP codes.
 var (
-	ErrInvalidDeliveryInfo = errors.New("invalid delivery info: address, delivery period and package info are required")
+	ErrInvalidDeliveryInfo  = errors.New("invalid delivery info: address, delivery period and package info are required")
+	ErrDeliveryInfoRequired = errors.New("delivery info is required")
 )
 
 // OrderTerminalStateError is returned when an operation is not allowed because the order is in a terminal state (COMPLETED or CANCELED).
@@ -18,7 +20,7 @@ type OrderTerminalStateError struct {
 }
 
 func (e *OrderTerminalStateError) Error() string {
-	return fmt.Sprintf("order in terminal state: %s", e.Status)
+	return fmt.Sprintf("order in terminal state: %s", orderStatusString(e.Status))
 }
 
 // DeliveryAlreadyInProgressError is returned when delivery info cannot be updated because the package is already assigned or in transit.
@@ -47,5 +49,30 @@ type InvalidOrderTransitionError struct {
 }
 
 func (e *InvalidOrderTransitionError) Error() string {
-	return fmt.Sprintf("cannot transition from %s to %s", e.From, e.To)
+	return fmt.Sprintf(
+		"cannot transition from %s to %s",
+		orderStatusString(e.From),
+		orderStatusString(e.To),
+	)
+}
+
+// DeliveryAlreadyRequestedError is returned when OMS attempts to request delivery twice.
+type DeliveryAlreadyRequestedError struct{}
+
+func (e *DeliveryAlreadyRequestedError) Error() string {
+	return "delivery already requested"
+}
+
+// DeliveryPackageMismatchError is returned when an incoming package ID disagrees with persisted state.
+type DeliveryPackageMismatchError struct {
+	Expected string
+	Actual   string
+}
+
+func (e *DeliveryPackageMismatchError) Error() string {
+	return fmt.Sprintf("delivery package mismatch: expected %s, got %s", e.Expected, e.Actual)
+}
+
+func orderStatusString(status OrderStatus) string {
+	return strings.ReplaceAll(status.String(), "CANCELLED", "CANCELED")
 }

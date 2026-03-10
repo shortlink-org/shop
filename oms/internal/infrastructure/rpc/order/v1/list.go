@@ -4,7 +4,6 @@ import (
 	"context"
 
 	order "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
-	commonv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/dto"
 	v1 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/model/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/rpcmeta"
@@ -16,12 +15,13 @@ func (o *OrderRPC) List(ctx context.Context, in *v1.ListRequest) (*v1.ListRespon
 	if err != nil {
 		return nil, err
 	}
+
 	customerID := &id
 
 	// Convert status filter
 	var statusFilter []order.OrderStatus
 	for _, s := range in.GetStatusFilter() {
-		statusFilter = append(statusFilter, order.OrderStatus(s))
+		statusFilter = append(statusFilter, s)
 	}
 
 	// Get pagination
@@ -48,11 +48,7 @@ func (o *OrderRPC) List(ctx context.Context, in *v1.ListRequest) (*v1.ListRespon
 
 	totalCount := int32(len(orders))
 	// Paginate in RPC layer
-	start := max((page-1)*pageSize, 0)
-
-	if start >= totalCount {
-		start = totalCount
-	}
+	start := min(max((page-1)*pageSize, 0), totalCount)
 
 	end := min(start+pageSize, totalCount)
 
@@ -75,9 +71,4 @@ func (o *OrderRPC) List(ctx context.Context, in *v1.ListRequest) (*v1.ListRespon
 			TotalPages:  totalPages,
 		},
 	}, nil
-}
-
-// Convert domain OrderStatus to proto OrderStatus
-func domainStatusToProto(s order.OrderStatus) commonv1.OrderStatus {
-	return commonv1.OrderStatus(s)
 }

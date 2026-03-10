@@ -13,6 +13,7 @@ import (
 	"github.com/shortlink-org/go-sdk/db"
 	"github.com/shortlink-org/go-sdk/db/drivers/postgres/migrate"
 
+	"github.com/shortlink-org/shop/oms/internal/domain"
 	order "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order/schema/queries"
 )
@@ -28,8 +29,9 @@ func New(ctx context.Context, store db.DB) (*Store, error) {
 	}
 
 	// Run migrations
-	if err := migrate.Migration(ctx, store, migrations, "repository_order"); err != nil {
-		return nil, err
+	err := migrate.Migration(ctx, store, migrations, "repository_order")
+	if err != nil {
+		return nil, domain.WrapUnavailable("migrate repository_order", err)
 	}
 
 	// Initialize L1 cache

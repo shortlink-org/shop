@@ -230,6 +230,7 @@ func TestAddress_IsValid(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewAddress() error = %v", err)
 	}
+
 	if !validAddr.IsValid() {
 		t.Errorf("Address.IsValid() = false for valid address")
 	}
@@ -304,14 +305,17 @@ func TestAddress_Equality(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewAddress() error = %v", err)
 	}
+
 	addr2, err := NewAddress("123 Main St", "Moscow", "101000", "Russia")
 	if err != nil {
 		t.Fatalf("NewAddress() error = %v", err)
 	}
+
 	addr3, err := NewAddress("456 Oak Ave", "Moscow", "101000", "Russia")
 	if err != nil {
 		t.Fatalf("NewAddress() error = %v", err)
 	}
+
 	if addr1 != addr2 {
 		t.Errorf("Addresses with same values should be equal")
 	}

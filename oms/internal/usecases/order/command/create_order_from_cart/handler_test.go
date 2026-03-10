@@ -47,7 +47,6 @@ func TestHandler_Handle_WithPricer(t *testing.T) {
 	// Setup expectations
 	mockUoW.EXPECT().Begin(mock.Anything).Return(ctx, nil)
 	mockUoW.EXPECT().Commit(mock.Anything).Return(nil)
-	mockUoW.EXPECT().Rollback(mock.Anything).Return(nil)
 
 	mockCartRepo.EXPECT().Load(mock.Anything, customerID).Return(cart, nil)
 	mockCartRepo.EXPECT().Save(mock.Anything, mock.Anything).Return(nil)
@@ -255,6 +254,7 @@ func TestHandler_Handle_MultipleItems(t *testing.T) {
 	require.NoError(t, err)
 	item3, err := itemv1.NewItemWithPricing(goodID3, 3, decimal.NewFromInt(10), decimal.Zero, decimal.Zero)
 	require.NoError(t, err)
+
 	cart := cartv1.Reconstitute(customerID, itemsv1.Items{item1, item2, item3}, 1)
 
 	// Create mocks
@@ -267,7 +267,6 @@ func TestHandler_Handle_MultipleItems(t *testing.T) {
 	// Setup expectations
 	mockUoW.EXPECT().Begin(mock.Anything).Return(ctx, nil)
 	mockUoW.EXPECT().Commit(mock.Anything).Return(nil)
-	mockUoW.EXPECT().Rollback(mock.Anything).Return(nil)
 
 	mockCartRepo.EXPECT().Load(mock.Anything, customerID).Return(cart, nil)
 	mockCartRepo.EXPECT().Save(mock.Anything, mock.Anything).Return(nil)

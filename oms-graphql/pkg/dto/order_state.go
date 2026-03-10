@@ -1,9 +1,11 @@
 package dto
 
 import (
+	"google.golang.org/protobuf/types/known/timestamppb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
+
 	ordermodel "github.com/shortlink-org/shop/oms-graphql/pkg/generated/oms/infrastructure/rpc/order/v1/model/v1"
 	servicepb "github.com/shortlink-org/shop/oms-graphql/pkg/generated/service/v1"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 // OrderStateToService maps OMS order state to Connect/GraphQL service response.
@@ -28,7 +30,26 @@ func OrderStateToService(order *ordermodel.OrderState) *servicepb.OrderState {
 				Items: items,
 			},
 		},
-		Status:       wrapperspb.String(order.GetStatus().String()),
-		DeliveryInfo: DeliveryInfoToService(order.GetDeliveryInfo()),
+		Status:         wrapperspb.String(order.GetStatus().String()),
+		DeliveryInfo:   DeliveryInfoToService(order.GetDeliveryInfo()),
+		DeliveryStatus: wrapperspb.String(order.GetDeliveryStatus().String()),
+		PackageId:      optionalString(order.GetPackageId()),
+		RequestedAt:    cloneTimestamp(order.GetRequestedAt()),
 	}
+}
+
+func optionalString(value string) *wrapperspb.StringValue {
+	if value == "" {
+		return nil
+	}
+
+	return wrapperspb.String(value)
+}
+
+func cloneTimestamp(value *timestamppb.Timestamp) *timestamppb.Timestamp {
+	if value == nil {
+		return nil
+	}
+
+	return timestamppb.New(value.AsTime())
 }

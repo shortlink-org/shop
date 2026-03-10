@@ -23,6 +23,8 @@ import (
 type DeliveryEventType string
 
 const (
+	EventTypePackageAccepted     DeliveryEventType = "PACKAGE_ACCEPTED"
+	EventTypePackageAssigned     DeliveryEventType = "PACKAGE_ASSIGNED"
 	EventTypePackageInTransit    DeliveryEventType = "PACKAGE_IN_TRANSIT"
 	EventTypePackageDelivered    DeliveryEventType = "PACKAGE_DELIVERED"
 	EventTypePackageNotDelivered DeliveryEventType = "PACKAGE_NOT_DELIVERED"
@@ -41,14 +43,16 @@ var (
 
 // DeliveryStatusEvent represents a delivery status update from the Delivery service.
 type DeliveryStatusEvent struct {
-	PackageID   string            `json:"package_id"`
-	OrderID     string            `json:"order_id"`
-	CourierID   string            `json:"courier_id"`
-	Status      string            `json:"status"`
-	EventType   DeliveryEventType `json:"event_type"`
-	Reason      string            `json:"reason,omitempty"`
-	Description string            `json:"reason_description,omitempty"`
-	OccurredAt  time.Time         `json:"occurred_at"`
+	PackageID           string                              `json:"package_id"`
+	OrderID             string                              `json:"order_id"`
+	CourierID           string                              `json:"courier_id"`
+	Status              string                              `json:"status"`
+	EventType           DeliveryEventType                   `json:"event_type"`
+	Reason              string                              `json:"reason,omitempty"`
+	Description         string                              `json:"reason_description,omitempty"`
+	OccurredAt          time.Time                           `json:"occurred_at"`
+	NotDeliveredDetails *deliverycommon.NotDeliveredDetails `json:"-"`
+	DeliveryLocation    *deliverycommon.Location            `json:"-"`
 }
 
 // DeliveryEventHandler defines the interface for handling delivery events.
@@ -93,6 +97,7 @@ func (w *watermillLoggerAdapter) Trace(msg string, fields watermill.LogFields) {
 	w.log.Debug(msg)
 }
 
+//nolint:ireturn // implements watermill.LoggerAdapter
 func (w *watermillLoggerAdapter) With(fields watermill.LogFields) watermill.LoggerAdapter {
 	return w
 }
@@ -175,6 +180,8 @@ func (c *DeliveryConsumer) Start(ctx context.Context) error {
 const eventTypeHeader = "event_type"
 
 // processMessage processes a single message (protobuf-encoded with event_type header).
+//
+//nolint:funcorder // unexported handler
 func (c *DeliveryConsumer) processMessage(ctx context.Context, msg *message.Message) {
 	c.log.Debug("Received message",
 		slog.String("uuid", msg.UUID))
@@ -198,7 +205,8 @@ func (c *DeliveryConsumer) processMessage(ctx context.Context, msg *message.Mess
 		return
 	}
 
-	if err := c.handler.HandleDeliveryStatus(ctx, event); err != nil {
+	err = c.handler.HandleDeliveryStatus(ctx, event)
+	if err != nil {
 		c.log.Error("Failed to handle delivery event",
 			slog.Any("error", err),
 			slog.String("package_id", event.PackageID),
@@ -216,12 +224,33 @@ func (c *DeliveryConsumer) processMessage(ctx context.Context, msg *message.Mess
 }
 
 // unmarshalDeliveryEvent decodes payload by event_type and maps to DeliveryStatusEvent.
+//
+//nolint:funcorder // unexported helper
 func (c *DeliveryConsumer) unmarshalDeliveryEvent(eventType string, payload []byte) (DeliveryStatusEvent, error) {
 	var event DeliveryStatusEvent
 
 	switch eventType {
+	case "PackageAcceptedEvent":
+		var e deliveryevents.PackageAcceptedEvent
+
+		err := proto.Unmarshal(payload, &e)
+		if err != nil {
+			return event, fmt.Errorf("proto unmarshal PackageAcceptedEvent: %w", err)
+		}
+
+		event = mapAcceptedToStatusEvent(&e)
+	case "PackageAssignedEvent":
+		var e deliveryevents.PackageAssignedEvent
+
+		err := proto.Unmarshal(payload, &e)
+		if err != nil {
+			return event, fmt.Errorf("proto unmarshal PackageAssignedEvent: %w", err)
+		}
+
+		event = mapAssignedToStatusEvent(&e)
 	case "PackageInTransitEvent":
 		var e deliveryevents.PackageInTransitEvent
+
 		err := proto.Unmarshal(payload, &e)
 		if err != nil {
 			return event, fmt.Errorf("proto unmarshal PackageInTransitEvent: %w", err)
@@ -230,6 +259,7 @@ func (c *DeliveryConsumer) unmarshalDeliveryEvent(eventType string, payload []by
 		event = mapInTransitToStatusEvent(&e)
 	case "PackageDeliveredEvent":
 		var e deliveryevents.PackageDeliveredEvent
+
 		err := proto.Unmarshal(payload, &e)
 		if err != nil {
 			return event, fmt.Errorf("proto unmarshal PackageDeliveredEvent: %w", err)
@@ -238,6 +268,7 @@ func (c *DeliveryConsumer) unmarshalDeliveryEvent(eventType string, payload []by
 		event = mapDeliveredToStatusEvent(&e)
 	case "PackageNotDeliveredEvent":
 		var e deliveryevents.PackageNotDeliveredEvent
+
 		err := proto.Unmarshal(payload, &e)
 		if err != nil {
 			return event, fmt.Errorf("proto unmarshal PackageNotDeliveredEvent: %w", err)
@@ -245,11 +276,31 @@ func (c *DeliveryConsumer) unmarshalDeliveryEvent(eventType string, payload []by
 
 		event = mapNotDeliveredToStatusEvent(&e)
 	default:
-		// Ignore other event types (PackageAcceptedEvent, PackageAssignedEvent, etc.)
+		// Ignore other event types.
 		return event, fmt.Errorf("unsupported or non-status event_type %s: %w", eventType, errUnsupportedEventType)
 	}
 
 	return event, nil
+}
+
+func mapAcceptedToStatusEvent(e *deliveryevents.PackageAcceptedEvent) DeliveryStatusEvent {
+	return DeliveryStatusEvent{
+		PackageID:  e.GetPackageId(),
+		OrderID:    e.GetOrderId(),
+		Status:     deliverycommon.PackageStatus_name[int32(e.GetStatus())],
+		EventType:  EventTypePackageAccepted,
+		OccurredAt: timestampToTime(e.GetOccurredAt()),
+	}
+}
+
+func mapAssignedToStatusEvent(e *deliveryevents.PackageAssignedEvent) DeliveryStatusEvent {
+	return DeliveryStatusEvent{
+		PackageID:  e.GetPackageId(),
+		CourierID:  e.GetCourierId(),
+		Status:     deliverycommon.PackageStatus_name[int32(e.GetStatus())],
+		EventType:  EventTypePackageAssigned,
+		OccurredAt: timestampToTime(e.GetOccurredAt()),
+	}
 }
 
 func mapInTransitToStatusEvent(e *deliveryevents.PackageInTransitEvent) DeliveryStatusEvent {
@@ -265,12 +316,13 @@ func mapInTransitToStatusEvent(e *deliveryevents.PackageInTransitEvent) Delivery
 
 func mapDeliveredToStatusEvent(e *deliveryevents.PackageDeliveredEvent) DeliveryStatusEvent {
 	return DeliveryStatusEvent{
-		PackageID:  e.GetPackageId(),
-		OrderID:    e.GetOrderId(),
-		CourierID:  e.GetCourierId(),
-		Status:     deliverycommon.PackageStatus_name[int32(e.GetStatus())],
-		EventType:  EventTypePackageDelivered,
-		OccurredAt: timestampToTime(e.GetOccurredAt()),
+		PackageID:        e.GetPackageId(),
+		OrderID:          e.GetOrderId(),
+		CourierID:        e.GetCourierId(),
+		Status:           deliverycommon.PackageStatus_name[int32(e.GetStatus())],
+		EventType:        EventTypePackageDelivered,
+		OccurredAt:       timestampToTime(e.GetOccurredAt()),
+		DeliveryLocation: e.GetDeliveryLocation(),
 	}
 }
 
@@ -282,14 +334,15 @@ func mapNotDeliveredToStatusEvent(e *deliveryevents.PackageNotDeliveredEvent) De
 	}
 
 	return DeliveryStatusEvent{
-		PackageID:   e.GetPackageId(),
-		OrderID:     e.GetOrderId(),
-		CourierID:   e.GetCourierId(),
-		Status:      deliverycommon.PackageStatus_name[int32(e.GetStatus())],
-		EventType:   EventTypePackageNotDelivered,
-		Reason:      reasonStr,
-		Description: desc,
-		OccurredAt:  timestampToTime(e.GetOccurredAt()),
+		PackageID:           e.GetPackageId(),
+		OrderID:             e.GetOrderId(),
+		CourierID:           e.GetCourierId(),
+		Status:              deliverycommon.PackageStatus_name[int32(e.GetStatus())],
+		EventType:           EventTypePackageNotDelivered,
+		Reason:              reasonStr,
+		Description:         desc,
+		OccurredAt:          timestampToTime(e.GetOccurredAt()),
+		NotDeliveredDetails: e.GetNotDeliveredDetails(),
 	}
 }
 
@@ -307,5 +360,10 @@ func (c *DeliveryConsumer) Close() error {
 		c.cancel(errConsumerClosed)
 	}
 
-	return c.subscriber.Close()
+	err := c.subscriber.Close()
+	if err != nil {
+		return fmt.Errorf("close subscriber: %w", err)
+	}
+
+	return nil
 }

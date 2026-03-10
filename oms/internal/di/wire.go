@@ -50,6 +50,7 @@ import (
 	// Order handlers
 	orderCancel "github.com/shortlink-org/shop/oms/internal/usecases/order/command/cancel"
 	orderCreate "github.com/shortlink-org/shop/oms/internal/usecases/order/command/create"
+	orderRequestDelivery "github.com/shortlink-org/shop/oms/internal/usecases/order/command/request_delivery"
 	orderUpdateDeliveryInfo "github.com/shortlink-org/shop/oms/internal/usecases/order/command/update_delivery_info"
 	orderGet "github.com/shortlink-org/shop/oms/internal/usecases/order/query/get"
 	orderList "github.com/shortlink-org/shop/oms/internal/usecases/order/query/list"
@@ -132,6 +133,7 @@ var OMSSet = wire.NewSet(
 
 	// Database
 	db.New,
+	newDBOptions,
 	wire.FieldsOf(new(*metrics.Monitoring), "Metrics", "Prometheus"),
 
 	// Redis
@@ -172,6 +174,7 @@ var OMSSet = wire.NewSet(
 	// Order Handlers
 	orderCreate.NewHandler,
 	orderCancel.NewHandler,
+	orderRequestDelivery.NewHandler,
 	orderUpdateDeliveryInfo.NewHandler,
 	orderGet.NewHandler,
 	orderList.NewHandler,
@@ -189,7 +192,7 @@ var OMSSet = wire.NewSet(
 
 	// Temporal Workers
 	cart_worker.New,
-	activities.New,
+	activities.NewWithHandlers,
 	order_worker.NewWithActivities,
 
 	NewOMSService,
@@ -229,6 +232,10 @@ func newRedisClient(cfg *config.Config) (rueidis.Client, func(), error) {
 	}
 
 	return client, cleanup, nil
+}
+
+func newDBOptions() []db.Option {
+	return nil
 }
 
 func NewOMSService(

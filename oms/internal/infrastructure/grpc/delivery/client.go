@@ -49,7 +49,10 @@ func NewClient(cfg Config) (*Client, error) {
 // Close closes the gRPC connection.
 func (c *Client) Close() error {
 	if c.conn != nil {
-		return c.conn.Close()
+		err := c.conn.Close()
+		if err != nil {
+			return fmt.Errorf("close delivery conn: %w", err)
+		}
 	}
 
 	return nil

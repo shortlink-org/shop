@@ -2,11 +2,13 @@ package dto
 
 import (
 	"math/big"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 
 	order "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
+	commonv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1/common"
 	"github.com/shortlink-org/shop/oms/internal/domain/order/v1/vo/address"
 	"github.com/shortlink-org/shop/oms/internal/domain/order/v1/vo/location"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order/schema/queries"
@@ -16,7 +18,7 @@ import (
 type OrderRow struct {
 	Order    queries.OmsOrder
 	Items    []queries.GetOrderItemsRow
-	Delivery *queries.OmsOrderDeliveryInfo
+	Delivery *queries.GetOrderDeliveryInfoRow
 }
 
 // ToDomain converts the row to domain aggregate.
@@ -28,15 +30,17 @@ func (r *OrderRow) ToDomain() *order.OrderState {
 
 	status := stringToOrderStatus(r.Order.Status)
 	deliveryInfo := toDeliveryInfoDomain(r.Delivery)
+	deliveryStatus := stringToDeliveryStatus(r.Delivery)
+	deliveryRequestedAt := deliveryRequestedAt(r.Delivery)
 
 	return order.NewOrderStateFromPersisted(
 		r.Order.ID, r.Order.CustomerID, domainItems,
-		status, int(r.Order.Version), deliveryInfo,
+		status, int(r.Order.Version), deliveryInfo, deliveryStatus, deliveryRequestedAt,
 	)
 }
 
 // toDeliveryInfoDomain converts database delivery info row to domain DeliveryInfo.
-func toDeliveryInfoDomain(row *queries.OmsOrderDeliveryInfo) *order.DeliveryInfo {
+func toDeliveryInfoDomain(row *queries.GetOrderDeliveryInfoRow) *order.DeliveryInfo {
 	if row == nil {
 		return nil
 	}
@@ -124,6 +128,16 @@ func toDeliveryInfoDomain(row *queries.OmsOrderDeliveryInfo) *order.DeliveryInfo
 	return &deliveryInfo
 }
 
+func deliveryRequestedAt(row *queries.GetOrderDeliveryInfoRow) *time.Time {
+	if row == nil || !row.RequestedAt.Valid {
+		return nil
+	}
+
+	requestedAt := row.RequestedAt.Time
+
+	return &requestedAt
+}
+
 // stringToOrderStatus converts status string to OrderStatus enum.
 func stringToOrderStatus(s string) order.OrderStatus {
 	switch s {
@@ -133,10 +147,31 @@ func stringToOrderStatus(s string) order.OrderStatus {
 		return order.OrderStatus_ORDER_STATUS_PROCESSING
 	case "COMPLETED", "ORDER_STATUS_COMPLETED":
 		return order.OrderStatus_ORDER_STATUS_COMPLETED
-	case "CANCELED", "CANCELLED", "ORDER_STATUS_CANCELED", "ORDER_STATUS_CANCELLED":
-		return order.OrderStatus_ORDER_STATUS_CANCELLED
+	case "CANCELED", "CANCELLED", "ORDER_STATUS_CANCELED", "ORDER_STATUS_CANCELLED": //nolint:misspell // accept both spellings
+		return order.OrderStatus_ORDER_STATUS_CANCELED
 	default:
 		return order.OrderStatus_ORDER_STATUS_UNSPECIFIED
+	}
+}
+
+func stringToDeliveryStatus(row *queries.GetOrderDeliveryInfoRow) commonv1.DeliveryStatus {
+	if row == nil {
+		return commonv1.DeliveryStatus_DELIVERY_STATUS_UNSPECIFIED
+	}
+
+	switch row.DeliveryStatus {
+	case "ACCEPTED", "DELIVERY_STATUS_ACCEPTED":
+		return commonv1.DeliveryStatus_DELIVERY_STATUS_ACCEPTED
+	case "ASSIGNED", "DELIVERY_STATUS_ASSIGNED":
+		return commonv1.DeliveryStatus_DELIVERY_STATUS_ASSIGNED
+	case "IN_TRANSIT", "DELIVERY_STATUS_IN_TRANSIT":
+		return commonv1.DeliveryStatus_DELIVERY_STATUS_IN_TRANSIT
+	case "DELIVERED", "DELIVERY_STATUS_DELIVERED":
+		return commonv1.DeliveryStatus_DELIVERY_STATUS_DELIVERED
+	case "NOT_DELIVERED", "DELIVERY_STATUS_NOT_DELIVERED":
+		return commonv1.DeliveryStatus_DELIVERY_STATUS_NOT_DELIVERED
+	default:
+		return commonv1.DeliveryStatus_DELIVERY_STATUS_UNSPECIFIED
 	}
 }
 
@@ -153,8 +188,8 @@ func numericToFloat64(n pgtype.Numeric) float64 {
 	// Apply exponent
 	if n.Exp != 0 {
 		exp := new(big.Float).SetFloat64(1)
-		for i := int32(0); i < abs(n.Exp); i++ {
-			exp.Mul(exp, big.NewFloat(10))
+		for range int(abs(n.Exp)) {
+			exp.Mul(exp, big.NewFloat(10)) //nolint:mnd // decimal base
 		}
 
 		if n.Exp < 0 {

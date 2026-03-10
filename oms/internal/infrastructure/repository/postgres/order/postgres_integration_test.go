@@ -249,7 +249,7 @@ func TestOrder_CancelOrder(t *testing.T) {
 	final, err := store.Load(txCtx3, orderID)
 	require.NoError(t, err)
 
-	assert.Equal(t, order.OrderStatus_ORDER_STATUS_CANCELLED, final.GetStatus())
+	assert.Equal(t, order.OrderStatus_ORDER_STATUS_CANCELED, final.GetStatus())
 }
 
 func TestOrder_OptimisticConcurrency(t *testing.T) {

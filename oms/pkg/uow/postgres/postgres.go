@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -24,7 +25,7 @@ func New(pool *pgxpool.Pool) *UoW {
 func (u *UoW) Begin(ctx context.Context) (context.Context, error) {
 	pgxTx, err := u.pool.Begin(ctx)
 	if err != nil {
-		return ctx, err
+		return ctx, fmt.Errorf("begin tx: %w", err)
 	}
 
 	return uow.WithTx(ctx, pgxTx), nil
@@ -53,5 +54,9 @@ func (u *UoW) Rollback(ctx context.Context) error {
 		return nil
 	}
 
-	return err
+	if err != nil {
+		return fmt.Errorf("rollback tx: %w", err)
+	}
+
+	return nil
 }

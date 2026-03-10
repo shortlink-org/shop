@@ -39,9 +39,11 @@ type OrderCreated struct {
 	// Created at timestamp
 	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// OccurredAt is the timestamp when the event occurred
-	OccurredAt    *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	OccurredAt *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
+	// Aggregate version after the mutation was applied
+	AggregateVersion int32 `protobuf:"varint,7,opt,name=aggregate_version,json=aggregateVersion,proto3" json:"aggregate_version,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *OrderCreated) Reset() {
@@ -116,6 +118,13 @@ func (x *OrderCreated) GetOccurredAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *OrderCreated) GetAggregateVersion() int32 {
+	if x != nil {
+		return x.AggregateVersion
+	}
+	return 0
+}
+
 // OrderCancelled event - canonical name: oms.order.cancelled.v1
 // Published when an order is cancelled
 type OrderCancelled struct {
@@ -131,9 +140,11 @@ type OrderCancelled struct {
 	// Cancelled at timestamp
 	CancelledAt *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=cancelled_at,json=cancelledAt,proto3" json:"cancelled_at,omitempty"`
 	// OccurredAt is the timestamp when the event occurred
-	OccurredAt    *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	OccurredAt *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
+	// Aggregate version after the mutation was applied
+	AggregateVersion int32 `protobuf:"varint,7,opt,name=aggregate_version,json=aggregateVersion,proto3" json:"aggregate_version,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *OrderCancelled) Reset() {
@@ -208,6 +219,13 @@ func (x *OrderCancelled) GetOccurredAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *OrderCancelled) GetAggregateVersion() int32 {
+	if x != nil {
+		return x.AggregateVersion
+	}
+	return 0
+}
+
 // OrderCompleted event - canonical name: oms.order.completed.v1
 // Published when an order is completed
 type OrderCompleted struct {
@@ -221,9 +239,11 @@ type OrderCompleted struct {
 	// Completed at timestamp
 	CompletedAt *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=completed_at,json=completedAt,proto3" json:"completed_at,omitempty"`
 	// OccurredAt is the timestamp when the event occurred
-	OccurredAt    *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	OccurredAt *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
+	// Aggregate version after the mutation was applied
+	AggregateVersion int32 `protobuf:"varint,6,opt,name=aggregate_version,json=aggregateVersion,proto3" json:"aggregate_version,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *OrderCompleted) Reset() {
@@ -291,6 +311,13 @@ func (x *OrderCompleted) GetOccurredAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *OrderCompleted) GetAggregateVersion() int32 {
+	if x != nil {
+		return x.AggregateVersion
+	}
+	return 0
+}
+
 // OrderDeliveryRequestedEvent - canonical name: oms.order.delivery_requested.v1
 // Event when order is created with delivery info
 // This event is published to delivery service to request package acceptance
@@ -313,9 +340,13 @@ type OrderDeliveryRequestedEvent struct {
 	// Timestamp when event was created
 	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	// OccurredAt is the timestamp when the event occurred
-	OccurredAt    *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	OccurredAt *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
+	// Package ID assigned by delivery service (optional at request time)
+	PackageId string `protobuf:"bytes,10,opt,name=package_id,json=packageId,proto3" json:"package_id,omitempty"`
+	// Aggregate version after the mutation was applied
+	AggregateVersion int32 `protobuf:"varint,11,opt,name=aggregate_version,json=aggregateVersion,proto3" json:"aggregate_version,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *OrderDeliveryRequestedEvent) Reset() {
@@ -411,6 +442,20 @@ func (x *OrderDeliveryRequestedEvent) GetOccurredAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *OrderDeliveryRequestedEvent) GetPackageId() string {
+	if x != nil {
+		return x.PackageId
+	}
+	return ""
+}
+
+func (x *OrderDeliveryRequestedEvent) GetAggregateVersion() int32 {
+	if x != nil {
+		return x.AggregateVersion
+	}
+	return 0
+}
+
 // OrderDeliveryStatusUpdatedEvent - canonical name: oms.order.delivery_status_updated.v1
 // Event when delivery status is updated
 // This event is received from delivery service
@@ -427,9 +472,11 @@ type OrderDeliveryStatusUpdatedEvent struct {
 	// Optional: courier ID if assigned
 	CourierId string `protobuf:"bytes,5,opt,name=courier_id,json=courierId,proto3" json:"courier_id,omitempty"`
 	// OccurredAt is the timestamp when the event occurred
-	OccurredAt    *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	OccurredAt *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
+	// Aggregate version after the mutation was applied
+	AggregateVersion int32 `protobuf:"varint,7,opt,name=aggregate_version,json=aggregateVersion,proto3" json:"aggregate_version,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *OrderDeliveryStatusUpdatedEvent) Reset() {
@@ -504,6 +551,13 @@ func (x *OrderDeliveryStatusUpdatedEvent) GetOccurredAt() *timestamppb.Timestamp
 	return nil
 }
 
+func (x *OrderDeliveryStatusUpdatedEvent) GetAggregateVersion() int32 {
+	if x != nil {
+		return x.AggregateVersion
+	}
+	return 0
+}
+
 // OrderDeliveryCompletedEvent - canonical name: oms.order.delivery_completed.v1
 // Event when delivery is completed
 // This event is received from delivery service
@@ -520,9 +574,11 @@ type OrderDeliveryCompletedEvent struct {
 	// Delivery location
 	DeliveryLocation *common.DeliveryLocation `protobuf:"bytes,5,opt,name=delivery_location,json=deliveryLocation,proto3" json:"delivery_location,omitempty"`
 	// OccurredAt is the timestamp when the event occurred
-	OccurredAt    *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	OccurredAt *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
+	// Aggregate version after the mutation was applied
+	AggregateVersion int32 `protobuf:"varint,7,opt,name=aggregate_version,json=aggregateVersion,proto3" json:"aggregate_version,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *OrderDeliveryCompletedEvent) Reset() {
@@ -597,6 +653,13 @@ func (x *OrderDeliveryCompletedEvent) GetOccurredAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *OrderDeliveryCompletedEvent) GetAggregateVersion() int32 {
+	if x != nil {
+		return x.AggregateVersion
+	}
+	return 0
+}
+
 // OrderDeliveryFailedEvent - canonical name: oms.order.delivery_failed.v1
 // Event when delivery failed
 // This event is received from delivery service
@@ -613,9 +676,11 @@ type OrderDeliveryFailedEvent struct {
 	// Timestamp when delivery failed
 	FailedAt *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=failed_at,json=failedAt,proto3" json:"failed_at,omitempty"`
 	// OccurredAt is the timestamp when the event occurred
-	OccurredAt    *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	OccurredAt *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=occurred_at,json=occurredAt,proto3" json:"occurred_at,omitempty"`
+	// Aggregate version after the mutation was applied
+	AggregateVersion int32 `protobuf:"varint,7,opt,name=aggregate_version,json=aggregateVersion,proto3" json:"aggregate_version,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *OrderDeliveryFailedEvent) Reset() {
@@ -690,11 +755,18 @@ func (x *OrderDeliveryFailedEvent) GetOccurredAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *OrderDeliveryFailedEvent) GetAggregateVersion() int32 {
+	if x != nil {
+		return x.AggregateVersion
+	}
+	return 0
+}
+
 var File_domain_order_v1_events_v1_events_proto protoreflect.FileDescriptor
 
 const file_domain_order_v1_events_v1_events_proto_rawDesc = "" +
 	"\n" +
-	"&domain/order/v1/events/v1/events.proto\x12\x16domain.order.events.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a#domain/order/v1/common/common.proto\"\xb8\x02\n" +
+	"&domain/order/v1/events/v1/events.proto\x12\x16domain.order.events.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a#domain/order/v1/common/common.proto\"\xe5\x02\n" +
 	"\fOrderCreated\x12\x19\n" +
 	"\border_id\x18\x01 \x01(\tR\aorderId\x12\x1f\n" +
 	"\vcustomer_id\x18\x02 \x01(\tR\n" +
@@ -704,7 +776,8 @@ const file_domain_order_v1_events_v1_events_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12;\n" +
 	"\voccurred_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"occurredAt\"\x9d\x02\n" +
+	"occurredAt\x12+\n" +
+	"\x11aggregate_version\x18\a \x01(\x05R\x10aggregateVersion\"\xca\x02\n" +
 	"\x0eOrderCancelled\x12\x19\n" +
 	"\border_id\x18\x01 \x01(\tR\aorderId\x12\x1f\n" +
 	"\vcustomer_id\x18\x02 \x01(\tR\n" +
@@ -713,7 +786,8 @@ const file_domain_order_v1_events_v1_events_proto_rawDesc = "" +
 	"\x06reason\x18\x04 \x01(\tR\x06reason\x12=\n" +
 	"\fcancelled_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\vcancelledAt\x12;\n" +
 	"\voccurred_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"occurredAt\"\x85\x02\n" +
+	"occurredAt\x12+\n" +
+	"\x11aggregate_version\x18\a \x01(\x05R\x10aggregateVersion\"\xb2\x02\n" +
 	"\x0eOrderCompleted\x12\x19\n" +
 	"\border_id\x18\x01 \x01(\tR\aorderId\x12\x1f\n" +
 	"\vcustomer_id\x18\x02 \x01(\tR\n" +
@@ -721,7 +795,8 @@ const file_domain_order_v1_events_v1_events_proto_rawDesc = "" +
 	"\x06status\x18\x03 \x01(\x0e2#.domain.order.common.v1.OrderStatusR\x06status\x12=\n" +
 	"\fcompleted_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\vcompletedAt\x12;\n" +
 	"\voccurred_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"occurredAt\"\xd4\x04\n" +
+	"occurredAt\x12+\n" +
+	"\x11aggregate_version\x18\x06 \x01(\x05R\x10aggregateVersion\"\xa0\x05\n" +
 	"\x1bOrderDeliveryRequestedEvent\x12\x19\n" +
 	"\border_id\x18\x01 \x01(\tR\aorderId\x12\x1f\n" +
 	"\vcustomer_id\x18\x02 \x01(\tR\n" +
@@ -734,7 +809,11 @@ const file_domain_order_v1_events_v1_events_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12;\n" +
 	"\voccurred_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"occurredAt\"\xb2\x02\n" +
+	"occurredAt\x12\x1d\n" +
+	"\n" +
+	"package_id\x18\n" +
+	" \x01(\tR\tpackageId\x12+\n" +
+	"\x11aggregate_version\x18\v \x01(\x05R\x10aggregateVersion\"\xdf\x02\n" +
 	"\x1fOrderDeliveryStatusUpdatedEvent\x12\x19\n" +
 	"\border_id\x18\x01 \x01(\tR\aorderId\x12\x1d\n" +
 	"\n" +
@@ -745,7 +824,8 @@ const file_domain_order_v1_events_v1_events_proto_rawDesc = "" +
 	"\n" +
 	"courier_id\x18\x05 \x01(\tR\tcourierId\x12;\n" +
 	"\voccurred_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"occurredAt\"\xc9\x02\n" +
+	"occurredAt\x12+\n" +
+	"\x11aggregate_version\x18\a \x01(\x05R\x10aggregateVersion\"\xf6\x02\n" +
 	"\x1bOrderDeliveryCompletedEvent\x12\x19\n" +
 	"\border_id\x18\x01 \x01(\tR\aorderId\x12\x1d\n" +
 	"\n" +
@@ -755,7 +835,8 @@ const file_domain_order_v1_events_v1_events_proto_rawDesc = "" +
 	"\fdelivered_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\vdeliveredAt\x12U\n" +
 	"\x11delivery_location\x18\x05 \x01(\v2(.domain.order.common.v1.DeliveryLocationR\x10deliveryLocation\x12;\n" +
 	"\voccurred_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"occurredAt\"\xca\x02\n" +
+	"occurredAt\x12+\n" +
+	"\x11aggregate_version\x18\a \x01(\x05R\x10aggregateVersion\"\xf7\x02\n" +
 	"\x18OrderDeliveryFailedEvent\x12\x19\n" +
 	"\border_id\x18\x01 \x01(\tR\aorderId\x12\x1d\n" +
 	"\n" +
@@ -765,7 +846,8 @@ const file_domain_order_v1_events_v1_events_proto_rawDesc = "" +
 	"\x15not_delivered_details\x18\x04 \x01(\v2+.domain.order.common.v1.NotDeliveredDetailsR\x13notDeliveredDetails\x127\n" +
 	"\tfailed_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\bfailedAt\x12;\n" +
 	"\voccurred_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"occurredAtB\xea\x01\n" +
+	"occurredAt\x12+\n" +
+	"\x11aggregate_version\x18\a \x01(\x05R\x10aggregateVersionB\xea\x01\n" +
 	"\x1acom.domain.order.events.v1B\vEventsProtoP\x01ZDgithub.com/shortlink-org/shop/oms/internal/domain/order/v1/events/v1\xa2\x02\x03DOE\xaa\x02\x16Domain.Order.Events.V1\xca\x02\x16Domain\\Order\\Events\\V1\xe2\x02\"Domain\\Order\\Events\\V1\\GPBMetadata\xea\x02\x19Domain::Order::Events::V1b\x06proto3"
 
 var (

@@ -7,6 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
+	"github.com/shortlink-org/shop/oms/internal/domain"
 	order "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order/dto"
@@ -32,7 +33,8 @@ func (s *Store) List(ctx context.Context, filter ports.ListFilter) ([]*order.Ord
 	hasCustomer := filter.CustomerID != nil
 	hasStatus := len(filter.StatusFilter) > 0
 
-	if hasCustomer && hasStatus {
+	switch {
+	case hasCustomer && hasStatus:
 		statusInts := statusesToInts(filter.StatusFilter)
 		rows, err = qtx.ListOrdersWithFilters(ctx, queries.ListOrdersWithFiltersParams{
 			CustomerID: *filter.CustomerID,
@@ -40,20 +42,20 @@ func (s *Store) List(ctx context.Context, filter ports.ListFilter) ([]*order.Ord
 			Limit:      math.MaxInt32,
 			Offset:     0,
 		})
-	} else if hasCustomer {
+	case hasCustomer:
 		rows, err = qtx.ListOrdersWithCustomerFilter(ctx, queries.ListOrdersWithCustomerFilterParams{
 			CustomerID: *filter.CustomerID,
 			Limit:      math.MaxInt32,
 			Offset:     0,
 		})
-	} else if hasStatus {
+	case hasStatus:
 		statusInts := statusesToInts(filter.StatusFilter)
 		rows, err = qtx.ListOrdersWithStatusFilter(ctx, queries.ListOrdersWithStatusFilterParams{
 			Column1: statusInts,
 			Limit:   math.MaxInt32,
 			Offset:  0,
 		})
-	} else {
+	default:
 		rows, err = qtx.ListOrders(ctx, queries.ListOrdersParams{
 			Limit:  math.MaxInt32,
 			Offset: 0,
@@ -61,22 +63,22 @@ func (s *Store) List(ctx context.Context, filter ports.ListFilter) ([]*order.Ord
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, domain.WrapUnavailable("ListOrders", err)
 	}
 
 	orders := make([]*order.OrderState, 0, len(rows))
 	for _, row := range rows {
 		items, err := qtx.GetOrderItems(ctx, row.ID)
 		if err != nil {
-			return nil, err
+			return nil, domain.WrapUnavailable("GetOrderItems", err)
 		}
 
-		var deliveryInfoRow *queries.OmsOrderDeliveryInfo
+		var deliveryInfoRow *queries.GetOrderDeliveryInfoRow
 
 		deliveryRow, err := qtx.GetOrderDeliveryInfo(ctx, row.ID)
 		if err != nil {
 			if !errors.Is(err, pgx.ErrNoRows) {
-				return nil, err
+				return nil, domain.WrapUnavailable("GetOrderDeliveryInfo", err)
 			}
 		} else {
 			deliveryInfoRow = &deliveryRow

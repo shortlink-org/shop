@@ -43,7 +43,12 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 
+	committed := false
 	defer func() {
+		if committed {
+			return
+		}
+
 		rollbackErr := h.uow.Rollback(ctx)
 		if rollbackErr != nil {
 			h.log.Warn("transaction rollback failed", slog.Any("error", rollbackErr))
@@ -67,20 +72,18 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 		return fmt.Errorf("failed to save order: %w", err)
 	}
 
-	// Commit transaction before publishing events
-	if err := h.uow.Commit(ctx); err != nil {
-		return fmt.Errorf("failed to commit transaction: %w", err)
-	}
-
-	// 4. Publish domain events (if any)
+	// 4. Publish domain events to outbox (same transaction)
 	for _, event := range order.GetDomainEvents() {
 		err := h.publisher.Publish(ctx, event)
 		if err != nil {
-			h.log.Error("failed to publish domain event",
-				slog.String("order_id", cmd.OrderID.String()),
-				slog.Any("error", err))
+			return fmt.Errorf("failed to publish domain event to outbox: %w", err)
 		}
 	}
+
+	if err := h.uow.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+	committed = true
 
 	order.ClearDomainEvents()
 

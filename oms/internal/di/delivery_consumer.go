@@ -18,7 +18,9 @@ func NewDeliveryConsumer(
 	ctx context.Context,
 	cfg *config.Config,
 	log logger.Logger,
+	uow ports.UnitOfWork,
 	orderRepo ports.OrderRepository,
+	publisher ports.EventPublisher,
 ) (*kafka.DeliveryConsumer, func(), error) {
 	viper.SetDefault("WATERMILL_KAFKA_BROKERS", []string{"localhost:9092"})
 
@@ -34,7 +36,7 @@ func NewDeliveryConsumer(
 	}
 
 	// Create event handler
-	handler, err := on_delivery_status.NewHandler(log, orderRepo)
+	handler, err := on_delivery_status.NewHandler(log, uow, orderRepo, publisher)
 	if err != nil {
 		return nil, func() {}, err
 	}

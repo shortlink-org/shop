@@ -15,6 +15,7 @@ import (
 	"github.com/shortlink-org/shop/oms/internal/domain/order/v1/vo/address"
 )
 
+//nolint:funlen,maintidx // one test per FSM behavior; splitting would obscure flow
 func TestOrderState(t *testing.T) {
 	// Define fixed UUIDs for consistency across tests.
 	fixedCustomerID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
@@ -73,7 +74,7 @@ func TestOrderState(t *testing.T) {
 
 		err = orderState.CancelOrder()
 		require.NoError(t, err, "CancelOrder should not return an error")
-		require.Equal(t, OrderStatus_ORDER_STATUS_CANCELLED, orderState.GetStatus(), "Status should transition to Canceled")
+		require.Equal(t, OrderStatus_ORDER_STATUS_CANCELED, orderState.GetStatus(), "Status should transition to Canceled")
 	})
 
 	t.Run("CompleteOrder", func(t *testing.T) {
@@ -136,7 +137,7 @@ func TestOrderState(t *testing.T) {
 		// After concurrent operations, the order should either be Canceled or have updated items.
 		// Depending on the FSM's transition rules, updating after cancellation might not change the state.
 		finalStatus := orderState.GetStatus()
-		require.True(t, finalStatus == OrderStatus_ORDER_STATUS_CANCELLED || finalStatus == OrderStatus_ORDER_STATUS_PROCESSING,
+		require.True(t, finalStatus == OrderStatus_ORDER_STATUS_CANCELED || finalStatus == OrderStatus_ORDER_STATUS_PROCESSING,
 			"Final status should be either Canceled or Processing")
 	})
 
@@ -211,7 +212,7 @@ func TestOrderState(t *testing.T) {
 		// Attempt to complete a Canceled order.
 		err = orderState.CompleteOrder()
 		require.Error(t, err, "CompleteOrder should return an error when transitioning from Canceled")
-		require.Equal(t, OrderStatus_ORDER_STATUS_CANCELLED, orderState.GetStatus(), "Status should remain Canceled after invalid transition")
+		require.Equal(t, OrderStatus_ORDER_STATUS_CANCELED, orderState.GetStatus(), "Status should remain Canceled after invalid transition")
 	})
 
 	// ContextCancellation test removed: domain layer no longer depends on context.Context
@@ -284,7 +285,7 @@ func TestSetDeliveryInfo_OrderStatusValidation(t *testing.T) {
 		deliveryInfo := createTestDeliveryInfo(t)
 		err = order.SetDeliveryInfo(deliveryInfo)
 		require.Error(t, err, "SetDeliveryInfo should fail in CANCELED state")
-		require.Contains(t, err.Error(), "ORDER_STATUS_CANCELLED")
+		require.Contains(t, err.Error(), "ORDER_STATUS_CANCELED")
 	})
 }
 
@@ -453,6 +454,6 @@ func TestSetDeliveryStatus(t *testing.T) {
 
 		err = order.SetDeliveryStatus(common.DeliveryStatus_DELIVERY_STATUS_ACCEPTED)
 		require.Error(t, err, "Should not allow delivery status update in CANCELED order")
-		require.Contains(t, err.Error(), "ORDER_STATUS_CANCELLED")
+		require.Contains(t, err.Error(), "ORDER_STATUS_CANCELED")
 	})
 }

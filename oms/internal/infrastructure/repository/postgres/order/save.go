@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 
+	"github.com/shortlink-org/shop/oms/internal/domain"
 	order "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order/schema/queries"
@@ -40,7 +41,7 @@ func (s *Store) Save(ctx context.Context, state *order.OrderState) error {
 			Status:     status,
 		})
 		if err != nil {
-			return err
+			return domain.WrapUnavailable("InsertOrder", err)
 		}
 	} else {
 		// Update with optimistic lock
@@ -51,7 +52,7 @@ func (s *Store) Save(ctx context.Context, state *order.OrderState) error {
 			Version_2: oldVersion,
 		})
 		if err != nil {
-			return err
+			return domain.WrapUnavailable("UpdateOrder", err)
 		}
 
 		if result.RowsAffected() == 0 {
@@ -62,7 +63,7 @@ func (s *Store) Save(ctx context.Context, state *order.OrderState) error {
 	// Delete existing items and insert new ones
 	err := qtx.DeleteOrderItems(ctx, orderID)
 	if err != nil {
-		return err
+		return domain.WrapUnavailable("DeleteOrderItems", err)
 	}
 
 	for _, item := range state.GetItems() {
@@ -73,12 +74,12 @@ func (s *Store) Save(ctx context.Context, state *order.OrderState) error {
 			Price:    item.GetPrice(),
 		})
 		if insertErr != nil {
-			return insertErr
+			return domain.WrapUnavailable("InsertOrderItem", insertErr)
 		}
 	}
 
 	// Save delivery info if present
-	err = s.saveDeliveryInfo(ctx, qtx, orderID, state.GetDeliveryInfo(), oldVersion == 0)
+	err = s.saveDeliveryInfo(ctx, qtx, orderID, state, oldVersion == 0)
 	if err != nil {
 		return err
 	}
@@ -90,11 +91,17 @@ func (s *Store) Save(ctx context.Context, state *order.OrderState) error {
 }
 
 // saveDeliveryInfo saves or updates delivery info for an order.
-func (s *Store) saveDeliveryInfo(ctx context.Context, qtx *queries.Queries, orderID uuid.UUID, deliveryInfo *order.DeliveryInfo, isNew bool) error {
+func (s *Store) saveDeliveryInfo(ctx context.Context, qtx *queries.Queries, orderID uuid.UUID, state *order.OrderState, isNew bool) error {
+	deliveryInfo := state.GetDeliveryInfo()
 	if deliveryInfo == nil {
 		// No delivery info - delete if exists (for updates)
 		if !isNew {
-			return qtx.DeleteOrderDeliveryInfo(ctx, orderID)
+			err := qtx.DeleteOrderDeliveryInfo(ctx, orderID)
+			if err != nil {
+				return domain.WrapUnavailable("DeleteOrderDeliveryInfo", err)
+			}
+
+			return nil
 		}
 
 		return nil
@@ -119,6 +126,11 @@ func (s *Store) saveDeliveryInfo(ctx context.Context, qtx *queries.Queries, orde
 		recipientEmail = pgtype.Text{String: rc.GetEmail(), Valid: rc.GetEmail() != ""}
 	}
 
+	var requestedAt pgtype.Timestamptz
+	if deliveryRequestedAt := state.GetDeliveryRequestedAt(); deliveryRequestedAt != nil {
+		requestedAt = pgtype.Timestamptz{Time: *deliveryRequestedAt, Valid: true}
+	}
+
 	params := queries.InsertOrderDeliveryInfoParams{
 		OrderID:            orderID,
 		PickupStreet:       pgtype.Text{String: pickupAddr.Street(), Valid: pickupAddr.Street() != ""},
@@ -138,22 +150,34 @@ func (s *Store) saveDeliveryInfo(ctx context.Context, qtx *queries.Queries, orde
 		WeightKg:           float64ToNumeric(pkgInfo.GetWeightKg()),
 		Priority:           deliveryInfo.GetPriority().String(),
 		PackageID:          packageID,
+		DeliveryStatus:     state.GetDeliveryStatus().String(),
+		RequestedAt:        requestedAt,
 		RecipientName:      recipientName,
 		RecipientPhone:     recipientPhone,
 		RecipientEmail:     recipientEmail,
 	}
 
 	if isNew {
-		return qtx.InsertOrderDeliveryInfo(ctx, params)
+		err := qtx.InsertOrderDeliveryInfo(ctx, params)
+		if err != nil {
+			return domain.WrapUnavailable("InsertOrderDeliveryInfo", err)
+		}
+
+		return nil
 	}
 
 	// For updates, delete and re-insert (simpler than upsert)
 	err := qtx.DeleteOrderDeliveryInfo(ctx, orderID)
 	if err != nil {
-		return err
+		return domain.WrapUnavailable("DeleteOrderDeliveryInfo", err)
 	}
 
-	return qtx.InsertOrderDeliveryInfo(ctx, params)
+	err = qtx.InsertOrderDeliveryInfo(ctx, params)
+	if err != nil {
+		return domain.WrapUnavailable("InsertOrderDeliveryInfo", err)
+	}
+
+	return nil
 }
 
 // invalidateCache removes an order from the L1 cache.
@@ -164,6 +188,7 @@ func (s *Store) invalidateCache(orderID string) {
 // float64ToNumeric converts a float64 to pgtype.Numeric.
 func float64ToNumeric(f float64) pgtype.Numeric {
 	var n pgtype.Numeric
+
 	err := n.Scan(f)
 	if err != nil {
 		return pgtype.Numeric{}

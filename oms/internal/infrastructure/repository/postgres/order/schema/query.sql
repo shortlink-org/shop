@@ -3,6 +3,12 @@ SELECT id, customer_id, status, version, created_at, updated_at
 FROM oms.orders
 WHERE id = $1;
 
+-- name: GetOrderByPackageID :one
+SELECT o.id, o.customer_id, o.status, o.version, o.created_at, o.updated_at
+FROM oms.orders o
+JOIN oms.order_delivery_info odi ON odi.order_id = o.id
+WHERE odi.package_id = $1;
+
 -- name: GetOrderItems :many
 SELECT good_id, quantity, price
 FROM oms.order_items
@@ -77,7 +83,7 @@ SELECT
     delivery_street, delivery_city, delivery_postal_code, delivery_country, delivery_latitude, delivery_longitude,
     period_start, period_end,
     weight_kg,
-    priority, package_id,
+    priority, package_id, delivery_status, requested_at,
     recipient_name, recipient_phone, recipient_email
 FROM oms.order_delivery_info
 WHERE order_id = $1;
@@ -89,7 +95,7 @@ INSERT INTO oms.order_delivery_info (
     delivery_street, delivery_city, delivery_postal_code, delivery_country, delivery_latitude, delivery_longitude,
     period_start, period_end,
     weight_kg,
-    priority, package_id,
+    priority, package_id, delivery_status, requested_at,
     recipient_name, recipient_phone, recipient_email
 ) VALUES (
     $1,
@@ -97,8 +103,8 @@ INSERT INTO oms.order_delivery_info (
     $8, $9, $10, $11, $12, $13,
     $14, $15,
     $16,
-    $17, $18,
-    $19, $20, $21
+    $17, $18, $19, $20,
+    $21, $22, $23
 );
 
 -- name: UpdateOrderDeliveryInfo :exec
@@ -108,8 +114,8 @@ SET
     delivery_street = $8, delivery_city = $9, delivery_postal_code = $10, delivery_country = $11, delivery_latitude = $12, delivery_longitude = $13,
     period_start = $14, period_end = $15,
     weight_kg = $16,
-    priority = $17, package_id = $18,
-    recipient_name = $19, recipient_phone = $20, recipient_email = $21
+    priority = $17, package_id = $18, delivery_status = $19, requested_at = $20,
+    recipient_name = $21, recipient_phone = $22, recipient_email = $23
 WHERE order_id = $1;
 
 -- name: DeleteOrderDeliveryInfo :exec

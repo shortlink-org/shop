@@ -80,7 +80,7 @@ func TestNewLocation(t *testing.T) {
 				}
 
 				if tt.errType != nil {
-					if !errors.Is(err, tt.errType) && !errors.Is(err, tt.errType) {
+					if !errors.Is(err, tt.errType) {
 						t.Errorf("NewLocation() error = %v, want %v", err, tt.errType)
 					}
 				}
@@ -190,6 +190,7 @@ func TestLocation_Equality(t *testing.T) {
 	require.NoError(t, err)
 	loc3, err := NewLocation(59.9343, 30.3351)
 	require.NoError(t, err)
+
 	if loc1 != loc2 {
 		t.Errorf("Locations with same coordinates should be equal")
 	}

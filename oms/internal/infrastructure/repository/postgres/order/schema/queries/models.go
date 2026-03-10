@@ -54,6 +54,10 @@ type OmsOrderDeliveryInfo struct {
 	RecipientPhone pgtype.Text
 	// Email for delivery notifications
 	RecipientEmail pgtype.Text
+	// Delivery lifecycle status from delivery Kafka events
+	DeliveryStatus string
+	// When OMS successfully requested delivery and received package_id
+	RequestedAt pgtype.Timestamptz
 }
 
 // Items in orders

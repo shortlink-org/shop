@@ -41,7 +41,13 @@ type OrderState struct {
 	// Timestamp for when the order was last updated
 	UpdatedAt *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	// Delivery information (optional, nil = self-pickup)
-	DeliveryInfo  *common.DeliveryInfo `protobuf:"bytes,7,opt,name=delivery_info,json=deliveryInfo,proto3" json:"delivery_info,omitempty"`
+	DeliveryInfo *common.DeliveryInfo `protobuf:"bytes,7,opt,name=delivery_info,json=deliveryInfo,proto3" json:"delivery_info,omitempty"`
+	// Delivery lifecycle status from delivery Kafka events
+	DeliveryStatus common.DeliveryStatus `protobuf:"varint,8,opt,name=delivery_status,json=deliveryStatus,proto3,enum=domain.order.common.v1.DeliveryStatus" json:"delivery_status,omitempty"`
+	// Package ID returned by Delivery service
+	PackageId string `protobuf:"bytes,9,opt,name=package_id,json=packageId,proto3" json:"package_id,omitempty"`
+	// Timestamp when OMS successfully requested delivery
+	RequestedAt   *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=requested_at,json=requestedAt,proto3" json:"requested_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -121,6 +127,27 @@ func (x *OrderState) GetUpdatedAt() *timestamppb.Timestamp {
 func (x *OrderState) GetDeliveryInfo() *common.DeliveryInfo {
 	if x != nil {
 		return x.DeliveryInfo
+	}
+	return nil
+}
+
+func (x *OrderState) GetDeliveryStatus() common.DeliveryStatus {
+	if x != nil {
+		return x.DeliveryStatus
+	}
+	return common.DeliveryStatus(0)
+}
+
+func (x *OrderState) GetPackageId() string {
+	if x != nil {
+		return x.PackageId
+	}
+	return ""
+}
+
+func (x *OrderState) GetRequestedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.RequestedAt
 	}
 	return nil
 }
@@ -864,7 +891,7 @@ var File_infrastructure_rpc_order_v1_model_v1_model_proto protoreflect.FileDescr
 
 const file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDesc = "" +
 	"\n" +
-	"0infrastructure/rpc/order/v1/model/v1/model.proto\x12$infrastructure.rpc.order.v1.model.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a google/protobuf/field_mask.proto\x1a#domain/order/v1/common/common.proto\"\x82\x03\n" +
+	"0infrastructure/rpc/order/v1/model/v1/model.proto\x12$infrastructure.rpc.order.v1.model.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a google/protobuf/field_mask.proto\x1a#domain/order/v1/common/common.proto\"\xb1\x04\n" +
 	"\n" +
 	"OrderState\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n" +
@@ -876,7 +903,12 @@ const file_infrastructure_rpc_order_v1_model_v1_model_proto_rawDesc = "" +
 	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
 	"updated_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12I\n" +
-	"\rdelivery_info\x18\a \x01(\v2$.domain.order.common.v1.DeliveryInfoR\fdeliveryInfo\"M\n" +
+	"\rdelivery_info\x18\a \x01(\v2$.domain.order.common.v1.DeliveryInfoR\fdeliveryInfo\x12O\n" +
+	"\x0fdelivery_status\x18\b \x01(\x0e2&.domain.order.common.v1.DeliveryStatusR\x0edeliveryStatus\x12\x1d\n" +
+	"\n" +
+	"package_id\x18\t \x01(\tR\tpackageId\x12=\n" +
+	"\frequested_at\x18\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampR\vrequestedAt\"M\n" +
 	"\tOrderItem\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n" +
 	"\bquantity\x18\x02 \x01(\x05R\bquantity\x12\x14\n" +
@@ -962,7 +994,8 @@ var file_infrastructure_rpc_order_v1_model_v1_model_proto_goTypes = []any{
 	(common.OrderStatus)(0),           // 14: domain.order.common.v1.OrderStatus
 	(*timestamppb.Timestamp)(nil),     // 15: google.protobuf.Timestamp
 	(*common.DeliveryInfo)(nil),       // 16: domain.order.common.v1.DeliveryInfo
-	(*fieldmaskpb.FieldMask)(nil),     // 17: google.protobuf.FieldMask
+	(common.DeliveryStatus)(0),        // 17: domain.order.common.v1.DeliveryStatus
+	(*fieldmaskpb.FieldMask)(nil),     // 18: google.protobuf.FieldMask
 }
 var file_infrastructure_rpc_order_v1_model_v1_model_proto_depIdxs = []int32{
 	1,  // 0: infrastructure.rpc.order.v1.model.v1.OrderState.items:type_name -> infrastructure.rpc.order.v1.model.v1.OrderItem
@@ -970,22 +1003,24 @@ var file_infrastructure_rpc_order_v1_model_v1_model_proto_depIdxs = []int32{
 	15, // 2: infrastructure.rpc.order.v1.model.v1.OrderState.created_at:type_name -> google.protobuf.Timestamp
 	15, // 3: infrastructure.rpc.order.v1.model.v1.OrderState.updated_at:type_name -> google.protobuf.Timestamp
 	16, // 4: infrastructure.rpc.order.v1.model.v1.OrderState.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
-	0,  // 5: infrastructure.rpc.order.v1.model.v1.CreateRequest.order:type_name -> infrastructure.rpc.order.v1.model.v1.OrderState
-	16, // 6: infrastructure.rpc.order.v1.model.v1.CreateRequest.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
-	0,  // 7: infrastructure.rpc.order.v1.model.v1.GetResponse.order:type_name -> infrastructure.rpc.order.v1.model.v1.OrderState
-	0,  // 8: infrastructure.rpc.order.v1.model.v1.UpdateRequest.order:type_name -> infrastructure.rpc.order.v1.model.v1.OrderState
-	17, // 9: infrastructure.rpc.order.v1.model.v1.UpdateRequest.update_mask:type_name -> google.protobuf.FieldMask
-	16, // 10: infrastructure.rpc.order.v1.model.v1.UpdateDeliveryInfoRequest.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
-	16, // 11: infrastructure.rpc.order.v1.model.v1.CheckoutRequest.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
-	14, // 12: infrastructure.rpc.order.v1.model.v1.ListRequest.status_filter:type_name -> domain.order.common.v1.OrderStatus
-	10, // 13: infrastructure.rpc.order.v1.model.v1.ListRequest.pagination:type_name -> infrastructure.rpc.order.v1.model.v1.Pagination
-	0,  // 14: infrastructure.rpc.order.v1.model.v1.ListResponse.orders:type_name -> infrastructure.rpc.order.v1.model.v1.OrderState
-	11, // 15: infrastructure.rpc.order.v1.model.v1.ListResponse.pagination:type_name -> infrastructure.rpc.order.v1.model.v1.PaginationResponse
-	16, // [16:16] is the sub-list for method output_type
-	16, // [16:16] is the sub-list for method input_type
-	16, // [16:16] is the sub-list for extension type_name
-	16, // [16:16] is the sub-list for extension extendee
-	0,  // [0:16] is the sub-list for field type_name
+	17, // 5: infrastructure.rpc.order.v1.model.v1.OrderState.delivery_status:type_name -> domain.order.common.v1.DeliveryStatus
+	15, // 6: infrastructure.rpc.order.v1.model.v1.OrderState.requested_at:type_name -> google.protobuf.Timestamp
+	0,  // 7: infrastructure.rpc.order.v1.model.v1.CreateRequest.order:type_name -> infrastructure.rpc.order.v1.model.v1.OrderState
+	16, // 8: infrastructure.rpc.order.v1.model.v1.CreateRequest.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
+	0,  // 9: infrastructure.rpc.order.v1.model.v1.GetResponse.order:type_name -> infrastructure.rpc.order.v1.model.v1.OrderState
+	0,  // 10: infrastructure.rpc.order.v1.model.v1.UpdateRequest.order:type_name -> infrastructure.rpc.order.v1.model.v1.OrderState
+	18, // 11: infrastructure.rpc.order.v1.model.v1.UpdateRequest.update_mask:type_name -> google.protobuf.FieldMask
+	16, // 12: infrastructure.rpc.order.v1.model.v1.UpdateDeliveryInfoRequest.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
+	16, // 13: infrastructure.rpc.order.v1.model.v1.CheckoutRequest.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
+	14, // 14: infrastructure.rpc.order.v1.model.v1.ListRequest.status_filter:type_name -> domain.order.common.v1.OrderStatus
+	10, // 15: infrastructure.rpc.order.v1.model.v1.ListRequest.pagination:type_name -> infrastructure.rpc.order.v1.model.v1.Pagination
+	0,  // 16: infrastructure.rpc.order.v1.model.v1.ListResponse.orders:type_name -> infrastructure.rpc.order.v1.model.v1.OrderState
+	11, // 17: infrastructure.rpc.order.v1.model.v1.ListResponse.pagination:type_name -> infrastructure.rpc.order.v1.model.v1.PaginationResponse
+	18, // [18:18] is the sub-list for method output_type
+	18, // [18:18] is the sub-list for method input_type
+	18, // [18:18] is the sub-list for extension type_name
+	18, // [18:18] is the sub-list for extension extendee
+	0,  // [0:18] is the sub-list for field type_name
 }
 
 func init() { file_infrastructure_rpc_order_v1_model_v1_model_proto_init() }

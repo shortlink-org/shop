@@ -1,4 +1,4 @@
-package create
+package request_delivery
 
 import (
 	"context"
@@ -7,11 +7,10 @@ import (
 
 	"github.com/shortlink-org/go-sdk/logger"
 
-	orderv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 )
 
-// Handler handles CreateOrder commands.
+// Handler handles RequestDelivery commands.
 type Handler struct {
 	log       logger.Logger
 	uow       ports.UnitOfWork
@@ -19,7 +18,7 @@ type Handler struct {
 	publisher ports.EventPublisher
 }
 
-// NewHandler creates a new CreateOrder handler.
+// NewHandler creates a new RequestDelivery handler.
 func NewHandler(
 	log logger.Logger,
 	uow ports.UnitOfWork,
@@ -34,10 +33,9 @@ func NewHandler(
 	}, nil
 }
 
-// Handle executes the CreateOrder command.
-// Pattern: Create aggregate -> Persist -> Publish event
+// Handle executes the RequestDelivery command.
+// Pattern: Begin -> Load -> Mutate -> Save -> Publish in tx -> Commit.
 func (h *Handler) Handle(ctx context.Context, cmd Command) error {
-	// Begin transaction
 	ctx, err := h.uow.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
@@ -49,38 +47,27 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) error {
 			return
 		}
 
-		err := h.uow.Rollback(ctx)
-		if err != nil {
-			h.log.Warn("transaction rollback failed", slog.Any("error", err))
+		rollbackErr := h.uow.Rollback(ctx)
+		if rollbackErr != nil {
+			h.log.Warn("transaction rollback failed", slog.Any("error", rollbackErr))
 		}
 	}()
 
-	// 1. Create domain aggregate
-	order := orderv1.NewOrderState(cmd.CustomerID)
-	order.SetID(cmd.OrderID)
-
-	// 2. Apply business logic (create order with items)
-	if err := order.CreateOrder(ctx, cmd.Items); err != nil {
-		return err
+	order, err := h.orderRepo.Load(ctx, cmd.OrderID)
+	if err != nil {
+		return fmt.Errorf("failed to load order: %w", err)
 	}
 
-	// 3. Set delivery info if provided
-	if cmd.DeliveryInfo != nil {
-		err := order.SetDeliveryInfo(*cmd.DeliveryInfo)
-		if err != nil {
-			return fmt.Errorf("failed to set delivery info: %w", err)
-		}
+	if err := order.RequestDelivery(&cmd.PackageID, cmd.RequestedAt); err != nil {
+		return fmt.Errorf("failed to record delivery request: %w", err)
 	}
 
-	// 4. Persist to database
 	if err := h.orderRepo.Save(ctx, order); err != nil {
-		return err
+		return fmt.Errorf("failed to save order: %w", err)
 	}
 
-	// 5. Publish domain events to outbox (same transaction)
 	for _, event := range order.GetDomainEvents() {
-		err := h.publisher.Publish(ctx, event)
-		if err != nil {
+		if err := h.publisher.Publish(ctx, event); err != nil {
 			return fmt.Errorf("failed to publish domain event to outbox: %w", err)
 		}
 	}

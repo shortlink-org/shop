@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 
 	orderv1 "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	orderCancel "github.com/shortlink-org/shop/oms/internal/usecases/order/command/cancel"
+	orderRequestDelivery "github.com/shortlink-org/shop/oms/internal/usecases/order/command/request_delivery"
 	orderGet "github.com/shortlink-org/shop/oms/internal/usecases/order/query/get"
 	"github.com/shortlink-org/shop/oms/internal/workers/order/activities/dto"
 )
@@ -24,6 +26,11 @@ type getHandler interface {
 	Handle(ctx context.Context, q orderGet.Query) (orderGet.Result, error)
 }
 
+// requestDeliveryHandler records a successful delivery request inside OMS.
+type requestDeliveryHandler interface {
+	Handle(ctx context.Context, cmd orderRequestDelivery.Command) error
+}
+
 // Activities wraps order command/query handlers for Temporal activities.
 // Activities are the bridge between Temporal workflows and application use cases.
 // Temporal workflows must never access repositories directly - only through activities.
@@ -32,22 +39,35 @@ type getHandler interface {
 // (CreateOrder command handler publishes event, which triggers the workflow).
 // Activities are used for compensation (cancel) and queries during workflow execution.
 type Activities struct {
-	cancelHandler  cancelHandler
-	getHandler     getHandler
-	deliveryClient ports.DeliveryClient
+	cancelHandler          cancelHandler
+	getHandler             getHandler
+	requestDeliveryHandler requestDeliveryHandler
+	deliveryClient         ports.DeliveryClient
 }
 
 // New creates a new Activities instance.
 func New(
 	cancelHandler cancelHandler,
 	getHandler getHandler,
+	requestDeliveryHandler requestDeliveryHandler,
 	deliveryClient ports.DeliveryClient,
 ) *Activities {
 	return &Activities{
-		cancelHandler:  cancelHandler,
-		getHandler:     getHandler,
-		deliveryClient: deliveryClient,
+		cancelHandler:          cancelHandler,
+		getHandler:             getHandler,
+		requestDeliveryHandler: requestDeliveryHandler,
+		deliveryClient:         deliveryClient,
 	}
+}
+
+// NewWithHandlers is a DI-friendly constructor that accepts concrete order handlers.
+func NewWithHandlers(
+	cancelHandler *orderCancel.Handler,
+	getHandler *orderGet.Handler,
+	requestDeliveryHandler *orderRequestDelivery.Handler,
+	deliveryClient ports.DeliveryClient,
+) *Activities {
+	return New(cancelHandler, getHandler, requestDeliveryHandler, deliveryClient)
 }
 
 // CancelOrderRequest represents the request for CancelOrder activity.
@@ -103,6 +123,9 @@ var ErrDeliveryClientNotConfigured = errors.New("delivery client not configured"
 // ErrOrderHasNoDeliveryInfo is returned when the order has no delivery info set.
 var ErrOrderHasNoDeliveryInfo = errors.New("order has no delivery info")
 
+// ErrInvalidPackageID is returned when delivery service returns a malformed package ID.
+var ErrInvalidPackageID = errors.New("delivery service returned invalid package_id")
+
 // RequestDelivery sends the order to the Delivery service for processing.
 // It loads the order (domain aggregate), maps delivery info to AcceptOrderRequest, and calls the Delivery client.
 func (a *Activities) RequestDelivery(ctx context.Context, req RequestDeliveryRequest) (*RequestDeliveryResponse, error) {
@@ -127,6 +150,18 @@ func (a *Activities) RequestDelivery(ctx context.Context, req RequestDeliveryReq
 	resp, err := a.deliveryClient.AcceptOrder(ctx, deliveryReq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to request delivery: %w", err)
+	}
+
+	packageID, err := uuid.Parse(resp.PackageID)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %s", ErrInvalidPackageID, resp.PackageID)
+	}
+
+	if err := a.requestDeliveryHandler.Handle(
+		ctx,
+		orderRequestDelivery.NewCommand(req.OrderID, packageID, time.Now().UTC()),
+	); err != nil {
+		return nil, fmt.Errorf("failed to persist delivery request: %w", err)
 	}
 
 	return &RequestDeliveryResponse{

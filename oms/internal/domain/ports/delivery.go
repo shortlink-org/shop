@@ -10,6 +10,8 @@ import (
 // DeliveryClient defines the interface for communicating with the Delivery service.
 // This is a port in the hexagonal architecture that will be implemented
 // by a gRPC adapter in the infrastructure layer.
+//
+//nolint:iface // port interface used by usecases and DI
 type DeliveryClient interface {
 	AcceptOrder(ctx context.Context, req AcceptOrderRequest) (*AcceptOrderResponse, error)
 }

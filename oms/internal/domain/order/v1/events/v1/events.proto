@@ -23,6 +23,8 @@ message OrderCreated {
   google.protobuf.Timestamp created_at = 5;
   // OccurredAt is the timestamp when the event occurred
   google.protobuf.Timestamp occurred_at = 6;
+  // Aggregate version after the mutation was applied
+  int32 aggregate_version = 7;
 }
 
 // OrderCancelled event - canonical name: oms.order.cancelled.v1
@@ -40,6 +42,8 @@ message OrderCancelled {
   google.protobuf.Timestamp cancelled_at = 5;
   // OccurredAt is the timestamp when the event occurred
   google.protobuf.Timestamp occurred_at = 6;
+  // Aggregate version after the mutation was applied
+  int32 aggregate_version = 7;
 }
 
 // OrderCompleted event - canonical name: oms.order.completed.v1
@@ -55,6 +59,8 @@ message OrderCompleted {
   google.protobuf.Timestamp completed_at = 4;
   // OccurredAt is the timestamp when the event occurred
   google.protobuf.Timestamp occurred_at = 5;
+  // Aggregate version after the mutation was applied
+  int32 aggregate_version = 6;
 }
 
 // OrderDeliveryRequestedEvent - canonical name: oms.order.delivery_requested.v1
@@ -79,6 +85,10 @@ message OrderDeliveryRequestedEvent {
   google.protobuf.Timestamp created_at = 8;
   // OccurredAt is the timestamp when the event occurred
   google.protobuf.Timestamp occurred_at = 9;
+  // Package ID assigned by delivery service (optional at request time)
+  string package_id = 10;
+  // Aggregate version after the mutation was applied
+  int32 aggregate_version = 11;
 }
 
 // OrderDeliveryStatusUpdatedEvent - canonical name: oms.order.delivery_status_updated.v1
@@ -97,6 +107,8 @@ message OrderDeliveryStatusUpdatedEvent {
   string courier_id = 5;
   // OccurredAt is the timestamp when the event occurred
   google.protobuf.Timestamp occurred_at = 6;
+  // Aggregate version after the mutation was applied
+  int32 aggregate_version = 7;
 }
 
 // OrderDeliveryCompletedEvent - canonical name: oms.order.delivery_completed.v1
@@ -115,6 +127,8 @@ message OrderDeliveryCompletedEvent {
   domain.order.common.v1.DeliveryLocation delivery_location = 5;
   // OccurredAt is the timestamp when the event occurred
   google.protobuf.Timestamp occurred_at = 6;
+  // Aggregate version after the mutation was applied
+  int32 aggregate_version = 7;
 }
 
 // OrderDeliveryFailedEvent - canonical name: oms.order.delivery_failed.v1
@@ -133,5 +147,6 @@ message OrderDeliveryFailedEvent {
   google.protobuf.Timestamp failed_at = 5;
   // OccurredAt is the timestamp when the event occurred
   google.protobuf.Timestamp occurred_at = 6;
+  // Aggregate version after the mutation was applied
+  int32 aggregate_version = 7;
 }
-
