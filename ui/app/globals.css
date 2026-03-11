@@ -126,10 +126,10 @@ body {
 
 /* --- Navbar: height, padding, overflow, search width, cart/profile spacing --- */
 .shop-navbar {
-  padding-top: 0.25rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.25rem;
 }
 .shop-navbar__header {
-  min-height: 4.5rem;
   overflow: visible;
 }
 .shop-navbar__header [class*='search'] {
@@ -137,8 +137,15 @@ body {
 }
 /* Header wrappers: allow badges and dropdowns to show outside bounds */
 .shop-navbar__header > div,
-.shop-navbar__header > div > div {
+.shop-navbar__header > div > div,
+.shop-navbar__header > div > div > div,
+.shop-navbar__header > div > div > div > div {
   overflow: visible;
+}
+.shop-navbar__header > div > div > div {
+  min-height: 5.25rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
 }
 .shop-navbar [class*='notification'] + [class*='profile'],
 .shop-navbar [class*='notifications'] + [class*='profile'] {
@@ -149,9 +156,13 @@ body {
 .shop-navbar [class*='notifications'] button,
 .shop-navbar [class*='profile'] button,
 .shop-navbar [class*='profile'] a[role='button'] {
-  min-height: 2.5rem;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+  min-height: 2.75rem;
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+}
+.shop-navbar__header [data-component='toggle-dark-mode'] {
+  display: inline-flex;
+  align-items: center;
 }
 
 .shop-panel {

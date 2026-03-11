@@ -46,9 +46,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const requestHeaders = await headers();
   const authHeader = requestHeaders.get('authorization') ?? undefined;
 
-  // Pass cart promise that never rejects — when carts service is down we resolve with CART_UNAVAILABLE so UI can show "we'll display it later"
+  // Resolve the cart on the server so client cart state does not suspend or roll back between
+  // an optimistic add-to-cart update and the revalidated snapshot.
   // Identity: only Authorization (JWT) is forwarded; oms-graphql gets x-user-id from Istio (RequestAuthentication outputClaimToHeaders).
-  const cartPromise: Promise<CartLoadResult> = getCart({
+  const initialCartResult: CartLoadResult = await getCart({
     authorization: authHeader
   }).catch(() => CART_UNAVAILABLE);
 
@@ -68,10 +69,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <Providers>
-            <CartProvider cartPromise={cartPromise}>
+            <CartProvider initialCartResult={initialCartResult}>
               <a
                 href="#main"
-                className="focus-ring absolute left-4 top-4 z-[100] -translate-y-full rounded-md bg-[var(--color-foreground)] px-4 py-2.5 text-sm font-medium text-[var(--color-background)] transition-transform focus:translate-y-0 focus:outline-2 focus:outline-offset-2"
+                className="focus-ring absolute top-4 left-4 z-[100] -translate-y-full rounded-md bg-[var(--color-foreground)] px-4 py-2.5 text-sm font-medium text-[var(--color-background)] transition-transform focus:translate-y-0 focus:outline-2 focus:outline-offset-2"
               >
                 Skip to main content
               </a>

@@ -2,10 +2,9 @@
 //!
 //! Adds recipient_name, recipient_phone, recipient_email to delivery.packages
 //! for storing recipient contact details from OMS AcceptOrder.
+//! Uses IF NOT EXISTS so the migration is idempotent when columns already exist.
 
 use sea_orm_migration::prelude::*;
-
-use super::m20260131_000001_create_couriers::Delivery;
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -14,13 +13,12 @@ pub struct Migration;
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
-            .alter_table(
-                Table::alter()
-                    .table((Delivery::Schema, Packages::Table))
-                    .add_column(ColumnDef::new(Packages::RecipientName).text().null())
-                    .add_column(ColumnDef::new(Packages::RecipientPhone).text().null())
-                    .add_column(ColumnDef::new(Packages::RecipientEmail).text().null())
-                    .to_owned(),
+            .get_connection()
+            .execute_unprepared(
+                "ALTER TABLE delivery.packages
+                 ADD COLUMN IF NOT EXISTS recipient_name TEXT,
+                 ADD COLUMN IF NOT EXISTS recipient_phone TEXT,
+                 ADD COLUMN IF NOT EXISTS recipient_email TEXT",
             )
             .await?;
 
@@ -29,25 +27,15 @@ impl MigrationTrait for Migration {
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
-            .alter_table(
-                Table::alter()
-                    .table((Delivery::Schema, Packages::Table))
-                    .drop_column(Packages::RecipientName)
-                    .drop_column(Packages::RecipientPhone)
-                    .drop_column(Packages::RecipientEmail)
-                    .to_owned(),
+            .get_connection()
+            .execute_unprepared(
+                "ALTER TABLE delivery.packages
+                 DROP COLUMN IF EXISTS recipient_name,
+                 DROP COLUMN IF EXISTS recipient_phone,
+                 DROP COLUMN IF EXISTS recipient_email",
             )
             .await?;
 
         Ok(())
     }
-}
-
-/// Packages table columns (subset used in this migration)
-#[derive(Iden)]
-pub enum Packages {
-    Table,
-    RecipientName,
-    RecipientPhone,
-    RecipientEmail,
 }

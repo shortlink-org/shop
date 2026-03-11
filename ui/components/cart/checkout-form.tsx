@@ -185,7 +185,11 @@ export default function CheckoutForm({
         })
       });
       const json = (await res.json()) as {
-        data?: { randomAddress?: { address?: { street?: string; city?: string; postalCode?: string; country?: string } } };
+        data?: {
+          randomAddress?: {
+            address?: { street?: string; city?: string; postalCode?: string; country?: string };
+          };
+        };
         errors?: unknown[];
       };
       if (json.errors?.length) {
@@ -193,13 +197,23 @@ export default function CheckoutForm({
       }
       const addr = json.data?.randomAddress?.address;
       if (addr) {
-        setValue('deliveryAddress.street', addr.street ?? '', { shouldDirty: true, shouldTouch: true });
-        setValue('deliveryAddress.city', addr.city ?? '', { shouldDirty: true, shouldTouch: true });
-        setValue('deliveryAddress.postalCode', addr.postalCode ?? '', { shouldDirty: true, shouldTouch: true });
-        setValue('deliveryAddress.country', (addr.country ?? 'Germany') as CheckoutFormInput['deliveryAddress']['country'], {
+        setValue('deliveryAddress.street', addr.street ?? '', {
           shouldDirty: true,
           shouldTouch: true
         });
+        setValue('deliveryAddress.city', addr.city ?? '', { shouldDirty: true, shouldTouch: true });
+        setValue('deliveryAddress.postalCode', addr.postalCode ?? '', {
+          shouldDirty: true,
+          shouldTouch: true
+        });
+        setValue(
+          'deliveryAddress.country',
+          (addr.country ?? 'Germany') as CheckoutFormInput['deliveryAddress']['country'],
+          {
+            shouldDirty: true,
+            shouldTouch: true
+          }
+        );
       }
     } finally {
       setRandomAddressLoading(false);

@@ -107,7 +107,12 @@ export function StorefrontHero({ goods }: { goods: Good[] }) {
                   {truncateDescription(featuredGood.description, 90)}
                 </p>
               </div>
-              <Button as={Link} asProps={{ href: `/good/${featuredGood.id}` }} variant="outline" className="shrink-0">
+              <Button
+                as={Link}
+                asProps={{ href: `/good/${featuredGood.id}` }}
+                variant="outline"
+                className="shrink-0"
+              >
                 View item
               </Button>
             </div>
@@ -129,7 +134,8 @@ export function StorefrontHero({ goods }: { goods: Good[] }) {
                 </div>
               </div>
               <p className="mt-2 line-clamp-2 text-xs leading-5 text-[var(--color-muted-foreground)]">
-                Showcase the fastest-moving items first and keep the leaderboard close to the buy flow.
+                Showcase the fastest-moving items first and keep the leaderboard close to the buy
+                flow.
               </p>
             </div>
             <div className="rounded-xl border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_88%,transparent)] p-3">
@@ -147,7 +153,8 @@ export function StorefrontHero({ goods }: { goods: Good[] }) {
                 </div>
               </div>
               <p className="mt-2 line-clamp-2 text-xs leading-5 text-[var(--color-muted-foreground)]">
-                Consistent poster-style visuals so the catalog feels designed even without uploaded media.
+                Consistent poster-style visuals so the catalog feels designed even without uploaded
+                media.
               </p>
             </div>
           </div>

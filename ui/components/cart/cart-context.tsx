@@ -3,7 +3,7 @@
 import { DEFAULT_OPTION } from 'lib/constants';
 import type { Cart, CartItem, Good, GoodVariant } from 'lib/shopify/types';
 import { CART_UNAVAILABLE, type CartLoadResult } from 'lib/shopify';
-import React, { createContext, use, useContext, useMemo, useOptimistic } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 type UpdateType = 'plus' | 'minus' | 'delete';
 
@@ -161,38 +161,53 @@ function cartReducer(state: Cart | undefined, action: CartAction): Cart {
 
 export function CartProvider({
   children,
-  cartPromise
+  initialCartResult
 }: {
   children: React.ReactNode;
-  cartPromise: Promise<CartLoadResult>;
+  initialCartResult: CartLoadResult;
 }) {
-  const initialResult = use(cartPromise);
-  const cartUnavailable = initialResult === CART_UNAVAILABLE;
-  const initialCart = cartUnavailable ? undefined : initialResult;
-  const [optimisticCart, updateOptimisticCart] = useOptimistic(initialCart, cartReducer);
+  const initialCart = initialCartResult === CART_UNAVAILABLE ? undefined : initialCartResult;
+  const [cart, setCart] = useState<Cart | undefined>(initialCart);
+  const [cartUnavailable, setCartUnavailable] = useState(initialCartResult === CART_UNAVAILABLE);
+
+  useEffect(() => {
+    if (initialCartResult === CART_UNAVAILABLE) {
+      setCartUnavailable(true);
+      return;
+    }
+
+    setCartUnavailable(false);
+    setCart(initialCartResult);
+  }, [initialCartResult]);
 
   const updateCartItem = (merchandiseId: string, updateType: UpdateType) => {
-    updateOptimisticCart({ type: 'UPDATE_ITEM', payload: { merchandiseId, updateType } });
+    setCart((currentCart) =>
+      cartReducer(currentCart, { type: 'UPDATE_ITEM', payload: { merchandiseId, updateType } })
+    );
   };
 
   const addCartItem = (variant: GoodVariant, good: Good) => {
-    updateOptimisticCart({ type: 'ADD_ITEM', payload: { variant, good } });
+    setCart((currentCart) =>
+      cartReducer(currentCart, { type: 'ADD_ITEM', payload: { variant, good } })
+    );
   };
 
   const setCartId = (cartId: string) => {
     if (!cartId) return;
-    updateOptimisticCart({ type: 'SET_CART_ID', payload: { cartId } });
+    setCart((currentCart) =>
+      cartReducer(currentCart, { type: 'SET_CART_ID', payload: { cartId } })
+    );
   };
 
   const value = useMemo(
     () => ({
-      cart: optimisticCart,
+      cart,
       cartUnavailable,
       updateCartItem,
       addCartItem,
       setCartId
     }),
-    [optimisticCart, cartUnavailable]
+    [cart, cartUnavailable]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

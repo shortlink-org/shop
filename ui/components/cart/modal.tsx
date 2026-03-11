@@ -112,6 +112,7 @@ export default function CartModal() {
           panelClassName="sm:!rounded-[1.75rem]"
           backdropClassName="bg-[var(--color-background)]/40 backdrop-blur-[2px]"
           onCheckout={() => {
+            closeCart();
             void redirectToCheckout();
           }}
           onContinueShopping={closeCart}

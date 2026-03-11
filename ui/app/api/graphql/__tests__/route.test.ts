@@ -91,7 +91,8 @@ describe('POST /api/graphql sanitize goods page variable', () => {
     const req = {
       headers: new Headers({
         'content-type': 'application/json',
-        authorization: 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTBlODQwMC1lMjllLTQxZDQtYTcxNi00NDY2NTU0NDAwMDAifQ.x'
+        authorization:
+          'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTBlODQwMC1lMjllLTQxZDQtYTcxNi00NDY2NTU0NDAwMDAifQ.x'
       }),
       text: vi.fn().mockResolvedValue(
         JSON.stringify({
