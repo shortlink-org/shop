@@ -195,6 +195,112 @@ func (x *QueryGetCartResponse) GetGetCart() *GetCartResponse {
 	return nil
 }
 
+// Request message for getLeaderboard operation.
+type QueryGetLeaderboardRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Board         string                 `protobuf:"bytes,1,opt,name=board,proto3" json:"board,omitempty"`
+	Window        string                 `protobuf:"bytes,2,opt,name=window,proto3" json:"window,omitempty"`
+	Limit         *wrapperspb.Int32Value `protobuf:"bytes,3,opt,name=limit,proto3" json:"limit,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *QueryGetLeaderboardRequest) Reset() {
+	*x = QueryGetLeaderboardRequest{}
+	mi := &file_service_v1_service_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *QueryGetLeaderboardRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryGetLeaderboardRequest) ProtoMessage() {}
+
+func (x *QueryGetLeaderboardRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_service_v1_service_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use QueryGetLeaderboardRequest.ProtoReflect.Descriptor instead.
+func (*QueryGetLeaderboardRequest) Descriptor() ([]byte, []int) {
+	return file_service_v1_service_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *QueryGetLeaderboardRequest) GetBoard() string {
+	if x != nil {
+		return x.Board
+	}
+	return ""
+}
+
+func (x *QueryGetLeaderboardRequest) GetWindow() string {
+	if x != nil {
+		return x.Window
+	}
+	return ""
+}
+
+func (x *QueryGetLeaderboardRequest) GetLimit() *wrapperspb.Int32Value {
+	if x != nil {
+		return x.Limit
+	}
+	return nil
+}
+
+// Response message for getLeaderboard operation.
+type QueryGetLeaderboardResponse struct {
+	state          protoimpl.MessageState  `protogen:"open.v1"`
+	GetLeaderboard *GetLeaderboardResponse `protobuf:"bytes,1,opt,name=get_leaderboard,json=getLeaderboard,proto3" json:"get_leaderboard,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *QueryGetLeaderboardResponse) Reset() {
+	*x = QueryGetLeaderboardResponse{}
+	mi := &file_service_v1_service_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *QueryGetLeaderboardResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryGetLeaderboardResponse) ProtoMessage() {}
+
+func (x *QueryGetLeaderboardResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_service_v1_service_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use QueryGetLeaderboardResponse.ProtoReflect.Descriptor instead.
+func (*QueryGetLeaderboardResponse) Descriptor() ([]byte, []int) {
+	return file_service_v1_service_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *QueryGetLeaderboardResponse) GetGetLeaderboard() *GetLeaderboardResponse {
+	if x != nil {
+		return x.GetLeaderboard
+	}
+	return nil
+}
+
 // Request message for getOrder operation.
 type QueryGetOrderRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -205,7 +311,7 @@ type QueryGetOrderRequest struct {
 
 func (x *QueryGetOrderRequest) Reset() {
 	*x = QueryGetOrderRequest{}
-	mi := &file_service_v1_service_proto_msgTypes[4]
+	mi := &file_service_v1_service_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -217,7 +323,7 @@ func (x *QueryGetOrderRequest) String() string {
 func (*QueryGetOrderRequest) ProtoMessage() {}
 
 func (x *QueryGetOrderRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[4]
+	mi := &file_service_v1_service_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -230,7 +336,7 @@ func (x *QueryGetOrderRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QueryGetOrderRequest.ProtoReflect.Descriptor instead.
 func (*QueryGetOrderRequest) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{4}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *QueryGetOrderRequest) GetId() string {
@@ -250,7 +356,7 @@ type QueryGetOrderResponse struct {
 
 func (x *QueryGetOrderResponse) Reset() {
 	*x = QueryGetOrderResponse{}
-	mi := &file_service_v1_service_proto_msgTypes[5]
+	mi := &file_service_v1_service_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -262,7 +368,7 @@ func (x *QueryGetOrderResponse) String() string {
 func (*QueryGetOrderResponse) ProtoMessage() {}
 
 func (x *QueryGetOrderResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[5]
+	mi := &file_service_v1_service_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -275,7 +381,7 @@ func (x *QueryGetOrderResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QueryGetOrderResponse.ProtoReflect.Descriptor instead.
 func (*QueryGetOrderResponse) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{5}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *QueryGetOrderResponse) GetGetOrder() *GetOrderResponse {
@@ -295,7 +401,7 @@ type MutationAddItemRequest struct {
 
 func (x *MutationAddItemRequest) Reset() {
 	*x = MutationAddItemRequest{}
-	mi := &file_service_v1_service_proto_msgTypes[6]
+	mi := &file_service_v1_service_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -307,7 +413,7 @@ func (x *MutationAddItemRequest) String() string {
 func (*MutationAddItemRequest) ProtoMessage() {}
 
 func (x *MutationAddItemRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[6]
+	mi := &file_service_v1_service_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -320,7 +426,7 @@ func (x *MutationAddItemRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MutationAddItemRequest.ProtoReflect.Descriptor instead.
 func (*MutationAddItemRequest) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{6}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *MutationAddItemRequest) GetAddRequest() *ItemRequest {
@@ -340,7 +446,7 @@ type MutationAddItemResponse struct {
 
 func (x *MutationAddItemResponse) Reset() {
 	*x = MutationAddItemResponse{}
-	mi := &file_service_v1_service_proto_msgTypes[7]
+	mi := &file_service_v1_service_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -352,7 +458,7 @@ func (x *MutationAddItemResponse) String() string {
 func (*MutationAddItemResponse) ProtoMessage() {}
 
 func (x *MutationAddItemResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[7]
+	mi := &file_service_v1_service_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -365,7 +471,7 @@ func (x *MutationAddItemResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MutationAddItemResponse.ProtoReflect.Descriptor instead.
 func (*MutationAddItemResponse) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{7}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *MutationAddItemResponse) GetAddItem() *Empty {
@@ -385,7 +491,7 @@ type MutationRemoveItemRequest struct {
 
 func (x *MutationRemoveItemRequest) Reset() {
 	*x = MutationRemoveItemRequest{}
-	mi := &file_service_v1_service_proto_msgTypes[8]
+	mi := &file_service_v1_service_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -397,7 +503,7 @@ func (x *MutationRemoveItemRequest) String() string {
 func (*MutationRemoveItemRequest) ProtoMessage() {}
 
 func (x *MutationRemoveItemRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[8]
+	mi := &file_service_v1_service_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -410,7 +516,7 @@ func (x *MutationRemoveItemRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MutationRemoveItemRequest.ProtoReflect.Descriptor instead.
 func (*MutationRemoveItemRequest) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{8}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *MutationRemoveItemRequest) GetRemoveRequest() *ItemRequest {
@@ -430,7 +536,7 @@ type MutationRemoveItemResponse struct {
 
 func (x *MutationRemoveItemResponse) Reset() {
 	*x = MutationRemoveItemResponse{}
-	mi := &file_service_v1_service_proto_msgTypes[9]
+	mi := &file_service_v1_service_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -442,7 +548,7 @@ func (x *MutationRemoveItemResponse) String() string {
 func (*MutationRemoveItemResponse) ProtoMessage() {}
 
 func (x *MutationRemoveItemResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[9]
+	mi := &file_service_v1_service_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -455,7 +561,7 @@ func (x *MutationRemoveItemResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MutationRemoveItemResponse.ProtoReflect.Descriptor instead.
 func (*MutationRemoveItemResponse) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{9}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *MutationRemoveItemResponse) GetRemoveItem() *Empty {
@@ -474,7 +580,7 @@ type MutationResetCartRequest struct {
 
 func (x *MutationResetCartRequest) Reset() {
 	*x = MutationResetCartRequest{}
-	mi := &file_service_v1_service_proto_msgTypes[10]
+	mi := &file_service_v1_service_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -486,7 +592,7 @@ func (x *MutationResetCartRequest) String() string {
 func (*MutationResetCartRequest) ProtoMessage() {}
 
 func (x *MutationResetCartRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[10]
+	mi := &file_service_v1_service_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -499,7 +605,7 @@ func (x *MutationResetCartRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MutationResetCartRequest.ProtoReflect.Descriptor instead.
 func (*MutationResetCartRequest) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{10}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{12}
 }
 
 // Response message for resetCart operation.
@@ -512,7 +618,7 @@ type MutationResetCartResponse struct {
 
 func (x *MutationResetCartResponse) Reset() {
 	*x = MutationResetCartResponse{}
-	mi := &file_service_v1_service_proto_msgTypes[11]
+	mi := &file_service_v1_service_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -524,7 +630,7 @@ func (x *MutationResetCartResponse) String() string {
 func (*MutationResetCartResponse) ProtoMessage() {}
 
 func (x *MutationResetCartResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[11]
+	mi := &file_service_v1_service_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -537,7 +643,7 @@ func (x *MutationResetCartResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MutationResetCartResponse.ProtoReflect.Descriptor instead.
 func (*MutationResetCartResponse) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{11}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *MutationResetCartResponse) GetResetCart() *Empty {
@@ -557,7 +663,7 @@ type MutationCreateOrderRequest struct {
 
 func (x *MutationCreateOrderRequest) Reset() {
 	*x = MutationCreateOrderRequest{}
-	mi := &file_service_v1_service_proto_msgTypes[12]
+	mi := &file_service_v1_service_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -569,7 +675,7 @@ func (x *MutationCreateOrderRequest) String() string {
 func (*MutationCreateOrderRequest) ProtoMessage() {}
 
 func (x *MutationCreateOrderRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[12]
+	mi := &file_service_v1_service_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -582,7 +688,7 @@ func (x *MutationCreateOrderRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MutationCreateOrderRequest.ProtoReflect.Descriptor instead.
 func (*MutationCreateOrderRequest) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{12}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *MutationCreateOrderRequest) GetInput() *CreateOrderInput {
@@ -602,7 +708,7 @@ type MutationCreateOrderResponse struct {
 
 func (x *MutationCreateOrderResponse) Reset() {
 	*x = MutationCreateOrderResponse{}
-	mi := &file_service_v1_service_proto_msgTypes[13]
+	mi := &file_service_v1_service_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -614,7 +720,7 @@ func (x *MutationCreateOrderResponse) String() string {
 func (*MutationCreateOrderResponse) ProtoMessage() {}
 
 func (x *MutationCreateOrderResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[13]
+	mi := &file_service_v1_service_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -627,7 +733,7 @@ func (x *MutationCreateOrderResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MutationCreateOrderResponse.ProtoReflect.Descriptor instead.
 func (*MutationCreateOrderResponse) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{13}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *MutationCreateOrderResponse) GetCreateOrder() *Empty {
@@ -647,7 +753,7 @@ type MutationCancelOrderRequest struct {
 
 func (x *MutationCancelOrderRequest) Reset() {
 	*x = MutationCancelOrderRequest{}
-	mi := &file_service_v1_service_proto_msgTypes[14]
+	mi := &file_service_v1_service_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -659,7 +765,7 @@ func (x *MutationCancelOrderRequest) String() string {
 func (*MutationCancelOrderRequest) ProtoMessage() {}
 
 func (x *MutationCancelOrderRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[14]
+	mi := &file_service_v1_service_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -672,7 +778,7 @@ func (x *MutationCancelOrderRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MutationCancelOrderRequest.ProtoReflect.Descriptor instead.
 func (*MutationCancelOrderRequest) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{14}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *MutationCancelOrderRequest) GetOrderId() string {
@@ -692,7 +798,7 @@ type MutationCancelOrderResponse struct {
 
 func (x *MutationCancelOrderResponse) Reset() {
 	*x = MutationCancelOrderResponse{}
-	mi := &file_service_v1_service_proto_msgTypes[15]
+	mi := &file_service_v1_service_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -704,7 +810,7 @@ func (x *MutationCancelOrderResponse) String() string {
 func (*MutationCancelOrderResponse) ProtoMessage() {}
 
 func (x *MutationCancelOrderResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[15]
+	mi := &file_service_v1_service_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -717,7 +823,7 @@ func (x *MutationCancelOrderResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MutationCancelOrderResponse.ProtoReflect.Descriptor instead.
 func (*MutationCancelOrderResponse) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{15}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *MutationCancelOrderResponse) GetCancelOrder() *Empty {
@@ -737,7 +843,7 @@ type MutationUpdateDeliveryInfoRequest struct {
 
 func (x *MutationUpdateDeliveryInfoRequest) Reset() {
 	*x = MutationUpdateDeliveryInfoRequest{}
-	mi := &file_service_v1_service_proto_msgTypes[16]
+	mi := &file_service_v1_service_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -749,7 +855,7 @@ func (x *MutationUpdateDeliveryInfoRequest) String() string {
 func (*MutationUpdateDeliveryInfoRequest) ProtoMessage() {}
 
 func (x *MutationUpdateDeliveryInfoRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[16]
+	mi := &file_service_v1_service_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -762,7 +868,7 @@ func (x *MutationUpdateDeliveryInfoRequest) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use MutationUpdateDeliveryInfoRequest.ProtoReflect.Descriptor instead.
 func (*MutationUpdateDeliveryInfoRequest) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{16}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *MutationUpdateDeliveryInfoRequest) GetInput() *UpdateDeliveryInfoInput {
@@ -782,7 +888,7 @@ type MutationUpdateDeliveryInfoResponse struct {
 
 func (x *MutationUpdateDeliveryInfoResponse) Reset() {
 	*x = MutationUpdateDeliveryInfoResponse{}
-	mi := &file_service_v1_service_proto_msgTypes[17]
+	mi := &file_service_v1_service_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -794,7 +900,7 @@ func (x *MutationUpdateDeliveryInfoResponse) String() string {
 func (*MutationUpdateDeliveryInfoResponse) ProtoMessage() {}
 
 func (x *MutationUpdateDeliveryInfoResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[17]
+	mi := &file_service_v1_service_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -807,7 +913,7 @@ func (x *MutationUpdateDeliveryInfoResponse) ProtoReflect() protoreflect.Message
 
 // Deprecated: Use MutationUpdateDeliveryInfoResponse.ProtoReflect.Descriptor instead.
 func (*MutationUpdateDeliveryInfoResponse) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{17}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *MutationUpdateDeliveryInfoResponse) GetUpdateDeliveryInfo() *Empty {
@@ -827,7 +933,7 @@ type MutationCheckoutRequest struct {
 
 func (x *MutationCheckoutRequest) Reset() {
 	*x = MutationCheckoutRequest{}
-	mi := &file_service_v1_service_proto_msgTypes[18]
+	mi := &file_service_v1_service_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -839,7 +945,7 @@ func (x *MutationCheckoutRequest) String() string {
 func (*MutationCheckoutRequest) ProtoMessage() {}
 
 func (x *MutationCheckoutRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[18]
+	mi := &file_service_v1_service_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -852,7 +958,7 @@ func (x *MutationCheckoutRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MutationCheckoutRequest.ProtoReflect.Descriptor instead.
 func (*MutationCheckoutRequest) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{18}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *MutationCheckoutRequest) GetInput() *CheckoutInput {
@@ -872,7 +978,7 @@ type MutationCheckoutResponse struct {
 
 func (x *MutationCheckoutResponse) Reset() {
 	*x = MutationCheckoutResponse{}
-	mi := &file_service_v1_service_proto_msgTypes[19]
+	mi := &file_service_v1_service_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -884,7 +990,7 @@ func (x *MutationCheckoutResponse) String() string {
 func (*MutationCheckoutResponse) ProtoMessage() {}
 
 func (x *MutationCheckoutResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[19]
+	mi := &file_service_v1_service_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -897,7 +1003,7 @@ func (x *MutationCheckoutResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MutationCheckoutResponse.ProtoReflect.Descriptor instead.
 func (*MutationCheckoutResponse) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{19}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *MutationCheckoutResponse) GetCheckout() *CheckoutResult {
@@ -916,7 +1022,7 @@ type GetCartResponse struct {
 
 func (x *GetCartResponse) Reset() {
 	*x = GetCartResponse{}
-	mi := &file_service_v1_service_proto_msgTypes[20]
+	mi := &file_service_v1_service_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -928,7 +1034,7 @@ func (x *GetCartResponse) String() string {
 func (*GetCartResponse) ProtoMessage() {}
 
 func (x *GetCartResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[20]
+	mi := &file_service_v1_service_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -941,7 +1047,7 @@ func (x *GetCartResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCartResponse.ProtoReflect.Descriptor instead.
 func (*GetCartResponse) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{20}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *GetCartResponse) GetState() *CartState {
@@ -960,7 +1066,7 @@ type GetOrderResponse struct {
 
 func (x *GetOrderResponse) Reset() {
 	*x = GetOrderResponse{}
-	mi := &file_service_v1_service_proto_msgTypes[21]
+	mi := &file_service_v1_service_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -972,7 +1078,7 @@ func (x *GetOrderResponse) String() string {
 func (*GetOrderResponse) ProtoMessage() {}
 
 func (x *GetOrderResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[21]
+	mi := &file_service_v1_service_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -985,12 +1091,56 @@ func (x *GetOrderResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetOrderResponse.ProtoReflect.Descriptor instead.
 func (*GetOrderResponse) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{21}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *GetOrderResponse) GetOrder() *OrderState {
 	if x != nil {
 		return x.Order
+	}
+	return nil
+}
+
+type GetLeaderboardResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Leaderboard   *GoodsLeaderboard      `protobuf:"bytes,1,opt,name=leaderboard,proto3" json:"leaderboard,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetLeaderboardResponse) Reset() {
+	*x = GetLeaderboardResponse{}
+	mi := &file_service_v1_service_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetLeaderboardResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetLeaderboardResponse) ProtoMessage() {}
+
+func (x *GetLeaderboardResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_service_v1_service_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetLeaderboardResponse.ProtoReflect.Descriptor instead.
+func (*GetLeaderboardResponse) Descriptor() ([]byte, []int) {
+	return file_service_v1_service_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *GetLeaderboardResponse) GetLeaderboard() *GoodsLeaderboard {
+	if x != nil {
+		return x.Leaderboard
 	}
 	return nil
 }
@@ -1004,7 +1154,7 @@ type ItemRequest struct {
 
 func (x *ItemRequest) Reset() {
 	*x = ItemRequest{}
-	mi := &file_service_v1_service_proto_msgTypes[22]
+	mi := &file_service_v1_service_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1016,7 +1166,7 @@ func (x *ItemRequest) String() string {
 func (*ItemRequest) ProtoMessage() {}
 
 func (x *ItemRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[22]
+	mi := &file_service_v1_service_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1029,7 +1179,7 @@ func (x *ItemRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ItemRequest.ProtoReflect.Descriptor instead.
 func (*ItemRequest) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{22}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *ItemRequest) GetItems() []*CartItemInput {
@@ -1048,7 +1198,7 @@ type Empty struct {
 
 func (x *Empty) Reset() {
 	*x = Empty{}
-	mi := &file_service_v1_service_proto_msgTypes[23]
+	mi := &file_service_v1_service_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1060,7 +1210,7 @@ func (x *Empty) String() string {
 func (*Empty) ProtoMessage() {}
 
 func (x *Empty) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[23]
+	mi := &file_service_v1_service_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1073,7 +1223,7 @@ func (x *Empty) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Empty.ProtoReflect.Descriptor instead.
 func (*Empty) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{23}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *Empty) GetOk() *wrapperspb.BoolValue {
@@ -1093,7 +1243,7 @@ type CreateOrderInput struct {
 
 func (x *CreateOrderInput) Reset() {
 	*x = CreateOrderInput{}
-	mi := &file_service_v1_service_proto_msgTypes[24]
+	mi := &file_service_v1_service_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1105,7 +1255,7 @@ func (x *CreateOrderInput) String() string {
 func (*CreateOrderInput) ProtoMessage() {}
 
 func (x *CreateOrderInput) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[24]
+	mi := &file_service_v1_service_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1118,7 +1268,7 @@ func (x *CreateOrderInput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateOrderInput.ProtoReflect.Descriptor instead.
 func (*CreateOrderInput) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{24}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *CreateOrderInput) GetItems() []*OrderItemInput {
@@ -1145,7 +1295,7 @@ type UpdateDeliveryInfoInput struct {
 
 func (x *UpdateDeliveryInfoInput) Reset() {
 	*x = UpdateDeliveryInfoInput{}
-	mi := &file_service_v1_service_proto_msgTypes[25]
+	mi := &file_service_v1_service_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1157,7 +1307,7 @@ func (x *UpdateDeliveryInfoInput) String() string {
 func (*UpdateDeliveryInfoInput) ProtoMessage() {}
 
 func (x *UpdateDeliveryInfoInput) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[25]
+	mi := &file_service_v1_service_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1170,7 +1320,7 @@ func (x *UpdateDeliveryInfoInput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateDeliveryInfoInput.ProtoReflect.Descriptor instead.
 func (*UpdateDeliveryInfoInput) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{25}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *UpdateDeliveryInfoInput) GetOrderId() string {
@@ -1196,7 +1346,7 @@ type CheckoutInput struct {
 
 func (x *CheckoutInput) Reset() {
 	*x = CheckoutInput{}
-	mi := &file_service_v1_service_proto_msgTypes[26]
+	mi := &file_service_v1_service_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1208,7 +1358,7 @@ func (x *CheckoutInput) String() string {
 func (*CheckoutInput) ProtoMessage() {}
 
 func (x *CheckoutInput) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[26]
+	mi := &file_service_v1_service_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1221,7 +1371,7 @@ func (x *CheckoutInput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CheckoutInput.ProtoReflect.Descriptor instead.
 func (*CheckoutInput) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{26}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *CheckoutInput) GetDeliveryInfo() *DeliveryInfoInput {
@@ -1240,7 +1390,7 @@ type CheckoutResult struct {
 
 func (x *CheckoutResult) Reset() {
 	*x = CheckoutResult{}
-	mi := &file_service_v1_service_proto_msgTypes[27]
+	mi := &file_service_v1_service_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1252,7 +1402,7 @@ func (x *CheckoutResult) String() string {
 func (*CheckoutResult) ProtoMessage() {}
 
 func (x *CheckoutResult) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[27]
+	mi := &file_service_v1_service_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1265,7 +1415,7 @@ func (x *CheckoutResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CheckoutResult.ProtoReflect.Descriptor instead.
 func (*CheckoutResult) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{27}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *CheckoutResult) GetOrderId() *wrapperspb.StringValue {
@@ -1285,7 +1435,7 @@ type CartItem struct {
 
 func (x *CartItem) Reset() {
 	*x = CartItem{}
-	mi := &file_service_v1_service_proto_msgTypes[28]
+	mi := &file_service_v1_service_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1297,7 +1447,7 @@ func (x *CartItem) String() string {
 func (*CartItem) ProtoMessage() {}
 
 func (x *CartItem) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[28]
+	mi := &file_service_v1_service_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1310,7 +1460,7 @@ func (x *CartItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CartItem.ProtoReflect.Descriptor instead.
 func (*CartItem) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{28}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *CartItem) GetGoodId() *wrapperspb.StringValue {
@@ -1337,7 +1487,7 @@ type CartState struct {
 
 func (x *CartState) Reset() {
 	*x = CartState{}
-	mi := &file_service_v1_service_proto_msgTypes[29]
+	mi := &file_service_v1_service_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1349,7 +1499,7 @@ func (x *CartState) String() string {
 func (*CartState) ProtoMessage() {}
 
 func (x *CartState) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[29]
+	mi := &file_service_v1_service_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1362,7 +1512,7 @@ func (x *CartState) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CartState.ProtoReflect.Descriptor instead.
 func (*CartState) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{29}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *CartState) GetCartId() *wrapperspb.StringValue {
@@ -1389,7 +1539,7 @@ type CartItemInput struct {
 
 func (x *CartItemInput) Reset() {
 	*x = CartItemInput{}
-	mi := &file_service_v1_service_proto_msgTypes[30]
+	mi := &file_service_v1_service_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1401,7 +1551,7 @@ func (x *CartItemInput) String() string {
 func (*CartItemInput) ProtoMessage() {}
 
 func (x *CartItemInput) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[30]
+	mi := &file_service_v1_service_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1414,7 +1564,7 @@ func (x *CartItemInput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CartItemInput.ProtoReflect.Descriptor instead.
 func (*CartItemInput) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{30}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *CartItemInput) GetGoodId() string {
@@ -1442,7 +1592,7 @@ type OrderItem struct {
 
 func (x *OrderItem) Reset() {
 	*x = OrderItem{}
-	mi := &file_service_v1_service_proto_msgTypes[31]
+	mi := &file_service_v1_service_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1454,7 +1604,7 @@ func (x *OrderItem) String() string {
 func (*OrderItem) ProtoMessage() {}
 
 func (x *OrderItem) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[31]
+	mi := &file_service_v1_service_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1467,7 +1617,7 @@ func (x *OrderItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OrderItem.ProtoReflect.Descriptor instead.
 func (*OrderItem) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{31}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *OrderItem) GetId() *wrapperspb.StringValue {
@@ -1505,7 +1655,7 @@ type DeliveryAddress struct {
 
 func (x *DeliveryAddress) Reset() {
 	*x = DeliveryAddress{}
-	mi := &file_service_v1_service_proto_msgTypes[32]
+	mi := &file_service_v1_service_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1517,7 +1667,7 @@ func (x *DeliveryAddress) String() string {
 func (*DeliveryAddress) ProtoMessage() {}
 
 func (x *DeliveryAddress) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[32]
+	mi := &file_service_v1_service_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1530,7 +1680,7 @@ func (x *DeliveryAddress) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeliveryAddress.ProtoReflect.Descriptor instead.
 func (*DeliveryAddress) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{32}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *DeliveryAddress) GetStreet() *wrapperspb.StringValue {
@@ -1585,7 +1735,7 @@ type DeliveryPeriod struct {
 
 func (x *DeliveryPeriod) Reset() {
 	*x = DeliveryPeriod{}
-	mi := &file_service_v1_service_proto_msgTypes[33]
+	mi := &file_service_v1_service_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1597,7 +1747,7 @@ func (x *DeliveryPeriod) String() string {
 func (*DeliveryPeriod) ProtoMessage() {}
 
 func (x *DeliveryPeriod) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[33]
+	mi := &file_service_v1_service_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1610,7 +1760,7 @@ func (x *DeliveryPeriod) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeliveryPeriod.ProtoReflect.Descriptor instead.
 func (*DeliveryPeriod) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{33}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *DeliveryPeriod) GetStartTime() *wrapperspb.StringValue {
@@ -1637,7 +1787,7 @@ type PackageInfo struct {
 
 func (x *PackageInfo) Reset() {
 	*x = PackageInfo{}
-	mi := &file_service_v1_service_proto_msgTypes[34]
+	mi := &file_service_v1_service_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1649,7 +1799,7 @@ func (x *PackageInfo) String() string {
 func (*PackageInfo) ProtoMessage() {}
 
 func (x *PackageInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[34]
+	mi := &file_service_v1_service_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1662,7 +1812,7 @@ func (x *PackageInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PackageInfo.ProtoReflect.Descriptor instead.
 func (*PackageInfo) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{34}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *PackageInfo) GetWeightKg() *wrapperspb.DoubleValue {
@@ -1690,7 +1840,7 @@ type RecipientContacts struct {
 
 func (x *RecipientContacts) Reset() {
 	*x = RecipientContacts{}
-	mi := &file_service_v1_service_proto_msgTypes[35]
+	mi := &file_service_v1_service_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1702,7 +1852,7 @@ func (x *RecipientContacts) String() string {
 func (*RecipientContacts) ProtoMessage() {}
 
 func (x *RecipientContacts) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[35]
+	mi := &file_service_v1_service_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1715,7 +1865,7 @@ func (x *RecipientContacts) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RecipientContacts.ProtoReflect.Descriptor instead.
 func (*RecipientContacts) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{35}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *RecipientContacts) GetRecipientName() *wrapperspb.StringValue {
@@ -1753,7 +1903,7 @@ type DeliveryInfo struct {
 
 func (x *DeliveryInfo) Reset() {
 	*x = DeliveryInfo{}
-	mi := &file_service_v1_service_proto_msgTypes[36]
+	mi := &file_service_v1_service_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1765,7 +1915,7 @@ func (x *DeliveryInfo) String() string {
 func (*DeliveryInfo) ProtoMessage() {}
 
 func (x *DeliveryInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[36]
+	mi := &file_service_v1_service_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1778,7 +1928,7 @@ func (x *DeliveryInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeliveryInfo.ProtoReflect.Descriptor instead.
 func (*DeliveryInfo) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{36}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *DeliveryInfo) GetPickupAddress() *DeliveryAddress {
@@ -1838,7 +1988,7 @@ type OrderState struct {
 
 func (x *OrderState) Reset() {
 	*x = OrderState{}
-	mi := &file_service_v1_service_proto_msgTypes[37]
+	mi := &file_service_v1_service_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1850,7 +2000,7 @@ func (x *OrderState) String() string {
 func (*OrderState) ProtoMessage() {}
 
 func (x *OrderState) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[37]
+	mi := &file_service_v1_service_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1863,7 +2013,7 @@ func (x *OrderState) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OrderState.ProtoReflect.Descriptor instead.
 func (*OrderState) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{37}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *OrderState) GetId() *wrapperspb.StringValue {
@@ -1915,6 +2065,150 @@ func (x *OrderState) GetRequestedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+type GoodsLeaderboard struct {
+	state         protoimpl.MessageState  `protogen:"open.v1"`
+	Board         *wrapperspb.StringValue `protobuf:"bytes,1,opt,name=board,proto3" json:"board,omitempty"`
+	Window        *wrapperspb.StringValue `protobuf:"bytes,2,opt,name=window,proto3" json:"window,omitempty"`
+	GeneratedAt   *timestamppb.Timestamp  `protobuf:"bytes,3,opt,name=generated_at,json=generatedAt,proto3" json:"generated_at,omitempty"`
+	Entries       []*LeaderboardEntry     `protobuf:"bytes,4,rep,name=entries,proto3" json:"entries,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GoodsLeaderboard) Reset() {
+	*x = GoodsLeaderboard{}
+	mi := &file_service_v1_service_proto_msgTypes[41]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GoodsLeaderboard) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GoodsLeaderboard) ProtoMessage() {}
+
+func (x *GoodsLeaderboard) ProtoReflect() protoreflect.Message {
+	mi := &file_service_v1_service_proto_msgTypes[41]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GoodsLeaderboard.ProtoReflect.Descriptor instead.
+func (*GoodsLeaderboard) Descriptor() ([]byte, []int) {
+	return file_service_v1_service_proto_rawDescGZIP(), []int{41}
+}
+
+func (x *GoodsLeaderboard) GetBoard() *wrapperspb.StringValue {
+	if x != nil {
+		return x.Board
+	}
+	return nil
+}
+
+func (x *GoodsLeaderboard) GetWindow() *wrapperspb.StringValue {
+	if x != nil {
+		return x.Window
+	}
+	return nil
+}
+
+func (x *GoodsLeaderboard) GetGeneratedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.GeneratedAt
+	}
+	return nil
+}
+
+func (x *GoodsLeaderboard) GetEntries() []*LeaderboardEntry {
+	if x != nil {
+		return x.Entries
+	}
+	return nil
+}
+
+type LeaderboardEntry struct {
+	state         protoimpl.MessageState  `protogen:"open.v1"`
+	MemberId      *wrapperspb.StringValue `protobuf:"bytes,1,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
+	Rank          *wrapperspb.Int32Value  `protobuf:"bytes,2,opt,name=rank,proto3" json:"rank,omitempty"`
+	Score         *wrapperspb.DoubleValue `protobuf:"bytes,3,opt,name=score,proto3" json:"score,omitempty"`
+	Orders        *wrapperspb.Int64Value  `protobuf:"bytes,4,opt,name=orders,proto3" json:"orders,omitempty"`
+	Units         *wrapperspb.Int64Value  `protobuf:"bytes,5,opt,name=units,proto3" json:"units,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LeaderboardEntry) Reset() {
+	*x = LeaderboardEntry{}
+	mi := &file_service_v1_service_proto_msgTypes[42]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LeaderboardEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LeaderboardEntry) ProtoMessage() {}
+
+func (x *LeaderboardEntry) ProtoReflect() protoreflect.Message {
+	mi := &file_service_v1_service_proto_msgTypes[42]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LeaderboardEntry.ProtoReflect.Descriptor instead.
+func (*LeaderboardEntry) Descriptor() ([]byte, []int) {
+	return file_service_v1_service_proto_rawDescGZIP(), []int{42}
+}
+
+func (x *LeaderboardEntry) GetMemberId() *wrapperspb.StringValue {
+	if x != nil {
+		return x.MemberId
+	}
+	return nil
+}
+
+func (x *LeaderboardEntry) GetRank() *wrapperspb.Int32Value {
+	if x != nil {
+		return x.Rank
+	}
+	return nil
+}
+
+func (x *LeaderboardEntry) GetScore() *wrapperspb.DoubleValue {
+	if x != nil {
+		return x.Score
+	}
+	return nil
+}
+
+func (x *LeaderboardEntry) GetOrders() *wrapperspb.Int64Value {
+	if x != nil {
+		return x.Orders
+	}
+	return nil
+}
+
+func (x *LeaderboardEntry) GetUnits() *wrapperspb.Int64Value {
+	if x != nil {
+		return x.Units
+	}
+	return nil
+}
+
 type DeliveryAddressInput struct {
 	state         protoimpl.MessageState  `protogen:"open.v1"`
 	Street        string                  `protobuf:"bytes,1,opt,name=street,proto3" json:"street,omitempty"`
@@ -1929,7 +2223,7 @@ type DeliveryAddressInput struct {
 
 func (x *DeliveryAddressInput) Reset() {
 	*x = DeliveryAddressInput{}
-	mi := &file_service_v1_service_proto_msgTypes[38]
+	mi := &file_service_v1_service_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1941,7 +2235,7 @@ func (x *DeliveryAddressInput) String() string {
 func (*DeliveryAddressInput) ProtoMessage() {}
 
 func (x *DeliveryAddressInput) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[38]
+	mi := &file_service_v1_service_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1954,7 +2248,7 @@ func (x *DeliveryAddressInput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeliveryAddressInput.ProtoReflect.Descriptor instead.
 func (*DeliveryAddressInput) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{38}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *DeliveryAddressInput) GetStreet() string {
@@ -2009,7 +2303,7 @@ type DeliveryPeriodInput struct {
 
 func (x *DeliveryPeriodInput) Reset() {
 	*x = DeliveryPeriodInput{}
-	mi := &file_service_v1_service_proto_msgTypes[39]
+	mi := &file_service_v1_service_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2021,7 +2315,7 @@ func (x *DeliveryPeriodInput) String() string {
 func (*DeliveryPeriodInput) ProtoMessage() {}
 
 func (x *DeliveryPeriodInput) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[39]
+	mi := &file_service_v1_service_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2034,7 +2328,7 @@ func (x *DeliveryPeriodInput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeliveryPeriodInput.ProtoReflect.Descriptor instead.
 func (*DeliveryPeriodInput) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{39}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *DeliveryPeriodInput) GetStartTime() string {
@@ -2061,7 +2355,7 @@ type PackageInfoInput struct {
 
 func (x *PackageInfoInput) Reset() {
 	*x = PackageInfoInput{}
-	mi := &file_service_v1_service_proto_msgTypes[40]
+	mi := &file_service_v1_service_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2073,7 +2367,7 @@ func (x *PackageInfoInput) String() string {
 func (*PackageInfoInput) ProtoMessage() {}
 
 func (x *PackageInfoInput) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[40]
+	mi := &file_service_v1_service_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2086,7 +2380,7 @@ func (x *PackageInfoInput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PackageInfoInput.ProtoReflect.Descriptor instead.
 func (*PackageInfoInput) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{40}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{45}
 }
 
 func (x *PackageInfoInput) GetWeightKg() float64 {
@@ -2114,7 +2408,7 @@ type RecipientContactsInput struct {
 
 func (x *RecipientContactsInput) Reset() {
 	*x = RecipientContactsInput{}
-	mi := &file_service_v1_service_proto_msgTypes[41]
+	mi := &file_service_v1_service_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2126,7 +2420,7 @@ func (x *RecipientContactsInput) String() string {
 func (*RecipientContactsInput) ProtoMessage() {}
 
 func (x *RecipientContactsInput) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[41]
+	mi := &file_service_v1_service_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2139,7 +2433,7 @@ func (x *RecipientContactsInput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RecipientContactsInput.ProtoReflect.Descriptor instead.
 func (*RecipientContactsInput) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{41}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *RecipientContactsInput) GetRecipientName() *wrapperspb.StringValue {
@@ -2177,7 +2471,7 @@ type DeliveryInfoInput struct {
 
 func (x *DeliveryInfoInput) Reset() {
 	*x = DeliveryInfoInput{}
-	mi := &file_service_v1_service_proto_msgTypes[42]
+	mi := &file_service_v1_service_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2189,7 +2483,7 @@ func (x *DeliveryInfoInput) String() string {
 func (*DeliveryInfoInput) ProtoMessage() {}
 
 func (x *DeliveryInfoInput) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[42]
+	mi := &file_service_v1_service_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2202,7 +2496,7 @@ func (x *DeliveryInfoInput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeliveryInfoInput.ProtoReflect.Descriptor instead.
 func (*DeliveryInfoInput) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{42}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{47}
 }
 
 func (x *DeliveryInfoInput) GetPickupAddress() *DeliveryAddressInput {
@@ -2258,7 +2552,7 @@ type OrderItemInput struct {
 
 func (x *OrderItemInput) Reset() {
 	*x = OrderItemInput{}
-	mi := &file_service_v1_service_proto_msgTypes[43]
+	mi := &file_service_v1_service_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2270,7 +2564,7 @@ func (x *OrderItemInput) String() string {
 func (*OrderItemInput) ProtoMessage() {}
 
 func (x *OrderItemInput) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[43]
+	mi := &file_service_v1_service_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2283,7 +2577,7 @@ func (x *OrderItemInput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OrderItemInput.ProtoReflect.Descriptor instead.
 func (*OrderItemInput) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{43}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *OrderItemInput) GetId() string {
@@ -2316,7 +2610,7 @@ type ListOfCartItem_List struct {
 
 func (x *ListOfCartItem_List) Reset() {
 	*x = ListOfCartItem_List{}
-	mi := &file_service_v1_service_proto_msgTypes[44]
+	mi := &file_service_v1_service_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2328,7 +2622,7 @@ func (x *ListOfCartItem_List) String() string {
 func (*ListOfCartItem_List) ProtoMessage() {}
 
 func (x *ListOfCartItem_List) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[44]
+	mi := &file_service_v1_service_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2360,7 +2654,7 @@ type ListOfOrderItem_List struct {
 
 func (x *ListOfOrderItem_List) Reset() {
 	*x = ListOfOrderItem_List{}
-	mi := &file_service_v1_service_proto_msgTypes[45]
+	mi := &file_service_v1_service_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2372,7 +2666,7 @@ func (x *ListOfOrderItem_List) String() string {
 func (*ListOfOrderItem_List) ProtoMessage() {}
 
 func (x *ListOfOrderItem_List) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[45]
+	mi := &file_service_v1_service_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2410,7 +2704,13 @@ const file_service_v1_service_proto_rawDesc = "" +
 	"\x05items\x18\x01 \x03(\v2\x18.shop.carts.v1.OrderItemR\x05items\"\x15\n" +
 	"\x13QueryGetCartRequest\"Q\n" +
 	"\x14QueryGetCartResponse\x129\n" +
-	"\bget_cart\x18\x01 \x01(\v2\x1e.shop.carts.v1.GetCartResponseR\agetCart\"&\n" +
+	"\bget_cart\x18\x01 \x01(\v2\x1e.shop.carts.v1.GetCartResponseR\agetCart\"}\n" +
+	"\x1aQueryGetLeaderboardRequest\x12\x14\n" +
+	"\x05board\x18\x01 \x01(\tR\x05board\x12\x16\n" +
+	"\x06window\x18\x02 \x01(\tR\x06window\x121\n" +
+	"\x05limit\x18\x03 \x01(\v2\x1b.google.protobuf.Int32ValueR\x05limit\"m\n" +
+	"\x1bQueryGetLeaderboardResponse\x12N\n" +
+	"\x0fget_leaderboard\x18\x01 \x01(\v2%.shop.carts.v1.GetLeaderboardResponseR\x0egetLeaderboard\"&\n" +
 	"\x14QueryGetOrderRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"U\n" +
 	"\x15QueryGetOrderResponse\x12<\n" +
@@ -2448,7 +2748,9 @@ const file_service_v1_service_proto_rawDesc = "" +
 	"\x0fGetCartResponse\x12.\n" +
 	"\x05state\x18\x01 \x01(\v2\x18.shop.carts.v1.CartStateR\x05state\"C\n" +
 	"\x10GetOrderResponse\x12/\n" +
-	"\x05order\x18\x01 \x01(\v2\x19.shop.carts.v1.OrderStateR\x05order\"A\n" +
+	"\x05order\x18\x01 \x01(\v2\x19.shop.carts.v1.OrderStateR\x05order\"[\n" +
+	"\x16GetLeaderboardResponse\x12A\n" +
+	"\vleaderboard\x18\x01 \x01(\v2\x1f.shop.carts.v1.GoodsLeaderboardR\vleaderboard\"A\n" +
 	"\vItemRequest\x122\n" +
 	"\x05items\x18\x01 \x03(\v2\x1c.shop.carts.v1.CartItemInputR\x05items\"3\n" +
 	"\x05Empty\x12*\n" +
@@ -2513,7 +2815,18 @@ const file_service_v1_service_proto_rawDesc = "" +
 	"\x0fdelivery_status\x18\x05 \x01(\v2\x1c.google.protobuf.StringValueR\x0edeliveryStatus\x12;\n" +
 	"\n" +
 	"package_id\x18\x06 \x01(\v2\x1c.google.protobuf.StringValueR\tpackageId\x12=\n" +
-	"\frequested_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\vrequestedAt\"\x91\x02\n" +
+	"\frequested_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\vrequestedAt\"\xf6\x01\n" +
+	"\x10GoodsLeaderboard\x122\n" +
+	"\x05board\x18\x01 \x01(\v2\x1c.google.protobuf.StringValueR\x05board\x124\n" +
+	"\x06window\x18\x02 \x01(\v2\x1c.google.protobuf.StringValueR\x06window\x12=\n" +
+	"\fgenerated_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\vgeneratedAt\x129\n" +
+	"\aentries\x18\x04 \x03(\v2\x1f.shop.carts.v1.LeaderboardEntryR\aentries\"\x9a\x02\n" +
+	"\x10LeaderboardEntry\x129\n" +
+	"\tmember_id\x18\x01 \x01(\v2\x1c.google.protobuf.StringValueR\bmemberId\x12/\n" +
+	"\x04rank\x18\x02 \x01(\v2\x1b.google.protobuf.Int32ValueR\x04rank\x122\n" +
+	"\x05score\x18\x03 \x01(\v2\x1c.google.protobuf.DoubleValueR\x05score\x123\n" +
+	"\x06orders\x18\x04 \x01(\v2\x1b.google.protobuf.Int64ValueR\x06orders\x121\n" +
+	"\x05units\x18\x05 \x01(\v2\x1b.google.protobuf.Int64ValueR\x05units\"\x91\x02\n" +
 	"\x14DeliveryAddressInput\x12\x16\n" +
 	"\x06street\x18\x01 \x01(\tR\x06street\x12\x12\n" +
 	"\x04city\x18\x02 \x01(\tR\x04city\x12=\n" +
@@ -2545,7 +2858,7 @@ const file_service_v1_service_proto_rawDesc = "" +
 	"\x0eOrderItemInput\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n" +
 	"\bquantity\x18\x02 \x01(\x05R\bquantity\x12\x14\n" +
-	"\x05price\x18\x03 \x01(\x01R\x05price2\xc7\a\n" +
+	"\x05price\x18\x03 \x01(\x01R\x05price2\xb7\b\n" +
 	"\x04Shop\x12b\n" +
 	"\x0fMutationAddItem\x12%.shop.carts.v1.MutationAddItemRequest\x1a&.shop.carts.v1.MutationAddItemResponse\"\x00\x12n\n" +
 	"\x13MutationCancelOrder\x12).shop.carts.v1.MutationCancelOrderRequest\x1a*.shop.carts.v1.MutationCancelOrderResponse\"\x00\x12e\n" +
@@ -2554,7 +2867,8 @@ const file_service_v1_service_proto_rawDesc = "" +
 	"\x12MutationRemoveItem\x12(.shop.carts.v1.MutationRemoveItemRequest\x1a).shop.carts.v1.MutationRemoveItemResponse\"\x00\x12h\n" +
 	"\x11MutationResetCart\x12'.shop.carts.v1.MutationResetCartRequest\x1a(.shop.carts.v1.MutationResetCartResponse\"\x00\x12\x83\x01\n" +
 	"\x1aMutationUpdateDeliveryInfo\x120.shop.carts.v1.MutationUpdateDeliveryInfoRequest\x1a1.shop.carts.v1.MutationUpdateDeliveryInfoResponse\"\x00\x12Y\n" +
-	"\fQueryGetCart\x12\".shop.carts.v1.QueryGetCartRequest\x1a#.shop.carts.v1.QueryGetCartResponse\"\x00\x12\\\n" +
+	"\fQueryGetCart\x12\".shop.carts.v1.QueryGetCartRequest\x1a#.shop.carts.v1.QueryGetCartResponse\"\x00\x12n\n" +
+	"\x13QueryGetLeaderboard\x12).shop.carts.v1.QueryGetLeaderboardRequest\x1a*.shop.carts.v1.QueryGetLeaderboardResponse\"\x00\x12\\\n" +
 	"\rQueryGetOrder\x12#.shop.carts.v1.QueryGetOrderRequest\x1a$.shop.carts.v1.QueryGetOrderResponse\"\x00BDZBgithub.com/shortlink-org/shop/oms-graphql/pkg/generated/service/v1b\x06proto3"
 
 var (
@@ -2569,156 +2883,176 @@ func file_service_v1_service_proto_rawDescGZIP() []byte {
 	return file_service_v1_service_proto_rawDescData
 }
 
-var file_service_v1_service_proto_msgTypes = make([]protoimpl.MessageInfo, 46)
+var file_service_v1_service_proto_msgTypes = make([]protoimpl.MessageInfo, 51)
 var file_service_v1_service_proto_goTypes = []any{
 	(*ListOfCartItem)(nil),                     // 0: shop.carts.v1.ListOfCartItem
 	(*ListOfOrderItem)(nil),                    // 1: shop.carts.v1.ListOfOrderItem
 	(*QueryGetCartRequest)(nil),                // 2: shop.carts.v1.QueryGetCartRequest
 	(*QueryGetCartResponse)(nil),               // 3: shop.carts.v1.QueryGetCartResponse
-	(*QueryGetOrderRequest)(nil),               // 4: shop.carts.v1.QueryGetOrderRequest
-	(*QueryGetOrderResponse)(nil),              // 5: shop.carts.v1.QueryGetOrderResponse
-	(*MutationAddItemRequest)(nil),             // 6: shop.carts.v1.MutationAddItemRequest
-	(*MutationAddItemResponse)(nil),            // 7: shop.carts.v1.MutationAddItemResponse
-	(*MutationRemoveItemRequest)(nil),          // 8: shop.carts.v1.MutationRemoveItemRequest
-	(*MutationRemoveItemResponse)(nil),         // 9: shop.carts.v1.MutationRemoveItemResponse
-	(*MutationResetCartRequest)(nil),           // 10: shop.carts.v1.MutationResetCartRequest
-	(*MutationResetCartResponse)(nil),          // 11: shop.carts.v1.MutationResetCartResponse
-	(*MutationCreateOrderRequest)(nil),         // 12: shop.carts.v1.MutationCreateOrderRequest
-	(*MutationCreateOrderResponse)(nil),        // 13: shop.carts.v1.MutationCreateOrderResponse
-	(*MutationCancelOrderRequest)(nil),         // 14: shop.carts.v1.MutationCancelOrderRequest
-	(*MutationCancelOrderResponse)(nil),        // 15: shop.carts.v1.MutationCancelOrderResponse
-	(*MutationUpdateDeliveryInfoRequest)(nil),  // 16: shop.carts.v1.MutationUpdateDeliveryInfoRequest
-	(*MutationUpdateDeliveryInfoResponse)(nil), // 17: shop.carts.v1.MutationUpdateDeliveryInfoResponse
-	(*MutationCheckoutRequest)(nil),            // 18: shop.carts.v1.MutationCheckoutRequest
-	(*MutationCheckoutResponse)(nil),           // 19: shop.carts.v1.MutationCheckoutResponse
-	(*GetCartResponse)(nil),                    // 20: shop.carts.v1.GetCartResponse
-	(*GetOrderResponse)(nil),                   // 21: shop.carts.v1.GetOrderResponse
-	(*ItemRequest)(nil),                        // 22: shop.carts.v1.ItemRequest
-	(*Empty)(nil),                              // 23: shop.carts.v1.Empty
-	(*CreateOrderInput)(nil),                   // 24: shop.carts.v1.CreateOrderInput
-	(*UpdateDeliveryInfoInput)(nil),            // 25: shop.carts.v1.UpdateDeliveryInfoInput
-	(*CheckoutInput)(nil),                      // 26: shop.carts.v1.CheckoutInput
-	(*CheckoutResult)(nil),                     // 27: shop.carts.v1.CheckoutResult
-	(*CartItem)(nil),                           // 28: shop.carts.v1.CartItem
-	(*CartState)(nil),                          // 29: shop.carts.v1.CartState
-	(*CartItemInput)(nil),                      // 30: shop.carts.v1.CartItemInput
-	(*OrderItem)(nil),                          // 31: shop.carts.v1.OrderItem
-	(*DeliveryAddress)(nil),                    // 32: shop.carts.v1.DeliveryAddress
-	(*DeliveryPeriod)(nil),                     // 33: shop.carts.v1.DeliveryPeriod
-	(*PackageInfo)(nil),                        // 34: shop.carts.v1.PackageInfo
-	(*RecipientContacts)(nil),                  // 35: shop.carts.v1.RecipientContacts
-	(*DeliveryInfo)(nil),                       // 36: shop.carts.v1.DeliveryInfo
-	(*OrderState)(nil),                         // 37: shop.carts.v1.OrderState
-	(*DeliveryAddressInput)(nil),               // 38: shop.carts.v1.DeliveryAddressInput
-	(*DeliveryPeriodInput)(nil),                // 39: shop.carts.v1.DeliveryPeriodInput
-	(*PackageInfoInput)(nil),                   // 40: shop.carts.v1.PackageInfoInput
-	(*RecipientContactsInput)(nil),             // 41: shop.carts.v1.RecipientContactsInput
-	(*DeliveryInfoInput)(nil),                  // 42: shop.carts.v1.DeliveryInfoInput
-	(*OrderItemInput)(nil),                     // 43: shop.carts.v1.OrderItemInput
-	(*ListOfCartItem_List)(nil),                // 44: shop.carts.v1.ListOfCartItem.List
-	(*ListOfOrderItem_List)(nil),               // 45: shop.carts.v1.ListOfOrderItem.List
-	(*wrapperspb.BoolValue)(nil),               // 46: google.protobuf.BoolValue
-	(*wrapperspb.StringValue)(nil),             // 47: google.protobuf.StringValue
-	(*wrapperspb.Int32Value)(nil),              // 48: google.protobuf.Int32Value
-	(*wrapperspb.DoubleValue)(nil),             // 49: google.protobuf.DoubleValue
-	(*timestamppb.Timestamp)(nil),              // 50: google.protobuf.Timestamp
+	(*QueryGetLeaderboardRequest)(nil),         // 4: shop.carts.v1.QueryGetLeaderboardRequest
+	(*QueryGetLeaderboardResponse)(nil),        // 5: shop.carts.v1.QueryGetLeaderboardResponse
+	(*QueryGetOrderRequest)(nil),               // 6: shop.carts.v1.QueryGetOrderRequest
+	(*QueryGetOrderResponse)(nil),              // 7: shop.carts.v1.QueryGetOrderResponse
+	(*MutationAddItemRequest)(nil),             // 8: shop.carts.v1.MutationAddItemRequest
+	(*MutationAddItemResponse)(nil),            // 9: shop.carts.v1.MutationAddItemResponse
+	(*MutationRemoveItemRequest)(nil),          // 10: shop.carts.v1.MutationRemoveItemRequest
+	(*MutationRemoveItemResponse)(nil),         // 11: shop.carts.v1.MutationRemoveItemResponse
+	(*MutationResetCartRequest)(nil),           // 12: shop.carts.v1.MutationResetCartRequest
+	(*MutationResetCartResponse)(nil),          // 13: shop.carts.v1.MutationResetCartResponse
+	(*MutationCreateOrderRequest)(nil),         // 14: shop.carts.v1.MutationCreateOrderRequest
+	(*MutationCreateOrderResponse)(nil),        // 15: shop.carts.v1.MutationCreateOrderResponse
+	(*MutationCancelOrderRequest)(nil),         // 16: shop.carts.v1.MutationCancelOrderRequest
+	(*MutationCancelOrderResponse)(nil),        // 17: shop.carts.v1.MutationCancelOrderResponse
+	(*MutationUpdateDeliveryInfoRequest)(nil),  // 18: shop.carts.v1.MutationUpdateDeliveryInfoRequest
+	(*MutationUpdateDeliveryInfoResponse)(nil), // 19: shop.carts.v1.MutationUpdateDeliveryInfoResponse
+	(*MutationCheckoutRequest)(nil),            // 20: shop.carts.v1.MutationCheckoutRequest
+	(*MutationCheckoutResponse)(nil),           // 21: shop.carts.v1.MutationCheckoutResponse
+	(*GetCartResponse)(nil),                    // 22: shop.carts.v1.GetCartResponse
+	(*GetOrderResponse)(nil),                   // 23: shop.carts.v1.GetOrderResponse
+	(*GetLeaderboardResponse)(nil),             // 24: shop.carts.v1.GetLeaderboardResponse
+	(*ItemRequest)(nil),                        // 25: shop.carts.v1.ItemRequest
+	(*Empty)(nil),                              // 26: shop.carts.v1.Empty
+	(*CreateOrderInput)(nil),                   // 27: shop.carts.v1.CreateOrderInput
+	(*UpdateDeliveryInfoInput)(nil),            // 28: shop.carts.v1.UpdateDeliveryInfoInput
+	(*CheckoutInput)(nil),                      // 29: shop.carts.v1.CheckoutInput
+	(*CheckoutResult)(nil),                     // 30: shop.carts.v1.CheckoutResult
+	(*CartItem)(nil),                           // 31: shop.carts.v1.CartItem
+	(*CartState)(nil),                          // 32: shop.carts.v1.CartState
+	(*CartItemInput)(nil),                      // 33: shop.carts.v1.CartItemInput
+	(*OrderItem)(nil),                          // 34: shop.carts.v1.OrderItem
+	(*DeliveryAddress)(nil),                    // 35: shop.carts.v1.DeliveryAddress
+	(*DeliveryPeriod)(nil),                     // 36: shop.carts.v1.DeliveryPeriod
+	(*PackageInfo)(nil),                        // 37: shop.carts.v1.PackageInfo
+	(*RecipientContacts)(nil),                  // 38: shop.carts.v1.RecipientContacts
+	(*DeliveryInfo)(nil),                       // 39: shop.carts.v1.DeliveryInfo
+	(*OrderState)(nil),                         // 40: shop.carts.v1.OrderState
+	(*GoodsLeaderboard)(nil),                   // 41: shop.carts.v1.GoodsLeaderboard
+	(*LeaderboardEntry)(nil),                   // 42: shop.carts.v1.LeaderboardEntry
+	(*DeliveryAddressInput)(nil),               // 43: shop.carts.v1.DeliveryAddressInput
+	(*DeliveryPeriodInput)(nil),                // 44: shop.carts.v1.DeliveryPeriodInput
+	(*PackageInfoInput)(nil),                   // 45: shop.carts.v1.PackageInfoInput
+	(*RecipientContactsInput)(nil),             // 46: shop.carts.v1.RecipientContactsInput
+	(*DeliveryInfoInput)(nil),                  // 47: shop.carts.v1.DeliveryInfoInput
+	(*OrderItemInput)(nil),                     // 48: shop.carts.v1.OrderItemInput
+	(*ListOfCartItem_List)(nil),                // 49: shop.carts.v1.ListOfCartItem.List
+	(*ListOfOrderItem_List)(nil),               // 50: shop.carts.v1.ListOfOrderItem.List
+	(*wrapperspb.Int32Value)(nil),              // 51: google.protobuf.Int32Value
+	(*wrapperspb.BoolValue)(nil),               // 52: google.protobuf.BoolValue
+	(*wrapperspb.StringValue)(nil),             // 53: google.protobuf.StringValue
+	(*wrapperspb.DoubleValue)(nil),             // 54: google.protobuf.DoubleValue
+	(*timestamppb.Timestamp)(nil),              // 55: google.protobuf.Timestamp
+	(*wrapperspb.Int64Value)(nil),              // 56: google.protobuf.Int64Value
 }
 var file_service_v1_service_proto_depIdxs = []int32{
-	44, // 0: shop.carts.v1.ListOfCartItem.list:type_name -> shop.carts.v1.ListOfCartItem.List
-	45, // 1: shop.carts.v1.ListOfOrderItem.list:type_name -> shop.carts.v1.ListOfOrderItem.List
-	20, // 2: shop.carts.v1.QueryGetCartResponse.get_cart:type_name -> shop.carts.v1.GetCartResponse
-	21, // 3: shop.carts.v1.QueryGetOrderResponse.get_order:type_name -> shop.carts.v1.GetOrderResponse
-	22, // 4: shop.carts.v1.MutationAddItemRequest.add_request:type_name -> shop.carts.v1.ItemRequest
-	23, // 5: shop.carts.v1.MutationAddItemResponse.add_item:type_name -> shop.carts.v1.Empty
-	22, // 6: shop.carts.v1.MutationRemoveItemRequest.remove_request:type_name -> shop.carts.v1.ItemRequest
-	23, // 7: shop.carts.v1.MutationRemoveItemResponse.remove_item:type_name -> shop.carts.v1.Empty
-	23, // 8: shop.carts.v1.MutationResetCartResponse.reset_cart:type_name -> shop.carts.v1.Empty
-	24, // 9: shop.carts.v1.MutationCreateOrderRequest.input:type_name -> shop.carts.v1.CreateOrderInput
-	23, // 10: shop.carts.v1.MutationCreateOrderResponse.create_order:type_name -> shop.carts.v1.Empty
-	23, // 11: shop.carts.v1.MutationCancelOrderResponse.cancel_order:type_name -> shop.carts.v1.Empty
-	25, // 12: shop.carts.v1.MutationUpdateDeliveryInfoRequest.input:type_name -> shop.carts.v1.UpdateDeliveryInfoInput
-	23, // 13: shop.carts.v1.MutationUpdateDeliveryInfoResponse.update_delivery_info:type_name -> shop.carts.v1.Empty
-	26, // 14: shop.carts.v1.MutationCheckoutRequest.input:type_name -> shop.carts.v1.CheckoutInput
-	27, // 15: shop.carts.v1.MutationCheckoutResponse.checkout:type_name -> shop.carts.v1.CheckoutResult
-	29, // 16: shop.carts.v1.GetCartResponse.state:type_name -> shop.carts.v1.CartState
-	37, // 17: shop.carts.v1.GetOrderResponse.order:type_name -> shop.carts.v1.OrderState
-	30, // 18: shop.carts.v1.ItemRequest.items:type_name -> shop.carts.v1.CartItemInput
-	46, // 19: shop.carts.v1.Empty.ok:type_name -> google.protobuf.BoolValue
-	43, // 20: shop.carts.v1.CreateOrderInput.items:type_name -> shop.carts.v1.OrderItemInput
-	42, // 21: shop.carts.v1.CreateOrderInput.delivery_info:type_name -> shop.carts.v1.DeliveryInfoInput
-	42, // 22: shop.carts.v1.UpdateDeliveryInfoInput.delivery_info:type_name -> shop.carts.v1.DeliveryInfoInput
-	42, // 23: shop.carts.v1.CheckoutInput.delivery_info:type_name -> shop.carts.v1.DeliveryInfoInput
-	47, // 24: shop.carts.v1.CheckoutResult.order_id:type_name -> google.protobuf.StringValue
-	47, // 25: shop.carts.v1.CartItem.good_id:type_name -> google.protobuf.StringValue
-	48, // 26: shop.carts.v1.CartItem.quantity:type_name -> google.protobuf.Int32Value
-	47, // 27: shop.carts.v1.CartState.cart_id:type_name -> google.protobuf.StringValue
-	0,  // 28: shop.carts.v1.CartState.items:type_name -> shop.carts.v1.ListOfCartItem
-	47, // 29: shop.carts.v1.OrderItem.id:type_name -> google.protobuf.StringValue
-	48, // 30: shop.carts.v1.OrderItem.quantity:type_name -> google.protobuf.Int32Value
-	49, // 31: shop.carts.v1.OrderItem.price:type_name -> google.protobuf.DoubleValue
-	47, // 32: shop.carts.v1.DeliveryAddress.street:type_name -> google.protobuf.StringValue
-	47, // 33: shop.carts.v1.DeliveryAddress.city:type_name -> google.protobuf.StringValue
-	47, // 34: shop.carts.v1.DeliveryAddress.postal_code:type_name -> google.protobuf.StringValue
-	47, // 35: shop.carts.v1.DeliveryAddress.country:type_name -> google.protobuf.StringValue
-	49, // 36: shop.carts.v1.DeliveryAddress.latitude:type_name -> google.protobuf.DoubleValue
-	49, // 37: shop.carts.v1.DeliveryAddress.longitude:type_name -> google.protobuf.DoubleValue
-	47, // 38: shop.carts.v1.DeliveryPeriod.start_time:type_name -> google.protobuf.StringValue
-	47, // 39: shop.carts.v1.DeliveryPeriod.end_time:type_name -> google.protobuf.StringValue
-	49, // 40: shop.carts.v1.PackageInfo.weight_kg:type_name -> google.protobuf.DoubleValue
-	47, // 41: shop.carts.v1.PackageInfo.dimensions:type_name -> google.protobuf.StringValue
-	47, // 42: shop.carts.v1.RecipientContacts.recipient_name:type_name -> google.protobuf.StringValue
-	47, // 43: shop.carts.v1.RecipientContacts.recipient_phone:type_name -> google.protobuf.StringValue
-	47, // 44: shop.carts.v1.RecipientContacts.recipient_email:type_name -> google.protobuf.StringValue
-	32, // 45: shop.carts.v1.DeliveryInfo.pickup_address:type_name -> shop.carts.v1.DeliveryAddress
-	32, // 46: shop.carts.v1.DeliveryInfo.delivery_address:type_name -> shop.carts.v1.DeliveryAddress
-	33, // 47: shop.carts.v1.DeliveryInfo.delivery_period:type_name -> shop.carts.v1.DeliveryPeriod
-	34, // 48: shop.carts.v1.DeliveryInfo.package_info:type_name -> shop.carts.v1.PackageInfo
-	47, // 49: shop.carts.v1.DeliveryInfo.priority:type_name -> google.protobuf.StringValue
-	35, // 50: shop.carts.v1.DeliveryInfo.recipient_contacts:type_name -> shop.carts.v1.RecipientContacts
-	47, // 51: shop.carts.v1.OrderState.id:type_name -> google.protobuf.StringValue
-	1,  // 52: shop.carts.v1.OrderState.items:type_name -> shop.carts.v1.ListOfOrderItem
-	47, // 53: shop.carts.v1.OrderState.status:type_name -> google.protobuf.StringValue
-	36, // 54: shop.carts.v1.OrderState.delivery_info:type_name -> shop.carts.v1.DeliveryInfo
-	47, // 55: shop.carts.v1.OrderState.delivery_status:type_name -> google.protobuf.StringValue
-	47, // 56: shop.carts.v1.OrderState.package_id:type_name -> google.protobuf.StringValue
-	50, // 57: shop.carts.v1.OrderState.requested_at:type_name -> google.protobuf.Timestamp
-	47, // 58: shop.carts.v1.DeliveryAddressInput.postal_code:type_name -> google.protobuf.StringValue
-	49, // 59: shop.carts.v1.DeliveryAddressInput.latitude:type_name -> google.protobuf.DoubleValue
-	49, // 60: shop.carts.v1.DeliveryAddressInput.longitude:type_name -> google.protobuf.DoubleValue
-	47, // 61: shop.carts.v1.RecipientContactsInput.recipient_name:type_name -> google.protobuf.StringValue
-	47, // 62: shop.carts.v1.RecipientContactsInput.recipient_phone:type_name -> google.protobuf.StringValue
-	47, // 63: shop.carts.v1.RecipientContactsInput.recipient_email:type_name -> google.protobuf.StringValue
-	38, // 64: shop.carts.v1.DeliveryInfoInput.pickup_address:type_name -> shop.carts.v1.DeliveryAddressInput
-	38, // 65: shop.carts.v1.DeliveryInfoInput.delivery_address:type_name -> shop.carts.v1.DeliveryAddressInput
-	39, // 66: shop.carts.v1.DeliveryInfoInput.delivery_period:type_name -> shop.carts.v1.DeliveryPeriodInput
-	40, // 67: shop.carts.v1.DeliveryInfoInput.package_info:type_name -> shop.carts.v1.PackageInfoInput
-	47, // 68: shop.carts.v1.DeliveryInfoInput.priority:type_name -> google.protobuf.StringValue
-	41, // 69: shop.carts.v1.DeliveryInfoInput.recipient_contacts:type_name -> shop.carts.v1.RecipientContactsInput
-	28, // 70: shop.carts.v1.ListOfCartItem.List.items:type_name -> shop.carts.v1.CartItem
-	31, // 71: shop.carts.v1.ListOfOrderItem.List.items:type_name -> shop.carts.v1.OrderItem
-	6,  // 72: shop.carts.v1.Shop.MutationAddItem:input_type -> shop.carts.v1.MutationAddItemRequest
-	14, // 73: shop.carts.v1.Shop.MutationCancelOrder:input_type -> shop.carts.v1.MutationCancelOrderRequest
-	18, // 74: shop.carts.v1.Shop.MutationCheckout:input_type -> shop.carts.v1.MutationCheckoutRequest
-	12, // 75: shop.carts.v1.Shop.MutationCreateOrder:input_type -> shop.carts.v1.MutationCreateOrderRequest
-	8,  // 76: shop.carts.v1.Shop.MutationRemoveItem:input_type -> shop.carts.v1.MutationRemoveItemRequest
-	10, // 77: shop.carts.v1.Shop.MutationResetCart:input_type -> shop.carts.v1.MutationResetCartRequest
-	16, // 78: shop.carts.v1.Shop.MutationUpdateDeliveryInfo:input_type -> shop.carts.v1.MutationUpdateDeliveryInfoRequest
-	2,  // 79: shop.carts.v1.Shop.QueryGetCart:input_type -> shop.carts.v1.QueryGetCartRequest
-	4,  // 80: shop.carts.v1.Shop.QueryGetOrder:input_type -> shop.carts.v1.QueryGetOrderRequest
-	7,  // 81: shop.carts.v1.Shop.MutationAddItem:output_type -> shop.carts.v1.MutationAddItemResponse
-	15, // 82: shop.carts.v1.Shop.MutationCancelOrder:output_type -> shop.carts.v1.MutationCancelOrderResponse
-	19, // 83: shop.carts.v1.Shop.MutationCheckout:output_type -> shop.carts.v1.MutationCheckoutResponse
-	13, // 84: shop.carts.v1.Shop.MutationCreateOrder:output_type -> shop.carts.v1.MutationCreateOrderResponse
-	9,  // 85: shop.carts.v1.Shop.MutationRemoveItem:output_type -> shop.carts.v1.MutationRemoveItemResponse
-	11, // 86: shop.carts.v1.Shop.MutationResetCart:output_type -> shop.carts.v1.MutationResetCartResponse
-	17, // 87: shop.carts.v1.Shop.MutationUpdateDeliveryInfo:output_type -> shop.carts.v1.MutationUpdateDeliveryInfoResponse
-	3,  // 88: shop.carts.v1.Shop.QueryGetCart:output_type -> shop.carts.v1.QueryGetCartResponse
-	5,  // 89: shop.carts.v1.Shop.QueryGetOrder:output_type -> shop.carts.v1.QueryGetOrderResponse
-	81, // [81:90] is the sub-list for method output_type
-	72, // [72:81] is the sub-list for method input_type
-	72, // [72:72] is the sub-list for extension type_name
-	72, // [72:72] is the sub-list for extension extendee
-	0,  // [0:72] is the sub-list for field type_name
+	49, // 0: shop.carts.v1.ListOfCartItem.list:type_name -> shop.carts.v1.ListOfCartItem.List
+	50, // 1: shop.carts.v1.ListOfOrderItem.list:type_name -> shop.carts.v1.ListOfOrderItem.List
+	22, // 2: shop.carts.v1.QueryGetCartResponse.get_cart:type_name -> shop.carts.v1.GetCartResponse
+	51, // 3: shop.carts.v1.QueryGetLeaderboardRequest.limit:type_name -> google.protobuf.Int32Value
+	24, // 4: shop.carts.v1.QueryGetLeaderboardResponse.get_leaderboard:type_name -> shop.carts.v1.GetLeaderboardResponse
+	23, // 5: shop.carts.v1.QueryGetOrderResponse.get_order:type_name -> shop.carts.v1.GetOrderResponse
+	25, // 6: shop.carts.v1.MutationAddItemRequest.add_request:type_name -> shop.carts.v1.ItemRequest
+	26, // 7: shop.carts.v1.MutationAddItemResponse.add_item:type_name -> shop.carts.v1.Empty
+	25, // 8: shop.carts.v1.MutationRemoveItemRequest.remove_request:type_name -> shop.carts.v1.ItemRequest
+	26, // 9: shop.carts.v1.MutationRemoveItemResponse.remove_item:type_name -> shop.carts.v1.Empty
+	26, // 10: shop.carts.v1.MutationResetCartResponse.reset_cart:type_name -> shop.carts.v1.Empty
+	27, // 11: shop.carts.v1.MutationCreateOrderRequest.input:type_name -> shop.carts.v1.CreateOrderInput
+	26, // 12: shop.carts.v1.MutationCreateOrderResponse.create_order:type_name -> shop.carts.v1.Empty
+	26, // 13: shop.carts.v1.MutationCancelOrderResponse.cancel_order:type_name -> shop.carts.v1.Empty
+	28, // 14: shop.carts.v1.MutationUpdateDeliveryInfoRequest.input:type_name -> shop.carts.v1.UpdateDeliveryInfoInput
+	26, // 15: shop.carts.v1.MutationUpdateDeliveryInfoResponse.update_delivery_info:type_name -> shop.carts.v1.Empty
+	29, // 16: shop.carts.v1.MutationCheckoutRequest.input:type_name -> shop.carts.v1.CheckoutInput
+	30, // 17: shop.carts.v1.MutationCheckoutResponse.checkout:type_name -> shop.carts.v1.CheckoutResult
+	32, // 18: shop.carts.v1.GetCartResponse.state:type_name -> shop.carts.v1.CartState
+	40, // 19: shop.carts.v1.GetOrderResponse.order:type_name -> shop.carts.v1.OrderState
+	41, // 20: shop.carts.v1.GetLeaderboardResponse.leaderboard:type_name -> shop.carts.v1.GoodsLeaderboard
+	33, // 21: shop.carts.v1.ItemRequest.items:type_name -> shop.carts.v1.CartItemInput
+	52, // 22: shop.carts.v1.Empty.ok:type_name -> google.protobuf.BoolValue
+	48, // 23: shop.carts.v1.CreateOrderInput.items:type_name -> shop.carts.v1.OrderItemInput
+	47, // 24: shop.carts.v1.CreateOrderInput.delivery_info:type_name -> shop.carts.v1.DeliveryInfoInput
+	47, // 25: shop.carts.v1.UpdateDeliveryInfoInput.delivery_info:type_name -> shop.carts.v1.DeliveryInfoInput
+	47, // 26: shop.carts.v1.CheckoutInput.delivery_info:type_name -> shop.carts.v1.DeliveryInfoInput
+	53, // 27: shop.carts.v1.CheckoutResult.order_id:type_name -> google.protobuf.StringValue
+	53, // 28: shop.carts.v1.CartItem.good_id:type_name -> google.protobuf.StringValue
+	51, // 29: shop.carts.v1.CartItem.quantity:type_name -> google.protobuf.Int32Value
+	53, // 30: shop.carts.v1.CartState.cart_id:type_name -> google.protobuf.StringValue
+	0,  // 31: shop.carts.v1.CartState.items:type_name -> shop.carts.v1.ListOfCartItem
+	53, // 32: shop.carts.v1.OrderItem.id:type_name -> google.protobuf.StringValue
+	51, // 33: shop.carts.v1.OrderItem.quantity:type_name -> google.protobuf.Int32Value
+	54, // 34: shop.carts.v1.OrderItem.price:type_name -> google.protobuf.DoubleValue
+	53, // 35: shop.carts.v1.DeliveryAddress.street:type_name -> google.protobuf.StringValue
+	53, // 36: shop.carts.v1.DeliveryAddress.city:type_name -> google.protobuf.StringValue
+	53, // 37: shop.carts.v1.DeliveryAddress.postal_code:type_name -> google.protobuf.StringValue
+	53, // 38: shop.carts.v1.DeliveryAddress.country:type_name -> google.protobuf.StringValue
+	54, // 39: shop.carts.v1.DeliveryAddress.latitude:type_name -> google.protobuf.DoubleValue
+	54, // 40: shop.carts.v1.DeliveryAddress.longitude:type_name -> google.protobuf.DoubleValue
+	53, // 41: shop.carts.v1.DeliveryPeriod.start_time:type_name -> google.protobuf.StringValue
+	53, // 42: shop.carts.v1.DeliveryPeriod.end_time:type_name -> google.protobuf.StringValue
+	54, // 43: shop.carts.v1.PackageInfo.weight_kg:type_name -> google.protobuf.DoubleValue
+	53, // 44: shop.carts.v1.PackageInfo.dimensions:type_name -> google.protobuf.StringValue
+	53, // 45: shop.carts.v1.RecipientContacts.recipient_name:type_name -> google.protobuf.StringValue
+	53, // 46: shop.carts.v1.RecipientContacts.recipient_phone:type_name -> google.protobuf.StringValue
+	53, // 47: shop.carts.v1.RecipientContacts.recipient_email:type_name -> google.protobuf.StringValue
+	35, // 48: shop.carts.v1.DeliveryInfo.pickup_address:type_name -> shop.carts.v1.DeliveryAddress
+	35, // 49: shop.carts.v1.DeliveryInfo.delivery_address:type_name -> shop.carts.v1.DeliveryAddress
+	36, // 50: shop.carts.v1.DeliveryInfo.delivery_period:type_name -> shop.carts.v1.DeliveryPeriod
+	37, // 51: shop.carts.v1.DeliveryInfo.package_info:type_name -> shop.carts.v1.PackageInfo
+	53, // 52: shop.carts.v1.DeliveryInfo.priority:type_name -> google.protobuf.StringValue
+	38, // 53: shop.carts.v1.DeliveryInfo.recipient_contacts:type_name -> shop.carts.v1.RecipientContacts
+	53, // 54: shop.carts.v1.OrderState.id:type_name -> google.protobuf.StringValue
+	1,  // 55: shop.carts.v1.OrderState.items:type_name -> shop.carts.v1.ListOfOrderItem
+	53, // 56: shop.carts.v1.OrderState.status:type_name -> google.protobuf.StringValue
+	39, // 57: shop.carts.v1.OrderState.delivery_info:type_name -> shop.carts.v1.DeliveryInfo
+	53, // 58: shop.carts.v1.OrderState.delivery_status:type_name -> google.protobuf.StringValue
+	53, // 59: shop.carts.v1.OrderState.package_id:type_name -> google.protobuf.StringValue
+	55, // 60: shop.carts.v1.OrderState.requested_at:type_name -> google.protobuf.Timestamp
+	53, // 61: shop.carts.v1.GoodsLeaderboard.board:type_name -> google.protobuf.StringValue
+	53, // 62: shop.carts.v1.GoodsLeaderboard.window:type_name -> google.protobuf.StringValue
+	55, // 63: shop.carts.v1.GoodsLeaderboard.generated_at:type_name -> google.protobuf.Timestamp
+	42, // 64: shop.carts.v1.GoodsLeaderboard.entries:type_name -> shop.carts.v1.LeaderboardEntry
+	53, // 65: shop.carts.v1.LeaderboardEntry.member_id:type_name -> google.protobuf.StringValue
+	51, // 66: shop.carts.v1.LeaderboardEntry.rank:type_name -> google.protobuf.Int32Value
+	54, // 67: shop.carts.v1.LeaderboardEntry.score:type_name -> google.protobuf.DoubleValue
+	56, // 68: shop.carts.v1.LeaderboardEntry.orders:type_name -> google.protobuf.Int64Value
+	56, // 69: shop.carts.v1.LeaderboardEntry.units:type_name -> google.protobuf.Int64Value
+	53, // 70: shop.carts.v1.DeliveryAddressInput.postal_code:type_name -> google.protobuf.StringValue
+	54, // 71: shop.carts.v1.DeliveryAddressInput.latitude:type_name -> google.protobuf.DoubleValue
+	54, // 72: shop.carts.v1.DeliveryAddressInput.longitude:type_name -> google.protobuf.DoubleValue
+	53, // 73: shop.carts.v1.RecipientContactsInput.recipient_name:type_name -> google.protobuf.StringValue
+	53, // 74: shop.carts.v1.RecipientContactsInput.recipient_phone:type_name -> google.protobuf.StringValue
+	53, // 75: shop.carts.v1.RecipientContactsInput.recipient_email:type_name -> google.protobuf.StringValue
+	43, // 76: shop.carts.v1.DeliveryInfoInput.pickup_address:type_name -> shop.carts.v1.DeliveryAddressInput
+	43, // 77: shop.carts.v1.DeliveryInfoInput.delivery_address:type_name -> shop.carts.v1.DeliveryAddressInput
+	44, // 78: shop.carts.v1.DeliveryInfoInput.delivery_period:type_name -> shop.carts.v1.DeliveryPeriodInput
+	45, // 79: shop.carts.v1.DeliveryInfoInput.package_info:type_name -> shop.carts.v1.PackageInfoInput
+	53, // 80: shop.carts.v1.DeliveryInfoInput.priority:type_name -> google.protobuf.StringValue
+	46, // 81: shop.carts.v1.DeliveryInfoInput.recipient_contacts:type_name -> shop.carts.v1.RecipientContactsInput
+	31, // 82: shop.carts.v1.ListOfCartItem.List.items:type_name -> shop.carts.v1.CartItem
+	34, // 83: shop.carts.v1.ListOfOrderItem.List.items:type_name -> shop.carts.v1.OrderItem
+	8,  // 84: shop.carts.v1.Shop.MutationAddItem:input_type -> shop.carts.v1.MutationAddItemRequest
+	16, // 85: shop.carts.v1.Shop.MutationCancelOrder:input_type -> shop.carts.v1.MutationCancelOrderRequest
+	20, // 86: shop.carts.v1.Shop.MutationCheckout:input_type -> shop.carts.v1.MutationCheckoutRequest
+	14, // 87: shop.carts.v1.Shop.MutationCreateOrder:input_type -> shop.carts.v1.MutationCreateOrderRequest
+	10, // 88: shop.carts.v1.Shop.MutationRemoveItem:input_type -> shop.carts.v1.MutationRemoveItemRequest
+	12, // 89: shop.carts.v1.Shop.MutationResetCart:input_type -> shop.carts.v1.MutationResetCartRequest
+	18, // 90: shop.carts.v1.Shop.MutationUpdateDeliveryInfo:input_type -> shop.carts.v1.MutationUpdateDeliveryInfoRequest
+	2,  // 91: shop.carts.v1.Shop.QueryGetCart:input_type -> shop.carts.v1.QueryGetCartRequest
+	4,  // 92: shop.carts.v1.Shop.QueryGetLeaderboard:input_type -> shop.carts.v1.QueryGetLeaderboardRequest
+	6,  // 93: shop.carts.v1.Shop.QueryGetOrder:input_type -> shop.carts.v1.QueryGetOrderRequest
+	9,  // 94: shop.carts.v1.Shop.MutationAddItem:output_type -> shop.carts.v1.MutationAddItemResponse
+	17, // 95: shop.carts.v1.Shop.MutationCancelOrder:output_type -> shop.carts.v1.MutationCancelOrderResponse
+	21, // 96: shop.carts.v1.Shop.MutationCheckout:output_type -> shop.carts.v1.MutationCheckoutResponse
+	15, // 97: shop.carts.v1.Shop.MutationCreateOrder:output_type -> shop.carts.v1.MutationCreateOrderResponse
+	11, // 98: shop.carts.v1.Shop.MutationRemoveItem:output_type -> shop.carts.v1.MutationRemoveItemResponse
+	13, // 99: shop.carts.v1.Shop.MutationResetCart:output_type -> shop.carts.v1.MutationResetCartResponse
+	19, // 100: shop.carts.v1.Shop.MutationUpdateDeliveryInfo:output_type -> shop.carts.v1.MutationUpdateDeliveryInfoResponse
+	3,  // 101: shop.carts.v1.Shop.QueryGetCart:output_type -> shop.carts.v1.QueryGetCartResponse
+	5,  // 102: shop.carts.v1.Shop.QueryGetLeaderboard:output_type -> shop.carts.v1.QueryGetLeaderboardResponse
+	7,  // 103: shop.carts.v1.Shop.QueryGetOrder:output_type -> shop.carts.v1.QueryGetOrderResponse
+	94, // [94:104] is the sub-list for method output_type
+	84, // [84:94] is the sub-list for method input_type
+	84, // [84:84] is the sub-list for extension type_name
+	84, // [84:84] is the sub-list for extension extendee
+	0,  // [0:84] is the sub-list for field type_name
 }
 
 func init() { file_service_v1_service_proto_init() }
@@ -2732,7 +3066,7 @@ func file_service_v1_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_service_v1_service_proto_rawDesc), len(file_service_v1_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   46,
+			NumMessages:   51,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

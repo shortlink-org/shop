@@ -73,8 +73,8 @@ export function ShopSidebar() {
               Follow what is moving now
             </p>
             <p className="mt-2 text-sm leading-6 text-[var(--color-muted-foreground)]">
-              Jump from the storefront rail straight into this week&apos;s highest-converting shops
-              and fastest-selling goods.
+              Jump from the storefront rail straight into this week&apos;s highest-grossing and
+              fastest-selling goods.
             </p>
             <Link
               href="/#leaderboard"

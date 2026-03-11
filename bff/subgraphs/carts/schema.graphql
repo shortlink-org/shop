@@ -84,6 +84,25 @@ type GetOrderResponse {
   order: OrderState
 }
 
+type LeaderboardEntry {
+  memberId: String
+  rank: Int
+  score: Float
+  orders: Int
+  units: Int
+}
+
+type GoodsLeaderboard {
+  board: String
+  window: String
+  generatedAt: String
+  entries: [LeaderboardEntry!]
+}
+
+type GetLeaderboardResponse {
+  leaderboard: GoodsLeaderboard
+}
+
 # ============================================
 # Order Inputs
 # ============================================
@@ -162,6 +181,9 @@ type Query {
   # Cart queries
   getCart: GetCartResponse
   
+  # Leaderboard queries
+  getLeaderboard(board: String!, window: String!, limit: Int): GetLeaderboardResponse
+
   # Order queries
   getOrder(id: String!): GetOrderResponse
 }

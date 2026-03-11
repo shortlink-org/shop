@@ -18,6 +18,9 @@ export { getGood, getGoodRecommendations, getGoods } from './api/good';
 // Collection API
 export { getCollection, getCollectionProducts, getCollections } from './api/collection';
 
+// Leaderboard API
+export { getGoodsLeaderboard } from './api/leaderboard';
+
 // Menu API
 export { getMenu } from './api/menu';
 

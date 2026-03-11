@@ -16,6 +16,7 @@ service Shop {
   rpc MutationResetCart(MutationResetCartRequest) returns (MutationResetCartResponse) {}
   rpc MutationUpdateDeliveryInfo(MutationUpdateDeliveryInfoRequest) returns (MutationUpdateDeliveryInfoResponse) {}
   rpc QueryGetCart(QueryGetCartRequest) returns (QueryGetCartResponse) {}
+  rpc QueryGetLeaderboard(QueryGetLeaderboardRequest) returns (QueryGetLeaderboardResponse) {}
   rpc QueryGetOrder(QueryGetOrderRequest) returns (QueryGetOrderResponse) {}
 }
 
@@ -39,6 +40,16 @@ message QueryGetCartRequest {
 // Response message for getCart operation.
 message QueryGetCartResponse {
   GetCartResponse get_cart = 1;
+}
+// Request message for getLeaderboard operation.
+message QueryGetLeaderboardRequest {
+  string board = 1;
+  string window = 2;
+  google.protobuf.Int32Value limit = 3;
+}
+// Response message for getLeaderboard operation.
+message QueryGetLeaderboardResponse {
+  GetLeaderboardResponse get_leaderboard = 1;
 }
 // Request message for getOrder operation.
 message QueryGetOrderRequest {
@@ -110,6 +121,10 @@ message GetCartResponse {
 
 message GetOrderResponse {
   OrderState order = 1;
+}
+
+message GetLeaderboardResponse {
+  GoodsLeaderboard leaderboard = 1;
 }
 
 message ItemRequest {
@@ -201,6 +216,21 @@ message OrderState {
   google.protobuf.StringValue delivery_status = 5;
   google.protobuf.StringValue package_id = 6;
   google.protobuf.Timestamp requested_at = 7;
+}
+
+message GoodsLeaderboard {
+  google.protobuf.StringValue board = 1;
+  google.protobuf.StringValue window = 2;
+  google.protobuf.Timestamp generated_at = 3;
+  repeated LeaderboardEntry entries = 4;
+}
+
+message LeaderboardEntry {
+  google.protobuf.StringValue member_id = 1;
+  google.protobuf.Int32Value rank = 2;
+  google.protobuf.DoubleValue score = 3;
+  google.protobuf.Int64Value orders = 4;
+  google.protobuf.Int64Value units = 5;
 }
 
 message DeliveryAddressInput {

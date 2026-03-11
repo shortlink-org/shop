@@ -36,6 +36,7 @@ import (
 	cartRepo "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/cart"
 	orderRepo "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/postgres/order"
 	cartGoodsIndex "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/redis/cart_goods_index"
+	leaderboardRepo "github.com/shortlink-org/shop/oms/internal/infrastructure/repository/redis/leaderboard"
 	cartRPC "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/cart/v1"
 	orderRPC "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/run"
@@ -48,6 +49,7 @@ import (
 	cartGet "github.com/shortlink-org/shop/oms/internal/usecases/cart/query/get"
 
 	// Order handlers
+	leaderboardGet "github.com/shortlink-org/shop/oms/internal/usecases/leaderboard/query/get"
 	orderCancel "github.com/shortlink-org/shop/oms/internal/usecases/order/command/cancel"
 	orderCreate "github.com/shortlink-org/shop/oms/internal/usecases/order/command/create"
 	orderRequestDelivery "github.com/shortlink-org/shop/oms/internal/usecases/order/command/request_delivery"
@@ -84,8 +86,9 @@ type OMSService struct {
 	UoW ports.UnitOfWork
 
 	// Repositories
-	CartRepo  ports.CartRepository
-	OrderRepo ports.OrderRepository
+	CartRepo        ports.CartRepository
+	OrderRepo       ports.OrderRepository
+	LeaderboardRepo ports.LeaderboardRepository
 
 	// Delivery
 	run            *run.Response
@@ -96,8 +99,9 @@ type OMSService struct {
 	EventPublisher ports.EventPublisher
 
 	// Delivery Integration
-	DeliveryClient   ports.DeliveryClient
-	DeliveryConsumer *omsKafka.DeliveryConsumer
+	DeliveryClient      ports.DeliveryClient
+	DeliveryConsumer    *omsKafka.DeliveryConsumer
+	LeaderboardConsumer *omsKafka.LeaderboardConsumer
 
 	// Pricer Integration
 	PricerClient ports.PricerClient
@@ -152,6 +156,8 @@ var OMSSet = wire.NewSet(
 	// Indexes
 	cartGoodsIndex.New,
 	wire.Bind(new(ports.CartGoodsIndex), new(*cartGoodsIndex.Store)),
+	leaderboardRepo.New,
+	wire.Bind(new(ports.LeaderboardRepository), new(*leaderboardRepo.Store)),
 
 	// Event Infrastructure (EventBus with WithTxAwareOutbox, go-sdk/uow)
 	newEventBus,
@@ -161,6 +167,7 @@ var OMSSet = wire.NewSet(
 	// Delivery Integration (gRPC client + Kafka consumer)
 	NewDeliveryClient,
 	NewDeliveryConsumer,
+	NewLeaderboardConsumer,
 
 	// Pricer Integration
 	NewPricerClient,
@@ -178,6 +185,7 @@ var OMSSet = wire.NewSet(
 	orderUpdateDeliveryInfo.NewHandler,
 	orderGet.NewHandler,
 	orderList.NewHandler,
+	leaderboardGet.NewHandler,
 
 	// Checkout Handlers
 	checkout.NewHandler,
@@ -260,6 +268,7 @@ func NewOMSService(
 	// Repositories
 	cartRepository ports.CartRepository,
 	orderRepository ports.OrderRepository,
+	leaderboardRepository ports.LeaderboardRepository,
 
 	// Event Infrastructure
 	eventPublisher ports.EventPublisher,
@@ -267,6 +276,7 @@ func NewOMSService(
 	// Delivery Integration
 	deliveryClient ports.DeliveryClient,
 	deliveryConsumer *omsKafka.DeliveryConsumer,
+	leaderboardConsumer *omsKafka.LeaderboardConsumer,
 
 	// Pricer Integration
 	pricerClient ports.PricerClient,
@@ -302,15 +312,17 @@ func NewOMSService(
 		UoW: unitOfWork,
 
 		// Repositories
-		CartRepo:  cartRepository,
-		OrderRepo: orderRepository,
+		CartRepo:        cartRepository,
+		OrderRepo:       orderRepository,
+		LeaderboardRepo: leaderboardRepository,
 
 		// Event Infrastructure
 		EventPublisher: eventPublisher,
 
 		// Delivery Integration
-		DeliveryClient:   deliveryClient,
-		DeliveryConsumer: deliveryConsumer,
+		DeliveryClient:      deliveryClient,
+		DeliveryConsumer:    deliveryConsumer,
+		LeaderboardConsumer: leaderboardConsumer,
 
 		// Pricer Integration
 		PricerClient: pricerClient,

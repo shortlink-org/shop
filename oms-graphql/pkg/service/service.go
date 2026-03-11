@@ -136,6 +136,33 @@ func (s *Service) QueryGetCart(
 	}), nil
 }
 
+func (s *Service) QueryGetLeaderboard(
+	ctx context.Context,
+	req *connect.Request[servicepb.QueryGetLeaderboardRequest],
+) (*connect.Response[servicepb.QueryGetLeaderboardResponse], error) { //nolint:whitespace // multi-line signature
+	outboundCtx := s.forwardContext(ctx, req)
+
+	limit := int32(7)
+	if req.Msg.GetLimit() != nil {
+		limit = req.Msg.GetLimit().GetValue()
+	}
+
+	response, err := s.orderClient.GetLeaderboard(outboundCtx, &ordermodel.GetLeaderboardRequest{
+		Board:  req.Msg.GetBoard(),
+		Window: req.Msg.GetWindow(),
+		Limit:  limit,
+	})
+	if err != nil {
+		return nil, grpcError(err)
+	}
+
+	return connect.NewResponse(&servicepb.QueryGetLeaderboardResponse{
+		GetLeaderboard: &servicepb.GetLeaderboardResponse{
+			Leaderboard: dto.GoodsLeaderboardToService(response.GetLeaderboard()),
+		},
+	}), nil
+}
+
 func (s *Service) QueryGetOrder(
 	ctx context.Context,
 	req *connect.Request[servicepb.QueryGetOrderRequest],
@@ -348,7 +375,20 @@ func (s *Service) authorizedContext(
 		return nil, connect.NewError(connect.CodeUnauthenticated, errMissingAuthorization)
 	}
 
-	mdPairs := []string{"authorization", authorization}
+	return s.forwardContext(ctx, req), nil
+}
+
+func (s *Service) forwardContext(
+	ctx context.Context,
+	req interface{ Header() http.Header },
+) context.Context { //nolint:whitespace // multi-line signature
+	authorization := strings.TrimSpace(req.Header().Get(authHeader))
+
+	mdPairs := make([]string, 0, 6)
+	if authorization != "" {
+		mdPairs = append(mdPairs, "authorization", authorization)
+	}
+
 	if v := strings.TrimSpace(req.Header().Get(traceparentHeader)); v != "" {
 		mdPairs = append(mdPairs, "traceparent", v)
 	}
@@ -357,7 +397,11 @@ func (s *Service) authorizedContext(
 		mdPairs = append(mdPairs, "trace-id", v)
 	}
 
-	return metadata.NewOutgoingContext(ctx, metadata.Pairs(mdPairs...)), nil
+	if len(mdPairs) == 0 {
+		return ctx
+	}
+
+	return metadata.NewOutgoingContext(ctx, metadata.Pairs(mdPairs...))
 }
 
 func grpcError(err error) error {

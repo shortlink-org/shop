@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	OrderService_Create_FullMethodName             = "/infrastructure.rpc.order.v1.OrderService/Create"
 	OrderService_Get_FullMethodName                = "/infrastructure.rpc.order.v1.OrderService/Get"
+	OrderService_GetLeaderboard_FullMethodName     = "/infrastructure.rpc.order.v1.OrderService/GetLeaderboard"
 	OrderService_List_FullMethodName               = "/infrastructure.rpc.order.v1.OrderService/List"
 	OrderService_Cancel_FullMethodName             = "/infrastructure.rpc.order.v1.OrderService/Cancel"
 	OrderService_UpdateDeliveryInfo_FullMethodName = "/infrastructure.rpc.order.v1.OrderService/UpdateDeliveryInfo"
@@ -39,6 +40,8 @@ type OrderServiceClient interface {
 	Create(ctx context.Context, in *v1.CreateRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// Get retrieves an order by its ID.
 	Get(ctx context.Context, in *v1.GetRequest, opts ...grpc.CallOption) (*v1.GetResponse, error)
+	// GetLeaderboard retrieves the current goods leaderboard from Redis projection.
+	GetLeaderboard(ctx context.Context, in *v1.GetLeaderboardRequest, opts ...grpc.CallOption) (*v1.GetLeaderboardResponse, error)
 	// List retrieves orders with filtering and pagination.
 	List(ctx context.Context, in *v1.ListRequest, opts ...grpc.CallOption) (*v1.ListResponse, error)
 	// Delete deletes an order by its ID.
@@ -71,6 +74,16 @@ func (c *orderServiceClient) Get(ctx context.Context, in *v1.GetRequest, opts ..
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(v1.GetResponse)
 	err := c.cc.Invoke(ctx, OrderService_Get_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *orderServiceClient) GetLeaderboard(ctx context.Context, in *v1.GetLeaderboardRequest, opts ...grpc.CallOption) (*v1.GetLeaderboardResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(v1.GetLeaderboardResponse)
+	err := c.cc.Invoke(ctx, OrderService_GetLeaderboard_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -127,6 +140,8 @@ type OrderServiceServer interface {
 	Create(context.Context, *v1.CreateRequest) (*emptypb.Empty, error)
 	// Get retrieves an order by its ID.
 	Get(context.Context, *v1.GetRequest) (*v1.GetResponse, error)
+	// GetLeaderboard retrieves the current goods leaderboard from Redis projection.
+	GetLeaderboard(context.Context, *v1.GetLeaderboardRequest) (*v1.GetLeaderboardResponse, error)
 	// List retrieves orders with filtering and pagination.
 	List(context.Context, *v1.ListRequest) (*v1.ListResponse, error)
 	// Delete deletes an order by its ID.
@@ -150,6 +165,9 @@ func (UnimplementedOrderServiceServer) Create(context.Context, *v1.CreateRequest
 }
 func (UnimplementedOrderServiceServer) Get(context.Context, *v1.GetRequest) (*v1.GetResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Get not implemented")
+}
+func (UnimplementedOrderServiceServer) GetLeaderboard(context.Context, *v1.GetLeaderboardRequest) (*v1.GetLeaderboardResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetLeaderboard not implemented")
 }
 func (UnimplementedOrderServiceServer) List(context.Context, *v1.ListRequest) (*v1.ListResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method List not implemented")
@@ -216,6 +234,24 @@ func _OrderService_Get_Handler(srv interface{}, ctx context.Context, dec func(in
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(OrderServiceServer).Get(ctx, req.(*v1.GetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OrderService_GetLeaderboard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(v1.GetLeaderboardRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderServiceServer).GetLeaderboard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OrderService_GetLeaderboard_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderServiceServer).GetLeaderboard(ctx, req.(*v1.GetLeaderboardRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -306,6 +342,10 @@ var OrderService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Get",
 			Handler:    _OrderService_Get_Handler,
+		},
+		{
+			MethodName: "GetLeaderboard",
+			Handler:    _OrderService_GetLeaderboard_Handler,
 		},
 		{
 			MethodName: "List",

@@ -39,6 +39,9 @@ const (
 	OrderServiceCreateProcedure = "/infrastructure.rpc.order.v1.OrderService/Create"
 	// OrderServiceGetProcedure is the fully-qualified name of the OrderService's Get RPC.
 	OrderServiceGetProcedure = "/infrastructure.rpc.order.v1.OrderService/Get"
+	// OrderServiceGetLeaderboardProcedure is the fully-qualified name of the OrderService's
+	// GetLeaderboard RPC.
+	OrderServiceGetLeaderboardProcedure = "/infrastructure.rpc.order.v1.OrderService/GetLeaderboard"
 	// OrderServiceListProcedure is the fully-qualified name of the OrderService's List RPC.
 	OrderServiceListProcedure = "/infrastructure.rpc.order.v1.OrderService/List"
 	// OrderServiceCancelProcedure is the fully-qualified name of the OrderService's Cancel RPC.
@@ -56,6 +59,8 @@ type OrderServiceClient interface {
 	Create(context.Context, *connect.Request[v1.CreateRequest]) (*connect.Response[emptypb.Empty], error)
 	// Get retrieves an order by its ID.
 	Get(context.Context, *connect.Request[v1.GetRequest]) (*connect.Response[v1.GetResponse], error)
+	// GetLeaderboard retrieves the current goods leaderboard from Redis projection.
+	GetLeaderboard(context.Context, *connect.Request[v1.GetLeaderboardRequest]) (*connect.Response[v1.GetLeaderboardResponse], error)
 	// List retrieves orders with filtering and pagination.
 	List(context.Context, *connect.Request[v1.ListRequest]) (*connect.Response[v1.ListResponse], error)
 	// Delete deletes an order by its ID.
@@ -89,6 +94,12 @@ func NewOrderServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(orderServiceMethods.ByName("Get")),
 			connect.WithClientOptions(opts...),
 		),
+		getLeaderboard: connect.NewClient[v1.GetLeaderboardRequest, v1.GetLeaderboardResponse](
+			httpClient,
+			baseURL+OrderServiceGetLeaderboardProcedure,
+			connect.WithSchema(orderServiceMethods.ByName("GetLeaderboard")),
+			connect.WithClientOptions(opts...),
+		),
 		list: connect.NewClient[v1.ListRequest, v1.ListResponse](
 			httpClient,
 			baseURL+OrderServiceListProcedure,
@@ -120,6 +131,7 @@ func NewOrderServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 type orderServiceClient struct {
 	create             *connect.Client[v1.CreateRequest, emptypb.Empty]
 	get                *connect.Client[v1.GetRequest, v1.GetResponse]
+	getLeaderboard     *connect.Client[v1.GetLeaderboardRequest, v1.GetLeaderboardResponse]
 	list               *connect.Client[v1.ListRequest, v1.ListResponse]
 	cancel             *connect.Client[v1.CancelRequest, emptypb.Empty]
 	updateDeliveryInfo *connect.Client[v1.UpdateDeliveryInfoRequest, emptypb.Empty]
@@ -134,6 +146,11 @@ func (c *orderServiceClient) Create(ctx context.Context, req *connect.Request[v1
 // Get calls infrastructure.rpc.order.v1.OrderService.Get.
 func (c *orderServiceClient) Get(ctx context.Context, req *connect.Request[v1.GetRequest]) (*connect.Response[v1.GetResponse], error) {
 	return c.get.CallUnary(ctx, req)
+}
+
+// GetLeaderboard calls infrastructure.rpc.order.v1.OrderService.GetLeaderboard.
+func (c *orderServiceClient) GetLeaderboard(ctx context.Context, req *connect.Request[v1.GetLeaderboardRequest]) (*connect.Response[v1.GetLeaderboardResponse], error) {
+	return c.getLeaderboard.CallUnary(ctx, req)
 }
 
 // List calls infrastructure.rpc.order.v1.OrderService.List.
@@ -162,6 +179,8 @@ type OrderServiceHandler interface {
 	Create(context.Context, *connect.Request[v1.CreateRequest]) (*connect.Response[emptypb.Empty], error)
 	// Get retrieves an order by its ID.
 	Get(context.Context, *connect.Request[v1.GetRequest]) (*connect.Response[v1.GetResponse], error)
+	// GetLeaderboard retrieves the current goods leaderboard from Redis projection.
+	GetLeaderboard(context.Context, *connect.Request[v1.GetLeaderboardRequest]) (*connect.Response[v1.GetLeaderboardResponse], error)
 	// List retrieves orders with filtering and pagination.
 	List(context.Context, *connect.Request[v1.ListRequest]) (*connect.Response[v1.ListResponse], error)
 	// Delete deletes an order by its ID.
@@ -189,6 +208,12 @@ func NewOrderServiceHandler(svc OrderServiceHandler, opts ...connect.HandlerOpti
 		OrderServiceGetProcedure,
 		svc.Get,
 		connect.WithSchema(orderServiceMethods.ByName("Get")),
+		connect.WithHandlerOptions(opts...),
+	)
+	orderServiceGetLeaderboardHandler := connect.NewUnaryHandler(
+		OrderServiceGetLeaderboardProcedure,
+		svc.GetLeaderboard,
+		connect.WithSchema(orderServiceMethods.ByName("GetLeaderboard")),
 		connect.WithHandlerOptions(opts...),
 	)
 	orderServiceListHandler := connect.NewUnaryHandler(
@@ -221,6 +246,8 @@ func NewOrderServiceHandler(svc OrderServiceHandler, opts ...connect.HandlerOpti
 			orderServiceCreateHandler.ServeHTTP(w, r)
 		case OrderServiceGetProcedure:
 			orderServiceGetHandler.ServeHTTP(w, r)
+		case OrderServiceGetLeaderboardProcedure:
+			orderServiceGetLeaderboardHandler.ServeHTTP(w, r)
 		case OrderServiceListProcedure:
 			orderServiceListHandler.ServeHTTP(w, r)
 		case OrderServiceCancelProcedure:
@@ -244,6 +271,10 @@ func (UnimplementedOrderServiceHandler) Create(context.Context, *connect.Request
 
 func (UnimplementedOrderServiceHandler) Get(context.Context, *connect.Request[v1.GetRequest]) (*connect.Response[v1.GetResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("infrastructure.rpc.order.v1.OrderService.Get is not implemented"))
+}
+
+func (UnimplementedOrderServiceHandler) GetLeaderboard(context.Context, *connect.Request[v1.GetLeaderboardRequest]) (*connect.Response[v1.GetLeaderboardResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("infrastructure.rpc.order.v1.OrderService.GetLeaderboard is not implemented"))
 }
 
 func (UnimplementedOrderServiceHandler) List(context.Context, *connect.Request[v1.ListRequest]) (*connect.Response[v1.ListResponse], error) {

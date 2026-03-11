@@ -2,33 +2,69 @@
 
 import { Button, MarketplaceLeaderboard } from '@shortlink-org/ui-kit';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
-import { leaderboardEntries, leaderboardFilters, leaderboardStats } from 'lib/leaderboard';
+import { useEffect, useState } from 'react';
+import type { LeaderboardEntry, LeaderboardStat } from '@shortlink-org/ui-kit';
+import { leaderboardFilters, loadGoodsLeaderboard } from 'lib/leaderboard';
 
 export function ShopLeaderboard() {
-  const [selectedFilterId, setSelectedFilterId] = useState<keyof typeof leaderboardEntries>('week');
+  const [selectedFilterId, setSelectedFilterId] = useState<'day' | 'week' | 'month'>('week');
+  const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+  const [stats, setStats] = useState<LeaderboardStat[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const entries = useMemo(
-    () => leaderboardEntries[selectedFilterId] || leaderboardEntries.week || [],
-    [selectedFilterId]
-  );
-  const stats = useMemo(
-    () => leaderboardStats[selectedFilterId] || leaderboardStats.week || [],
-    [selectedFilterId]
-  );
+  useEffect(() => {
+    let cancelled = false;
+
+    setLoading(true);
+    loadGoodsLeaderboard(selectedFilterId)
+      .then((payload) => {
+        if (cancelled) {
+          return;
+        }
+
+        setEntries(payload.entries);
+        setStats(payload.stats);
+      })
+      .catch(() => {
+        if (cancelled) {
+          return;
+        }
+
+        setEntries([]);
+        setStats([]);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedFilterId]);
+
+  function handleFilterChange(filterId: string) {
+    if (filterId === 'day' || filterId === 'week' || filterId === 'month') {
+      setSelectedFilterId(filterId);
+    }
+  }
 
   return (
     <MarketplaceLeaderboard
-      eyebrow="Marketplace leaderboard"
-      title="Who is setting the pace this week"
-      description="A live view into the storefronts leading on conversion, repeat buyers and revenue momentum, now framed as part of the storefront instead of a separate dashboard."
+      eyebrow="Goods leaderboard"
+      title="Which goods are setting the pace"
+      description="A live read model built from completed orders, ranking the items driving the most revenue over the current period."
       scoreLabel="GMV"
       entries={entries}
       stats={stats}
       filters={leaderboardFilters}
       selectedFilterId={selectedFilterId}
-      onFilterChange={setSelectedFilterId}
+      onFilterChange={handleFilterChange}
       visibleRows={7}
+      loading={loading}
+      emptyTitle="No completed orders yet"
+      emptyDescription="The leaderboard will populate once the first completed purchases land in OMS."
       headerAction={
         <Button as={Link} asProps={{ href: '/search?sort=trending' }} variant="secondary">
           Browse trending goods

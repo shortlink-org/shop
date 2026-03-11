@@ -17,6 +17,13 @@
       "response": "QueryGetOrderResponse"
     },
     {
+      "type": "OPERATION_TYPE_QUERY",
+      "original": "getLeaderboard",
+      "mapped": "QueryGetLeaderboard",
+      "request": "QueryGetLeaderboardRequest",
+      "response": "QueryGetLeaderboardResponse"
+    },
+    {
       "type": "OPERATION_TYPE_MUTATION",
       "original": "addItem",
       "mapped": "MutationAddItem",
@@ -83,6 +90,24 @@
             {
               "original": "id",
               "mapped": "id"
+            }
+          ]
+        },
+        {
+          "original": "getLeaderboard",
+          "mapped": "get_leaderboard",
+          "argumentMappings": [
+            {
+              "original": "board",
+              "mapped": "board"
+            },
+            {
+              "original": "window",
+              "mapped": "window"
+            },
+            {
+              "original": "limit",
+              "mapped": "limit"
             }
           ]
         }
@@ -199,6 +224,16 @@
       ]
     },
     {
+      "type": "GetLeaderboardResponse",
+      "fieldMappings": [
+        {
+          "original": "leaderboard",
+          "mapped": "leaderboard",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
       "type": "CartItemInput",
       "fieldMappings": [
         {
@@ -239,6 +274,61 @@
         {
           "original": "price",
           "mapped": "price",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "GoodsLeaderboard",
+      "fieldMappings": [
+        {
+          "original": "board",
+          "mapped": "board",
+          "argumentMappings": []
+        },
+        {
+          "original": "window",
+          "mapped": "window",
+          "argumentMappings": []
+        },
+        {
+          "original": "generatedAt",
+          "mapped": "generated_at",
+          "argumentMappings": []
+        },
+        {
+          "original": "entries",
+          "mapped": "entries",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "LeaderboardEntry",
+      "fieldMappings": [
+        {
+          "original": "memberId",
+          "mapped": "member_id",
+          "argumentMappings": []
+        },
+        {
+          "original": "rank",
+          "mapped": "rank",
+          "argumentMappings": []
+        },
+        {
+          "original": "score",
+          "mapped": "score",
+          "argumentMappings": []
+        },
+        {
+          "original": "orders",
+          "mapped": "orders",
+          "argumentMappings": []
+        },
+        {
+          "original": "units",
+          "mapped": "units",
           "argumentMappings": []
         }
       ]

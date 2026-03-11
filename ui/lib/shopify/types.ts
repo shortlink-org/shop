@@ -229,6 +229,30 @@ export type ShopifyCollectionProductsOperation = {
   variables: Record<string, never>;
 };
 
+export type ShopifyLeaderboardOperation = {
+  data: {
+    getLeaderboard: {
+      leaderboard: {
+        board?: string | null;
+        window?: string | null;
+        generatedAt?: string | null;
+        entries?: Array<{
+          memberId?: string | null;
+          rank?: number | null;
+          score?: number | null;
+          orders?: number | null;
+          units?: number | null;
+        }> | null;
+      } | null;
+    } | null;
+  };
+  variables: {
+    board: string;
+    window: string;
+    limit?: number;
+  };
+};
+
 export type ShopifyCollectionsOperation = {
   data: {
     collections: Connection<ShopifyCollection>;

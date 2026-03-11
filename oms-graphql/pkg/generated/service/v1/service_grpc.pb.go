@@ -27,6 +27,7 @@ const (
 	Shop_MutationResetCart_FullMethodName          = "/shop.carts.v1.Shop/MutationResetCart"
 	Shop_MutationUpdateDeliveryInfo_FullMethodName = "/shop.carts.v1.Shop/MutationUpdateDeliveryInfo"
 	Shop_QueryGetCart_FullMethodName               = "/shop.carts.v1.Shop/QueryGetCart"
+	Shop_QueryGetLeaderboard_FullMethodName        = "/shop.carts.v1.Shop/QueryGetLeaderboard"
 	Shop_QueryGetOrder_FullMethodName              = "/shop.carts.v1.Shop/QueryGetOrder"
 )
 
@@ -44,6 +45,7 @@ type ShopClient interface {
 	MutationResetCart(ctx context.Context, in *MutationResetCartRequest, opts ...grpc.CallOption) (*MutationResetCartResponse, error)
 	MutationUpdateDeliveryInfo(ctx context.Context, in *MutationUpdateDeliveryInfoRequest, opts ...grpc.CallOption) (*MutationUpdateDeliveryInfoResponse, error)
 	QueryGetCart(ctx context.Context, in *QueryGetCartRequest, opts ...grpc.CallOption) (*QueryGetCartResponse, error)
+	QueryGetLeaderboard(ctx context.Context, in *QueryGetLeaderboardRequest, opts ...grpc.CallOption) (*QueryGetLeaderboardResponse, error)
 	QueryGetOrder(ctx context.Context, in *QueryGetOrderRequest, opts ...grpc.CallOption) (*QueryGetOrderResponse, error)
 }
 
@@ -135,6 +137,16 @@ func (c *shopClient) QueryGetCart(ctx context.Context, in *QueryGetCartRequest, 
 	return out, nil
 }
 
+func (c *shopClient) QueryGetLeaderboard(ctx context.Context, in *QueryGetLeaderboardRequest, opts ...grpc.CallOption) (*QueryGetLeaderboardResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(QueryGetLeaderboardResponse)
+	err := c.cc.Invoke(ctx, Shop_QueryGetLeaderboard_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *shopClient) QueryGetOrder(ctx context.Context, in *QueryGetOrderRequest, opts ...grpc.CallOption) (*QueryGetOrderResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(QueryGetOrderResponse)
@@ -159,6 +171,7 @@ type ShopServer interface {
 	MutationResetCart(context.Context, *MutationResetCartRequest) (*MutationResetCartResponse, error)
 	MutationUpdateDeliveryInfo(context.Context, *MutationUpdateDeliveryInfoRequest) (*MutationUpdateDeliveryInfoResponse, error)
 	QueryGetCart(context.Context, *QueryGetCartRequest) (*QueryGetCartResponse, error)
+	QueryGetLeaderboard(context.Context, *QueryGetLeaderboardRequest) (*QueryGetLeaderboardResponse, error)
 	QueryGetOrder(context.Context, *QueryGetOrderRequest) (*QueryGetOrderResponse, error)
 	mustEmbedUnimplementedShopServer()
 }
@@ -193,6 +206,9 @@ func (UnimplementedShopServer) MutationUpdateDeliveryInfo(context.Context, *Muta
 }
 func (UnimplementedShopServer) QueryGetCart(context.Context, *QueryGetCartRequest) (*QueryGetCartResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method QueryGetCart not implemented")
+}
+func (UnimplementedShopServer) QueryGetLeaderboard(context.Context, *QueryGetLeaderboardRequest) (*QueryGetLeaderboardResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method QueryGetLeaderboard not implemented")
 }
 func (UnimplementedShopServer) QueryGetOrder(context.Context, *QueryGetOrderRequest) (*QueryGetOrderResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method QueryGetOrder not implemented")
@@ -362,6 +378,24 @@ func _Shop_QueryGetCart_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Shop_QueryGetLeaderboard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetLeaderboardRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ShopServer).QueryGetLeaderboard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Shop_QueryGetLeaderboard_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ShopServer).QueryGetLeaderboard(ctx, req.(*QueryGetLeaderboardRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Shop_QueryGetOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryGetOrderRequest)
 	if err := dec(in); err != nil {
@@ -418,6 +452,10 @@ var Shop_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "QueryGetCart",
 			Handler:    _Shop_QueryGetCart_Handler,
+		},
+		{
+			MethodName: "QueryGetLeaderboard",
+			Handler:    _Shop_QueryGetLeaderboard_Handler,
 		},
 		{
 			MethodName: "QueryGetOrder",

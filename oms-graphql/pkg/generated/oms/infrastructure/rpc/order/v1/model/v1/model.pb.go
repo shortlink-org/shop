@@ -363,6 +363,254 @@ func (x *GetResponse) GetOrder() *OrderState {
 	return nil
 }
 
+type LeaderboardEntry struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	MemberId      string                 `protobuf:"bytes,1,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
+	Rank          int32                  `protobuf:"varint,2,opt,name=rank,proto3" json:"rank,omitempty"`
+	Score         float64                `protobuf:"fixed64,3,opt,name=score,proto3" json:"score,omitempty"`
+	Orders        int64                  `protobuf:"varint,4,opt,name=orders,proto3" json:"orders,omitempty"`
+	Units         int64                  `protobuf:"varint,5,opt,name=units,proto3" json:"units,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LeaderboardEntry) Reset() {
+	*x = LeaderboardEntry{}
+	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LeaderboardEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LeaderboardEntry) ProtoMessage() {}
+
+func (x *LeaderboardEntry) ProtoReflect() protoreflect.Message {
+	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LeaderboardEntry.ProtoReflect.Descriptor instead.
+func (*LeaderboardEntry) Descriptor() ([]byte, []int) {
+	return file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *LeaderboardEntry) GetMemberId() string {
+	if x != nil {
+		return x.MemberId
+	}
+	return ""
+}
+
+func (x *LeaderboardEntry) GetRank() int32 {
+	if x != nil {
+		return x.Rank
+	}
+	return 0
+}
+
+func (x *LeaderboardEntry) GetScore() float64 {
+	if x != nil {
+		return x.Score
+	}
+	return 0
+}
+
+func (x *LeaderboardEntry) GetOrders() int64 {
+	if x != nil {
+		return x.Orders
+	}
+	return 0
+}
+
+func (x *LeaderboardEntry) GetUnits() int64 {
+	if x != nil {
+		return x.Units
+	}
+	return 0
+}
+
+type GoodsLeaderboard struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Board         string                 `protobuf:"bytes,1,opt,name=board,proto3" json:"board,omitempty"`
+	Window        string                 `protobuf:"bytes,2,opt,name=window,proto3" json:"window,omitempty"`
+	GeneratedAt   *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=generated_at,json=generatedAt,proto3" json:"generated_at,omitempty"`
+	Entries       []*LeaderboardEntry    `protobuf:"bytes,4,rep,name=entries,proto3" json:"entries,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GoodsLeaderboard) Reset() {
+	*x = GoodsLeaderboard{}
+	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GoodsLeaderboard) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GoodsLeaderboard) ProtoMessage() {}
+
+func (x *GoodsLeaderboard) ProtoReflect() protoreflect.Message {
+	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GoodsLeaderboard.ProtoReflect.Descriptor instead.
+func (*GoodsLeaderboard) Descriptor() ([]byte, []int) {
+	return file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *GoodsLeaderboard) GetBoard() string {
+	if x != nil {
+		return x.Board
+	}
+	return ""
+}
+
+func (x *GoodsLeaderboard) GetWindow() string {
+	if x != nil {
+		return x.Window
+	}
+	return ""
+}
+
+func (x *GoodsLeaderboard) GetGeneratedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.GeneratedAt
+	}
+	return nil
+}
+
+func (x *GoodsLeaderboard) GetEntries() []*LeaderboardEntry {
+	if x != nil {
+		return x.Entries
+	}
+	return nil
+}
+
+type GetLeaderboardRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Board         string                 `protobuf:"bytes,1,opt,name=board,proto3" json:"board,omitempty"`
+	Window        string                 `protobuf:"bytes,2,opt,name=window,proto3" json:"window,omitempty"`
+	Limit         int32                  `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetLeaderboardRequest) Reset() {
+	*x = GetLeaderboardRequest{}
+	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetLeaderboardRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetLeaderboardRequest) ProtoMessage() {}
+
+func (x *GetLeaderboardRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetLeaderboardRequest.ProtoReflect.Descriptor instead.
+func (*GetLeaderboardRequest) Descriptor() ([]byte, []int) {
+	return file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *GetLeaderboardRequest) GetBoard() string {
+	if x != nil {
+		return x.Board
+	}
+	return ""
+}
+
+func (x *GetLeaderboardRequest) GetWindow() string {
+	if x != nil {
+		return x.Window
+	}
+	return ""
+}
+
+func (x *GetLeaderboardRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+type GetLeaderboardResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Leaderboard   *GoodsLeaderboard      `protobuf:"bytes,1,opt,name=leaderboard,proto3" json:"leaderboard,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetLeaderboardResponse) Reset() {
+	*x = GetLeaderboardResponse{}
+	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetLeaderboardResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetLeaderboardResponse) ProtoMessage() {}
+
+func (x *GetLeaderboardResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetLeaderboardResponse.ProtoReflect.Descriptor instead.
+func (*GetLeaderboardResponse) Descriptor() ([]byte, []int) {
+	return file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *GetLeaderboardResponse) GetLeaderboard() *GoodsLeaderboard {
+	if x != nil {
+		return x.Leaderboard
+	}
+	return nil
+}
+
 // Request message for updating an order
 type UpdateRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -376,7 +624,7 @@ type UpdateRequest struct {
 
 func (x *UpdateRequest) Reset() {
 	*x = UpdateRequest{}
-	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[5]
+	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -388,7 +636,7 @@ func (x *UpdateRequest) String() string {
 func (*UpdateRequest) ProtoMessage() {}
 
 func (x *UpdateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[5]
+	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -401,7 +649,7 @@ func (x *UpdateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateRequest.ProtoReflect.Descriptor instead.
 func (*UpdateRequest) Descriptor() ([]byte, []int) {
-	return file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{5}
+	return file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *UpdateRequest) GetOrder() *OrderState {
@@ -429,7 +677,7 @@ type CancelRequest struct {
 
 func (x *CancelRequest) Reset() {
 	*x = CancelRequest{}
-	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[6]
+	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -441,7 +689,7 @@ func (x *CancelRequest) String() string {
 func (*CancelRequest) ProtoMessage() {}
 
 func (x *CancelRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[6]
+	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -454,7 +702,7 @@ func (x *CancelRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CancelRequest.ProtoReflect.Descriptor instead.
 func (*CancelRequest) Descriptor() ([]byte, []int) {
-	return file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{6}
+	return file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *CancelRequest) GetId() string {
@@ -477,7 +725,7 @@ type UpdateDeliveryInfoRequest struct {
 
 func (x *UpdateDeliveryInfoRequest) Reset() {
 	*x = UpdateDeliveryInfoRequest{}
-	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[7]
+	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -489,7 +737,7 @@ func (x *UpdateDeliveryInfoRequest) String() string {
 func (*UpdateDeliveryInfoRequest) ProtoMessage() {}
 
 func (x *UpdateDeliveryInfoRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[7]
+	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -502,7 +750,7 @@ func (x *UpdateDeliveryInfoRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateDeliveryInfoRequest.ProtoReflect.Descriptor instead.
 func (*UpdateDeliveryInfoRequest) Descriptor() ([]byte, []int) {
-	return file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{7}
+	return file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *UpdateDeliveryInfoRequest) GetOrderId() string {
@@ -531,7 +779,7 @@ type CheckoutRequest struct {
 
 func (x *CheckoutRequest) Reset() {
 	*x = CheckoutRequest{}
-	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[8]
+	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -543,7 +791,7 @@ func (x *CheckoutRequest) String() string {
 func (*CheckoutRequest) ProtoMessage() {}
 
 func (x *CheckoutRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[8]
+	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -556,7 +804,7 @@ func (x *CheckoutRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CheckoutRequest.ProtoReflect.Descriptor instead.
 func (*CheckoutRequest) Descriptor() ([]byte, []int) {
-	return file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{8}
+	return file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *CheckoutRequest) GetDeliveryInfo() *common.DeliveryInfo {
@@ -585,7 +833,7 @@ type CheckoutResponse struct {
 
 func (x *CheckoutResponse) Reset() {
 	*x = CheckoutResponse{}
-	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[9]
+	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -597,7 +845,7 @@ func (x *CheckoutResponse) String() string {
 func (*CheckoutResponse) ProtoMessage() {}
 
 func (x *CheckoutResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[9]
+	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -610,7 +858,7 @@ func (x *CheckoutResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CheckoutResponse.ProtoReflect.Descriptor instead.
 func (*CheckoutResponse) Descriptor() ([]byte, []int) {
-	return file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{9}
+	return file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *CheckoutResponse) GetOrderId() string {
@@ -661,7 +909,7 @@ type Pagination struct {
 
 func (x *Pagination) Reset() {
 	*x = Pagination{}
-	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[10]
+	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -673,7 +921,7 @@ func (x *Pagination) String() string {
 func (*Pagination) ProtoMessage() {}
 
 func (x *Pagination) ProtoReflect() protoreflect.Message {
-	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[10]
+	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -686,7 +934,7 @@ func (x *Pagination) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Pagination.ProtoReflect.Descriptor instead.
 func (*Pagination) Descriptor() ([]byte, []int) {
-	return file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{10}
+	return file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *Pagination) GetPage() int32 {
@@ -718,7 +966,7 @@ type PaginationResponse struct {
 
 func (x *PaginationResponse) Reset() {
 	*x = PaginationResponse{}
-	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[11]
+	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -730,7 +978,7 @@ func (x *PaginationResponse) String() string {
 func (*PaginationResponse) ProtoMessage() {}
 
 func (x *PaginationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[11]
+	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -743,7 +991,7 @@ func (x *PaginationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PaginationResponse.ProtoReflect.Descriptor instead.
 func (*PaginationResponse) Descriptor() ([]byte, []int) {
-	return file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{11}
+	return file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *PaginationResponse) GetCurrentPage() int32 {
@@ -781,7 +1029,7 @@ type ListRequest struct {
 
 func (x *ListRequest) Reset() {
 	*x = ListRequest{}
-	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[12]
+	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -793,7 +1041,7 @@ func (x *ListRequest) String() string {
 func (*ListRequest) ProtoMessage() {}
 
 func (x *ListRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[12]
+	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -806,7 +1054,7 @@ func (x *ListRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListRequest.ProtoReflect.Descriptor instead.
 func (*ListRequest) Descriptor() ([]byte, []int) {
-	return file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{12}
+	return file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *ListRequest) GetStatusFilter() []common.OrderStatus {
@@ -838,7 +1086,7 @@ type ListResponse struct {
 
 func (x *ListResponse) Reset() {
 	*x = ListResponse{}
-	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[13]
+	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -850,7 +1098,7 @@ func (x *ListResponse) String() string {
 func (*ListResponse) ProtoMessage() {}
 
 func (x *ListResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[13]
+	mi := &file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -863,7 +1111,7 @@ func (x *ListResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListResponse.ProtoReflect.Descriptor instead.
 func (*ListResponse) Descriptor() ([]byte, []int) {
-	return file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{13}
+	return file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *ListResponse) GetOrders() []*OrderState {
@@ -920,7 +1168,24 @@ const file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_rawDesc = "" +
 	"GetRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"U\n" +
 	"\vGetResponse\x12F\n" +
-	"\x05order\x18\x01 \x01(\v20.infrastructure.rpc.order.v1.model.v1.OrderStateR\x05order\"\x94\x01\n" +
+	"\x05order\x18\x01 \x01(\v20.infrastructure.rpc.order.v1.model.v1.OrderStateR\x05order\"\x87\x01\n" +
+	"\x10LeaderboardEntry\x12\x1b\n" +
+	"\tmember_id\x18\x01 \x01(\tR\bmemberId\x12\x12\n" +
+	"\x04rank\x18\x02 \x01(\x05R\x04rank\x12\x14\n" +
+	"\x05score\x18\x03 \x01(\x01R\x05score\x12\x16\n" +
+	"\x06orders\x18\x04 \x01(\x03R\x06orders\x12\x14\n" +
+	"\x05units\x18\x05 \x01(\x03R\x05units\"\xd1\x01\n" +
+	"\x10GoodsLeaderboard\x12\x14\n" +
+	"\x05board\x18\x01 \x01(\tR\x05board\x12\x16\n" +
+	"\x06window\x18\x02 \x01(\tR\x06window\x12=\n" +
+	"\fgenerated_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\vgeneratedAt\x12P\n" +
+	"\aentries\x18\x04 \x03(\v26.infrastructure.rpc.order.v1.model.v1.LeaderboardEntryR\aentries\"[\n" +
+	"\x15GetLeaderboardRequest\x12\x14\n" +
+	"\x05board\x18\x01 \x01(\tR\x05board\x12\x16\n" +
+	"\x06window\x18\x02 \x01(\tR\x06window\x12\x14\n" +
+	"\x05limit\x18\x03 \x01(\x05R\x05limit\"r\n" +
+	"\x16GetLeaderboardResponse\x12X\n" +
+	"\vleaderboard\x18\x01 \x01(\v26.infrastructure.rpc.order.v1.model.v1.GoodsLeaderboardR\vleaderboard\"\x94\x01\n" +
 	"\rUpdateRequest\x12F\n" +
 	"\x05order\x18\x01 \x01(\v20.infrastructure.rpc.order.v1.model.v1.OrderStateR\x05order\x12;\n" +
 	"\vupdate_mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskR\n" +
@@ -973,52 +1238,59 @@ func file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescGZIP() []b
 	return file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_rawDescData
 }
 
-var file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_goTypes = []any{
 	(*OrderState)(nil),                // 0: infrastructure.rpc.order.v1.model.v1.OrderState
 	(*OrderItem)(nil),                 // 1: infrastructure.rpc.order.v1.model.v1.OrderItem
 	(*CreateRequest)(nil),             // 2: infrastructure.rpc.order.v1.model.v1.CreateRequest
 	(*GetRequest)(nil),                // 3: infrastructure.rpc.order.v1.model.v1.GetRequest
 	(*GetResponse)(nil),               // 4: infrastructure.rpc.order.v1.model.v1.GetResponse
-	(*UpdateRequest)(nil),             // 5: infrastructure.rpc.order.v1.model.v1.UpdateRequest
-	(*CancelRequest)(nil),             // 6: infrastructure.rpc.order.v1.model.v1.CancelRequest
-	(*UpdateDeliveryInfoRequest)(nil), // 7: infrastructure.rpc.order.v1.model.v1.UpdateDeliveryInfoRequest
-	(*CheckoutRequest)(nil),           // 8: infrastructure.rpc.order.v1.model.v1.CheckoutRequest
-	(*CheckoutResponse)(nil),          // 9: infrastructure.rpc.order.v1.model.v1.CheckoutResponse
-	(*Pagination)(nil),                // 10: infrastructure.rpc.order.v1.model.v1.Pagination
-	(*PaginationResponse)(nil),        // 11: infrastructure.rpc.order.v1.model.v1.PaginationResponse
-	(*ListRequest)(nil),               // 12: infrastructure.rpc.order.v1.model.v1.ListRequest
-	(*ListResponse)(nil),              // 13: infrastructure.rpc.order.v1.model.v1.ListResponse
-	(common.OrderStatus)(0),           // 14: domain.order.common.v1.OrderStatus
-	(*timestamppb.Timestamp)(nil),     // 15: google.protobuf.Timestamp
-	(*common.DeliveryInfo)(nil),       // 16: domain.order.common.v1.DeliveryInfo
-	(common.DeliveryStatus)(0),        // 17: domain.order.common.v1.DeliveryStatus
-	(*fieldmaskpb.FieldMask)(nil),     // 18: google.protobuf.FieldMask
+	(*LeaderboardEntry)(nil),          // 5: infrastructure.rpc.order.v1.model.v1.LeaderboardEntry
+	(*GoodsLeaderboard)(nil),          // 6: infrastructure.rpc.order.v1.model.v1.GoodsLeaderboard
+	(*GetLeaderboardRequest)(nil),     // 7: infrastructure.rpc.order.v1.model.v1.GetLeaderboardRequest
+	(*GetLeaderboardResponse)(nil),    // 8: infrastructure.rpc.order.v1.model.v1.GetLeaderboardResponse
+	(*UpdateRequest)(nil),             // 9: infrastructure.rpc.order.v1.model.v1.UpdateRequest
+	(*CancelRequest)(nil),             // 10: infrastructure.rpc.order.v1.model.v1.CancelRequest
+	(*UpdateDeliveryInfoRequest)(nil), // 11: infrastructure.rpc.order.v1.model.v1.UpdateDeliveryInfoRequest
+	(*CheckoutRequest)(nil),           // 12: infrastructure.rpc.order.v1.model.v1.CheckoutRequest
+	(*CheckoutResponse)(nil),          // 13: infrastructure.rpc.order.v1.model.v1.CheckoutResponse
+	(*Pagination)(nil),                // 14: infrastructure.rpc.order.v1.model.v1.Pagination
+	(*PaginationResponse)(nil),        // 15: infrastructure.rpc.order.v1.model.v1.PaginationResponse
+	(*ListRequest)(nil),               // 16: infrastructure.rpc.order.v1.model.v1.ListRequest
+	(*ListResponse)(nil),              // 17: infrastructure.rpc.order.v1.model.v1.ListResponse
+	(common.OrderStatus)(0),           // 18: domain.order.common.v1.OrderStatus
+	(*timestamppb.Timestamp)(nil),     // 19: google.protobuf.Timestamp
+	(*common.DeliveryInfo)(nil),       // 20: domain.order.common.v1.DeliveryInfo
+	(common.DeliveryStatus)(0),        // 21: domain.order.common.v1.DeliveryStatus
+	(*fieldmaskpb.FieldMask)(nil),     // 22: google.protobuf.FieldMask
 }
 var file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_depIdxs = []int32{
 	1,  // 0: infrastructure.rpc.order.v1.model.v1.OrderState.items:type_name -> infrastructure.rpc.order.v1.model.v1.OrderItem
-	14, // 1: infrastructure.rpc.order.v1.model.v1.OrderState.status:type_name -> domain.order.common.v1.OrderStatus
-	15, // 2: infrastructure.rpc.order.v1.model.v1.OrderState.created_at:type_name -> google.protobuf.Timestamp
-	15, // 3: infrastructure.rpc.order.v1.model.v1.OrderState.updated_at:type_name -> google.protobuf.Timestamp
-	16, // 4: infrastructure.rpc.order.v1.model.v1.OrderState.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
-	17, // 5: infrastructure.rpc.order.v1.model.v1.OrderState.delivery_status:type_name -> domain.order.common.v1.DeliveryStatus
-	15, // 6: infrastructure.rpc.order.v1.model.v1.OrderState.requested_at:type_name -> google.protobuf.Timestamp
+	18, // 1: infrastructure.rpc.order.v1.model.v1.OrderState.status:type_name -> domain.order.common.v1.OrderStatus
+	19, // 2: infrastructure.rpc.order.v1.model.v1.OrderState.created_at:type_name -> google.protobuf.Timestamp
+	19, // 3: infrastructure.rpc.order.v1.model.v1.OrderState.updated_at:type_name -> google.protobuf.Timestamp
+	20, // 4: infrastructure.rpc.order.v1.model.v1.OrderState.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
+	21, // 5: infrastructure.rpc.order.v1.model.v1.OrderState.delivery_status:type_name -> domain.order.common.v1.DeliveryStatus
+	19, // 6: infrastructure.rpc.order.v1.model.v1.OrderState.requested_at:type_name -> google.protobuf.Timestamp
 	0,  // 7: infrastructure.rpc.order.v1.model.v1.CreateRequest.order:type_name -> infrastructure.rpc.order.v1.model.v1.OrderState
-	16, // 8: infrastructure.rpc.order.v1.model.v1.CreateRequest.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
+	20, // 8: infrastructure.rpc.order.v1.model.v1.CreateRequest.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
 	0,  // 9: infrastructure.rpc.order.v1.model.v1.GetResponse.order:type_name -> infrastructure.rpc.order.v1.model.v1.OrderState
-	0,  // 10: infrastructure.rpc.order.v1.model.v1.UpdateRequest.order:type_name -> infrastructure.rpc.order.v1.model.v1.OrderState
-	18, // 11: infrastructure.rpc.order.v1.model.v1.UpdateRequest.update_mask:type_name -> google.protobuf.FieldMask
-	16, // 12: infrastructure.rpc.order.v1.model.v1.UpdateDeliveryInfoRequest.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
-	16, // 13: infrastructure.rpc.order.v1.model.v1.CheckoutRequest.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
-	14, // 14: infrastructure.rpc.order.v1.model.v1.ListRequest.status_filter:type_name -> domain.order.common.v1.OrderStatus
-	10, // 15: infrastructure.rpc.order.v1.model.v1.ListRequest.pagination:type_name -> infrastructure.rpc.order.v1.model.v1.Pagination
-	0,  // 16: infrastructure.rpc.order.v1.model.v1.ListResponse.orders:type_name -> infrastructure.rpc.order.v1.model.v1.OrderState
-	11, // 17: infrastructure.rpc.order.v1.model.v1.ListResponse.pagination:type_name -> infrastructure.rpc.order.v1.model.v1.PaginationResponse
-	18, // [18:18] is the sub-list for method output_type
-	18, // [18:18] is the sub-list for method input_type
-	18, // [18:18] is the sub-list for extension type_name
-	18, // [18:18] is the sub-list for extension extendee
-	0,  // [0:18] is the sub-list for field type_name
+	19, // 10: infrastructure.rpc.order.v1.model.v1.GoodsLeaderboard.generated_at:type_name -> google.protobuf.Timestamp
+	5,  // 11: infrastructure.rpc.order.v1.model.v1.GoodsLeaderboard.entries:type_name -> infrastructure.rpc.order.v1.model.v1.LeaderboardEntry
+	6,  // 12: infrastructure.rpc.order.v1.model.v1.GetLeaderboardResponse.leaderboard:type_name -> infrastructure.rpc.order.v1.model.v1.GoodsLeaderboard
+	0,  // 13: infrastructure.rpc.order.v1.model.v1.UpdateRequest.order:type_name -> infrastructure.rpc.order.v1.model.v1.OrderState
+	22, // 14: infrastructure.rpc.order.v1.model.v1.UpdateRequest.update_mask:type_name -> google.protobuf.FieldMask
+	20, // 15: infrastructure.rpc.order.v1.model.v1.UpdateDeliveryInfoRequest.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
+	20, // 16: infrastructure.rpc.order.v1.model.v1.CheckoutRequest.delivery_info:type_name -> domain.order.common.v1.DeliveryInfo
+	18, // 17: infrastructure.rpc.order.v1.model.v1.ListRequest.status_filter:type_name -> domain.order.common.v1.OrderStatus
+	14, // 18: infrastructure.rpc.order.v1.model.v1.ListRequest.pagination:type_name -> infrastructure.rpc.order.v1.model.v1.Pagination
+	0,  // 19: infrastructure.rpc.order.v1.model.v1.ListResponse.orders:type_name -> infrastructure.rpc.order.v1.model.v1.OrderState
+	15, // 20: infrastructure.rpc.order.v1.model.v1.ListResponse.pagination:type_name -> infrastructure.rpc.order.v1.model.v1.PaginationResponse
+	21, // [21:21] is the sub-list for method output_type
+	21, // [21:21] is the sub-list for method input_type
+	21, // [21:21] is the sub-list for extension type_name
+	21, // [21:21] is the sub-list for extension extendee
+	0,  // [0:21] is the sub-list for field type_name
 }
 
 func init() { file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_init() }
@@ -1032,7 +1304,7 @@ func file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_rawDesc), len(file_oms_infrastructure_rpc_order_v1_model_v1_model_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   14,
+			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

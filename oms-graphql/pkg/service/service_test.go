@@ -196,6 +196,104 @@ func TestShopHandlerQueryGetOrderMapsDeliveryLifecycleFields(t *testing.T) {
 	}
 }
 
+func TestShopHandlerQueryGetLeaderboardMapsGoodsEntries(t *testing.T) {
+	t.Parallel()
+
+	generatedAt := time.Date(testYear, time.March, 11, 18, 15, 0, 0, time.UTC)
+	orderClient := &stubOrderClient{
+		getLeaderboardFunc: func(
+			ctx context.Context,
+			in *ordermodel.GetLeaderboardRequest,
+			_ ...grpc.CallOption,
+		) (*ordermodel.GetLeaderboardResponse, error) {
+			if in.GetBoard() != "GOODS_GMV" {
+				t.Fatalf("expected board GOODS_GMV, got %s", in.GetBoard())
+			}
+
+			if in.GetWindow() != "WEEK" {
+				t.Fatalf("expected window WEEK, got %s", in.GetWindow())
+			}
+
+			if in.GetLimit() != 5 {
+				t.Fatalf("expected limit 5, got %d", in.GetLimit())
+			}
+
+			md, ok := metadata.FromOutgoingContext(ctx)
+			if !ok {
+				t.Fatal("expected outgoing metadata from trace headers")
+			}
+
+			if got := md.Get("authorization"); len(got) != 0 {
+				t.Fatalf("did not expect authorization metadata, got %v", got)
+			}
+
+			if got := md.Get("trace-id"); len(got) != 1 || got[0] != "leaderboard-trace" {
+				t.Fatalf("expected trace-id metadata, got %v", got)
+			}
+
+			return &ordermodel.GetLeaderboardResponse{
+				Leaderboard: &ordermodel.GoodsLeaderboard{
+					Board:       "GOODS_GMV",
+					Window:      "WEEK",
+					GeneratedAt: timestamppb.New(generatedAt),
+					Entries: []*ordermodel.LeaderboardEntry{
+						{
+							MemberId: "good-1",
+							Rank:     1,
+							Score:    125.5,
+							Orders:   4,
+							Units:    7,
+						},
+					},
+				},
+			}, nil
+		},
+	}
+
+	shopClient := newTestShopClient(t, New(nil, nil, orderClient))
+	req := connect.NewRequest(&servicepb.QueryGetLeaderboardRequest{
+		Board:  "GOODS_GMV",
+		Window: "WEEK",
+		Limit:  wrapperspb.Int32(5),
+	})
+	req.Header().Set(traceIDHeader, "leaderboard-trace")
+
+	resp, err := shopClient.QueryGetLeaderboard(context.Background(), req)
+	if err != nil {
+		t.Fatalf("QueryGetLeaderboard over Connect returned error: %v", err)
+	}
+
+	leaderboard := resp.Msg.GetGetLeaderboard().GetLeaderboard()
+	if leaderboard.GetBoard().GetValue() != "GOODS_GMV" {
+		t.Fatalf("expected board GOODS_GMV, got %s", leaderboard.GetBoard().GetValue())
+	}
+
+	if leaderboard.GetWindow().GetValue() != "WEEK" {
+		t.Fatalf("expected window WEEK, got %s", leaderboard.GetWindow().GetValue())
+	}
+
+	if !leaderboard.GetGeneratedAt().AsTime().Equal(generatedAt) {
+		t.Fatalf("expected generatedAt %s, got %s", generatedAt, leaderboard.GetGeneratedAt().AsTime())
+	}
+
+	entries := leaderboard.GetEntries()
+	if len(entries) != 1 {
+		t.Fatalf("expected 1 leaderboard entry, got %d", len(entries))
+	}
+
+	if entries[0].GetMemberId().GetValue() != "good-1" {
+		t.Fatalf("expected member id good-1, got %s", entries[0].GetMemberId().GetValue())
+	}
+
+	if entries[0].GetRank().GetValue() != 1 {
+		t.Fatalf("expected rank 1, got %d", entries[0].GetRank().GetValue())
+	}
+
+	if entries[0].GetOrders().GetValue() != 4 {
+		t.Fatalf("expected orders 4, got %d", entries[0].GetOrders().GetValue())
+	}
+}
+
 func TestShopHandlerQueryGetCartMapsState(t *testing.T) {
 	t.Parallel()
 
@@ -353,6 +451,7 @@ type stubOrderClient struct {
 	ordergrpc.OrderServiceClient
 
 	getFunc                func(ctx context.Context, in *ordermodel.GetRequest, opts ...grpc.CallOption) (*ordermodel.GetResponse, error)
+	getLeaderboardFunc     func(ctx context.Context, in *ordermodel.GetLeaderboardRequest, opts ...grpc.CallOption) (*ordermodel.GetLeaderboardResponse, error)
 	updateDeliveryInfoFunc func(ctx context.Context, in *ordermodel.UpdateDeliveryInfoRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -367,6 +466,18 @@ func (s *stubOrderClient) Get(
 	}
 
 	return s.getFunc(ctx, in, opts...)
+}
+
+func (s *stubOrderClient) GetLeaderboard(
+	ctx context.Context,
+	in *ordermodel.GetLeaderboardRequest,
+	opts ...grpc.CallOption,
+) (*ordermodel.GetLeaderboardResponse, error) {
+	if s.getLeaderboardFunc == nil {
+		return nil, nil
+	}
+
+	return s.getLeaderboardFunc(ctx, in, opts...)
 }
 
 func (s *stubOrderClient) Create(context.Context, *ordermodel.CreateRequest, ...grpc.CallOption) (*emptypb.Empty, error) {

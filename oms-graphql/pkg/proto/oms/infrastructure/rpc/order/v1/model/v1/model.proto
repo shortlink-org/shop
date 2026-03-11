@@ -63,6 +63,31 @@ message GetResponse {
   OrderState order = 1;
 }
 
+message LeaderboardEntry {
+  string member_id = 1;
+  int32 rank = 2;
+  double score = 3;
+  int64 orders = 4;
+  int64 units = 5;
+}
+
+message GoodsLeaderboard {
+  string board = 1;
+  string window = 2;
+  google.protobuf.Timestamp generated_at = 3;
+  repeated LeaderboardEntry entries = 4;
+}
+
+message GetLeaderboardRequest {
+  string board = 1;
+  string window = 2;
+  int32 limit = 3;
+}
+
+message GetLeaderboardResponse {
+  GoodsLeaderboard leaderboard = 1;
+}
+
 // Request message for updating an order
 message UpdateRequest {
   // Updated order details

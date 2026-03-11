@@ -6,6 +6,8 @@ require (
 	github.com/IBM/sarama v1.47.0
 	github.com/ThreeDotsLabs/watermill v1.5.1
 	github.com/ThreeDotsLabs/watermill-kafka/v3 v3.1.2
+	github.com/ThreeDotsLabs/watermill-sql/v4 v4.1.2
+	github.com/alicebob/miniredis/v2 v2.37.0
 	github.com/authzed/authzed-go v1.8.0
 	github.com/dgraph-io/ristretto/v2 v2.4.0
 	github.com/golang-migrate/migrate/v4 v4.19.1
@@ -30,11 +32,15 @@ require (
 	github.com/shortlink-org/go-sdk/specification v0.0.0-20260307190635-c49239be411f
 	github.com/shortlink-org/go-sdk/temporal v0.0.0-20260307190635-c49239be411f
 	github.com/shortlink-org/go-sdk/uow v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/watermill v0.0.0-20260307190635-c49239be411f
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.40.0
+	github.com/testcontainers/testcontainers-go/modules/kafka v0.40.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.40.0
+	go.opentelemetry.io/otel/sdk/metric v1.42.0
 	go.opentelemetry.io/otel/trace v1.42.0
+	go.temporal.io/api v1.62.1
 	go.temporal.io/sdk v1.40.0
 	google.golang.org/grpc v1.79.2
 	google.golang.org/protobuf v1.36.11
@@ -47,7 +53,6 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
 	github.com/Masterminds/semver/v3 v3.4.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
-	github.com/ThreeDotsLabs/watermill-sql/v4 v4.1.2 // indirect
 	github.com/Unleash/unleash-go-sdk/v6 v6.2.0 // indirect
 	github.com/XSAM/otelsql v0.41.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -149,7 +154,6 @@ require (
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
 	github.com/shirou/gopsutil/v4 v4.25.6 // indirect
 	github.com/shortlink-org/go-sdk/http v0.0.0-20260307190635-c49239be411f // indirect
-	github.com/shortlink-org/go-sdk/watermill v0.0.0-20260307190635-c49239be411f // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/sony/gobreaker v1.0.0 // indirect
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 // indirect
@@ -160,7 +164,6 @@ require (
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
-	github.com/testcontainers/testcontainers-go/modules/kafka v0.40.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/twmb/murmur3 v1.1.8 // indirect
@@ -169,6 +172,7 @@ require (
 	github.com/xdg-go/scram v1.2.0 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
+	github.com/yuin/gopher-lua v1.1.1 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.mongodb.org/mongo-driver v1.17.2 // indirect
 	go.mongodb.org/mongo-driver/v2 v2.5.0 // indirect
@@ -182,9 +186,7 @@ require (
 	go.opentelemetry.io/otel/exporters/prometheus v0.64.0 // indirect
 	go.opentelemetry.io/otel/metric v1.42.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.42.0 // indirect
-	go.opentelemetry.io/otel/sdk/metric v1.42.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.9.0 // indirect
-	go.temporal.io/api v1.62.1 // indirect
 	go.temporal.io/sdk/contrib/opentelemetry v0.7.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect

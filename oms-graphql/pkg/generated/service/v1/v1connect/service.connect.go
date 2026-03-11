@@ -52,6 +52,9 @@ const (
 	ShopMutationUpdateDeliveryInfoProcedure = "/shop.carts.v1.Shop/MutationUpdateDeliveryInfo"
 	// ShopQueryGetCartProcedure is the fully-qualified name of the Shop's QueryGetCart RPC.
 	ShopQueryGetCartProcedure = "/shop.carts.v1.Shop/QueryGetCart"
+	// ShopQueryGetLeaderboardProcedure is the fully-qualified name of the Shop's QueryGetLeaderboard
+	// RPC.
+	ShopQueryGetLeaderboardProcedure = "/shop.carts.v1.Shop/QueryGetLeaderboard"
 	// ShopQueryGetOrderProcedure is the fully-qualified name of the Shop's QueryGetOrder RPC.
 	ShopQueryGetOrderProcedure = "/shop.carts.v1.Shop/QueryGetOrder"
 )
@@ -66,6 +69,7 @@ type ShopClient interface {
 	MutationResetCart(context.Context, *connect.Request[v1.MutationResetCartRequest]) (*connect.Response[v1.MutationResetCartResponse], error)
 	MutationUpdateDeliveryInfo(context.Context, *connect.Request[v1.MutationUpdateDeliveryInfoRequest]) (*connect.Response[v1.MutationUpdateDeliveryInfoResponse], error)
 	QueryGetCart(context.Context, *connect.Request[v1.QueryGetCartRequest]) (*connect.Response[v1.QueryGetCartResponse], error)
+	QueryGetLeaderboard(context.Context, *connect.Request[v1.QueryGetLeaderboardRequest]) (*connect.Response[v1.QueryGetLeaderboardResponse], error)
 	QueryGetOrder(context.Context, *connect.Request[v1.QueryGetOrderRequest]) (*connect.Response[v1.QueryGetOrderResponse], error)
 }
 
@@ -128,6 +132,12 @@ func NewShopClient(httpClient connect.HTTPClient, baseURL string, opts ...connec
 			connect.WithSchema(shopMethods.ByName("QueryGetCart")),
 			connect.WithClientOptions(opts...),
 		),
+		queryGetLeaderboard: connect.NewClient[v1.QueryGetLeaderboardRequest, v1.QueryGetLeaderboardResponse](
+			httpClient,
+			baseURL+ShopQueryGetLeaderboardProcedure,
+			connect.WithSchema(shopMethods.ByName("QueryGetLeaderboard")),
+			connect.WithClientOptions(opts...),
+		),
 		queryGetOrder: connect.NewClient[v1.QueryGetOrderRequest, v1.QueryGetOrderResponse](
 			httpClient,
 			baseURL+ShopQueryGetOrderProcedure,
@@ -147,6 +157,7 @@ type shopClient struct {
 	mutationResetCart          *connect.Client[v1.MutationResetCartRequest, v1.MutationResetCartResponse]
 	mutationUpdateDeliveryInfo *connect.Client[v1.MutationUpdateDeliveryInfoRequest, v1.MutationUpdateDeliveryInfoResponse]
 	queryGetCart               *connect.Client[v1.QueryGetCartRequest, v1.QueryGetCartResponse]
+	queryGetLeaderboard        *connect.Client[v1.QueryGetLeaderboardRequest, v1.QueryGetLeaderboardResponse]
 	queryGetOrder              *connect.Client[v1.QueryGetOrderRequest, v1.QueryGetOrderResponse]
 }
 
@@ -190,6 +201,11 @@ func (c *shopClient) QueryGetCart(ctx context.Context, req *connect.Request[v1.Q
 	return c.queryGetCart.CallUnary(ctx, req)
 }
 
+// QueryGetLeaderboard calls shop.carts.v1.Shop.QueryGetLeaderboard.
+func (c *shopClient) QueryGetLeaderboard(ctx context.Context, req *connect.Request[v1.QueryGetLeaderboardRequest]) (*connect.Response[v1.QueryGetLeaderboardResponse], error) {
+	return c.queryGetLeaderboard.CallUnary(ctx, req)
+}
+
 // QueryGetOrder calls shop.carts.v1.Shop.QueryGetOrder.
 func (c *shopClient) QueryGetOrder(ctx context.Context, req *connect.Request[v1.QueryGetOrderRequest]) (*connect.Response[v1.QueryGetOrderResponse], error) {
 	return c.queryGetOrder.CallUnary(ctx, req)
@@ -205,6 +221,7 @@ type ShopHandler interface {
 	MutationResetCart(context.Context, *connect.Request[v1.MutationResetCartRequest]) (*connect.Response[v1.MutationResetCartResponse], error)
 	MutationUpdateDeliveryInfo(context.Context, *connect.Request[v1.MutationUpdateDeliveryInfoRequest]) (*connect.Response[v1.MutationUpdateDeliveryInfoResponse], error)
 	QueryGetCart(context.Context, *connect.Request[v1.QueryGetCartRequest]) (*connect.Response[v1.QueryGetCartResponse], error)
+	QueryGetLeaderboard(context.Context, *connect.Request[v1.QueryGetLeaderboardRequest]) (*connect.Response[v1.QueryGetLeaderboardResponse], error)
 	QueryGetOrder(context.Context, *connect.Request[v1.QueryGetOrderRequest]) (*connect.Response[v1.QueryGetOrderResponse], error)
 }
 
@@ -263,6 +280,12 @@ func NewShopHandler(svc ShopHandler, opts ...connect.HandlerOption) (string, htt
 		connect.WithSchema(shopMethods.ByName("QueryGetCart")),
 		connect.WithHandlerOptions(opts...),
 	)
+	shopQueryGetLeaderboardHandler := connect.NewUnaryHandler(
+		ShopQueryGetLeaderboardProcedure,
+		svc.QueryGetLeaderboard,
+		connect.WithSchema(shopMethods.ByName("QueryGetLeaderboard")),
+		connect.WithHandlerOptions(opts...),
+	)
 	shopQueryGetOrderHandler := connect.NewUnaryHandler(
 		ShopQueryGetOrderProcedure,
 		svc.QueryGetOrder,
@@ -287,6 +310,8 @@ func NewShopHandler(svc ShopHandler, opts ...connect.HandlerOption) (string, htt
 			shopMutationUpdateDeliveryInfoHandler.ServeHTTP(w, r)
 		case ShopQueryGetCartProcedure:
 			shopQueryGetCartHandler.ServeHTTP(w, r)
+		case ShopQueryGetLeaderboardProcedure:
+			shopQueryGetLeaderboardHandler.ServeHTTP(w, r)
 		case ShopQueryGetOrderProcedure:
 			shopQueryGetOrderHandler.ServeHTTP(w, r)
 		default:
@@ -328,6 +353,10 @@ func (UnimplementedShopHandler) MutationUpdateDeliveryInfo(context.Context, *con
 
 func (UnimplementedShopHandler) QueryGetCart(context.Context, *connect.Request[v1.QueryGetCartRequest]) (*connect.Response[v1.QueryGetCartResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("shop.carts.v1.Shop.QueryGetCart is not implemented"))
+}
+
+func (UnimplementedShopHandler) QueryGetLeaderboard(context.Context, *connect.Request[v1.QueryGetLeaderboardRequest]) (*connect.Response[v1.QueryGetLeaderboardResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("shop.carts.v1.Shop.QueryGetLeaderboard is not implemented"))
 }
 
 func (UnimplementedShopHandler) QueryGetOrder(context.Context, *connect.Request[v1.QueryGetOrderRequest]) (*connect.Response[v1.QueryGetOrderResponse], error) {
