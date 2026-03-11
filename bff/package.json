@@ -15,7 +15,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "wgc": "0.109.0"
+    "wgc": "0.109.1"
   },
   "engines": {
     "node": ">=20 <26",
