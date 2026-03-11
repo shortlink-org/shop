@@ -1,0 +1,12 @@
+// Protocol Buffers - Google's data interchange format
+// Source: https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/timestamp.proto
+// Local copy so Cosmo Router proto compiler can resolve google.protobuf.Timestamp.
+
+syntax = "proto3";
+
+package google.protobuf;
+
+message Timestamp {
+  int64 seconds = 1;
+  int32 nanos = 2;
+}

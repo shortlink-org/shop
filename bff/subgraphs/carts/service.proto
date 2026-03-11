@@ -3,6 +3,7 @@ package shop.carts.v1;
 
 option go_package = "github.com/shortlink-org/shop/oms-graphql/pkg/generated/service/v1";
 
+import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
 
 // Service definition for Shop
