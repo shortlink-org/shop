@@ -7,7 +7,7 @@ import { useNotificationProvider } from '@refinedev/antd';
 import routerProvider from '@refinedev/nextjs-router';
 import { App as AntdApp, ConfigProvider, Layout, Menu, theme, Avatar, Dropdown, Space } from 'antd';
 import type { MenuProps } from 'antd';
-import ruRU from 'antd/locale/ru_RU';
+import enUS from 'antd/locale/en_US';
 import { 
   TeamOutlined, 
   DashboardOutlined, 
@@ -40,18 +40,18 @@ interface RefineProviderProps {
 function UserMenu() {
   const { session, logout } = useSession();
   
-  const userName = session ? getUserName(session) : 'Пользователь';
+  const userName = session ? getUserName(session) : 'User';
 
   const items: MenuProps['items'] = [
     {
       key: 'profile',
       icon: <UserOutlined />,
-      label: 'Профиль',
+      label: 'Profile',
     },
     {
       key: 'settings',
       icon: <SettingOutlined />,
-      label: 'Настройки',
+      label: 'Settings',
     },
     {
       type: 'divider',
@@ -59,7 +59,7 @@ function UserMenu() {
     {
       key: 'logout',
       icon: <LogoutOutlined />,
-      label: 'Выйти',
+      label: 'Sign out',
       danger: true,
       onClick: () => logout(),
     },
@@ -82,17 +82,17 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
     {
       key: '/',
       icon: <DashboardOutlined />,
-      label: <Link href="/">Дашборд</Link>,
+      label: <Link href="/">Dashboard</Link>,
     },
     {
       key: '/couriers',
       icon: <TeamOutlined />,
-      label: <Link href="/couriers">Курьеры</Link>,
+      label: <Link href="/couriers">Couriers</Link>,
     },
     {
       key: 'django-admin',
       icon: <SwapOutlined />,
-      label: <a href="/admin">Django Admin</a>,
+      label: <a href="https://admin.shop.shortlink.best/admin">Django Admin</a>,
     },
   ];
 
@@ -123,7 +123,7 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
           justifyContent: 'space-between',
           alignItems: 'center',
         }}>
-          <span className="text-lg font-semibold">Панель управления доставкой</span>
+          <span className="text-lg font-semibold">Delivery control panel</span>
           <UserMenu />
         </Header>
         <Content style={{ margin: '0', background: '#f5f5f5' }}>
@@ -147,7 +147,7 @@ function RefineApp({ children }: { children: React.ReactNode }) {
             name: 'dashboard',
             list: '/',
             meta: {
-              label: 'Дашборд',
+              label: 'Dashboard',
               icon: <DashboardOutlined />,
             },
           },
@@ -158,7 +158,7 @@ function RefineApp({ children }: { children: React.ReactNode }) {
             create: '/couriers/create',
             edit: '/couriers/:id/edit',
             meta: {
-              label: 'Курьеры',
+              label: 'Couriers',
               icon: <TeamOutlined />,
             },
           },
@@ -179,7 +179,7 @@ export function RefineProvider({ children }: RefineProviderProps) {
   return (
     <ApolloProvider client={apolloClient}>
       <ConfigProvider
-        locale={ruRU}
+        locale={enUS}
         theme={{
           algorithm: theme.defaultAlgorithm,
         }}

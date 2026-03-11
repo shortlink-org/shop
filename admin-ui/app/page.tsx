@@ -14,13 +14,13 @@ export default function DashboardPage() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Дашборд</h1>
+      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
       
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title="Всего курьеров"
+              title="Total couriers"
               value={stats.totalCouriers}
               prefix={<TeamOutlined />}
             />
@@ -30,7 +30,7 @@ export default function DashboardPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title="Активные"
+              title="Active"
               value={stats.activeCouriers}
               prefix={<CheckCircleOutlined />}
               valueStyle={{ color: '#3f8600' }}
@@ -41,7 +41,7 @@ export default function DashboardPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title="На доставке"
+              title="On delivery"
               value={stats.busyCouriers}
               prefix={<ClockCircleOutlined />}
               valueStyle={{ color: '#1890ff' }}
@@ -52,7 +52,7 @@ export default function DashboardPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title="Доставок сегодня"
+              title="Deliveries today"
               value={stats.deliveriesToday}
               prefix={<CarOutlined />}
             />
@@ -61,9 +61,9 @@ export default function DashboardPage() {
       </Row>
       
       <div className="mt-8">
-        <Card title="Быстрые действия">
+        <Card title="Quick actions">
           <p className="text-gray-500">
-            Перейдите в раздел «Курьеры» для управления курьерами.
+            Go to the Couriers section to manage couriers.
           </p>
         </Card>
       </div>

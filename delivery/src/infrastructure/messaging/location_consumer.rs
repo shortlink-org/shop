@@ -12,9 +12,11 @@ use tracing::{error, info};
 use uuid::Uuid;
 
 use crate::domain::model::courier_location::LocationHistoryEntry;
+use crate::domain::model::package::PackageStatus;
 use crate::domain::model::vo::location::Location;
 use crate::domain::model::CourierLocation;
-use crate::domain::ports::{LocationCache, LocationRepository};
+use crate::domain::ports::{LocationCache, LocationRepository, PackageRepository};
+use crate::infrastructure::messaging::RedisTrackingPubSub;
 
 /// Kafka topic for courier location updates
 pub const TOPIC_COURIER_LOCATION_UPDATES: &str = "courier.location.updates";
@@ -90,20 +92,29 @@ impl LocationConsumerConfig {
 }
 
 /// Location consumer for processing courier location updates
-pub struct LocationConsumer<C: LocationCache, R: LocationRepository> {
+pub struct LocationConsumer<C: LocationCache, R: LocationRepository, P: PackageRepository> {
     consumer: StreamConsumer,
     location_cache: Arc<C>,
     location_repository: Arc<R>,
+    package_repository: Arc<P>,
+    tracking_pubsub: Arc<RedisTrackingPubSub>,
     config: LocationConsumerConfig,
     shutdown_rx: broadcast::Receiver<()>,
 }
 
-impl<C: LocationCache + 'static, R: LocationRepository + 'static> LocationConsumer<C, R> {
+impl<C, R, P> LocationConsumer<C, R, P>
+where
+    C: LocationCache + 'static,
+    R: LocationRepository + 'static,
+    P: PackageRepository + 'static,
+{
     /// Create a new location consumer
     pub fn new(
         config: LocationConsumerConfig,
         location_cache: Arc<C>,
         location_repository: Arc<R>,
+        package_repository: Arc<P>,
+        tracking_pubsub: Arc<RedisTrackingPubSub>,
         shutdown_rx: broadcast::Receiver<()>,
     ) -> Result<Self, String> {
         let consumer: StreamConsumer = ClientConfig::new()
@@ -130,6 +141,8 @@ impl<C: LocationCache + 'static, R: LocationRepository + 'static> LocationConsum
             consumer,
             location_cache,
             location_repository,
+            package_repository,
+            tracking_pubsub,
             config,
             shutdown_rx,
         })
@@ -217,6 +230,27 @@ impl<C: LocationCache + 'static, R: LocationRepository + 'static> LocationConsum
             .save(&history_entry)
             .await
             .map_err(|e| format!("Failed to save location history: {}", e))?;
+
+        let packages = self
+            .package_repository
+            .find_by_courier(courier_id)
+            .await
+            .map_err(|e| format!("Failed to load courier packages: {}", e))?;
+
+        for package in packages {
+            if matches!(
+                package.status(),
+                PackageStatus::Assigned | PackageStatus::InTransit
+            ) {
+                if let Err(err) = self
+                    .tracking_pubsub
+                    .publish_order_update(package.order_id())
+                    .await
+                {
+                    error!(order_id = %package.order_id(), error = %err, "Failed to publish tracking update");
+                }
+            }
+        }
 
         Ok(())
     }

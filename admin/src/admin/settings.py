@@ -333,7 +333,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://localhost:8000",
     "https://shortlink.best",
-    "https://shop.shortlink.best",  # Django admin hostname
+    "https://admin.shop.shortlink.best",  # Django admin hostname
 ]
 
 # Content Security Policy (CSP)

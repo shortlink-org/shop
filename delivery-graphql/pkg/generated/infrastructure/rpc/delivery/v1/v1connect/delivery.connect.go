@@ -33,70 +33,22 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
-	// DeliveryServiceGetCourierProcedure is the fully-qualified name of the DeliveryService's
-	// GetCourier RPC.
-	DeliveryServiceGetCourierProcedure = "/infrastructure.rpc.delivery.v1.DeliveryService/GetCourier"
-	// DeliveryServiceGetCourierPoolProcedure is the fully-qualified name of the DeliveryService's
-	// GetCourierPool RPC.
-	DeliveryServiceGetCourierPoolProcedure = "/infrastructure.rpc.delivery.v1.DeliveryService/GetCourierPool"
-	// DeliveryServiceRegisterCourierProcedure is the fully-qualified name of the DeliveryService's
-	// RegisterCourier RPC.
-	DeliveryServiceRegisterCourierProcedure = "/infrastructure.rpc.delivery.v1.DeliveryService/RegisterCourier"
-	// DeliveryServiceActivateCourierProcedure is the fully-qualified name of the DeliveryService's
-	// ActivateCourier RPC.
-	DeliveryServiceActivateCourierProcedure = "/infrastructure.rpc.delivery.v1.DeliveryService/ActivateCourier"
-	// DeliveryServiceDeactivateCourierProcedure is the fully-qualified name of the DeliveryService's
-	// DeactivateCourier RPC.
-	DeliveryServiceDeactivateCourierProcedure = "/infrastructure.rpc.delivery.v1.DeliveryService/DeactivateCourier"
-	// DeliveryServiceArchiveCourierProcedure is the fully-qualified name of the DeliveryService's
-	// ArchiveCourier RPC.
-	DeliveryServiceArchiveCourierProcedure = "/infrastructure.rpc.delivery.v1.DeliveryService/ArchiveCourier"
-	// DeliveryServiceUpdateContactInfoProcedure is the fully-qualified name of the DeliveryService's
-	// UpdateContactInfo RPC.
-	DeliveryServiceUpdateContactInfoProcedure = "/infrastructure.rpc.delivery.v1.DeliveryService/UpdateContactInfo"
-	// DeliveryServiceUpdateWorkScheduleProcedure is the fully-qualified name of the DeliveryService's
-	// UpdateWorkSchedule RPC.
-	DeliveryServiceUpdateWorkScheduleProcedure = "/infrastructure.rpc.delivery.v1.DeliveryService/UpdateWorkSchedule"
-	// DeliveryServiceChangeTransportTypeProcedure is the fully-qualified name of the DeliveryService's
-	// ChangeTransportType RPC.
-	DeliveryServiceChangeTransportTypeProcedure = "/infrastructure.rpc.delivery.v1.DeliveryService/ChangeTransportType"
-	// DeliveryServiceAcceptOrderProcedure is the fully-qualified name of the DeliveryService's
-	// AcceptOrder RPC.
-	DeliveryServiceAcceptOrderProcedure = "/infrastructure.rpc.delivery.v1.DeliveryService/AcceptOrder"
-	// DeliveryServiceAssignOrderProcedure is the fully-qualified name of the DeliveryService's
-	// AssignOrder RPC.
-	DeliveryServiceAssignOrderProcedure = "/infrastructure.rpc.delivery.v1.DeliveryService/AssignOrder"
-	// DeliveryServicePickUpOrderProcedure is the fully-qualified name of the DeliveryService's
-	// PickUpOrder RPC.
-	DeliveryServicePickUpOrderProcedure = "/infrastructure.rpc.delivery.v1.DeliveryService/PickUpOrder"
-	// DeliveryServiceDeliverOrderProcedure is the fully-qualified name of the DeliveryService's
-	// DeliverOrder RPC.
-	DeliveryServiceDeliverOrderProcedure = "/infrastructure.rpc.delivery.v1.DeliveryService/DeliverOrder"
-	// DeliveryServiceGetCourierDeliveriesProcedure is the fully-qualified name of the DeliveryService's
-	// GetCourierDeliveries RPC.
-	DeliveryServiceGetCourierDeliveriesProcedure = "/infrastructure.rpc.delivery.v1.DeliveryService/GetCourierDeliveries"
 	// DeliveryServiceGetRandomAddressProcedure is the fully-qualified name of the DeliveryService's
 	// GetRandomAddress RPC.
 	DeliveryServiceGetRandomAddressProcedure = "/infrastructure.rpc.delivery.v1.DeliveryService/GetRandomAddress"
+	// DeliveryServiceGetOrderTrackingProcedure is the fully-qualified name of the DeliveryService's
+	// GetOrderTracking RPC.
+	DeliveryServiceGetOrderTrackingProcedure = "/infrastructure.rpc.delivery.v1.DeliveryService/GetOrderTracking"
+	// DeliveryServiceSubscribeOrderTrackingProcedure is the fully-qualified name of the
+	// DeliveryService's SubscribeOrderTracking RPC.
+	DeliveryServiceSubscribeOrderTrackingProcedure = "/infrastructure.rpc.delivery.v1.DeliveryService/SubscribeOrderTracking"
 )
 
 // DeliveryServiceClient is a client for the infrastructure.rpc.delivery.v1.DeliveryService service.
 type DeliveryServiceClient interface {
-	GetCourier(context.Context, *connect.Request[v1.GetCourierRequest]) (*connect.Response[v1.GetCourierResponse], error)
-	GetCourierPool(context.Context, *connect.Request[v1.GetCourierPoolRequest]) (*connect.Response[v1.GetCourierPoolResponse], error)
-	RegisterCourier(context.Context, *connect.Request[v1.RegisterCourierRequest]) (*connect.Response[v1.RegisterCourierResponse], error)
-	ActivateCourier(context.Context, *connect.Request[v1.ActivateCourierRequest]) (*connect.Response[v1.ActivateCourierResponse], error)
-	DeactivateCourier(context.Context, *connect.Request[v1.DeactivateCourierRequest]) (*connect.Response[v1.DeactivateCourierResponse], error)
-	ArchiveCourier(context.Context, *connect.Request[v1.ArchiveCourierRequest]) (*connect.Response[v1.ArchiveCourierResponse], error)
-	UpdateContactInfo(context.Context, *connect.Request[v1.UpdateContactInfoRequest]) (*connect.Response[v1.UpdateContactInfoResponse], error)
-	UpdateWorkSchedule(context.Context, *connect.Request[v1.UpdateWorkScheduleRequest]) (*connect.Response[v1.UpdateWorkScheduleResponse], error)
-	ChangeTransportType(context.Context, *connect.Request[v1.ChangeTransportTypeRequest]) (*connect.Response[v1.ChangeTransportTypeResponse], error)
-	AcceptOrder(context.Context, *connect.Request[v1.AcceptOrderRequest]) (*connect.Response[v1.AcceptOrderResponse], error)
-	AssignOrder(context.Context, *connect.Request[v1.AssignOrderRequest]) (*connect.Response[v1.AssignOrderResponse], error)
-	PickUpOrder(context.Context, *connect.Request[v1.PickUpOrderRequest]) (*connect.Response[v1.PickUpOrderResponse], error)
-	DeliverOrder(context.Context, *connect.Request[v1.DeliverOrderRequest]) (*connect.Response[v1.DeliverOrderResponse], error)
-	GetCourierDeliveries(context.Context, *connect.Request[v1.GetCourierDeliveriesRequest]) (*connect.Response[v1.GetCourierDeliveriesResponse], error)
 	GetRandomAddress(context.Context, *connect.Request[v1.GetRandomAddressRequest]) (*connect.Response[v1.GetRandomAddressResponse], error)
+	GetOrderTracking(context.Context, *connect.Request[v1.GetOrderTrackingRequest]) (*connect.Response[v1.GetOrderTrackingResponse], error)
+	SubscribeOrderTracking(context.Context, *connect.Request[v1.GetOrderTrackingRequest]) (*connect.ServerStreamForClient[v1.GetOrderTrackingResponse], error)
 }
 
 // NewDeliveryServiceClient constructs a client for the
@@ -111,94 +63,22 @@ func NewDeliveryServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 	baseURL = strings.TrimRight(baseURL, "/")
 	deliveryServiceMethods := v1.File_infrastructure_rpc_delivery_v1_delivery_proto.Services().ByName("DeliveryService").Methods()
 	return &deliveryServiceClient{
-		getCourier: connect.NewClient[v1.GetCourierRequest, v1.GetCourierResponse](
-			httpClient,
-			baseURL+DeliveryServiceGetCourierProcedure,
-			connect.WithSchema(deliveryServiceMethods.ByName("GetCourier")),
-			connect.WithClientOptions(opts...),
-		),
-		getCourierPool: connect.NewClient[v1.GetCourierPoolRequest, v1.GetCourierPoolResponse](
-			httpClient,
-			baseURL+DeliveryServiceGetCourierPoolProcedure,
-			connect.WithSchema(deliveryServiceMethods.ByName("GetCourierPool")),
-			connect.WithClientOptions(opts...),
-		),
-		registerCourier: connect.NewClient[v1.RegisterCourierRequest, v1.RegisterCourierResponse](
-			httpClient,
-			baseURL+DeliveryServiceRegisterCourierProcedure,
-			connect.WithSchema(deliveryServiceMethods.ByName("RegisterCourier")),
-			connect.WithClientOptions(opts...),
-		),
-		activateCourier: connect.NewClient[v1.ActivateCourierRequest, v1.ActivateCourierResponse](
-			httpClient,
-			baseURL+DeliveryServiceActivateCourierProcedure,
-			connect.WithSchema(deliveryServiceMethods.ByName("ActivateCourier")),
-			connect.WithClientOptions(opts...),
-		),
-		deactivateCourier: connect.NewClient[v1.DeactivateCourierRequest, v1.DeactivateCourierResponse](
-			httpClient,
-			baseURL+DeliveryServiceDeactivateCourierProcedure,
-			connect.WithSchema(deliveryServiceMethods.ByName("DeactivateCourier")),
-			connect.WithClientOptions(opts...),
-		),
-		archiveCourier: connect.NewClient[v1.ArchiveCourierRequest, v1.ArchiveCourierResponse](
-			httpClient,
-			baseURL+DeliveryServiceArchiveCourierProcedure,
-			connect.WithSchema(deliveryServiceMethods.ByName("ArchiveCourier")),
-			connect.WithClientOptions(opts...),
-		),
-		updateContactInfo: connect.NewClient[v1.UpdateContactInfoRequest, v1.UpdateContactInfoResponse](
-			httpClient,
-			baseURL+DeliveryServiceUpdateContactInfoProcedure,
-			connect.WithSchema(deliveryServiceMethods.ByName("UpdateContactInfo")),
-			connect.WithClientOptions(opts...),
-		),
-		updateWorkSchedule: connect.NewClient[v1.UpdateWorkScheduleRequest, v1.UpdateWorkScheduleResponse](
-			httpClient,
-			baseURL+DeliveryServiceUpdateWorkScheduleProcedure,
-			connect.WithSchema(deliveryServiceMethods.ByName("UpdateWorkSchedule")),
-			connect.WithClientOptions(opts...),
-		),
-		changeTransportType: connect.NewClient[v1.ChangeTransportTypeRequest, v1.ChangeTransportTypeResponse](
-			httpClient,
-			baseURL+DeliveryServiceChangeTransportTypeProcedure,
-			connect.WithSchema(deliveryServiceMethods.ByName("ChangeTransportType")),
-			connect.WithClientOptions(opts...),
-		),
-		acceptOrder: connect.NewClient[v1.AcceptOrderRequest, v1.AcceptOrderResponse](
-			httpClient,
-			baseURL+DeliveryServiceAcceptOrderProcedure,
-			connect.WithSchema(deliveryServiceMethods.ByName("AcceptOrder")),
-			connect.WithClientOptions(opts...),
-		),
-		assignOrder: connect.NewClient[v1.AssignOrderRequest, v1.AssignOrderResponse](
-			httpClient,
-			baseURL+DeliveryServiceAssignOrderProcedure,
-			connect.WithSchema(deliveryServiceMethods.ByName("AssignOrder")),
-			connect.WithClientOptions(opts...),
-		),
-		pickUpOrder: connect.NewClient[v1.PickUpOrderRequest, v1.PickUpOrderResponse](
-			httpClient,
-			baseURL+DeliveryServicePickUpOrderProcedure,
-			connect.WithSchema(deliveryServiceMethods.ByName("PickUpOrder")),
-			connect.WithClientOptions(opts...),
-		),
-		deliverOrder: connect.NewClient[v1.DeliverOrderRequest, v1.DeliverOrderResponse](
-			httpClient,
-			baseURL+DeliveryServiceDeliverOrderProcedure,
-			connect.WithSchema(deliveryServiceMethods.ByName("DeliverOrder")),
-			connect.WithClientOptions(opts...),
-		),
-		getCourierDeliveries: connect.NewClient[v1.GetCourierDeliveriesRequest, v1.GetCourierDeliveriesResponse](
-			httpClient,
-			baseURL+DeliveryServiceGetCourierDeliveriesProcedure,
-			connect.WithSchema(deliveryServiceMethods.ByName("GetCourierDeliveries")),
-			connect.WithClientOptions(opts...),
-		),
 		getRandomAddress: connect.NewClient[v1.GetRandomAddressRequest, v1.GetRandomAddressResponse](
 			httpClient,
 			baseURL+DeliveryServiceGetRandomAddressProcedure,
 			connect.WithSchema(deliveryServiceMethods.ByName("GetRandomAddress")),
+			connect.WithClientOptions(opts...),
+		),
+		getOrderTracking: connect.NewClient[v1.GetOrderTrackingRequest, v1.GetOrderTrackingResponse](
+			httpClient,
+			baseURL+DeliveryServiceGetOrderTrackingProcedure,
+			connect.WithSchema(deliveryServiceMethods.ByName("GetOrderTracking")),
+			connect.WithClientOptions(opts...),
+		),
+		subscribeOrderTracking: connect.NewClient[v1.GetOrderTrackingRequest, v1.GetOrderTrackingResponse](
+			httpClient,
+			baseURL+DeliveryServiceSubscribeOrderTrackingProcedure,
+			connect.WithSchema(deliveryServiceMethods.ByName("SubscribeOrderTracking")),
 			connect.WithClientOptions(opts...),
 		),
 	}
@@ -206,91 +86,9 @@ func NewDeliveryServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 
 // deliveryServiceClient implements DeliveryServiceClient.
 type deliveryServiceClient struct {
-	getCourier           *connect.Client[v1.GetCourierRequest, v1.GetCourierResponse]
-	getCourierPool       *connect.Client[v1.GetCourierPoolRequest, v1.GetCourierPoolResponse]
-	registerCourier      *connect.Client[v1.RegisterCourierRequest, v1.RegisterCourierResponse]
-	activateCourier      *connect.Client[v1.ActivateCourierRequest, v1.ActivateCourierResponse]
-	deactivateCourier    *connect.Client[v1.DeactivateCourierRequest, v1.DeactivateCourierResponse]
-	archiveCourier       *connect.Client[v1.ArchiveCourierRequest, v1.ArchiveCourierResponse]
-	updateContactInfo    *connect.Client[v1.UpdateContactInfoRequest, v1.UpdateContactInfoResponse]
-	updateWorkSchedule   *connect.Client[v1.UpdateWorkScheduleRequest, v1.UpdateWorkScheduleResponse]
-	changeTransportType  *connect.Client[v1.ChangeTransportTypeRequest, v1.ChangeTransportTypeResponse]
-	acceptOrder          *connect.Client[v1.AcceptOrderRequest, v1.AcceptOrderResponse]
-	assignOrder          *connect.Client[v1.AssignOrderRequest, v1.AssignOrderResponse]
-	pickUpOrder          *connect.Client[v1.PickUpOrderRequest, v1.PickUpOrderResponse]
-	deliverOrder         *connect.Client[v1.DeliverOrderRequest, v1.DeliverOrderResponse]
-	getCourierDeliveries *connect.Client[v1.GetCourierDeliveriesRequest, v1.GetCourierDeliveriesResponse]
-	getRandomAddress     *connect.Client[v1.GetRandomAddressRequest, v1.GetRandomAddressResponse]
-}
-
-// GetCourier calls infrastructure.rpc.delivery.v1.DeliveryService.GetCourier.
-func (c *deliveryServiceClient) GetCourier(ctx context.Context, req *connect.Request[v1.GetCourierRequest]) (*connect.Response[v1.GetCourierResponse], error) {
-	return c.getCourier.CallUnary(ctx, req)
-}
-
-// GetCourierPool calls infrastructure.rpc.delivery.v1.DeliveryService.GetCourierPool.
-func (c *deliveryServiceClient) GetCourierPool(ctx context.Context, req *connect.Request[v1.GetCourierPoolRequest]) (*connect.Response[v1.GetCourierPoolResponse], error) {
-	return c.getCourierPool.CallUnary(ctx, req)
-}
-
-// RegisterCourier calls infrastructure.rpc.delivery.v1.DeliveryService.RegisterCourier.
-func (c *deliveryServiceClient) RegisterCourier(ctx context.Context, req *connect.Request[v1.RegisterCourierRequest]) (*connect.Response[v1.RegisterCourierResponse], error) {
-	return c.registerCourier.CallUnary(ctx, req)
-}
-
-// ActivateCourier calls infrastructure.rpc.delivery.v1.DeliveryService.ActivateCourier.
-func (c *deliveryServiceClient) ActivateCourier(ctx context.Context, req *connect.Request[v1.ActivateCourierRequest]) (*connect.Response[v1.ActivateCourierResponse], error) {
-	return c.activateCourier.CallUnary(ctx, req)
-}
-
-// DeactivateCourier calls infrastructure.rpc.delivery.v1.DeliveryService.DeactivateCourier.
-func (c *deliveryServiceClient) DeactivateCourier(ctx context.Context, req *connect.Request[v1.DeactivateCourierRequest]) (*connect.Response[v1.DeactivateCourierResponse], error) {
-	return c.deactivateCourier.CallUnary(ctx, req)
-}
-
-// ArchiveCourier calls infrastructure.rpc.delivery.v1.DeliveryService.ArchiveCourier.
-func (c *deliveryServiceClient) ArchiveCourier(ctx context.Context, req *connect.Request[v1.ArchiveCourierRequest]) (*connect.Response[v1.ArchiveCourierResponse], error) {
-	return c.archiveCourier.CallUnary(ctx, req)
-}
-
-// UpdateContactInfo calls infrastructure.rpc.delivery.v1.DeliveryService.UpdateContactInfo.
-func (c *deliveryServiceClient) UpdateContactInfo(ctx context.Context, req *connect.Request[v1.UpdateContactInfoRequest]) (*connect.Response[v1.UpdateContactInfoResponse], error) {
-	return c.updateContactInfo.CallUnary(ctx, req)
-}
-
-// UpdateWorkSchedule calls infrastructure.rpc.delivery.v1.DeliveryService.UpdateWorkSchedule.
-func (c *deliveryServiceClient) UpdateWorkSchedule(ctx context.Context, req *connect.Request[v1.UpdateWorkScheduleRequest]) (*connect.Response[v1.UpdateWorkScheduleResponse], error) {
-	return c.updateWorkSchedule.CallUnary(ctx, req)
-}
-
-// ChangeTransportType calls infrastructure.rpc.delivery.v1.DeliveryService.ChangeTransportType.
-func (c *deliveryServiceClient) ChangeTransportType(ctx context.Context, req *connect.Request[v1.ChangeTransportTypeRequest]) (*connect.Response[v1.ChangeTransportTypeResponse], error) {
-	return c.changeTransportType.CallUnary(ctx, req)
-}
-
-// AcceptOrder calls infrastructure.rpc.delivery.v1.DeliveryService.AcceptOrder.
-func (c *deliveryServiceClient) AcceptOrder(ctx context.Context, req *connect.Request[v1.AcceptOrderRequest]) (*connect.Response[v1.AcceptOrderResponse], error) {
-	return c.acceptOrder.CallUnary(ctx, req)
-}
-
-// AssignOrder calls infrastructure.rpc.delivery.v1.DeliveryService.AssignOrder.
-func (c *deliveryServiceClient) AssignOrder(ctx context.Context, req *connect.Request[v1.AssignOrderRequest]) (*connect.Response[v1.AssignOrderResponse], error) {
-	return c.assignOrder.CallUnary(ctx, req)
-}
-
-// PickUpOrder calls infrastructure.rpc.delivery.v1.DeliveryService.PickUpOrder.
-func (c *deliveryServiceClient) PickUpOrder(ctx context.Context, req *connect.Request[v1.PickUpOrderRequest]) (*connect.Response[v1.PickUpOrderResponse], error) {
-	return c.pickUpOrder.CallUnary(ctx, req)
-}
-
-// DeliverOrder calls infrastructure.rpc.delivery.v1.DeliveryService.DeliverOrder.
-func (c *deliveryServiceClient) DeliverOrder(ctx context.Context, req *connect.Request[v1.DeliverOrderRequest]) (*connect.Response[v1.DeliverOrderResponse], error) {
-	return c.deliverOrder.CallUnary(ctx, req)
-}
-
-// GetCourierDeliveries calls infrastructure.rpc.delivery.v1.DeliveryService.GetCourierDeliveries.
-func (c *deliveryServiceClient) GetCourierDeliveries(ctx context.Context, req *connect.Request[v1.GetCourierDeliveriesRequest]) (*connect.Response[v1.GetCourierDeliveriesResponse], error) {
-	return c.getCourierDeliveries.CallUnary(ctx, req)
+	getRandomAddress       *connect.Client[v1.GetRandomAddressRequest, v1.GetRandomAddressResponse]
+	getOrderTracking       *connect.Client[v1.GetOrderTrackingRequest, v1.GetOrderTrackingResponse]
+	subscribeOrderTracking *connect.Client[v1.GetOrderTrackingRequest, v1.GetOrderTrackingResponse]
 }
 
 // GetRandomAddress calls infrastructure.rpc.delivery.v1.DeliveryService.GetRandomAddress.
@@ -298,24 +96,23 @@ func (c *deliveryServiceClient) GetRandomAddress(ctx context.Context, req *conne
 	return c.getRandomAddress.CallUnary(ctx, req)
 }
 
+// GetOrderTracking calls infrastructure.rpc.delivery.v1.DeliveryService.GetOrderTracking.
+func (c *deliveryServiceClient) GetOrderTracking(ctx context.Context, req *connect.Request[v1.GetOrderTrackingRequest]) (*connect.Response[v1.GetOrderTrackingResponse], error) {
+	return c.getOrderTracking.CallUnary(ctx, req)
+}
+
+// SubscribeOrderTracking calls
+// infrastructure.rpc.delivery.v1.DeliveryService.SubscribeOrderTracking.
+func (c *deliveryServiceClient) SubscribeOrderTracking(ctx context.Context, req *connect.Request[v1.GetOrderTrackingRequest]) (*connect.ServerStreamForClient[v1.GetOrderTrackingResponse], error) {
+	return c.subscribeOrderTracking.CallServerStream(ctx, req)
+}
+
 // DeliveryServiceHandler is an implementation of the infrastructure.rpc.delivery.v1.DeliveryService
 // service.
 type DeliveryServiceHandler interface {
-	GetCourier(context.Context, *connect.Request[v1.GetCourierRequest]) (*connect.Response[v1.GetCourierResponse], error)
-	GetCourierPool(context.Context, *connect.Request[v1.GetCourierPoolRequest]) (*connect.Response[v1.GetCourierPoolResponse], error)
-	RegisterCourier(context.Context, *connect.Request[v1.RegisterCourierRequest]) (*connect.Response[v1.RegisterCourierResponse], error)
-	ActivateCourier(context.Context, *connect.Request[v1.ActivateCourierRequest]) (*connect.Response[v1.ActivateCourierResponse], error)
-	DeactivateCourier(context.Context, *connect.Request[v1.DeactivateCourierRequest]) (*connect.Response[v1.DeactivateCourierResponse], error)
-	ArchiveCourier(context.Context, *connect.Request[v1.ArchiveCourierRequest]) (*connect.Response[v1.ArchiveCourierResponse], error)
-	UpdateContactInfo(context.Context, *connect.Request[v1.UpdateContactInfoRequest]) (*connect.Response[v1.UpdateContactInfoResponse], error)
-	UpdateWorkSchedule(context.Context, *connect.Request[v1.UpdateWorkScheduleRequest]) (*connect.Response[v1.UpdateWorkScheduleResponse], error)
-	ChangeTransportType(context.Context, *connect.Request[v1.ChangeTransportTypeRequest]) (*connect.Response[v1.ChangeTransportTypeResponse], error)
-	AcceptOrder(context.Context, *connect.Request[v1.AcceptOrderRequest]) (*connect.Response[v1.AcceptOrderResponse], error)
-	AssignOrder(context.Context, *connect.Request[v1.AssignOrderRequest]) (*connect.Response[v1.AssignOrderResponse], error)
-	PickUpOrder(context.Context, *connect.Request[v1.PickUpOrderRequest]) (*connect.Response[v1.PickUpOrderResponse], error)
-	DeliverOrder(context.Context, *connect.Request[v1.DeliverOrderRequest]) (*connect.Response[v1.DeliverOrderResponse], error)
-	GetCourierDeliveries(context.Context, *connect.Request[v1.GetCourierDeliveriesRequest]) (*connect.Response[v1.GetCourierDeliveriesResponse], error)
 	GetRandomAddress(context.Context, *connect.Request[v1.GetRandomAddressRequest]) (*connect.Response[v1.GetRandomAddressResponse], error)
+	GetOrderTracking(context.Context, *connect.Request[v1.GetOrderTrackingRequest]) (*connect.Response[v1.GetOrderTrackingResponse], error)
+	SubscribeOrderTracking(context.Context, *connect.Request[v1.GetOrderTrackingRequest], *connect.ServerStream[v1.GetOrderTrackingResponse]) error
 }
 
 // NewDeliveryServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -325,128 +122,32 @@ type DeliveryServiceHandler interface {
 // and JSON codecs. They also support gzip compression.
 func NewDeliveryServiceHandler(svc DeliveryServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
 	deliveryServiceMethods := v1.File_infrastructure_rpc_delivery_v1_delivery_proto.Services().ByName("DeliveryService").Methods()
-	deliveryServiceGetCourierHandler := connect.NewUnaryHandler(
-		DeliveryServiceGetCourierProcedure,
-		svc.GetCourier,
-		connect.WithSchema(deliveryServiceMethods.ByName("GetCourier")),
-		connect.WithHandlerOptions(opts...),
-	)
-	deliveryServiceGetCourierPoolHandler := connect.NewUnaryHandler(
-		DeliveryServiceGetCourierPoolProcedure,
-		svc.GetCourierPool,
-		connect.WithSchema(deliveryServiceMethods.ByName("GetCourierPool")),
-		connect.WithHandlerOptions(opts...),
-	)
-	deliveryServiceRegisterCourierHandler := connect.NewUnaryHandler(
-		DeliveryServiceRegisterCourierProcedure,
-		svc.RegisterCourier,
-		connect.WithSchema(deliveryServiceMethods.ByName("RegisterCourier")),
-		connect.WithHandlerOptions(opts...),
-	)
-	deliveryServiceActivateCourierHandler := connect.NewUnaryHandler(
-		DeliveryServiceActivateCourierProcedure,
-		svc.ActivateCourier,
-		connect.WithSchema(deliveryServiceMethods.ByName("ActivateCourier")),
-		connect.WithHandlerOptions(opts...),
-	)
-	deliveryServiceDeactivateCourierHandler := connect.NewUnaryHandler(
-		DeliveryServiceDeactivateCourierProcedure,
-		svc.DeactivateCourier,
-		connect.WithSchema(deliveryServiceMethods.ByName("DeactivateCourier")),
-		connect.WithHandlerOptions(opts...),
-	)
-	deliveryServiceArchiveCourierHandler := connect.NewUnaryHandler(
-		DeliveryServiceArchiveCourierProcedure,
-		svc.ArchiveCourier,
-		connect.WithSchema(deliveryServiceMethods.ByName("ArchiveCourier")),
-		connect.WithHandlerOptions(opts...),
-	)
-	deliveryServiceUpdateContactInfoHandler := connect.NewUnaryHandler(
-		DeliveryServiceUpdateContactInfoProcedure,
-		svc.UpdateContactInfo,
-		connect.WithSchema(deliveryServiceMethods.ByName("UpdateContactInfo")),
-		connect.WithHandlerOptions(opts...),
-	)
-	deliveryServiceUpdateWorkScheduleHandler := connect.NewUnaryHandler(
-		DeliveryServiceUpdateWorkScheduleProcedure,
-		svc.UpdateWorkSchedule,
-		connect.WithSchema(deliveryServiceMethods.ByName("UpdateWorkSchedule")),
-		connect.WithHandlerOptions(opts...),
-	)
-	deliveryServiceChangeTransportTypeHandler := connect.NewUnaryHandler(
-		DeliveryServiceChangeTransportTypeProcedure,
-		svc.ChangeTransportType,
-		connect.WithSchema(deliveryServiceMethods.ByName("ChangeTransportType")),
-		connect.WithHandlerOptions(opts...),
-	)
-	deliveryServiceAcceptOrderHandler := connect.NewUnaryHandler(
-		DeliveryServiceAcceptOrderProcedure,
-		svc.AcceptOrder,
-		connect.WithSchema(deliveryServiceMethods.ByName("AcceptOrder")),
-		connect.WithHandlerOptions(opts...),
-	)
-	deliveryServiceAssignOrderHandler := connect.NewUnaryHandler(
-		DeliveryServiceAssignOrderProcedure,
-		svc.AssignOrder,
-		connect.WithSchema(deliveryServiceMethods.ByName("AssignOrder")),
-		connect.WithHandlerOptions(opts...),
-	)
-	deliveryServicePickUpOrderHandler := connect.NewUnaryHandler(
-		DeliveryServicePickUpOrderProcedure,
-		svc.PickUpOrder,
-		connect.WithSchema(deliveryServiceMethods.ByName("PickUpOrder")),
-		connect.WithHandlerOptions(opts...),
-	)
-	deliveryServiceDeliverOrderHandler := connect.NewUnaryHandler(
-		DeliveryServiceDeliverOrderProcedure,
-		svc.DeliverOrder,
-		connect.WithSchema(deliveryServiceMethods.ByName("DeliverOrder")),
-		connect.WithHandlerOptions(opts...),
-	)
-	deliveryServiceGetCourierDeliveriesHandler := connect.NewUnaryHandler(
-		DeliveryServiceGetCourierDeliveriesProcedure,
-		svc.GetCourierDeliveries,
-		connect.WithSchema(deliveryServiceMethods.ByName("GetCourierDeliveries")),
-		connect.WithHandlerOptions(opts...),
-	)
 	deliveryServiceGetRandomAddressHandler := connect.NewUnaryHandler(
 		DeliveryServiceGetRandomAddressProcedure,
 		svc.GetRandomAddress,
 		connect.WithSchema(deliveryServiceMethods.ByName("GetRandomAddress")),
 		connect.WithHandlerOptions(opts...),
 	)
+	deliveryServiceGetOrderTrackingHandler := connect.NewUnaryHandler(
+		DeliveryServiceGetOrderTrackingProcedure,
+		svc.GetOrderTracking,
+		connect.WithSchema(deliveryServiceMethods.ByName("GetOrderTracking")),
+		connect.WithHandlerOptions(opts...),
+	)
+	deliveryServiceSubscribeOrderTrackingHandler := connect.NewServerStreamHandler(
+		DeliveryServiceSubscribeOrderTrackingProcedure,
+		svc.SubscribeOrderTracking,
+		connect.WithSchema(deliveryServiceMethods.ByName("SubscribeOrderTracking")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/infrastructure.rpc.delivery.v1.DeliveryService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case DeliveryServiceGetCourierProcedure:
-			deliveryServiceGetCourierHandler.ServeHTTP(w, r)
-		case DeliveryServiceGetCourierPoolProcedure:
-			deliveryServiceGetCourierPoolHandler.ServeHTTP(w, r)
-		case DeliveryServiceRegisterCourierProcedure:
-			deliveryServiceRegisterCourierHandler.ServeHTTP(w, r)
-		case DeliveryServiceActivateCourierProcedure:
-			deliveryServiceActivateCourierHandler.ServeHTTP(w, r)
-		case DeliveryServiceDeactivateCourierProcedure:
-			deliveryServiceDeactivateCourierHandler.ServeHTTP(w, r)
-		case DeliveryServiceArchiveCourierProcedure:
-			deliveryServiceArchiveCourierHandler.ServeHTTP(w, r)
-		case DeliveryServiceUpdateContactInfoProcedure:
-			deliveryServiceUpdateContactInfoHandler.ServeHTTP(w, r)
-		case DeliveryServiceUpdateWorkScheduleProcedure:
-			deliveryServiceUpdateWorkScheduleHandler.ServeHTTP(w, r)
-		case DeliveryServiceChangeTransportTypeProcedure:
-			deliveryServiceChangeTransportTypeHandler.ServeHTTP(w, r)
-		case DeliveryServiceAcceptOrderProcedure:
-			deliveryServiceAcceptOrderHandler.ServeHTTP(w, r)
-		case DeliveryServiceAssignOrderProcedure:
-			deliveryServiceAssignOrderHandler.ServeHTTP(w, r)
-		case DeliveryServicePickUpOrderProcedure:
-			deliveryServicePickUpOrderHandler.ServeHTTP(w, r)
-		case DeliveryServiceDeliverOrderProcedure:
-			deliveryServiceDeliverOrderHandler.ServeHTTP(w, r)
-		case DeliveryServiceGetCourierDeliveriesProcedure:
-			deliveryServiceGetCourierDeliveriesHandler.ServeHTTP(w, r)
 		case DeliveryServiceGetRandomAddressProcedure:
 			deliveryServiceGetRandomAddressHandler.ServeHTTP(w, r)
+		case DeliveryServiceGetOrderTrackingProcedure:
+			deliveryServiceGetOrderTrackingHandler.ServeHTTP(w, r)
+		case DeliveryServiceSubscribeOrderTrackingProcedure:
+			deliveryServiceSubscribeOrderTrackingHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -456,62 +157,14 @@ func NewDeliveryServiceHandler(svc DeliveryServiceHandler, opts ...connect.Handl
 // UnimplementedDeliveryServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedDeliveryServiceHandler struct{}
 
-func (UnimplementedDeliveryServiceHandler) GetCourier(context.Context, *connect.Request[v1.GetCourierRequest]) (*connect.Response[v1.GetCourierResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("infrastructure.rpc.delivery.v1.DeliveryService.GetCourier is not implemented"))
-}
-
-func (UnimplementedDeliveryServiceHandler) GetCourierPool(context.Context, *connect.Request[v1.GetCourierPoolRequest]) (*connect.Response[v1.GetCourierPoolResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("infrastructure.rpc.delivery.v1.DeliveryService.GetCourierPool is not implemented"))
-}
-
-func (UnimplementedDeliveryServiceHandler) RegisterCourier(context.Context, *connect.Request[v1.RegisterCourierRequest]) (*connect.Response[v1.RegisterCourierResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("infrastructure.rpc.delivery.v1.DeliveryService.RegisterCourier is not implemented"))
-}
-
-func (UnimplementedDeliveryServiceHandler) ActivateCourier(context.Context, *connect.Request[v1.ActivateCourierRequest]) (*connect.Response[v1.ActivateCourierResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("infrastructure.rpc.delivery.v1.DeliveryService.ActivateCourier is not implemented"))
-}
-
-func (UnimplementedDeliveryServiceHandler) DeactivateCourier(context.Context, *connect.Request[v1.DeactivateCourierRequest]) (*connect.Response[v1.DeactivateCourierResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("infrastructure.rpc.delivery.v1.DeliveryService.DeactivateCourier is not implemented"))
-}
-
-func (UnimplementedDeliveryServiceHandler) ArchiveCourier(context.Context, *connect.Request[v1.ArchiveCourierRequest]) (*connect.Response[v1.ArchiveCourierResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("infrastructure.rpc.delivery.v1.DeliveryService.ArchiveCourier is not implemented"))
-}
-
-func (UnimplementedDeliveryServiceHandler) UpdateContactInfo(context.Context, *connect.Request[v1.UpdateContactInfoRequest]) (*connect.Response[v1.UpdateContactInfoResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("infrastructure.rpc.delivery.v1.DeliveryService.UpdateContactInfo is not implemented"))
-}
-
-func (UnimplementedDeliveryServiceHandler) UpdateWorkSchedule(context.Context, *connect.Request[v1.UpdateWorkScheduleRequest]) (*connect.Response[v1.UpdateWorkScheduleResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("infrastructure.rpc.delivery.v1.DeliveryService.UpdateWorkSchedule is not implemented"))
-}
-
-func (UnimplementedDeliveryServiceHandler) ChangeTransportType(context.Context, *connect.Request[v1.ChangeTransportTypeRequest]) (*connect.Response[v1.ChangeTransportTypeResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("infrastructure.rpc.delivery.v1.DeliveryService.ChangeTransportType is not implemented"))
-}
-
-func (UnimplementedDeliveryServiceHandler) AcceptOrder(context.Context, *connect.Request[v1.AcceptOrderRequest]) (*connect.Response[v1.AcceptOrderResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("infrastructure.rpc.delivery.v1.DeliveryService.AcceptOrder is not implemented"))
-}
-
-func (UnimplementedDeliveryServiceHandler) AssignOrder(context.Context, *connect.Request[v1.AssignOrderRequest]) (*connect.Response[v1.AssignOrderResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("infrastructure.rpc.delivery.v1.DeliveryService.AssignOrder is not implemented"))
-}
-
-func (UnimplementedDeliveryServiceHandler) PickUpOrder(context.Context, *connect.Request[v1.PickUpOrderRequest]) (*connect.Response[v1.PickUpOrderResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("infrastructure.rpc.delivery.v1.DeliveryService.PickUpOrder is not implemented"))
-}
-
-func (UnimplementedDeliveryServiceHandler) DeliverOrder(context.Context, *connect.Request[v1.DeliverOrderRequest]) (*connect.Response[v1.DeliverOrderResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("infrastructure.rpc.delivery.v1.DeliveryService.DeliverOrder is not implemented"))
-}
-
-func (UnimplementedDeliveryServiceHandler) GetCourierDeliveries(context.Context, *connect.Request[v1.GetCourierDeliveriesRequest]) (*connect.Response[v1.GetCourierDeliveriesResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("infrastructure.rpc.delivery.v1.DeliveryService.GetCourierDeliveries is not implemented"))
-}
-
 func (UnimplementedDeliveryServiceHandler) GetRandomAddress(context.Context, *connect.Request[v1.GetRandomAddressRequest]) (*connect.Response[v1.GetRandomAddressResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("infrastructure.rpc.delivery.v1.DeliveryService.GetRandomAddress is not implemented"))
+}
+
+func (UnimplementedDeliveryServiceHandler) GetOrderTracking(context.Context, *connect.Request[v1.GetOrderTrackingRequest]) (*connect.Response[v1.GetOrderTrackingResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("infrastructure.rpc.delivery.v1.DeliveryService.GetOrderTracking is not implemented"))
+}
+
+func (UnimplementedDeliveryServiceHandler) SubscribeOrderTracking(context.Context, *connect.Request[v1.GetOrderTrackingRequest], *connect.ServerStream[v1.GetOrderTrackingResponse]) error {
+	return connect.NewError(connect.CodeUnimplemented, errors.New("infrastructure.rpc.delivery.v1.DeliveryService.SubscribeOrderTracking is not implemented"))
 }

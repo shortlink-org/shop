@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+package infrastructure.rpc.delivery.v1;
+
+option go_package = "github.com/shortlink-org/shop/delivery-graphql/pkg/generated/infrastructure/rpc/delivery/v1";
+
+import "google/protobuf/timestamp.proto";
+
+service DeliveryService {
+  rpc GetRandomAddress(GetRandomAddressRequest) returns (GetRandomAddressResponse);
+  rpc GetOrderTracking(GetOrderTrackingRequest) returns (GetOrderTrackingResponse);
+  rpc SubscribeOrderTracking(GetOrderTrackingRequest) returns (stream GetOrderTrackingResponse);
+}
+
+message GetRandomAddressRequest {}
+
+message Address {
+  string street = 1;
+  string city = 2;
+  string postal_code = 3;
+  string country = 4;
+  double latitude = 5;
+  double longitude = 6;
+}
+
+message GetRandomAddressResponse {
+  Address address = 1;
+}
+
+message Location {
+  double latitude = 1;
+  double longitude = 2;
+}
+
+enum TransportType {
+  TRANSPORT_TYPE_UNSPECIFIED = 0;
+  TRANSPORT_TYPE_WALKING = 1;
+  TRANSPORT_TYPE_BICYCLE = 2;
+  TRANSPORT_TYPE_MOTORCYCLE = 3;
+  TRANSPORT_TYPE_CAR = 4;
+}
+
+enum CourierStatus {
+  COURIER_STATUS_UNSPECIFIED = 0;
+  COURIER_STATUS_UNAVAILABLE = 1;
+  COURIER_STATUS_FREE = 2;
+  COURIER_STATUS_BUSY = 3;
+  COURIER_STATUS_ARCHIVED = 4;
+}
+
+enum PackageStatus {
+  PACKAGE_STATUS_UNSPECIFIED = 0;
+  PACKAGE_STATUS_ACCEPTED = 1;
+  PACKAGE_STATUS_IN_POOL = 2;
+  PACKAGE_STATUS_ASSIGNED = 3;
+  PACKAGE_STATUS_IN_TRANSIT = 4;
+  PACKAGE_STATUS_DELIVERED = 5;
+  PACKAGE_STATUS_NOT_DELIVERED = 6;
+  PACKAGE_STATUS_REQUIRES_HANDLING = 7;
+}
+
+message GetOrderTrackingRequest {
+  string order_id = 1;
+}
+
+message TrackingCourier {
+  string courier_id = 1;
+  string name = 2;
+  string phone = 3;
+  TransportType transport_type = 4;
+  CourierStatus status = 5;
+  Location current_location = 6;
+  google.protobuf.Timestamp last_active_at = 7;
+}
+
+message GetOrderTrackingResponse {
+  string order_id = 1;
+  string package_id = 2;
+  PackageStatus status = 3;
+  TrackingCourier courier = 4;
+  optional int32 estimated_minutes_remaining = 5;
+  optional double distance_km_remaining = 6;
+  google.protobuf.Timestamp estimated_arrival_at = 7;
+  google.protobuf.Timestamp assigned_at = 8;
+  google.protobuf.Timestamp delivered_at = 9;
+}

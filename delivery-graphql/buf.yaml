@@ -1,8 +1,6 @@
 version: v2
 modules:
   - path: pkg/proto
-deps:
-  - buf.build/shortlink-org/shop-delivery-rpc
 lint:
   use:
     - STANDARD

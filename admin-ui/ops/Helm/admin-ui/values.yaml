@@ -13,7 +13,7 @@ ingress:
 
 # ==============================================================================
 # HTTPRoute configuration for Gateway API
-# Served at shop.shortlink.best/admin-ui/* (couriers, etc.). /admin remains Django.
+# Served at shop.shortlink.best/admin-ui/* (couriers, etc.). Django admin lives on admin.shop.shortlink.best/admin.
 httpRoute:
   enabled: true
   gatewayName: external-gateway

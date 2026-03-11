@@ -21,8 +21,8 @@ use temporalio_common::{
     worker::{WorkerDeploymentOptions, WorkerTaskTypes},
 };
 use temporalio_sdk::{
+    activities::{activities, ActivityContext, ActivityError},
     Worker, WorkerOptions,
-    activities::{ActivityContext, ActivityError, activities},
 };
 use temporalio_sdk_core::{CoreRuntime, RuntimeOptions, Url};
 
@@ -42,8 +42,11 @@ trait CourierTemporalActivityApi: Send + Sync {
         status: CourierStatus,
     ) -> Result<String, ActivityError>;
     async fn accept_package(&self, courier_id: Uuid) -> Result<String, ActivityError>;
-    async fn complete_courier_delivery(&self, courier_id: Uuid, success: bool)
-        -> Result<String, ActivityError>;
+    async fn complete_courier_delivery(
+        &self,
+        courier_id: Uuid,
+        success: bool,
+    ) -> Result<String, ActivityError>;
 }
 
 #[async_trait]
@@ -53,8 +56,7 @@ where
     C: CourierCache + Send + Sync + 'static,
 {
     async fn get_free_couriers(&self, zone: &str) -> Result<String, ActivityError> {
-        self
-            .get_free_couriers_in_zone(&zone)
+        self.get_free_couriers_in_zone(&zone)
             .await
             .map(|couriers| {
                 couriers
@@ -71,16 +73,14 @@ where
         courier_id: Uuid,
         status: CourierStatus,
     ) -> Result<String, ActivityError> {
-        self
-            .update_status(courier_id, status)
+        self.update_status(courier_id, status)
             .await
             .map(|_| "ok".to_string())
             .map_err(activity_err)
     }
 
     async fn accept_package(&self, courier_id: Uuid) -> Result<String, ActivityError> {
-        self
-            .accept_package(courier_id)
+        self.accept_package(courier_id)
             .await
             .map(|_| "ok".to_string())
             .map_err(activity_err)
@@ -91,8 +91,7 @@ where
         courier_id: Uuid,
         success: bool,
     ) -> Result<String, ActivityError> {
-        self
-            .complete_delivery(courier_id, success)
+        self.complete_delivery(courier_id, success)
             .await
             .map(|_| "ok".to_string())
             .map_err(activity_err)
@@ -162,7 +161,9 @@ impl CourierTemporalActivities {
 
         let courier_id = parse_uuid(parts[0], "courier")?;
         let success = parts[1] == "true";
-        self.inner.complete_courier_delivery(courier_id, success).await
+        self.inner
+            .complete_courier_delivery(courier_id, success)
+            .await
     }
 }
 
@@ -186,8 +187,7 @@ where
     C: CourierCache + Send + Sync + 'static,
 {
     async fn get_free_couriers_for_dispatch(&self, zone: &str) -> Result<String, ActivityError> {
-        self
-            .get_free_couriers_for_dispatch(zone)
+        self.get_free_couriers_for_dispatch(zone)
             .await
             .map(|couriers| {
                 couriers
@@ -204,8 +204,7 @@ where
         courier_id: Uuid,
         order_id: Uuid,
     ) -> Result<String, ActivityError> {
-        self
-            .assign_order(courier_id, order_id)
+        self.assign_order(courier_id, order_id)
             .await
             .map(|_| "ok".to_string())
             .map_err(activity_err)
@@ -217,8 +216,7 @@ where
         order_id: Uuid,
         success: bool,
     ) -> Result<String, ActivityError> {
-        self
-            .complete_delivery(courier_id, order_id, success)
+        self.complete_delivery(courier_id, order_id, success)
             .await
             .map(|_| "ok".to_string())
             .map_err(activity_err)
@@ -436,8 +434,7 @@ impl TemporalWorkerRunner {
 }
 
 fn parse_uuid(value: &str, entity: &str) -> Result<Uuid, ActivityError> {
-    Uuid::parse_str(value)
-        .map_err(|e| ActivityError::from(anyhow!("Invalid {entity} ID: {e}")))
+    Uuid::parse_str(value).map_err(|e| ActivityError::from(anyhow!("Invalid {entity} ID: {e}")))
 }
 
 fn parse_courier_status(value: &str) -> Result<CourierStatus, ActivityError> {

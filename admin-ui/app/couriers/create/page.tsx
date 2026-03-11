@@ -35,13 +35,13 @@ interface FormValues {
 }
 
 const WEEKDAYS = [
-  { value: 0, label: 'Воскресенье' },
-  { value: 1, label: 'Понедельник' },
-  { value: 2, label: 'Вторник' },
-  { value: 3, label: 'Среда' },
-  { value: 4, label: 'Четверг' },
-  { value: 5, label: 'Пятница' },
-  { value: 6, label: 'Суббота' },
+  { value: 0, label: 'Sunday' },
+  { value: 1, label: 'Monday' },
+  { value: 2, label: 'Tuesday' },
+  { value: 3, label: 'Wednesday' },
+  { value: 4, label: 'Thursday' },
+  { value: 5, label: 'Friday' },
+  { value: 6, label: 'Saturday' },
 ];
 
 export default function CreateCourierPage() {
@@ -71,11 +71,11 @@ export default function CreateCourierPage() {
       },
       {
         onSuccess: (data) => {
-          message.success('Курьер зарегистрирован');
+          message.success('Courier registered');
           router.push(`/couriers/${data.data.id}`);
         },
         onError: (error) => {
-          message.error(`Ошибка: ${error.message}`);
+          message.error(`Error: ${error.message}`);
         },
       }
     );
@@ -86,9 +86,9 @@ export default function CreateCourierPage() {
       <div className="mb-4">
         <Space>
           <Link href="/couriers">
-            <Button icon={<ArrowLeftOutlined />}>Назад</Button>
+            <Button icon={<ArrowLeftOutlined />}>Back</Button>
           </Link>
-          <h1 className="text-2xl font-bold m-0">Регистрация курьера</h1>
+          <h1 className="text-2xl font-bold m-0">Courier registration</h1>
         </Space>
       </div>
 
@@ -108,22 +108,22 @@ export default function CreateCourierPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Personal Info */}
             <div>
-              <h3 className="text-lg font-semibold mb-4">Личная информация</h3>
+              <h3 className="text-lg font-semibold mb-4">Personal information</h3>
               
               <Form.Item
                 name="name"
-                label="ФИО"
-                rules={[{ required: true, message: 'Введите имя курьера' }]}
+                label="Full name"
+                rules={[{ required: true, message: 'Enter the courier name' }]}
               >
-                <Input placeholder="Иван Иванов" />
+                <Input placeholder="John Doe" />
               </Form.Item>
 
               <Form.Item
                 name="phone"
-                label="Телефон"
+                label="Phone"
                 rules={[
-                  { required: true, message: 'Введите телефон' },
-                  { pattern: /^\+?[0-9]{10,15}$/, message: 'Неверный формат телефона' },
+                  { required: true, message: 'Enter a phone number' },
+                  { pattern: /^\+?[0-9]{10,15}$/, message: 'Invalid phone number format' },
                 ]}
               >
                 <Input placeholder="+79001234567" />
@@ -133,8 +133,8 @@ export default function CreateCourierPage() {
                 name="email"
                 label="Email"
                 rules={[
-                  { required: true, message: 'Введите email' },
-                  { type: 'email', message: 'Неверный формат email' },
+                  { required: true, message: 'Enter an email address' },
+                  { type: 'email', message: 'Invalid email format' },
                 ]}
               >
                 <Input placeholder="courier@example.com" />
@@ -143,55 +143,55 @@ export default function CreateCourierPage() {
 
             {/* Work Info */}
             <div>
-              <h3 className="text-lg font-semibold mb-4">Рабочая информация</h3>
+              <h3 className="text-lg font-semibold mb-4">Work information</h3>
               
               <Form.Item
                 name="transportType"
-                label="Тип транспорта"
-                rules={[{ required: true, message: 'Выберите тип транспорта' }]}
+                label="Transport type"
+                rules={[{ required: true, message: 'Select a transport type' }]}
               >
                 <Select>
-                  <Option value="WALKING">Пешком</Option>
-                  <Option value="BICYCLE">Велосипед</Option>
-                  <Option value="MOTORCYCLE">Мотоцикл</Option>
-                  <Option value="CAR">Автомобиль</Option>
+                  <Option value="WALKING">Walking</Option>
+                  <Option value="BICYCLE">Bicycle</Option>
+                  <Option value="MOTORCYCLE">Motorcycle</Option>
+                  <Option value="CAR">Car</Option>
                 </Select>
               </Form.Item>
 
               <Form.Item
                 name="maxDistanceKm"
-                label="Максимальная дистанция (км)"
-                rules={[{ required: true, message: 'Введите максимальную дистанцию' }]}
+                label="Maximum distance (km)"
+                rules={[{ required: true, message: 'Enter the maximum distance' }]}
               >
                 <InputNumber min={1} max={100} style={{ width: '100%' }} />
               </Form.Item>
 
               <Form.Item
                 name="workZone"
-                label="Рабочая зона"
-                rules={[{ required: true, message: 'Введите рабочую зону' }]}
+                label="Work zone"
+                rules={[{ required: true, message: 'Enter the work zone' }]}
               >
-                <Input placeholder="Центр, Север, Юг..." />
+                <Input placeholder="Center, North, South..." />
               </Form.Item>
             </div>
 
             {/* Schedule */}
             <div className="md:col-span-2">
-              <h3 className="text-lg font-semibold mb-4">Расписание</h3>
+              <h3 className="text-lg font-semibold mb-4">Schedule</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Form.Item
                   name="workStart"
-                  label="Начало работы"
-                  rules={[{ required: true, message: 'Выберите время начала' }]}
+                  label="Start time"
+                  rules={[{ required: true, message: 'Select the start time' }]}
                 >
                   <TimePicker format="HH:mm" style={{ width: '100%' }} />
                 </Form.Item>
 
                 <Form.Item
                   name="workEnd"
-                  label="Конец работы"
-                  rules={[{ required: true, message: 'Выберите время окончания' }]}
+                  label="End time"
+                  rules={[{ required: true, message: 'Select the end time' }]}
                 >
                   <TimePicker format="HH:mm" style={{ width: '100%' }} />
                 </Form.Item>
@@ -199,8 +199,8 @@ export default function CreateCourierPage() {
 
               <Form.Item
                 name="workDays"
-                label="Рабочие дни"
-                rules={[{ required: true, message: 'Выберите рабочие дни' }]}
+                label="Work days"
+                rules={[{ required: true, message: 'Select the work days' }]}
               >
                 <Checkbox.Group options={WEEKDAYS} />
               </Form.Item>
@@ -209,7 +209,7 @@ export default function CreateCourierPage() {
 
           <div className="flex justify-end gap-4 mt-6">
             <Link href="/couriers">
-              <Button>Отмена</Button>
+              <Button>Cancel</Button>
             </Link>
             <Button 
               type="primary" 
@@ -217,7 +217,7 @@ export default function CreateCourierPage() {
               icon={<SaveOutlined />}
               loading={isLoading}
             >
-              Зарегистрировать
+              Register
             </Button>
           </div>
         </Form>

@@ -30,7 +30,7 @@ httpRoute:
       namespace: istio-ingress
       sectionName: https
   hostnames:
-    - shop.shortlink.best
+    - admin.shop.shortlink.best
   rules:
     - matches:
         - path:
@@ -73,7 +73,7 @@ deploy:
     # Security --------------------------
     # TODO: set false, when research as work with static files
     DEBUG: true
-    CSRF_COOKIE_DOMAIN: https://shop.shortlink.best
+    CSRF_COOKIE_DOMAIN: admin.shop.shortlink.best
 
   envSecret:
     - name: POSTGRES_DB

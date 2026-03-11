@@ -371,3 +371,57 @@ export type ShopifyCheckoutOperation = {
     input: CheckoutInput;
   };
 };
+
+export type DeliveryTrackingLocation = {
+  latitude?: number | null;
+  longitude?: number | null;
+};
+
+export type DeliveryTrackingCourier = {
+  courierId?: string | null;
+  name?: string | null;
+  phone?: string | null;
+  transportType?: string | null;
+  status?: string | null;
+  lastActiveAt?: string | null;
+  currentLocation?: DeliveryTrackingLocation | null;
+};
+
+export type OrderSummary = {
+  id?: string | null;
+  status?: string | null;
+  deliveryInfo?: {
+    deliveryAddress?: DeliveryAddress | null;
+    deliveryPeriod?: DeliveryPeriod | null;
+    recipientContacts?: RecipientContacts | null;
+  } | null;
+};
+
+export type DeliveryTrackingSummary = {
+  orderId?: string | null;
+  packageId?: string | null;
+  status?: string | null;
+  estimatedMinutesRemaining?: number | null;
+  distanceKmRemaining?: number | null;
+  estimatedArrivalAt?: string | null;
+  assignedAt?: string | null;
+  deliveredAt?: string | null;
+  courier?: DeliveryTrackingCourier | null;
+};
+
+export type OrderTrackingPageData = {
+  order: OrderSummary | null;
+  tracking: DeliveryTrackingSummary | null;
+};
+
+export type ShopifyOrderTrackingPageOperation = {
+  data: {
+    getOrder?: {
+      order?: OrderSummary | null;
+    } | null;
+    deliveryTracking?: DeliveryTrackingSummary | null;
+  };
+  variables: {
+    id: string;
+  };
+};

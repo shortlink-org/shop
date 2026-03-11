@@ -19,6 +19,14 @@ subgraphs:
       proto_file: subgraphs/admin/service.proto
       mapping_file: subgraphs/admin/mapping.json
 
+  - name: delivery
+    routing_url: http://shortlink-shop-delivery-graphql.shortlink-shop.svc.cluster.local:4013/graphql
+    schema:
+      file: schemas/delivery.graphql
+    subscription:
+      url: http://shortlink-shop-delivery-graphql.shortlink-shop.svc.cluster.local:4013/graphql
+      protocol: sse
+
   - name: countries
     routing_url: https://countries.trevorblades.com/
     schema:

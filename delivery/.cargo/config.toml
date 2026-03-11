@@ -7,6 +7,11 @@ incremental = true
 [term]
 color = "always"
 
+[env]
+# Docker 29 in this environment fails testcontainers startup in auto-remove mode.
+# Tests keep containers at the client level and explicitly `rm()` them via a test guard.
+TESTCONTAINERS_COMMAND = "keep"
+
 # Force dynamic linking for musl targets (Alpine Linux)
 # Without this, Rust tries to statically link librdkafka which isn't available
 [target.x86_64-unknown-linux-musl]

@@ -16,10 +16,9 @@ pub async fn get_random_address(
     state: &Arc<AppState>,
     _req: GetRandomAddressRequest,
 ) -> Result<Response<GetRandomAddressResponse>, Status> {
-    let bbox = state
-        .random_address_bbox
-        .as_ref()
-        .ok_or_else(|| Status::failed_precondition("Random address is not configured (set RANDOM_ADDRESS_* env)"))?;
+    let bbox = state.random_address_bbox.as_ref().ok_or_else(|| {
+        Status::failed_precondition("Random address is not configured (set RANDOM_ADDRESS_* env)")
+    })?;
 
     let mut rng = rand::thread_rng();
     let latitude = rng.gen_range(bbox.min_lat..=bbox.max_lat);

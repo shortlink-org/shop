@@ -12,29 +12,17 @@ ingress:
   enabled: false
 
 # ==============================================================================
-# HTTPRoute: disabled for shop; all shop traffic goes UI → Oathkeeper → Next.js (see plan).
-# Next.js proxies /api/graphql to BFF internally.
+# HTTPRoute: expose router GraphQL endpoint directly for realtime subscriptions.
+# Queries/mutations still go through Next.js /api/graphql, but the storefront opens
+# websocket subscriptions against /graphql on the same host.
 httpRoute:
-  enabled: false
+  enabled: true
   gatewayName: external-gateway
   gatewayNamespace: istio-ingress
   hostnames:
     - shop.shortlink.best
-  rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /api
-      filters:
-        - type: URLRewrite
-          urlRewrite:
-            path:
-              type: ReplacePrefixMatch
-              replacePrefixMatch: /
-      backendRefs:
-        - name: oathkeeper-proxy
-          namespace: auth
-          port: 4455
+  path: /graphql
+  port: 9991
 
 # ==============================================================================
 deploy:

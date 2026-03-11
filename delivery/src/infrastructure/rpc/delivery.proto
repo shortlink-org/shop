@@ -65,6 +65,12 @@ service DeliveryService {
   // GetCourierDeliveries retrieves recent deliveries for a courier
   rpc GetCourierDeliveries(GetCourierDeliveriesRequest) returns (GetCourierDeliveriesResponse);
 
+  // GetOrderTracking returns live delivery tracking by OMS order ID
+  rpc GetOrderTracking(GetOrderTrackingRequest) returns (GetOrderTrackingResponse);
+
+  // SubscribeOrderTracking streams tracking snapshots whenever delivery state changes
+  rpc SubscribeOrderTracking(GetOrderTrackingRequest) returns (stream GetOrderTrackingResponse);
+
   // ==================== Random Address ====================
   // GetRandomAddress returns a random address within the configured region (e.g. Berlin bbox)
   rpc GetRandomAddress(GetRandomAddressRequest) returns (GetRandomAddressResponse);
@@ -409,6 +415,37 @@ message DeliveryRecord {
 message GetCourierDeliveriesResponse {
   repeated DeliveryRecord deliveries = 1;
   int32 total_count = 2;  // Total deliveries for this courier
+}
+
+// ==================== GetOrderTracking ====================
+
+// GetOrderTrackingRequest contains OMS order ID
+message GetOrderTrackingRequest {
+  string order_id = 1;
+}
+
+// TrackingCourier represents courier details for customer tracking
+message TrackingCourier {
+  string courier_id = 1;
+  string name = 2;
+  string phone = 3;
+  TransportType transport_type = 4;
+  CourierStatus status = 5;
+  optional Location current_location = 6;
+  optional google.protobuf.Timestamp last_active_at = 7;
+}
+
+// GetOrderTrackingResponse returns live tracking information for a delivery order
+message GetOrderTrackingResponse {
+  string order_id = 1;
+  string package_id = 2;
+  PackageStatus status = 3;
+  TrackingCourier courier = 4;
+  optional int32 estimated_minutes_remaining = 5;
+  optional double distance_km_remaining = 6;
+  optional google.protobuf.Timestamp estimated_arrival_at = 7;
+  optional google.protobuf.Timestamp assigned_at = 8;
+  optional google.protobuf.Timestamp delivered_at = 9;
 }
 
 // ==================== PickUpOrder ====================

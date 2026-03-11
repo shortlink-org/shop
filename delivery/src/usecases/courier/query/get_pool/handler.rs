@@ -159,24 +159,28 @@ mod tests {
     use chrono::NaiveTime;
     use migration::{Migrator, MigratorTrait};
     use sea_orm::{Database, DatabaseConnection};
-    use testcontainers::{runners::AsyncRunner, ContainerAsync, ImageExt};
+    use testcontainers::{runners::AsyncRunner, ImageExt};
     use testcontainers_modules::{postgres::Postgres, redis::Redis};
+
+    use crate::test_support::ManagedAsyncContainer;
 
     /// Test environment with PostgreSQL and Redis containers
     struct TestEnv {
-        _pg_container: ContainerAsync<Postgres>,
-        _redis_container: ContainerAsync<Redis>,
+        _pg_container: ManagedAsyncContainer<Postgres>,
+        _redis_container: ManagedAsyncContainer<Redis>,
         repository: Arc<CourierPostgresRepository>,
         cache: Arc<CourierRedisCache>,
     }
 
     async fn setup_test_env() -> TestEnv {
         // Start PostgreSQL container
-        let pg_container = Postgres::default()
-            .with_tag("18-alpine")
-            .start()
-            .await
-            .unwrap();
+        let pg_container = ManagedAsyncContainer::new(
+            Postgres::default()
+                .with_tag("18-alpine")
+                .start()
+                .await
+                .unwrap(),
+        );
         let pg_port = pg_container.get_host_port_ipv4(5432).await.unwrap();
         let pg_url = format!(
             "postgres://postgres:postgres@localhost:{}/postgres",
@@ -188,7 +192,9 @@ mod tests {
         Migrator::up(&db, None).await.unwrap();
 
         // Start Redis container
-        let redis_container = Redis::default().with_tag("7-alpine").start().await.unwrap();
+        let redis_container = ManagedAsyncContainer::new(
+            Redis::default().with_tag("7-alpine").start().await.unwrap(),
+        );
         let redis_port = redis_container.get_host_port_ipv4(6379).await.unwrap();
         let redis_url = format!("redis://localhost:{}", redis_port);
         let redis_client = redis::Client::open(redis_url).unwrap();

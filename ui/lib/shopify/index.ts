@@ -26,3 +26,6 @@ export { getMenu } from './api/menu';
 
 // Page API
 export { getPage, getPages } from './api/page';
+
+// Order tracking API
+export { getOrderTrackingPage } from './api/order';

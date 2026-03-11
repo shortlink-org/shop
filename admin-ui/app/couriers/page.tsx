@@ -51,14 +51,14 @@ export default function CouriersListPage() {
 
   const [activateCourier] = useMutation(ACTIVATE_COURIER, {
     onCompleted: () => {
-      message.success('Курьер активирован');
+      message.success('Courier activated');
       refetch();
     },
     onError: (e) => message.error(e.message),
   });
   const [deactivateCourier] = useMutation(DEACTIVATE_COURIER, {
     onCompleted: () => {
-      message.success('Курьер деактивирован');
+      message.success('Courier deactivated');
       refetch();
     },
     onError: (e) => message.error(e.message),
@@ -74,7 +74,7 @@ export default function CouriersListPage() {
 
   const columns: ColumnsType<Courier> = [
     {
-      title: 'Имя',
+      title: 'Name',
       dataIndex: 'name',
       key: 'name',
       render: (name: string, record: Courier) => (
@@ -84,24 +84,24 @@ export default function CouriersListPage() {
       ),
     },
     {
-      title: 'Статус',
+      title: 'Status',
       dataIndex: 'status',
       key: 'status',
       render: (status: CourierStatus) => <CourierStatusBadge status={status} />,
     },
     {
-      title: 'Транспорт',
+      title: 'Transport',
       dataIndex: 'transportType',
       key: 'transportType',
       render: (type: TransportType) => <TransportBadge type={type} />,
     },
     {
-      title: 'Зона',
+      title: 'Zone',
       dataIndex: 'workZone',
       key: 'workZone',
     },
     {
-      title: 'Рейтинг',
+      title: 'Rating',
       dataIndex: 'rating',
       key: 'rating',
       render: (rating: number) => (
@@ -109,7 +109,7 @@ export default function CouriersListPage() {
       ),
     },
     {
-      title: 'Загрузка',
+      title: 'Load',
       key: 'load',
       render: (_: unknown, record: Courier) => (
         <span>
@@ -118,10 +118,10 @@ export default function CouriersListPage() {
       ),
     },
     {
-      title: 'Доставки',
+      title: 'Deliveries',
       key: 'deliveries',
       render: (_: unknown, record: Courier) => (
-        <Tooltip title={`Успешных: ${record.successfulDeliveries}, Неудачных: ${record.failedDeliveries}`}>
+        <Tooltip title={`Successful: ${record.successfulDeliveries}, Failed: ${record.failedDeliveries}`}>
           <span className="text-green-600">{record.successfulDeliveries}</span>
           {' / '}
           <span className="text-red-600">{record.failedDeliveries}</span>
@@ -129,20 +129,20 @@ export default function CouriersListPage() {
       ),
     },
     {
-      title: 'Действия',
+      title: 'Actions',
       key: 'actions',
       render: (_: unknown, record: Courier) => (
         <Space size="small">
-          <Tooltip title="Просмотр">
+          <Tooltip title="View">
             <Link href={`/couriers/${record.courierId}`}>
               <Button icon={<EyeOutlined />} size="small" />
             </Link>
           </Tooltip>
           
           {record.status === 'UNAVAILABLE' && (
-            <Tooltip title="Активировать">
+            <Tooltip title="Activate">
               <Popconfirm
-                title="Активировать курьера?"
+                title="Activate courier?"
                 onConfirm={() => handleActivate(record.courierId)}
               >
                 <Button icon={<CheckOutlined />} size="small" type="primary" />
@@ -151,9 +151,9 @@ export default function CouriersListPage() {
           )}
           
           {(record.status === 'FREE' || record.status === 'BUSY') && (
-            <Tooltip title="Деактивировать">
+            <Tooltip title="Deactivate">
               <Popconfirm
-                title="Деактивировать курьера?"
+                title="Deactivate courier?"
                 onConfirm={() => handleDeactivate(record.courierId)}
               >
                 <Button icon={<StopOutlined />} size="small" danger />
@@ -171,18 +171,18 @@ export default function CouriersListPage() {
   return (
     <div className="p-6">
       <Card
-        title="Курьеры"
+        title="Couriers"
         extra={
           <Space>
             <Button 
               icon={<ReloadOutlined />} 
               onClick={() => refetch()}
             >
-              Обновить
+              Refresh
             </Button>
             <Link href="/couriers/create">
               <Button type="primary" icon={<PlusOutlined />}>
-                Добавить курьера
+                Add courier
               </Button>
             </Link>
           </Space>
@@ -192,29 +192,29 @@ export default function CouriersListPage() {
         <div className="mb-4 flex gap-4 flex-wrap">
           <Select
             mode="multiple"
-            placeholder="Статус"
+            placeholder="Status"
             style={{ minWidth: 200 }}
             value={statusFilter}
             onChange={setStatusFilter}
             options={[
-              { value: 'FREE', label: 'Свободен' },
-              { value: 'BUSY', label: 'Занят' },
-              { value: 'UNAVAILABLE', label: 'Недоступен' },
-              { value: 'ARCHIVED', label: 'В архиве' },
+              { value: 'FREE', label: 'Available' },
+              { value: 'BUSY', label: 'Busy' },
+              { value: 'UNAVAILABLE', label: 'Unavailable' },
+              { value: 'ARCHIVED', label: 'Archived' },
             ]}
             allowClear
           />
           <Select
             mode="multiple"
-            placeholder="Транспорт"
+            placeholder="Transport"
             style={{ minWidth: 200 }}
             value={transportFilter}
             onChange={setTransportFilter}
             options={[
-              { value: 'WALKING', label: 'Пешком' },
-              { value: 'BICYCLE', label: 'Велосипед' },
-              { value: 'MOTORCYCLE', label: 'Мотоцикл' },
-              { value: 'CAR', label: 'Автомобиль' },
+              { value: 'WALKING', label: 'Walking' },
+              { value: 'BICYCLE', label: 'Bicycle' },
+              { value: 'MOTORCYCLE', label: 'Motorcycle' },
+              { value: 'CAR', label: 'Car' },
             ]}
             allowClear
           />
@@ -231,7 +231,7 @@ export default function CouriersListPage() {
             pageSize: pageSize,
             total: totalCount,
             showSizeChanger: true,
-            showTotal: (total) => `Всего: ${total}`,
+            showTotal: (total) => `Total: ${total}`,
             onChange: (p, ps) => {
               setPage(p);
               setPageSize(ps);

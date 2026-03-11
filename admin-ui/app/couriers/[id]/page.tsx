@@ -31,7 +31,7 @@ import { TransportBadge } from '@/components/couriers/TransportBadge';
 import { ACTIVATE_COURIER, DEACTIVATE_COURIER, ARCHIVE_COURIER } from '@/graphql/mutations/couriers';
 import type { Courier } from '@/types/courier';
 
-const WEEKDAYS = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export default function CourierDetailPage() {
   const params = useParams();
@@ -46,21 +46,21 @@ export default function CourierDetailPage() {
 
   const [activateCourier] = useMutation(ACTIVATE_COURIER, {
     onCompleted: () => {
-      message.success('Курьер активирован');
+      message.success('Courier activated');
       refetch();
     },
     onError: (e) => message.error(e.message),
   });
   const [deactivateCourier] = useMutation(DEACTIVATE_COURIER, {
     onCompleted: () => {
-      message.success('Курьер деактивирован');
+      message.success('Courier deactivated');
       refetch();
     },
     onError: (e) => message.error(e.message),
   });
   const [archiveCourier] = useMutation(ARCHIVE_COURIER, {
     onCompleted: () => {
-      message.success('Курьер архивирован');
+      message.success('Courier archived');
       refetch();
     },
     onError: (e) => message.error(e.message),
@@ -92,9 +92,9 @@ export default function CourierDetailPage() {
     return (
       <div className="p-6">
         <Card>
-          <p>Курьер не найден</p>
+          <p>Courier not found</p>
           <Link href="/couriers">
-            <Button icon={<ArrowLeftOutlined />}>Назад к списку</Button>
+            <Button icon={<ArrowLeftOutlined />}>Back to list</Button>
           </Link>
         </Card>
       </div>
@@ -107,7 +107,7 @@ export default function CourierDetailPage() {
       <div className="mb-4 flex justify-between items-center flex-wrap gap-4">
         <Space>
           <Link href="/couriers">
-            <Button icon={<ArrowLeftOutlined />}>Назад</Button>
+            <Button icon={<ArrowLeftOutlined />}>Back</Button>
           </Link>
           <h1 className="text-2xl font-bold m-0">{courier.name}</h1>
           <CourierStatusBadge status={courier.status} />
@@ -116,57 +116,57 @@ export default function CourierDetailPage() {
         <Space wrap>
           {courier.status === 'UNAVAILABLE' && (
             <Popconfirm
-              title="Активировать курьера?"
+              title="Activate courier?"
               onConfirm={handleActivate}
             >
               <Button icon={<CheckOutlined />} type="primary">
-                Активировать
+                Activate
               </Button>
             </Popconfirm>
           )}
           
           {(courier.status === 'FREE' || courier.status === 'BUSY') && (
             <Popconfirm
-              title="Деактивировать курьера?"
+              title="Deactivate courier?"
               onConfirm={handleDeactivate}
             >
               <Button icon={<StopOutlined />}>
-                Деактивировать
+                Deactivate
               </Button>
             </Popconfirm>
           )}
           
           {courier.status !== 'ARCHIVED' && (
             <Popconfirm
-              title="Архивировать курьера? Это действие нельзя отменить."
+              title="Archive courier? This action cannot be undone."
               onConfirm={handleArchive}
               okButtonProps={{ danger: true }}
             >
               <Button icon={<DeleteOutlined />} danger>
-                Архивировать
+                Archive
               </Button>
             </Popconfirm>
           )}
           
           <Link href={`/couriers/${courierId}/edit`}>
-            <Button icon={<EditOutlined />}>Редактировать</Button>
+            <Button icon={<EditOutlined />}>Edit</Button>
           </Link>
         </Space>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Basic Info */}
-        <Card title="Основная информация">
+        <Card title="Basic information">
           <Descriptions column={1}>
             <Descriptions.Item label="ID">{courier.courierId}</Descriptions.Item>
-            <Descriptions.Item label="Имя">{courier.name}</Descriptions.Item>
-            <Descriptions.Item label={<><PhoneOutlined /> Телефон</>}>
+            <Descriptions.Item label="Name">{courier.name}</Descriptions.Item>
+            <Descriptions.Item label={<><PhoneOutlined /> Phone</>}>
               <a href={`tel:${courier.phone}`}>{courier.phone}</a>
             </Descriptions.Item>
             <Descriptions.Item label={<><MailOutlined /> Email</>}>
               <a href={`mailto:${courier.email}`}>{courier.email}</a>
             </Descriptions.Item>
-            <Descriptions.Item label="Рейтинг">
+            <Descriptions.Item label="Rating">
               <Rate disabled value={courier.rating} allowHalf />
               <span className="ml-2">({courier.rating?.toFixed(1)})</span>
             </Descriptions.Item>
@@ -174,26 +174,26 @@ export default function CourierDetailPage() {
         </Card>
 
         {/* Transport & Work */}
-        <Card title="Транспорт и работа">
+        <Card title="Transport and work">
           <Descriptions column={1}>
-            <Descriptions.Item label="Транспорт">
+            <Descriptions.Item label="Transport">
               <TransportBadge type={courier.transportType} />
             </Descriptions.Item>
-            <Descriptions.Item label="Макс. дистанция">
-              {courier.maxDistanceKm} км
+            <Descriptions.Item label="Max distance">
+              {courier.maxDistanceKm} km
             </Descriptions.Item>
-            <Descriptions.Item label="Загрузка">
-              {courier.currentLoad} / {courier.maxLoad} посылок
+            <Descriptions.Item label="Load">
+              {courier.currentLoad} / {courier.maxLoad} packages
             </Descriptions.Item>
-            <Descriptions.Item label={<><EnvironmentOutlined /> Зона</>}>
+            <Descriptions.Item label={<><EnvironmentOutlined /> Zone</>}>
               {courier.workZone}
             </Descriptions.Item>
             {courier.workHours && (
               <>
-                <Descriptions.Item label="Рабочие часы">
+                <Descriptions.Item label="Working hours">
                   {courier.workHours.startTime} - {courier.workHours.endTime}
                 </Descriptions.Item>
-                <Descriptions.Item label="Рабочие дни">
+                <Descriptions.Item label="Working days">
                   {courier.workHours.workDays?.map((d: number) => WEEKDAYS[d]).join(', ')}
                 </Descriptions.Item>
               </>
@@ -202,26 +202,26 @@ export default function CourierDetailPage() {
         </Card>
 
         {/* Statistics */}
-        <Card title="Статистика">
+        <Card title="Statistics">
           <Descriptions column={2}>
-            <Descriptions.Item label="Успешных доставок">
+            <Descriptions.Item label="Successful deliveries">
               <span className="text-green-600 font-bold">
                 {courier.successfulDeliveries}
               </span>
             </Descriptions.Item>
-            <Descriptions.Item label="Неудачных доставок">
+            <Descriptions.Item label="Failed deliveries">
               <span className="text-red-600 font-bold">
                 {courier.failedDeliveries}
               </span>
             </Descriptions.Item>
-            <Descriptions.Item label="Дата регистрации">
+            <Descriptions.Item label="Registration date">
               {courier.createdAt 
-                ? new Date(courier.createdAt).toLocaleDateString('ru-RU') 
+                ? new Date(courier.createdAt).toLocaleDateString('en-US') 
                 : '—'}
             </Descriptions.Item>
-            <Descriptions.Item label="Последняя активность">
+            <Descriptions.Item label="Last activity">
               {courier.lastActiveAt 
-                ? new Date(courier.lastActiveAt).toLocaleString('ru-RU') 
+                ? new Date(courier.lastActiveAt).toLocaleString('en-US') 
                 : '—'}
             </Descriptions.Item>
           </Descriptions>
@@ -229,17 +229,17 @@ export default function CourierDetailPage() {
 
         {/* Location */}
         {courier.currentLocation && (
-          <Card title="Текущая локация">
+          <Card title="Current location">
             <Descriptions column={2}>
-              <Descriptions.Item label="Широта">
+              <Descriptions.Item label="Latitude">
                 {courier.currentLocation.latitude?.toFixed(6)}
               </Descriptions.Item>
-              <Descriptions.Item label="Долгота">
+              <Descriptions.Item label="Longitude">
                 {courier.currentLocation.longitude?.toFixed(6)}
               </Descriptions.Item>
             </Descriptions>
             <div className="mt-4 p-4 bg-gray-100 rounded text-center text-gray-500">
-              Карта будет добавлена позже
+              Map will be added later
             </div>
           </Card>
         )}
@@ -247,9 +247,9 @@ export default function CourierDetailPage() {
 
       {/* Recent Deliveries Placeholder */}
       <Divider />
-      <Card title="Недавние доставки" className="mt-6">
+      <Card title="Recent deliveries" className="mt-6">
         <div className="text-center text-gray-500 py-8">
-          Данные о доставках будут загружены после подключения к GraphQL API
+          Delivery data will be loaded after the GraphQL API is connected
         </div>
       </Card>
     </div>

@@ -49,7 +49,7 @@ export function SessionWrapper({ children, requireAuth = true }: SessionWrapperP
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Spin size="large" tip="Загрузка..." />
+        <Spin size="large" tip="Loading..." />
       </div>
     );
   }
@@ -59,14 +59,14 @@ export function SessionWrapper({ children, requireAuth = true }: SessionWrapperP
     return (
       <Result
         status="error"
-        title="Ошибка авторизации"
+        title="Authorization error"
         subTitle={error.message}
         extra={[
           <Button type="primary" key="login" href={getLoginUrl()}>
-            Войти
+            Sign in
           </Button>,
           <Button key="retry" onClick={() => window.location.reload()}>
-            Повторить
+            Retry
           </Button>,
         ]}
       />
@@ -78,11 +78,11 @@ export function SessionWrapper({ children, requireAuth = true }: SessionWrapperP
     return (
       <Result
         status="403"
-        title="Требуется авторизация"
-        subTitle="Пожалуйста, войдите в систему для доступа к админ-панели"
+        title="Authorization required"
+        subTitle="Please sign in to access the admin panel"
         extra={
           <Button type="primary" href={getLoginUrl()}>
-            Войти
+            Sign in
           </Button>
         }
       />
