@@ -3,12 +3,13 @@
 import { BasketItem, Button, FeedbackPanel } from '@shortlink-org/ui-kit';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
+import { toast } from 'sonner';
 import CheckoutForm, { CheckoutFormData } from 'components/cart/checkout-form';
+import { submitCheckout } from 'components/cart/actions';
 import { useCart } from 'components/cart/cart-context';
 import { useCartBasket } from 'components/cart/use-cart-basket';
 import { formatCartMoney } from 'components/cart/ui-kit';
 import { RATE_LIMIT_MESSAGE } from 'lib/constants';
-import { checkout } from 'lib/shopify';
 import type { PackageInfo } from 'lib/shopify/types';
 import { ArrowLeftIcon, ShoppingCartIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
@@ -52,7 +53,7 @@ export default function CheckoutPage() {
     setError(null);
 
     try {
-      const result = await checkout({
+      const result = await submitCheckout({
         deliveryInfo: {
           pickupAddress: PICKUP_ADDRESS,
           deliveryAddress: formData.deliveryAddress,
@@ -67,10 +68,12 @@ export default function CheckoutPage() {
         }
       });
 
-      if (result.orderId) {
+      if (result.ok) {
         router.push(`/order/${result.orderId}`);
       } else {
-        setError('Failed to create order. Please try again.');
+        const msg = result.message;
+        setError(msg);
+        toast.error(msg, { duration: 8000 });
       }
     } catch (err) {
       console.error('Checkout error:', err);
@@ -80,13 +83,16 @@ export default function CheckoutPage() {
           : undefined;
       const message =
         err && typeof err === 'object' && 'message' in err
-          ? (err as { message: string }).message
+          ? String((err as { message: string }).message).trim()
           : undefined;
-      setError(
+      const msg =
         status === 429 || message === RATE_LIMIT_MESSAGE
           ? RATE_LIMIT_MESSAGE
-          : 'An error occurred during checkout. Please try again.'
-      );
+          : message && message.length > 0
+            ? message
+            : 'An error occurred during checkout. Please try again.';
+      setError(msg);
+      toast.error(msg, { duration: 8000 });
     } finally {
       setIsLoading(false);
     }
@@ -163,7 +169,7 @@ export default function CheckoutPage() {
       {error && (
         <div
           ref={formErrorRef}
-          className="mb-6 rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)] p-4 text-[var(--color-foreground)]"
+          className="mb-6 rounded-lg border border-red-300 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950/50 dark:text-red-200"
           role="alert"
         >
           {error}

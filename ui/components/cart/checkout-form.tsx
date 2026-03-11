@@ -6,7 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useSession } from '@/contexts/SessionContext';
 import { useCallback, useEffect, useState } from 'react';
-import { getGraphqlEndpoint } from 'lib/shopify/config';
+import { toast } from 'sonner';
+import { fetchRandomAddress as fetchRandomAddressAction } from './actions';
 
 const TIME_SLOTS = [
   { label: '09:00 - 12:00', start: '09:00', end: '12:00' },
@@ -163,58 +164,33 @@ export default function CheckoutForm({
   const tomorrowDate = getMinDate();
   const [randomAddressLoading, setRandomAddressLoading] = useState(false);
 
-  const fetchRandomAddress = useCallback(async () => {
+  const handleRandomAddress = useCallback(async () => {
     setRandomAddressLoading(true);
     try {
-      const res = await fetch(getGraphqlEndpoint(), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: `
-            query GetRandomAddress {
-              randomAddress {
-                address {
-                  street
-                  city
-                  postalCode
-                  country
-                }
-              }
-            }
-          `
-        })
-      });
-      const json = (await res.json()) as {
-        data?: {
-          randomAddress?: {
-            address?: { street?: string; city?: string; postalCode?: string; country?: string };
-          };
-        };
-        errors?: unknown[];
-      };
-      if (json.errors?.length) {
+      const result = await fetchRandomAddressAction();
+      if (!result.ok) {
+        toast.error(result.message);
         return;
       }
-      const addr = json.data?.randomAddress?.address;
-      if (addr) {
-        setValue('deliveryAddress.street', addr.street ?? '', {
+
+      const addr = result.address;
+      setValue('deliveryAddress.street', addr.street ?? '', {
+        shouldDirty: true,
+        shouldTouch: true
+      });
+      setValue('deliveryAddress.city', addr.city ?? '', { shouldDirty: true, shouldTouch: true });
+      setValue('deliveryAddress.postalCode', addr.postalCode ?? '', {
+        shouldDirty: true,
+        shouldTouch: true
+      });
+      setValue(
+        'deliveryAddress.country',
+        (addr.country ?? 'Germany') as CheckoutFormInput['deliveryAddress']['country'],
+        {
           shouldDirty: true,
           shouldTouch: true
-        });
-        setValue('deliveryAddress.city', addr.city ?? '', { shouldDirty: true, shouldTouch: true });
-        setValue('deliveryAddress.postalCode', addr.postalCode ?? '', {
-          shouldDirty: true,
-          shouldTouch: true
-        });
-        setValue(
-          'deliveryAddress.country',
-          (addr.country ?? 'Germany') as CheckoutFormInput['deliveryAddress']['country'],
-          {
-            shouldDirty: true,
-            shouldTouch: true
-          }
-        );
-      }
+        }
+      );
     } finally {
       setRandomAddressLoading(false);
     }
@@ -255,7 +231,7 @@ export default function CheckoutForm({
           <Button
             type="button"
             variant="secondary"
-            onClick={fetchRandomAddress}
+            onClick={handleRandomAddress}
             loading={randomAddressLoading}
           >
             Random address
