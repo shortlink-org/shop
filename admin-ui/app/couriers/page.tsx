@@ -1,33 +1,77 @@
 'use client';
 
-import { useState } from 'react';
-import { useList } from '@refinedev/core';
-import { useMutation } from '@apollo/client/react';
-import { 
-  Table, 
-  Card, 
-  Button, 
-  Space, 
-  Select, 
-  Rate,
-  Tooltip,
-  message,
-  Popconfirm,
-} from 'antd';
-import { 
-  PlusOutlined, 
-  ReloadOutlined,
-  CheckOutlined,
-  StopOutlined,
-  EyeOutlined,
-} from '@ant-design/icons';
+import { Button, FeedbackPanel, StatCard } from '@shortlink-org/ui-kit';
+import { useMemo, useState } from 'react';
+import { useMutation, useQuery } from '@apollo/client/react';
 import Link from 'next/link';
-import type { ColumnsType } from 'antd/es/table';
+import { toast } from 'sonner';
 
 import { CourierStatusBadge } from '@/components/couriers/CourierStatusBadge';
 import { TransportBadge } from '@/components/couriers/TransportBadge';
+import { GET_COURIERS } from '@/graphql/queries/couriers';
 import { ACTIVATE_COURIER, DEACTIVATE_COURIER } from '@/graphql/mutations/couriers';
 import type { Courier, CourierStatus, TransportType } from '@/types/courier';
+
+const STATUS_OPTIONS: Array<{ value: CourierStatus; label: string }> = [
+  { value: 'FREE', label: 'Available' },
+  { value: 'BUSY', label: 'Busy' },
+  { value: 'UNAVAILABLE', label: 'Unavailable' },
+  { value: 'ARCHIVED', label: 'Archived' },
+];
+
+const TRANSPORT_OPTIONS: Array<{ value: TransportType; label: string }> = [
+  { value: 'WALKING', label: 'Walking' },
+  { value: 'BICYCLE', label: 'Bicycle' },
+  { value: 'MOTORCYCLE', label: 'Motorcycle' },
+  { value: 'CAR', label: 'Car' },
+];
+
+type CouriersQueryResult = {
+  couriers?: {
+    couriers?: Courier[];
+    totalCount?: number;
+  };
+};
+
+function FilterPills<T extends string>({
+  label,
+  options,
+  selected,
+  onToggle,
+}: {
+  label: string;
+  options: Array<{ value: T; label: string }>;
+  selected: T[];
+  onToggle: (value: T) => void;
+}) {
+  return (
+    <div className="space-y-3">
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-muted-foreground)]">
+        {label}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {options.map((option) => {
+          const active = selected.includes(option.value);
+          return (
+            <button
+              key={option.value}
+              type="button"
+              className={[
+                'rounded-full border px-3 py-2 text-sm font-medium transition',
+                active
+                  ? 'border-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_14%,transparent)] text-[var(--color-accent)]'
+                  : 'border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_72%,transparent)] text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]',
+              ].join(' ')}
+              onClick={() => onToggle(option.value)}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export default function CouriersListPage() {
   const [page, setPage] = useState(1);
@@ -35,210 +79,296 @@ export default function CouriersListPage() {
   const [statusFilter, setStatusFilter] = useState<CourierStatus[]>([]);
   const [transportFilter, setTransportFilter] = useState<TransportType[]>([]);
 
-  const filters = [
-    ...(statusFilter.length ? [{ field: 'status' as const, operator: 'in' as const, value: statusFilter }] : []),
-    ...(transportFilter.length ? [{ field: 'transportType' as const, operator: 'in' as const, value: transportFilter }] : []),
-  ];
+  const variables = useMemo(
+    () => ({
+      filter: {
+        ...(statusFilter.length ? { statusFilter } : {}),
+        ...(transportFilter.length ? { transportTypeFilter: transportFilter } : {}),
+      },
+      pagination: { page, pageSize },
+    }),
+    [page, pageSize, statusFilter, transportFilter]
+  );
 
-  const { query, result } = useList<Courier>({
-    resource: 'couriers',
-    pagination: { currentPage: page, pageSize },
-    filters,
+  const { data, loading, refetch } = useQuery<CouriersQueryResult>(GET_COURIERS, {
+    variables,
+    notifyOnNetworkStatusChange: true,
   });
-  
-  const { isLoading, refetch } = query;
-  const data = result;
 
   const [activateCourier] = useMutation(ACTIVATE_COURIER, {
     onCompleted: () => {
-      message.success('Courier activated');
-      refetch();
+      toast.success('Courier activated');
+      void refetch();
     },
-    onError: (e) => message.error(e.message),
+    onError: (error) => toast.error(error.message),
   });
   const [deactivateCourier] = useMutation(DEACTIVATE_COURIER, {
     onCompleted: () => {
-      message.success('Courier deactivated');
-      refetch();
+      toast.success('Courier deactivated');
+      void refetch();
     },
-    onError: (e) => message.error(e.message),
+    onError: (error) => toast.error(error.message),
   });
 
   const handleActivate = (id: string) => {
-    activateCourier({ variables: { id } });
+    if (!window.confirm('Activate courier?')) return;
+    void activateCourier({ variables: { id } });
   };
 
   const handleDeactivate = (id: string) => {
-    deactivateCourier({ variables: { id } });
+    if (!window.confirm('Deactivate courier?')) return;
+    void deactivateCourier({ variables: { id } });
   };
 
-  const columns: ColumnsType<Courier> = [
-    {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-      render: (name: string, record: Courier) => (
-        <Link href={`/couriers/${record.courierId}`}>
-          <span className="text-blue-600 hover:underline">{name}</span>
-        </Link>
-      ),
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: CourierStatus) => <CourierStatusBadge status={status} />,
-    },
-    {
-      title: 'Transport',
-      dataIndex: 'transportType',
-      key: 'transportType',
-      render: (type: TransportType) => <TransportBadge type={type} />,
-    },
-    {
-      title: 'Zone',
-      dataIndex: 'workZone',
-      key: 'workZone',
-    },
-    {
-      title: 'Rating',
-      dataIndex: 'rating',
-      key: 'rating',
-      render: (rating: number) => (
-        <Rate disabled defaultValue={rating} allowHalf />
-      ),
-    },
-    {
-      title: 'Load',
-      key: 'load',
-      render: (_: unknown, record: Courier) => (
-        <span>
-          {record.currentLoad} / {record.maxLoad}
-        </span>
-      ),
-    },
-    {
-      title: 'Deliveries',
-      key: 'deliveries',
-      render: (_: unknown, record: Courier) => (
-        <Tooltip title={`Successful: ${record.successfulDeliveries}, Failed: ${record.failedDeliveries}`}>
-          <span className="text-green-600">{record.successfulDeliveries}</span>
-          {' / '}
-          <span className="text-red-600">{record.failedDeliveries}</span>
-        </Tooltip>
-      ),
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      render: (_: unknown, record: Courier) => (
-        <Space size="small">
-          <Tooltip title="View">
-            <Link href={`/couriers/${record.courierId}`}>
-              <Button icon={<EyeOutlined />} size="small" />
-            </Link>
-          </Tooltip>
-          
-          {record.status === 'UNAVAILABLE' && (
-            <Tooltip title="Activate">
-              <Popconfirm
-                title="Activate courier?"
-                onConfirm={() => handleActivate(record.courierId)}
-              >
-                <Button icon={<CheckOutlined />} size="small" type="primary" />
-              </Popconfirm>
-            </Tooltip>
-          )}
-          
-          {(record.status === 'FREE' || record.status === 'BUSY') && (
-            <Tooltip title="Deactivate">
-              <Popconfirm
-                title="Deactivate courier?"
-                onConfirm={() => handleDeactivate(record.courierId)}
-              >
-                <Button icon={<StopOutlined />} size="small" danger />
-              </Popconfirm>
-            </Tooltip>
-          )}
-        </Space>
-      ),
-    },
-  ];
+  const couriers = data?.couriers?.couriers ?? [];
+  const totalCount = data?.couriers?.totalCount ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const availableCount = couriers.filter((courier) => courier.status === 'FREE').length;
+  const busyCount = couriers.filter((courier) => courier.status === 'BUSY').length;
+  const unavailableCount = couriers.filter((courier) => courier.status === 'UNAVAILABLE').length;
 
-  const couriers = data?.data || [];
-  const totalCount = data?.total || 0;
+  const toggleStatus = (value: CourierStatus) => {
+    setPage(1);
+    setStatusFilter((current) =>
+      current.includes(value) ? current.filter((item) => item !== value) : [...current, value]
+    );
+  };
+
+  const toggleTransport = (value: TransportType) => {
+    setPage(1);
+    setTransportFilter((current) =>
+      current.includes(value) ? current.filter((item) => item !== value) : [...current, value]
+    );
+  };
 
   return (
-    <div className="p-6">
-      <Card
-        title="Couriers"
-        extra={
-          <Space>
-            <Button 
-              icon={<ReloadOutlined />} 
-              onClick={() => refetch()}
-            >
+    <div className="space-y-6">
+      <section className="admin-card overflow-hidden p-6 sm:p-8">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+          <div className="space-y-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--color-muted-foreground)]">
+              Courier workspace
+            </p>
+            <div>
+              <h1 className="text-3xl font-semibold tracking-tight">Couriers</h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--color-muted-foreground)]">
+                First feature slice migrated away from `refine`: direct Apollo queries, shared shell,
+                `sonner` notifications, and data-first operational layout.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <Button variant="secondary" onClick={() => void refetch()}>
               Refresh
             </Button>
-            <Link href="/couriers/create">
-              <Button type="primary" icon={<PlusOutlined />}>
-                Add courier
-              </Button>
-            </Link>
-          </Space>
-        }
-      >
-        {/* Filters */}
-        <div className="mb-4 flex gap-4 flex-wrap">
-          <Select
-            mode="multiple"
-            placeholder="Status"
-            style={{ minWidth: 200 }}
-            value={statusFilter}
-            onChange={setStatusFilter}
-            options={[
-              { value: 'FREE', label: 'Available' },
-              { value: 'BUSY', label: 'Busy' },
-              { value: 'UNAVAILABLE', label: 'Unavailable' },
-              { value: 'ARCHIVED', label: 'Archived' },
-            ]}
-            allowClear
+            <Button as={Link} asProps={{ href: '/couriers/create' }}>
+              Add courier
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Visible couriers" value={couriers.length} tone="neutral" className="admin-card p-5" />
+        <StatCard
+          label="Available now"
+          value={<span className="text-[var(--color-success)]">{availableCount}</span>}
+          tone="success"
+          className="admin-card p-5"
+        />
+        <StatCard
+          label="Busy now"
+          value={<span className="text-[var(--color-accent)]">{busyCount}</span>}
+          tone="accent"
+          className="admin-card p-5"
+        />
+        <StatCard
+          label="Unavailable"
+          value={<span className="text-[var(--color-warning)]">{unavailableCount}</span>}
+          tone="warning"
+          className="admin-card p-5"
+        />
+      </section>
+
+      <section className="admin-card p-6">
+        <div className="grid gap-6 xl:grid-cols-2">
+          <FilterPills
+            label="Status filters"
+            options={STATUS_OPTIONS}
+            selected={statusFilter}
+            onToggle={toggleStatus}
           />
-          <Select
-            mode="multiple"
-            placeholder="Transport"
-            style={{ minWidth: 200 }}
-            value={transportFilter}
-            onChange={setTransportFilter}
-            options={[
-              { value: 'WALKING', label: 'Walking' },
-              { value: 'BICYCLE', label: 'Bicycle' },
-              { value: 'MOTORCYCLE', label: 'Motorcycle' },
-              { value: 'CAR', label: 'Car' },
-            ]}
-            allowClear
+          <FilterPills
+            label="Transport filters"
+            options={TRANSPORT_OPTIONS}
+            selected={transportFilter}
+            onToggle={toggleTransport}
           />
         </div>
+      </section>
 
-        {/* Table */}
-        <Table
-          columns={columns}
-          dataSource={couriers}
-          rowKey="courierId"
-          loading={isLoading}
-          pagination={{
-            current: page,
-            pageSize: pageSize,
-            total: totalCount,
-            showSizeChanger: true,
-            showTotal: (total) => `Total: ${total}`,
-            onChange: (p, ps) => {
-              setPage(p);
-              setPageSize(ps);
-            },
-          }}
-        />
-      </Card>
+      <section className="admin-card overflow-hidden">
+        <div className="border-b border-[var(--color-border)] px-6 py-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold tracking-tight">Fleet overview</h2>
+              <p className="text-sm text-[var(--color-muted-foreground)]">
+                Total matched couriers: {totalCount}
+              </p>
+            </div>
+            <div className="flex items-center gap-3 text-sm text-[var(--color-muted-foreground)]">
+              <label htmlFor="couriers-page-size">Rows</label>
+              <select
+                id="couriers-page-size"
+                className="rounded-full border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_78%,transparent)] px-3 py-2 text-sm text-[var(--color-foreground)]"
+                value={pageSize}
+                onChange={(event) => {
+                  setPage(1);
+                  setPageSize(Number(event.target.value));
+                }}
+              >
+                {[10, 20, 50].map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="px-6 py-16">
+            <FeedbackPanel
+              variant="loading"
+              eyebrow="Courier workspace"
+              title="Loading couriers"
+              message="Fetching the latest fleet state from GraphQL."
+              className="mx-auto max-w-2xl"
+            />
+          </div>
+        ) : couriers.length === 0 ? (
+          <div className="px-6 py-16">
+            <FeedbackPanel
+              variant="empty"
+              eyebrow="Courier workspace"
+              title="No couriers found"
+              message="Adjust the filters or register the first courier for this workspace."
+              className="mx-auto max-w-2xl"
+              action={
+                <Button as={Link} asProps={{ href: '/couriers/create' }}>
+                  Add courier
+                </Button>
+              }
+            />
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full border-collapse text-left">
+              <thead>
+                <tr className="border-b border-[var(--color-border)] text-xs uppercase tracking-[0.18em] text-[var(--color-muted-foreground)]">
+                  <th className="px-6 py-4 font-semibold">Courier</th>
+                  <th className="px-6 py-4 font-semibold">Status</th>
+                  <th className="px-6 py-4 font-semibold">Transport</th>
+                  <th className="px-6 py-4 font-semibold">Zone</th>
+                  <th className="px-6 py-4 font-semibold">Load</th>
+                  <th className="px-6 py-4 font-semibold">Deliveries</th>
+                  <th className="px-6 py-4 font-semibold">Rating</th>
+                  <th className="px-6 py-4 font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {couriers.map((courier) => (
+                  <tr key={courier.courierId} className="border-b border-[var(--color-border)]/70 last:border-b-0">
+                    <td className="px-6 py-5 align-top">
+                      <div className="space-y-1">
+                        <Link
+                          href={`/couriers/${courier.courierId}`}
+                          className="text-sm font-semibold text-[var(--color-foreground)] hover:text-[var(--color-accent)]"
+                        >
+                          {courier.name}
+                        </Link>
+                        <div className="text-xs text-[var(--color-muted-foreground)]">
+                          {courier.email || courier.phone}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 align-top">
+                      <CourierStatusBadge status={courier.status} />
+                    </td>
+                    <td className="px-6 py-5 align-top">
+                      <TransportBadge type={courier.transportType} />
+                    </td>
+                    <td className="px-6 py-5 align-top text-sm text-[var(--color-muted-foreground)]">
+                      {courier.workZone}
+                    </td>
+                    <td className="px-6 py-5 align-top text-sm text-[var(--color-muted-foreground)]">
+                      {courier.currentLoad} / {courier.maxLoad}
+                    </td>
+                    <td className="px-6 py-5 align-top text-sm text-[var(--color-muted-foreground)]">
+                      <span className="font-semibold text-[var(--color-success)]">{courier.successfulDeliveries}</span>
+                      <span className="mx-1 text-[var(--color-border)]">/</span>
+                      <span className="font-semibold text-[var(--color-danger)]">{courier.failedDeliveries}</span>
+                    </td>
+                    <td className="px-6 py-5 align-top text-sm text-[var(--color-muted-foreground)]">
+                      {courier.rating ? courier.rating.toFixed(1) : '—'}
+                    </td>
+                    <td className="px-6 py-5 align-top">
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          as={Link}
+                          asProps={{ href: `/couriers/${courier.courierId}` }}
+                        >
+                          View
+                        </Button>
+                        {courier.status === 'UNAVAILABLE' && (
+                          <Button size="sm" onClick={() => handleActivate(courier.courierId)}>
+                            Activate
+                          </Button>
+                        )}
+                        {(courier.status === 'FREE' || courier.status === 'BUSY') && (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDeactivate(courier.courierId)}
+                          >
+                            Deactivate
+                          </Button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <div className="flex flex-col gap-4 border-t border-[var(--color-border)] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-[var(--color-muted-foreground)]">
+            Page {page} of {totalPages}
+          </p>
+          <div className="flex gap-3">
+            <Button
+              variant="secondary"
+              disabled={page <= 1}
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="secondary"
+              disabled={page >= totalPages}
+              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

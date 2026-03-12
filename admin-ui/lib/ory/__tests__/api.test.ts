@@ -67,8 +67,6 @@ describe('getUserName', () => {
 });
 
 describe('getLoginUrl', () => {
-  const defaultBase = 'http://localhost:4433';
-
   beforeEach(() => {
     delete process.env.NEXT_PUBLIC_ORY_SDK_URL;
   });

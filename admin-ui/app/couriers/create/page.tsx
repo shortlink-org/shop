@@ -1,26 +1,22 @@
 'use client';
 
-import { useCreate } from '@refinedev/core';
+import { Button, FeedbackPanel } from '@shortlink-org/ui-kit';
+import { useMutation } from '@apollo/client/react';
 import { useRouter } from 'next/navigation';
-import { 
-  Card, 
-  Form, 
-  Input, 
-  Select, 
-  InputNumber, 
-  Button, 
-  TimePicker, 
-  Checkbox,
-  message,
-  Space,
-} from 'antd';
-import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
 import Link from 'next/link';
-import dayjs from 'dayjs';
+import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
+import { REGISTER_COURIER } from '@/graphql/mutations/couriers';
 import type { TransportType } from '@/types/courier';
 
-const { Option } = Select;
+type RegisterCourierMutationResult = {
+  registerCourier?: {
+    courierId: string;
+    status?: string | null;
+    createdAt?: string | null;
+  } | null;
+};
 
 interface FormValues {
   name: string;
@@ -29,10 +25,12 @@ interface FormValues {
   transportType: TransportType;
   maxDistanceKm: number;
   workZone: string;
-  workStart: dayjs.Dayjs;
-  workEnd: dayjs.Dayjs;
+  workStart: string;
+  workEnd: string;
   workDays: number[];
 }
+
+type FormErrors = Partial<Record<keyof FormValues, string>>;
 
 const WEEKDAYS = [
   { value: 0, label: 'Sunday' },
@@ -44,184 +42,326 @@ const WEEKDAYS = [
   { value: 6, label: 'Saturday' },
 ];
 
+const INITIAL_VALUES: FormValues = {
+  name: '',
+  phone: '',
+  email: '',
+  transportType: 'BICYCLE',
+  maxDistanceKm: 10,
+  workZone: '',
+  workStart: '09:00',
+  workEnd: '18:00',
+  workDays: [1, 2, 3, 4, 5],
+};
+
+function validateForm(values: FormValues): FormErrors {
+  const errors: FormErrors = {};
+
+  if (!values.name.trim()) {
+    errors.name = 'Enter the courier name';
+  }
+
+  if (!values.phone.trim()) {
+    errors.phone = 'Enter a phone number';
+  } else if (!/^\+?[0-9]{10,15}$/.test(values.phone.trim())) {
+    errors.phone = 'Invalid phone number format';
+  }
+
+  if (!values.email.trim()) {
+    errors.email = 'Enter an email address';
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) {
+    errors.email = 'Invalid email format';
+  }
+
+  if (!values.transportType) {
+    errors.transportType = 'Select a transport type';
+  }
+
+  if (!Number.isFinite(values.maxDistanceKm) || values.maxDistanceKm < 1 || values.maxDistanceKm > 100) {
+    errors.maxDistanceKm = 'Distance must be between 1 and 100 km';
+  }
+
+  if (!values.workZone.trim()) {
+    errors.workZone = 'Enter the work zone';
+  }
+
+  if (!values.workStart) {
+    errors.workStart = 'Select the start time';
+  }
+
+  if (!values.workEnd) {
+    errors.workEnd = 'Select the end time';
+  }
+
+  if (values.workStart && values.workEnd && values.workStart >= values.workEnd) {
+    errors.workEnd = 'End time must be later than start time';
+  }
+
+  if (!values.workDays.length) {
+    errors.workDays = 'Select at least one work day';
+  }
+
+  return errors;
+}
+
 export default function CreateCourierPage() {
   const router = useRouter();
-  const [form] = Form.useForm<FormValues>();
+  const [values, setValues] = useState<FormValues>(INITIAL_VALUES);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [registerCourier, { loading }] = useMutation<RegisterCourierMutationResult>(REGISTER_COURIER);
 
-  const { mutate: createCourier, mutation } = useCreate();
-  const isLoading = mutation.isPending;
+  const selectedWorkDays = useMemo(() => new Set(values.workDays), [values.workDays]);
 
-  const onFinish = (values: FormValues) => {
-    createCourier(
-      {
-        resource: 'couriers',
-        values: {
-          name: values.name,
-          phone: values.phone,
-          email: values.email,
-          transportType: values.transportType,
-          maxDistanceKm: values.maxDistanceKm,
-          workZone: values.workZone,
-          workHours: {
-            startTime: values.workStart.format('HH:mm'),
-            endTime: values.workEnd.format('HH:mm'),
-            workDays: values.workDays,
+  const updateField = <K extends keyof FormValues>(field: K, value: FormValues[K]) => {
+    setValues((current) => ({ ...current, [field]: value }));
+    setErrors((current) => ({ ...current, [field]: undefined }));
+  };
+
+  const toggleWorkDay = (day: number) => {
+    const nextDays = selectedWorkDays.has(day)
+      ? values.workDays.filter((value) => value !== day)
+      : [...values.workDays, day].sort((left, right) => left - right);
+    updateField('workDays', nextDays);
+  };
+
+  const onFinish = async () => {
+    const validationErrors = validateForm(values);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      toast.error('Please fix the highlighted fields');
+      return;
+    }
+
+    try {
+      const { data } = await registerCourier({
+        variables: {
+          input: {
+            name: values.name.trim(),
+            phone: values.phone.trim(),
+            email: values.email.trim(),
+            transportType: values.transportType,
+            maxDistanceKm: values.maxDistanceKm,
+            workZone: values.workZone.trim(),
+            workHours: {
+              startTime: values.workStart,
+              endTime: values.workEnd,
+              workDays: values.workDays,
+            },
           },
         },
-      },
-      {
-        onSuccess: (data) => {
-          message.success('Courier registered');
-          router.push(`/couriers/${data.data.id}`);
-        },
-        onError: (error) => {
-          message.error(`Error: ${error.message}`);
-        },
+      });
+
+      const courierId = data?.registerCourier?.courierId;
+      if (!courierId) {
+        throw new Error('Courier registration did not return an id');
       }
-    );
+
+      toast.success('Courier registered');
+      router.push(`/couriers/${courierId}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to register courier');
+    }
   };
 
   return (
-    <div className="p-6">
-      <div className="mb-4">
-        <Space>
-          <Link href="/couriers">
-            <Button icon={<ArrowLeftOutlined />}>Back</Button>
-          </Link>
-          <h1 className="text-2xl font-bold m-0">Courier registration</h1>
-        </Space>
-      </div>
+    <div className="space-y-6">
+      <section className="admin-card overflow-hidden p-6 sm:p-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-3">
+            <Button as={Link} asProps={{ href: '/couriers' }} variant="secondary" size="sm">
+              Back to couriers
+            </Button>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--color-muted-foreground)]">
+                Courier onboarding
+              </p>
+              <h1 className="mt-2 text-3xl font-semibold tracking-tight">Register courier</h1>
+              <p className="mt-2 max-w-2xl text-sm text-[var(--color-muted-foreground)]">
+                Create a new courier profile with contact details, transport configuration, and work schedule.
+              </p>
+            </div>
+          </div>
 
-      <Card>
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={onFinish}
-          initialValues={{
-            transportType: 'BICYCLE',
-            maxDistanceKm: 10,
-            workDays: [1, 2, 3, 4, 5],
-            workStart: dayjs('09:00', 'HH:mm'),
-            workEnd: dayjs('18:00', 'HH:mm'),
+          <div className="admin-card p-4">
+            <p className="text-sm font-semibold">Operational note</p>
+            <p className="mt-2 text-sm text-[var(--color-muted-foreground)]">
+              New couriers start as unavailable until operations activates them.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="admin-card p-6">
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            void onFinish();
           }}
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Personal Info */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Personal information</h3>
-              
-              <Form.Item
-                name="name"
-                label="Full name"
-                rules={[{ required: true, message: 'Enter the courier name' }]}
-              >
-                <Input placeholder="John Doe" />
-              </Form.Item>
-
-              <Form.Item
-                name="phone"
-                label="Phone"
-                rules={[
-                  { required: true, message: 'Enter a phone number' },
-                  { pattern: /^\+?[0-9]{10,15}$/, message: 'Invalid phone number format' },
-                ]}
-              >
-                <Input placeholder="+79001234567" />
-              </Form.Item>
-
-              <Form.Item
-                name="email"
-                label="Email"
-                rules={[
-                  { required: true, message: 'Enter an email address' },
-                  { type: 'email', message: 'Invalid email format' },
-                ]}
-              >
-                <Input placeholder="courier@example.com" />
-              </Form.Item>
-            </div>
-
-            {/* Work Info */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Work information</h3>
-              
-              <Form.Item
-                name="transportType"
-                label="Transport type"
-                rules={[{ required: true, message: 'Select a transport type' }]}
-              >
-                <Select>
-                  <Option value="WALKING">Walking</Option>
-                  <Option value="BICYCLE">Bicycle</Option>
-                  <Option value="MOTORCYCLE">Motorcycle</Option>
-                  <Option value="CAR">Car</Option>
-                </Select>
-              </Form.Item>
-
-              <Form.Item
-                name="maxDistanceKm"
-                label="Maximum distance (km)"
-                rules={[{ required: true, message: 'Enter the maximum distance' }]}
-              >
-                <InputNumber min={1} max={100} style={{ width: '100%' }} />
-              </Form.Item>
-
-              <Form.Item
-                name="workZone"
-                label="Work zone"
-                rules={[{ required: true, message: 'Enter the work zone' }]}
-              >
-                <Input placeholder="Center, North, South..." />
-              </Form.Item>
-            </div>
-
-            {/* Schedule */}
-            <div className="md:col-span-2">
-              <h3 className="text-lg font-semibold mb-4">Schedule</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Form.Item
-                  name="workStart"
-                  label="Start time"
-                  rules={[{ required: true, message: 'Select the start time' }]}
-                >
-                  <TimePicker format="HH:mm" style={{ width: '100%' }} />
-                </Form.Item>
-
-                <Form.Item
-                  name="workEnd"
-                  label="End time"
-                  rules={[{ required: true, message: 'Select the end time' }]}
-                >
-                  <TimePicker format="HH:mm" style={{ width: '100%' }} />
-                </Form.Item>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="space-y-5">
+              <div>
+                <h2 className="text-lg font-semibold tracking-tight">Personal information</h2>
+                <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+                  Contact fields used by dispatchers and internal operations.
+                </p>
               </div>
 
-              <Form.Item
-                name="workDays"
-                label="Work days"
-                rules={[{ required: true, message: 'Select the work days' }]}
-              >
-                <Checkbox.Group options={WEEKDAYS} />
-              </Form.Item>
+              <label className="admin-field">
+                <span className="admin-label">Full name</span>
+                <input
+                  className="admin-input"
+                  placeholder="John Doe"
+                  value={values.name}
+                  onChange={(event) => updateField('name', event.target.value)}
+                />
+                {errors.name && <span className="admin-error">{errors.name}</span>}
+              </label>
+
+              <label className="admin-field">
+                <span className="admin-label">Phone</span>
+                <input
+                  className="admin-input"
+                  placeholder="+79001234567"
+                  value={values.phone}
+                  onChange={(event) => updateField('phone', event.target.value)}
+                />
+                {errors.phone && <span className="admin-error">{errors.phone}</span>}
+              </label>
+
+              <label className="admin-field">
+                <span className="admin-label">Email</span>
+                <input
+                  className="admin-input"
+                  type="email"
+                  placeholder="courier@example.com"
+                  value={values.email}
+                  onChange={(event) => updateField('email', event.target.value)}
+                />
+                {errors.email && <span className="admin-error">{errors.email}</span>}
+              </label>
+            </div>
+
+            <div className="space-y-5">
+              <div>
+                <h2 className="text-lg font-semibold tracking-tight">Work configuration</h2>
+                <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+                  Delivery capacity and zone settings used for assignment decisions.
+                </p>
+              </div>
+
+              <label className="admin-field">
+                <span className="admin-label">Transport type</span>
+                <select
+                  className="admin-select"
+                  value={values.transportType}
+                  onChange={(event) => updateField('transportType', event.target.value as TransportType)}
+                >
+                  <option value="WALKING">Walking</option>
+                  <option value="BICYCLE">Bicycle</option>
+                  <option value="MOTORCYCLE">Motorcycle</option>
+                  <option value="CAR">Car</option>
+                </select>
+                {errors.transportType && <span className="admin-error">{errors.transportType}</span>}
+              </label>
+
+              <label className="admin-field">
+                <span className="admin-label">Maximum distance (km)</span>
+                <input
+                  className="admin-input"
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={values.maxDistanceKm}
+                  onChange={(event) => updateField('maxDistanceKm', Number(event.target.value))}
+                />
+                {errors.maxDistanceKm && <span className="admin-error">{errors.maxDistanceKm}</span>}
+              </label>
+
+              <label className="admin-field">
+                <span className="admin-label">Work zone</span>
+                <input
+                  className="admin-input"
+                  placeholder="Center, North, South..."
+                  value={values.workZone}
+                  onChange={(event) => updateField('workZone', event.target.value)}
+                />
+                {errors.workZone && <span className="admin-error">{errors.workZone}</span>}
+              </label>
             </div>
           </div>
 
-          <div className="flex justify-end gap-4 mt-6">
-            <Link href="/couriers">
-              <Button>Cancel</Button>
-            </Link>
-            <Button 
-              type="primary" 
-              htmlType="submit" 
-              icon={<SaveOutlined />}
-              loading={isLoading}
-            >
-              Register
-            </Button>
+          <div className="mt-8 rounded-[1.5rem] border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_75%,transparent)] p-6">
+            <div className="mb-5">
+              <h2 className="text-lg font-semibold tracking-tight">Schedule</h2>
+              <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+                Working hours and active weekdays for courier availability planning.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <label className="admin-field">
+                <span className="admin-label">Start time</span>
+                <input
+                  className="admin-input"
+                  type="time"
+                  value={values.workStart}
+                  onChange={(event) => updateField('workStart', event.target.value)}
+                />
+                {errors.workStart && <span className="admin-error">{errors.workStart}</span>}
+              </label>
+
+              <label className="admin-field">
+                <span className="admin-label">End time</span>
+                <input
+                  className="admin-input"
+                  type="time"
+                  value={values.workEnd}
+                  onChange={(event) => updateField('workEnd', event.target.value)}
+                />
+                {errors.workEnd && <span className="admin-error">{errors.workEnd}</span>}
+              </label>
+            </div>
+
+            <div className="admin-field mt-4">
+              <span className="admin-label">Work days</span>
+              <div className="admin-checkbox-grid">
+                {WEEKDAYS.map((day) => (
+                  <label key={day.value} className="admin-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={selectedWorkDays.has(day.value)}
+                      onChange={() => toggleWorkDay(day.value)}
+                    />
+                    <span>{day.label}</span>
+                  </label>
+                ))}
+              </div>
+              {errors.workDays && <span className="admin-error">{errors.workDays}</span>}
+            </div>
           </div>
-        </Form>
-      </Card>
+
+          <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <FeedbackPanel
+              variant="empty"
+              eyebrow="Validation"
+              title="Review data before creating"
+              message="The courier registration flow now uses plain React state and Apollo, with no Ant Design form layer."
+              size="sm"
+              className="w-full max-w-xl"
+            />
+
+            <div className="flex flex-wrap gap-3">
+              <Button as={Link} asProps={{ href: '/couriers' }} variant="secondary">
+                Cancel
+              </Button>
+              <Button loading={loading} type="submit">
+                Register
+              </Button>
+            </div>
+          </div>
+        </form>
+      </section>
     </div>
   );
 }
