@@ -1,6 +1,6 @@
 module github.com/shortlink-org/shop/delivery-graphql
 
-go 1.25.6
+go 1.26.1
 
 require (
 	connectrpc.com/connect v1.19.1
