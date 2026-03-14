@@ -4,12 +4,13 @@
   "description": "ShortLink Shop BFF - Cosmo Router based GraphQL Federation Gateway",
   "scripts": {
     "compose": "pnpm run compose:local",
-    "compose:local": "wgc router compose -i graph-local.yaml -o router-config.json",
-    "compose:static": "wgc router compose -i graph-static.yaml -o router-config.json",
+    "sync:delivery-subgraph": "sh ./scripts/sync-delivery-subgraph.sh",
+    "compose:local": "pnpm run sync:delivery-subgraph && wgc router compose -i graph-local.yaml -o router-config.json",
+    "compose:static": "pnpm run sync:delivery-subgraph && wgc router compose -i graph-static.yaml -o router-config.json",
     "start": "echo 'Run the router binary with: ./router --config router.yaml'",
     "download:router": "wgc router download-binary -o ./router",
     "build": "pnpm run compose",
-    "docker:build": "docker build -f ops/dockerfile/Dockerfile -t shortlink-shop-bff:latest .",
+    "docker:build": "pnpm run sync:delivery-subgraph && docker build -f ops/dockerfile/Dockerfile -t shortlink-shop-bff:latest .",
     "docker:run": "docker run -p 9991:9991 -p 8088:8088 shortlink-shop-bff:latest"
   },
   "author": "",

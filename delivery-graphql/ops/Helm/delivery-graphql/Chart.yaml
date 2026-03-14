@@ -1,13 +1,12 @@
 apiVersion: v2
 appVersion: "1.0.0"
 name: delivery-graphql
-description: ShortLink Shop Delivery GraphQL Subgraph (Tailcall) - gRPC to GraphQL
+description: ShortLink Shop Delivery GraphQL Subgraph (Go/Connect) - Cosmo federation gRPC adapter
 version: 0.1.1
 kubeVersion: ">= 1.30.0 || >= v1.30.0-0"
 keywords:
   - graphql
   - delivery
-  - tailcall
   - subgraph
   - courier
   - grpc

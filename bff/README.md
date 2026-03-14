@@ -26,16 +26,18 @@ GraphQL Federation Gateway powered by [WunderGraph Cosmo Router](https://cosmo-d
 
 ## Subgraphs
 
-| Subgraph   | Port | Technology | Description                        |
-|------------|------|------------|------------------------------------|
-| carts      | 4011 | Go/Connect | gRPC adapter for cart and orders   |
-| admin      | 4012 | Go/Connect | REST adapter for goods             |
-| countries  | -    | External   | External GraphQL API               |
+| Subgraph   | Port | Technology | Description                           |
+|------------|------|------------|---------------------------------------|
+| carts      | 4011 | Go/Connect | gRPC adapter for cart and orders      |
+| admin      | 4012 | Go/Connect | REST adapter for goods                |
+| delivery   | 4013 | Go/Connect | gRPC adapter for delivery tracking    |
+| countries  | -    | External   | External GraphQL API                  |
 
 ## Prerequisites
 
 - Node.js 18+
 - pnpm
+- Buf CLI
 - Cosmo CLI (`wgc`, pinned to `0.109.0` in `package.json`)
 - All subgraphs running
 
@@ -59,7 +61,10 @@ cd ../oms-graphql && go run ./cmd/service
 # Terminal 3: Admin subgraph (goods)
 cd ../admin-graphql && go run ./cmd/service
 
-# Terminal 4: Django Admin
+# Terminal 4: Delivery subgraph
+cd ../delivery-graphql && go run ./cmd/service
+
+# Terminal 5: Django Admin
 cd ../admin && uv run python src/manage.py runserver 8000
 ```
 
@@ -69,7 +74,7 @@ cd ../admin && uv run python src/manage.py runserver 8000
 pnpm run compose
 ```
 
-This generates `router-config.json` from `graph-local.yaml` for local development.
+This syncs `delivery` proto artifacts from `delivery-graphql` via `buf export` and then generates `router-config.json` from `graph-local.yaml`.
 
 ### 3. Download and run the router
 
@@ -124,6 +129,12 @@ subgraphs:
       schema_file: ../admin-graphql/pkg/graph/schema.graphql
       proto_file: ../admin-graphql/pkg/proto/service/v1/service.proto
       mapping_file: ../admin-graphql/pkg/proto/service/v1/mapping.json
+  - name: delivery
+    routing_url: dns:///localhost:4013
+    grpc:
+      schema_file: subgraphs/delivery/schema.graphql
+      proto_file: subgraphs/delivery/service.proto
+      mapping_file: subgraphs/delivery/mapping.json
 ```
 
 ### CI/CD Integration
@@ -134,8 +145,9 @@ In your CI pipeline, compose the schema before building the Docker image:
 build:bff:
   script:
     - cd bff
+    - buf --version
     - npm install -g wgc@0.109.0
-    - wgc router compose -i graph-static.yaml -o router-config.json
+    - pnpm run compose:static
     - docker build -f ops/dockerfile/Dockerfile -t bff:latest .
 ```
 
@@ -162,6 +174,12 @@ subgraphs:
       schema_file: ../admin-graphql/pkg/graph/schema.graphql
       proto_file: ../admin-graphql/pkg/proto/service/v1/service.proto
       mapping_file: ../admin-graphql/pkg/proto/service/v1/mapping.json
+  - name: delivery
+    routing_url: dns:///localhost:4013
+    grpc:
+      schema_file: subgraphs/delivery/schema.graphql
+      proto_file: subgraphs/delivery/service.proto
+      mapping_file: subgraphs/delivery/mapping.json
   - name: countries
     routing_url: https://countries.trevorblades.com/
     introspection:
@@ -187,6 +205,12 @@ subgraphs:
       schema_file: subgraphs/admin/schema.graphql
       proto_file: subgraphs/admin/service.proto
       mapping_file: subgraphs/admin/mapping.json
+  - name: delivery
+    routing_url: dns:///shortlink-shop-delivery-graphql.shortlink-shop.svc.cluster.local:4013
+    grpc:
+      schema_file: subgraphs/delivery/schema.graphql
+      proto_file: subgraphs/delivery/service.proto
+      mapping_file: subgraphs/delivery/mapping.json
   - name: countries
     routing_url: https://countries.trevorblades.com/
     schema:
@@ -212,21 +236,23 @@ The BFF cannot reach the gRPC subgraphs. In Kubernetes the router expects these 
 | Subgraph | Expected Service name              | Port |
 |----------|------------------------------------|------|
 | admin    | `shortlink-shop-admin-graphql`      | 4012 |
-| carts    | `shortlink-shop-oms-graphql`       | 4011 |
+| carts    | `shortlink-shop-oms-graphql`        | 4011 |
+| delivery | `shortlink-shop-delivery-graphql`   | 4013 |
 
 **Checks:**
 
-1. **Deployments** – Ensure `admin-graphql` and `oms-graphql` are deployed. Helm release names should be `shortlink-shop-admin-graphql` and `shortlink-shop-oms-graphql` so that the created Services match the names above (if your chart uses `Release.Name` for the Service name).
+1. **Deployments** – Ensure `admin-graphql`, `oms-graphql`, and `delivery-graphql` are deployed. Helm release names should match the Service names above.
 
 2. **Pods** – Confirm subgraph pods are Running and Ready:
    ```bash
    kubectl get pods -n shortlink-shop -l app.kubernetes.io/name=admin-graphql
    kubectl get pods -n shortlink-shop -l app.kubernetes.io/name=oms-graphql
+   kubectl get pods -n shortlink-shop -l app.kubernetes.io/name=delivery-graphql
    ```
 
 3. **Services** – Verify Services exist and target the correct port:
    ```bash
-   kubectl get svc -n shortlink-shop shortlink-shop-admin-graphql shortlink-shop-oms-graphql
+   kubectl get svc -n shortlink-shop shortlink-shop-admin-graphql shortlink-shop-oms-graphql shortlink-shop-delivery-graphql
    ```
 
 4. **Different names** – Update `graph-static.yaml`, rebuild `router-config.json` via Docker image build, and redeploy BFF.

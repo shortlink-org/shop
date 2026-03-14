@@ -28,4 +28,4 @@ export { getMenu } from './api/menu';
 export { getPage, getPages } from './api/page';
 
 // Order tracking API
-export { getOrderTrackingPage } from './api/order';
+export { getDeliveryTracking, getOrderTrackingPage } from './api/order';

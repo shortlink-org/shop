@@ -49,3 +49,30 @@ export const getOrderTrackingPageQuery = /* GraphQL */ `
     }
   }
 `;
+
+export const getDeliveryTrackingQuery = /* GraphQL */ `
+  query GetDeliveryTracking($id: String!) {
+    deliveryTracking(orderId: $id) {
+      orderId
+      packageId
+      status
+      estimatedMinutesRemaining
+      distanceKmRemaining
+      estimatedArrivalAt
+      assignedAt
+      deliveredAt
+      courier {
+        courierId
+        name
+        phone
+        transportType
+        status
+        lastActiveAt
+        currentLocation {
+          latitude
+          longitude
+        }
+      }
+    }
+  }
+`;

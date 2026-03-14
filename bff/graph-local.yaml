@@ -17,12 +17,11 @@ subgraphs:
       mapping_file: subgraphs/admin/mapping.json
 
   - name: delivery
-    routing_url: http://localhost:4013/graphql
-    schema:
-      file: schemas/delivery.graphql
-    subscription:
-      url: http://localhost:4013/graphql
-      protocol: sse
+    routing_url: dns:///localhost:4013
+    grpc:
+      schema_file: subgraphs/delivery/schema.graphql
+      proto_file: subgraphs/delivery/service.proto
+      mapping_file: subgraphs/delivery/mapping.json
 
   - name: countries
     routing_url: https://countries.trevorblades.com/

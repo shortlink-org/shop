@@ -74,7 +74,6 @@ func Start(ctx context.Context) error {
 	mux := http.NewServeMux()
 	path, handler := serviceconnect.NewDeliveryHandler(svc)
 	mux.Handle(path, handler)
-	mux.Handle("/graphql", newGraphQLHandler(svc))
 	mux.Handle("/healthz", http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("ok")) //nolint:errcheck // healthz best-effort

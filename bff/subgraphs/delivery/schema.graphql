@@ -42,7 +42,3 @@ type Query {
   randomAddress: RandomAddressResponse!
   deliveryTracking(orderId: String!): DeliveryTracking
 }
-
-type Subscription {
-  deliveryTrackingUpdated(orderId: String!): DeliveryTracking
-}

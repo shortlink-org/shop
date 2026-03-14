@@ -11,6 +11,7 @@ import {
 import Link from 'next/link';
 import { useEffect, useEffectEvent, useState } from 'react';
 
+import { getDeliveryTracking } from 'lib/shopify';
 import type {
   DeliveryAddress,
   DeliveryTrackingLocation,
@@ -197,18 +198,6 @@ function buildMiniMap(
   };
 }
 
-function getWebSocketUrl(): string {
-  const configured = process.env.NEXT_PUBLIC_BFF_WS_URL;
-  if (configured) return configured;
-
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    return `${protocol}//localhost:9991/graphql`;
-  }
-
-  return `${protocol}//${window.location.host}/graphql`;
-}
-
 function isTerminal(status?: string | null): boolean {
   return Boolean(status && TERMINAL_STATUSES.has(status));
 }
@@ -234,127 +223,28 @@ export function OrderTrackingView({
       return;
     }
 
-    let socket: WebSocket | null = null;
-    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+    let pollTimer: ReturnType<typeof setTimeout> | undefined;
     let disposed = false;
-    const subscriptionId = `delivery-tracking-${orderId}`;
-
-    const closeSocket = () => {
-      if (!socket) return;
-      if (socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify({ id: subscriptionId, type: 'complete' }));
-      }
-      socket.close();
-      socket = null;
-    };
-
-    const connect = () => {
+    const poll = async () => {
       setConnectionState((current) => (current === 'live' ? 'reconnecting' : 'connecting'));
-      socket = new WebSocket(getWebSocketUrl(), 'graphql-transport-ws');
+      try {
+        const nextTracking = await getDeliveryTracking(orderId, { authorization });
+        if (disposed) return;
 
-      socket.onopen = () => {
-        socket?.send(
-          JSON.stringify({
-            type: 'connection_init',
-            payload: {
-              Authorization: authorization
-            }
-          })
-        );
-      };
-
-      socket.onmessage = (event) => {
-        let message: {
-          id?: string;
-          type: string;
-          payload?: {
-            data?: {
-              deliveryTrackingUpdated?: DeliveryTrackingSummary | null;
-            };
-          };
-        };
-        try {
-          message = JSON.parse(event.data);
-        } catch {
-          return;
-        }
-
-        if (message.type === 'connection_ack') {
-          setConnectionState('live');
-          socket?.send(
-            JSON.stringify({
-              id: subscriptionId,
-              type: 'subscribe',
-              payload: {
-                query: `
-                  subscription DeliveryTrackingUpdated($orderId: String!) {
-                    deliveryTrackingUpdated(orderId: $orderId) {
-                      orderId
-                      packageId
-                      status
-                      estimatedMinutesRemaining
-                      distanceKmRemaining
-                      estimatedArrivalAt
-                      assignedAt
-                      deliveredAt
-                      courier {
-                        courierId
-                        name
-                        phone
-                        transportType
-                        status
-                        lastActiveAt
-                        currentLocation {
-                          latitude
-                          longitude
-                        }
-                      }
-                    }
-                  }
-                `,
-                variables: { orderId }
-              }
-            })
-          );
-          return;
-        }
-
-        if (message.type === 'next') {
-          applyTrackingUpdate(message.payload?.data?.deliveryTrackingUpdated ?? null);
-          return;
-        }
-
-        if (message.type === 'ping') {
-          socket?.send(JSON.stringify({ type: 'pong' }));
-          return;
-        }
-
-        if (message.type === 'complete') {
-          socket?.close();
-        }
-      };
-
-      socket.onerror = () => {
-        socket?.close();
-      };
-
-      socket.onclose = () => {
-        if (disposed || isTerminal(tracking?.status)) {
-          setConnectionState('idle');
-          return;
-        }
-
+        applyTrackingUpdate(nextTracking);
+        setConnectionState('live');
+      } catch {
+        if (disposed) return;
         setConnectionState('reconnecting');
-        reconnectTimer = setTimeout(connect, 3000);
-      };
+      }
+      pollTimer = setTimeout(poll, 10000);
     };
 
-    connect();
+    void poll();
 
     return () => {
       disposed = true;
-      if (reconnectTimer) clearTimeout(reconnectTimer);
-      closeSocket();
+      if (pollTimer) clearTimeout(pollTimer);
     };
   }, [applyTrackingUpdate, authorization, orderId, tracking?.status]);
 
@@ -405,7 +295,7 @@ export function OrderTrackingView({
                 }`}
               >
                 {connectionState === 'live'
-                  ? 'Live updates'
+                  ? 'Auto refresh'
                   : connectionState === 'reconnecting'
                     ? 'Reconnecting'
                     : connectionState === 'connecting'

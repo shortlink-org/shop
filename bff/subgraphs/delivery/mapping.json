@@ -1,0 +1,215 @@
+{
+  "version": 1,
+  "service": "Delivery",
+  "operationMappings": [
+    {
+      "type": "OPERATION_TYPE_QUERY",
+      "original": "randomAddress",
+      "mapped": "QueryRandomAddress",
+      "request": "QueryRandomAddressRequest",
+      "response": "QueryRandomAddressResponse"
+    },
+    {
+      "type": "OPERATION_TYPE_QUERY",
+      "original": "deliveryTracking",
+      "mapped": "QueryDeliveryTracking",
+      "request": "QueryDeliveryTrackingRequest",
+      "response": "QueryDeliveryTrackingResponse"
+    }
+  ],
+  "entityMappings": [],
+  "typeFieldMappings": [
+    {
+      "type": "Query",
+      "fieldMappings": [
+        {
+          "original": "randomAddress",
+          "mapped": "random_address",
+          "argumentMappings": []
+        },
+        {
+          "original": "deliveryTracking",
+          "mapped": "delivery_tracking",
+          "argumentMappings": [
+            {
+              "original": "orderId",
+              "mapped": "order_id"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "QueryRandomAddressResponse",
+      "fieldMappings": [
+        {
+          "original": "randomAddress",
+          "mapped": "random_address",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "RandomAddressResponse",
+      "fieldMappings": [
+        {
+          "original": "address",
+          "mapped": "address",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "Address",
+      "fieldMappings": [
+        {
+          "original": "street",
+          "mapped": "street",
+          "argumentMappings": []
+        },
+        {
+          "original": "city",
+          "mapped": "city",
+          "argumentMappings": []
+        },
+        {
+          "original": "postalCode",
+          "mapped": "postal_code",
+          "argumentMappings": []
+        },
+        {
+          "original": "country",
+          "mapped": "country",
+          "argumentMappings": []
+        },
+        {
+          "original": "latitude",
+          "mapped": "latitude",
+          "argumentMappings": []
+        },
+        {
+          "original": "longitude",
+          "mapped": "longitude",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "QueryDeliveryTrackingResponse",
+      "fieldMappings": [
+        {
+          "original": "deliveryTracking",
+          "mapped": "delivery_tracking",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "DeliveryTracking",
+      "fieldMappings": [
+        {
+          "original": "orderId",
+          "mapped": "order_id",
+          "argumentMappings": []
+        },
+        {
+          "original": "packageId",
+          "mapped": "package_id",
+          "argumentMappings": []
+        },
+        {
+          "original": "status",
+          "mapped": "status",
+          "argumentMappings": []
+        },
+        {
+          "original": "courier",
+          "mapped": "courier",
+          "argumentMappings": []
+        },
+        {
+          "original": "estimatedMinutesRemaining",
+          "mapped": "estimated_minutes_remaining",
+          "argumentMappings": []
+        },
+        {
+          "original": "distanceKmRemaining",
+          "mapped": "distance_km_remaining",
+          "argumentMappings": []
+        },
+        {
+          "original": "estimatedArrivalAt",
+          "mapped": "estimated_arrival_at",
+          "argumentMappings": []
+        },
+        {
+          "original": "assignedAt",
+          "mapped": "assigned_at",
+          "argumentMappings": []
+        },
+        {
+          "original": "deliveredAt",
+          "mapped": "delivered_at",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "DeliveryCourier",
+      "fieldMappings": [
+        {
+          "original": "courierId",
+          "mapped": "courier_id",
+          "argumentMappings": []
+        },
+        {
+          "original": "name",
+          "mapped": "name",
+          "argumentMappings": []
+        },
+        {
+          "original": "phone",
+          "mapped": "phone",
+          "argumentMappings": []
+        },
+        {
+          "original": "transportType",
+          "mapped": "transport_type",
+          "argumentMappings": []
+        },
+        {
+          "original": "status",
+          "mapped": "status",
+          "argumentMappings": []
+        },
+        {
+          "original": "currentLocation",
+          "mapped": "current_location",
+          "argumentMappings": []
+        },
+        {
+          "original": "lastActiveAt",
+          "mapped": "last_active_at",
+          "argumentMappings": []
+        }
+      ]
+    },
+    {
+      "type": "DeliveryLocation",
+      "fieldMappings": [
+        {
+          "original": "latitude",
+          "mapped": "latitude",
+          "argumentMappings": []
+        },
+        {
+          "original": "longitude",
+          "mapped": "longitude",
+          "argumentMappings": []
+        }
+      ]
+    }
+  ],
+  "enumMappings": [],
+  "resolveMappings": []
+}

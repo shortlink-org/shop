@@ -425,3 +425,12 @@ export type ShopifyOrderTrackingPageOperation = {
     id: string;
   };
 };
+
+export type ShopifyDeliveryTrackingOperation = {
+  data: {
+    deliveryTracking?: DeliveryTrackingSummary | null;
+  };
+  variables: {
+    id: string;
+  };
+};

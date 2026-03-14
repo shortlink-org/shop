@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package shop.delivery.v1;
+
+option go_package = "github.com/shortlink-org/shop/delivery-graphql/pkg/generated/service/v1";
+
+import "google/protobuf/timestamp.proto";
+
+// Delivery subgraph Connect service (Cosmo federated contract)
+// Maps GraphQL Query/Mutation to RPCs.
+service Delivery {
+  // Query.randomAddress
+  rpc QueryRandomAddress(QueryRandomAddressRequest) returns (QueryRandomAddressResponse);
+  // Query.deliveryTracking
+  rpc QueryDeliveryTracking(QueryDeliveryTrackingRequest) returns (QueryDeliveryTrackingResponse);
+}
+
+message QueryRandomAddressRequest {}
+
+message QueryRandomAddressResponse {
+  RandomAddressResponse random_address = 1;
+}
+
+message QueryDeliveryTrackingRequest {
+  string order_id = 1;
+}
+
+message QueryDeliveryTrackingResponse {
+  DeliveryTracking delivery_tracking = 1;
+}
+
+message RandomAddressResponse {
+  Address address = 1;
+}
+
+message Address {
+  string street = 1;
+  string city = 2;
+  string postal_code = 3;
+  string country = 4;
+  double latitude = 5;
+  double longitude = 6;
+}
+
+message DeliveryLocation {
+  double latitude = 1;
+  double longitude = 2;
+}
+
+message DeliveryCourier {
+  string courier_id = 1;
+  string name = 2;
+  string phone = 3;
+  string transport_type = 4;
+  string status = 5;
+  DeliveryLocation current_location = 6;
+  google.protobuf.Timestamp last_active_at = 7;
+}
+
+message DeliveryTracking {
+  string order_id = 1;
+  string package_id = 2;
+  string status = 3;
+  DeliveryCourier courier = 4;
+  optional int32 estimated_minutes_remaining = 5;
+  optional double distance_km_remaining = 6;
+  google.protobuf.Timestamp estimated_arrival_at = 7;
+  google.protobuf.Timestamp assigned_at = 8;
+  google.protobuf.Timestamp delivered_at = 9;
+}

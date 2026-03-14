@@ -1,54 +1,49 @@
 # Delivery GraphQL Subgraph
 
-GraphQL subgraph for the Delivery service. It currently proxies the gRPC API to GraphQL via [Tailcall](https://tailcall.run/) (Node). The target approach is the same pattern as **oms-graphql** and **admin-graphql**: a Go/Connect subgraph with typed calls to the Delivery gRPC API. Migration plan: [docs/MIGRATION-TO-CONNECT.md](./docs/MIGRATION-TO-CONNECT.md).
+`delivery-graphql` is a Go/Connect federation subgraph for the Delivery service. It exposes the Cosmo subgraph contract over gRPC on port `4013` and translates those requests to the Delivery backend gRPC API.
 
 ## Architecture
 
-```
-admin-ui → BFF (Cosmo Router) → delivery-graphql → Delivery Service (gRPC)
+```text
+admin-ui / ui -> BFF (Cosmo Router) -> delivery-graphql (Go/Connect) -> Delivery service (gRPC)
 ```
 
 ## Running
 
 ```bash
-# Install dependencies
-pnpm install
+# Generate/update Go stubs
+buf generate
 
-# Start (port 8080)
-pnpm start
+# Start the subgraph
+go run ./cmd/service
 
-# Development with hot-reload
-pnpm dev
-
-# Validate configuration
-pnpm check
+# Run tests
+go test ./...
 ```
 
 ## Environment variables
 
-| Variable           | Description              | Default                    |
-|--------------------|--------------------------|----------------------------|
-| `DELIVERY_GRPC_URL` | Delivery gRPC service URL | `http://localhost:50051`   |
+| Variable | Description | Default |
+| --- | --- | --- |
+| `LISTEN_ADDR` | Connect/gRPC listen address | `0.0.0.0:4013` |
+| `DELIVERY_GRPC_URL` | Delivery backend gRPC target | `localhost:50052` |
 
-## GraphQL API
+## Subgraph contract
 
-### Queries
+The federated contract is defined in:
 
-- `couriers(filter, pagination)` — list couriers with filtering and pagination
-- `courier(id, includeLocation)` — get a courier by ID
-- `courierDeliveries(courierId, limit)` — courier delivery history
+- `pkg/graph/schema.graphql`
+- `pkg/proto/service/v1/service.proto`
+- `pkg/proto/service/v1/mapping.json`
 
-### Mutations
+The currently exposed query fields are:
 
-- `registerCourier(input)` — register a courier
-- `activateCourier(id)` — activate courier
-- `deactivateCourier(id, reason)` — deactivate courier
-- `archiveCourier(id, reason)` — archive courier
-- `updateCourierContact(id, input)` — update contact info
-- `updateCourierSchedule(id, input)` — update schedule
-- `changeCourierTransport(id, transportType)` — change transport type
+- `randomAddress`
+- `deliveryTracking(orderId: String!)`
+
+Delivery tracking refreshes are now expected to come from repeated snapshot queries via the BFF rather than a GraphQL subscription endpoint in this service.
 
 ## References
 
-- [Tailcall Documentation](https://tailcall.run/docs/)
-- Delivery Service proto: `delivery/src/infrastructure/rpc/delivery.proto`
+- Migration notes: `docs/MIGRATION-TO-CONNECT.md`
+- Delivery backend proto: `delivery/src/infrastructure/rpc/delivery.proto`
