@@ -8,13 +8,13 @@ require (
 	github.com/ThreeDotsLabs/watermill-kafka/v3 v3.1.2
 	github.com/dgraph-io/ristretto/v2 v2.4.0
 	github.com/google/wire v0.7.0
-	github.com/shortlink-org/go-sdk/config v0.0.0-20260307190635-c49239be411f
-	github.com/shortlink-org/go-sdk/context v0.0.0-20260307190635-c49239be411f
-	github.com/shortlink-org/go-sdk/flags v0.0.0-20260307190635-c49239be411f
-	github.com/shortlink-org/go-sdk/graceful_shutdown v0.0.0-20260307190635-c49239be411f
-	github.com/shortlink-org/go-sdk/logger v0.0.0-20260307190635-c49239be411f
-	github.com/shortlink-org/go-sdk/observability v0.0.0-20260307190635-c49239be411f
-	github.com/shortlink-org/go-sdk/watermill v0.0.0-20260307190635-c49239be411f
+	github.com/shortlink-org/go-sdk/config v0.0.0-20260307200444-15cb7da01fe0
+	github.com/shortlink-org/go-sdk/context v0.0.0-20260307200444-15cb7da01fe0
+	github.com/shortlink-org/go-sdk/flags v0.0.0-20260307200444-15cb7da01fe0
+	github.com/shortlink-org/go-sdk/graceful_shutdown v0.0.0-20260307200444-15cb7da01fe0
+	github.com/shortlink-org/go-sdk/logger v0.0.0-20260307200444-15cb7da01fe0
+	github.com/shortlink-org/go-sdk/observability v0.0.0-20260307200444-15cb7da01fe0
+	github.com/shortlink-org/go-sdk/watermill v0.0.0-20260307200444-15cb7da01fe0
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.40.0
@@ -53,7 +53,7 @@ require (
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
-	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
+	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/google/pprof v0.0.0-20251213031049-b05bdaca462f // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/grafana/otel-profiling-go v0.5.1 // indirect
@@ -70,7 +70,7 @@ require (
 	github.com/jcmturner/gokrb5/v8 v8.4.4 // indirect
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
 	github.com/klauspost/compress v1.18.4 // indirect
-	github.com/launchdarkly/eventsource v1.10.0 // indirect
+	github.com/launchdarkly/eventsource v1.11.0 // indirect
 	github.com/lithammer/shortuuid/v3 v3.0.7 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/magiconair/properties v1.8.10 // indirect
@@ -97,7 +97,7 @@ require (
 	github.com/prometheus/otlptranslator v1.0.0 // indirect
 	github.com/prometheus/procfs v0.19.2 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 // indirect
-	github.com/sagikazarmark/locafero v0.11.0 // indirect
+	github.com/sagikazarmark/locafero v0.12.0 // indirect
 	github.com/shirou/gopsutil/v4 v4.25.6 // indirect
 	github.com/shortlink-org/go-sdk/http v0.0.0-20260307190635-c49239be411f // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
@@ -107,7 +107,7 @@ require (
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/spf13/cobra v1.10.2 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
-	github.com/stretchr/objx v0.5.2 // indirect
+	github.com/stretchr/objx v0.5.3 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
@@ -129,8 +129,8 @@ require (
 	golang.org/x/crypto v0.48.0 // indirect
 	golang.org/x/mod v0.33.0 // indirect
 	golang.org/x/net v0.51.0 // indirect
-	golang.org/x/sys v0.41.0 // indirect
-	golang.org/x/text v0.34.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
+	golang.org/x/text v0.35.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260209200024-4cfbd4190f57 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260226221140-a57be14db171 // indirect
 	google.golang.org/grpc v1.79.2 // indirect

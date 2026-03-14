@@ -3,7 +3,7 @@
 ARG BUILDKIT_SBOM_SCAN_STAGE=true
 ARG BUILDKIT_SBOM_SCAN_CONTEXT=true
 
-FROM --platform=$BUILDPLATFORM golang:1.26.1-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.25.6-alpine AS builder
 
 ARG TARGETOS
 ARG TARGETARCH

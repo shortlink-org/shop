@@ -106,12 +106,12 @@ websocket:
       export_token:
         enabled: true
         header_key: Authorization
-    forward_upgrade_headers:
-      enabled: true
-      allow_list:
-        - Authorization
-        - traceparent
-        - trace-id
+  forward_upgrade_headers:
+    enabled: true
+    allow_list:
+      - Authorization
+      - traceparent
+      - trace-id
 
 # Telemetry configuration
 telemetry:
