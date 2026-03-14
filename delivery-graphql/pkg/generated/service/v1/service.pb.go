@@ -9,6 +9,7 @@ package v1
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -101,6 +102,94 @@ func (x *QueryRandomAddressResponse) GetRandomAddress() *RandomAddressResponse {
 	return nil
 }
 
+type QueryDeliveryTrackingRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	OrderId       string                 `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *QueryDeliveryTrackingRequest) Reset() {
+	*x = QueryDeliveryTrackingRequest{}
+	mi := &file_service_v1_service_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *QueryDeliveryTrackingRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryDeliveryTrackingRequest) ProtoMessage() {}
+
+func (x *QueryDeliveryTrackingRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_service_v1_service_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use QueryDeliveryTrackingRequest.ProtoReflect.Descriptor instead.
+func (*QueryDeliveryTrackingRequest) Descriptor() ([]byte, []int) {
+	return file_service_v1_service_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *QueryDeliveryTrackingRequest) GetOrderId() string {
+	if x != nil {
+		return x.OrderId
+	}
+	return ""
+}
+
+type QueryDeliveryTrackingResponse struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	DeliveryTracking *DeliveryTracking      `protobuf:"bytes,1,opt,name=delivery_tracking,json=deliveryTracking,proto3" json:"delivery_tracking,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *QueryDeliveryTrackingResponse) Reset() {
+	*x = QueryDeliveryTrackingResponse{}
+	mi := &file_service_v1_service_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *QueryDeliveryTrackingResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryDeliveryTrackingResponse) ProtoMessage() {}
+
+func (x *QueryDeliveryTrackingResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_service_v1_service_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use QueryDeliveryTrackingResponse.ProtoReflect.Descriptor instead.
+func (*QueryDeliveryTrackingResponse) Descriptor() ([]byte, []int) {
+	return file_service_v1_service_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *QueryDeliveryTrackingResponse) GetDeliveryTracking() *DeliveryTracking {
+	if x != nil {
+		return x.DeliveryTracking
+	}
+	return nil
+}
+
 type RandomAddressResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Address       *Address               `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
@@ -110,7 +199,7 @@ type RandomAddressResponse struct {
 
 func (x *RandomAddressResponse) Reset() {
 	*x = RandomAddressResponse{}
-	mi := &file_service_v1_service_proto_msgTypes[2]
+	mi := &file_service_v1_service_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -122,7 +211,7 @@ func (x *RandomAddressResponse) String() string {
 func (*RandomAddressResponse) ProtoMessage() {}
 
 func (x *RandomAddressResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[2]
+	mi := &file_service_v1_service_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -135,7 +224,7 @@ func (x *RandomAddressResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RandomAddressResponse.ProtoReflect.Descriptor instead.
 func (*RandomAddressResponse) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{2}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *RandomAddressResponse) GetAddress() *Address {
@@ -159,7 +248,7 @@ type Address struct {
 
 func (x *Address) Reset() {
 	*x = Address{}
-	mi := &file_service_v1_service_proto_msgTypes[3]
+	mi := &file_service_v1_service_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -171,7 +260,7 @@ func (x *Address) String() string {
 func (*Address) ProtoMessage() {}
 
 func (x *Address) ProtoReflect() protoreflect.Message {
-	mi := &file_service_v1_service_proto_msgTypes[3]
+	mi := &file_service_v1_service_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -184,7 +273,7 @@ func (x *Address) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Address.ProtoReflect.Descriptor instead.
 func (*Address) Descriptor() ([]byte, []int) {
-	return file_service_v1_service_proto_rawDescGZIP(), []int{3}
+	return file_service_v1_service_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *Address) GetStreet() string {
@@ -229,14 +318,270 @@ func (x *Address) GetLongitude() float64 {
 	return 0
 }
 
+type DeliveryLocation struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Latitude      float64                `protobuf:"fixed64,1,opt,name=latitude,proto3" json:"latitude,omitempty"`
+	Longitude     float64                `protobuf:"fixed64,2,opt,name=longitude,proto3" json:"longitude,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeliveryLocation) Reset() {
+	*x = DeliveryLocation{}
+	mi := &file_service_v1_service_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeliveryLocation) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeliveryLocation) ProtoMessage() {}
+
+func (x *DeliveryLocation) ProtoReflect() protoreflect.Message {
+	mi := &file_service_v1_service_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeliveryLocation.ProtoReflect.Descriptor instead.
+func (*DeliveryLocation) Descriptor() ([]byte, []int) {
+	return file_service_v1_service_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *DeliveryLocation) GetLatitude() float64 {
+	if x != nil {
+		return x.Latitude
+	}
+	return 0
+}
+
+func (x *DeliveryLocation) GetLongitude() float64 {
+	if x != nil {
+		return x.Longitude
+	}
+	return 0
+}
+
+type DeliveryCourier struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	CourierId       string                 `protobuf:"bytes,1,opt,name=courier_id,json=courierId,proto3" json:"courier_id,omitempty"`
+	Name            string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Phone           string                 `protobuf:"bytes,3,opt,name=phone,proto3" json:"phone,omitempty"`
+	TransportType   string                 `protobuf:"bytes,4,opt,name=transport_type,json=transportType,proto3" json:"transport_type,omitempty"`
+	Status          string                 `protobuf:"bytes,5,opt,name=status,proto3" json:"status,omitempty"`
+	CurrentLocation *DeliveryLocation      `protobuf:"bytes,6,opt,name=current_location,json=currentLocation,proto3" json:"current_location,omitempty"`
+	LastActiveAt    *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=last_active_at,json=lastActiveAt,proto3" json:"last_active_at,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *DeliveryCourier) Reset() {
+	*x = DeliveryCourier{}
+	mi := &file_service_v1_service_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeliveryCourier) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeliveryCourier) ProtoMessage() {}
+
+func (x *DeliveryCourier) ProtoReflect() protoreflect.Message {
+	mi := &file_service_v1_service_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeliveryCourier.ProtoReflect.Descriptor instead.
+func (*DeliveryCourier) Descriptor() ([]byte, []int) {
+	return file_service_v1_service_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *DeliveryCourier) GetCourierId() string {
+	if x != nil {
+		return x.CourierId
+	}
+	return ""
+}
+
+func (x *DeliveryCourier) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *DeliveryCourier) GetPhone() string {
+	if x != nil {
+		return x.Phone
+	}
+	return ""
+}
+
+func (x *DeliveryCourier) GetTransportType() string {
+	if x != nil {
+		return x.TransportType
+	}
+	return ""
+}
+
+func (x *DeliveryCourier) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *DeliveryCourier) GetCurrentLocation() *DeliveryLocation {
+	if x != nil {
+		return x.CurrentLocation
+	}
+	return nil
+}
+
+func (x *DeliveryCourier) GetLastActiveAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.LastActiveAt
+	}
+	return nil
+}
+
+type DeliveryTracking struct {
+	state                     protoimpl.MessageState `protogen:"open.v1"`
+	OrderId                   string                 `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
+	PackageId                 string                 `protobuf:"bytes,2,opt,name=package_id,json=packageId,proto3" json:"package_id,omitempty"`
+	Status                    string                 `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
+	Courier                   *DeliveryCourier       `protobuf:"bytes,4,opt,name=courier,proto3" json:"courier,omitempty"`
+	EstimatedMinutesRemaining *int32                 `protobuf:"varint,5,opt,name=estimated_minutes_remaining,json=estimatedMinutesRemaining,proto3,oneof" json:"estimated_minutes_remaining,omitempty"`
+	DistanceKmRemaining       *float64               `protobuf:"fixed64,6,opt,name=distance_km_remaining,json=distanceKmRemaining,proto3,oneof" json:"distance_km_remaining,omitempty"`
+	EstimatedArrivalAt        *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=estimated_arrival_at,json=estimatedArrivalAt,proto3" json:"estimated_arrival_at,omitempty"`
+	AssignedAt                *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=assigned_at,json=assignedAt,proto3" json:"assigned_at,omitempty"`
+	DeliveredAt               *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=delivered_at,json=deliveredAt,proto3" json:"delivered_at,omitempty"`
+	unknownFields             protoimpl.UnknownFields
+	sizeCache                 protoimpl.SizeCache
+}
+
+func (x *DeliveryTracking) Reset() {
+	*x = DeliveryTracking{}
+	mi := &file_service_v1_service_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeliveryTracking) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeliveryTracking) ProtoMessage() {}
+
+func (x *DeliveryTracking) ProtoReflect() protoreflect.Message {
+	mi := &file_service_v1_service_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeliveryTracking.ProtoReflect.Descriptor instead.
+func (*DeliveryTracking) Descriptor() ([]byte, []int) {
+	return file_service_v1_service_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *DeliveryTracking) GetOrderId() string {
+	if x != nil {
+		return x.OrderId
+	}
+	return ""
+}
+
+func (x *DeliveryTracking) GetPackageId() string {
+	if x != nil {
+		return x.PackageId
+	}
+	return ""
+}
+
+func (x *DeliveryTracking) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *DeliveryTracking) GetCourier() *DeliveryCourier {
+	if x != nil {
+		return x.Courier
+	}
+	return nil
+}
+
+func (x *DeliveryTracking) GetEstimatedMinutesRemaining() int32 {
+	if x != nil && x.EstimatedMinutesRemaining != nil {
+		return *x.EstimatedMinutesRemaining
+	}
+	return 0
+}
+
+func (x *DeliveryTracking) GetDistanceKmRemaining() float64 {
+	if x != nil && x.DistanceKmRemaining != nil {
+		return *x.DistanceKmRemaining
+	}
+	return 0
+}
+
+func (x *DeliveryTracking) GetEstimatedArrivalAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.EstimatedArrivalAt
+	}
+	return nil
+}
+
+func (x *DeliveryTracking) GetAssignedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.AssignedAt
+	}
+	return nil
+}
+
+func (x *DeliveryTracking) GetDeliveredAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.DeliveredAt
+	}
+	return nil
+}
+
 var File_service_v1_service_proto protoreflect.FileDescriptor
 
 const file_service_v1_service_proto_rawDesc = "" +
 	"\n" +
-	"\x18service/v1/service.proto\x12\x10shop.delivery.v1\"\x1b\n" +
+	"\x18service/v1/service.proto\x12\x10shop.delivery.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x1b\n" +
 	"\x19QueryRandomAddressRequest\"l\n" +
 	"\x1aQueryRandomAddressResponse\x12N\n" +
-	"\x0erandom_address\x18\x01 \x01(\v2'.shop.delivery.v1.RandomAddressResponseR\rrandomAddress\"L\n" +
+	"\x0erandom_address\x18\x01 \x01(\v2'.shop.delivery.v1.RandomAddressResponseR\rrandomAddress\"9\n" +
+	"\x1cQueryDeliveryTrackingRequest\x12\x19\n" +
+	"\border_id\x18\x01 \x01(\tR\aorderId\"p\n" +
+	"\x1dQueryDeliveryTrackingResponse\x12O\n" +
+	"\x11delivery_tracking\x18\x01 \x01(\v2\".shop.delivery.v1.DeliveryTrackingR\x10deliveryTracking\"L\n" +
 	"\x15RandomAddressResponse\x123\n" +
 	"\aaddress\x18\x01 \x01(\v2\x19.shop.delivery.v1.AddressR\aaddress\"\xaa\x01\n" +
 	"\aAddress\x12\x16\n" +
@@ -246,9 +591,36 @@ const file_service_v1_service_proto_rawDesc = "" +
 	"postalCode\x12\x18\n" +
 	"\acountry\x18\x04 \x01(\tR\acountry\x12\x1a\n" +
 	"\blatitude\x18\x05 \x01(\x01R\blatitude\x12\x1c\n" +
-	"\tlongitude\x18\x06 \x01(\x01R\tlongitude2{\n" +
+	"\tlongitude\x18\x06 \x01(\x01R\tlongitude\"L\n" +
+	"\x10DeliveryLocation\x12\x1a\n" +
+	"\blatitude\x18\x01 \x01(\x01R\blatitude\x12\x1c\n" +
+	"\tlongitude\x18\x02 \x01(\x01R\tlongitude\"\xaa\x02\n" +
+	"\x0fDeliveryCourier\x12\x1d\n" +
+	"\n" +
+	"courier_id\x18\x01 \x01(\tR\tcourierId\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +
+	"\x05phone\x18\x03 \x01(\tR\x05phone\x12%\n" +
+	"\x0etransport_type\x18\x04 \x01(\tR\rtransportType\x12\x16\n" +
+	"\x06status\x18\x05 \x01(\tR\x06status\x12M\n" +
+	"\x10current_location\x18\x06 \x01(\v2\".shop.delivery.v1.DeliveryLocationR\x0fcurrentLocation\x12@\n" +
+	"\x0elast_active_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\flastActiveAt\"\xa3\x04\n" +
+	"\x10DeliveryTracking\x12\x19\n" +
+	"\border_id\x18\x01 \x01(\tR\aorderId\x12\x1d\n" +
+	"\n" +
+	"package_id\x18\x02 \x01(\tR\tpackageId\x12\x16\n" +
+	"\x06status\x18\x03 \x01(\tR\x06status\x12;\n" +
+	"\acourier\x18\x04 \x01(\v2!.shop.delivery.v1.DeliveryCourierR\acourier\x12C\n" +
+	"\x1bestimated_minutes_remaining\x18\x05 \x01(\x05H\x00R\x19estimatedMinutesRemaining\x88\x01\x01\x127\n" +
+	"\x15distance_km_remaining\x18\x06 \x01(\x01H\x01R\x13distanceKmRemaining\x88\x01\x01\x12L\n" +
+	"\x14estimated_arrival_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\x12estimatedArrivalAt\x12;\n" +
+	"\vassigned_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"assignedAt\x12=\n" +
+	"\fdelivered_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\vdeliveredAtB\x1e\n" +
+	"\x1c_estimated_minutes_remainingB\x18\n" +
+	"\x16_distance_km_remaining2\xf5\x01\n" +
 	"\bDelivery\x12o\n" +
-	"\x12QueryRandomAddress\x12+.shop.delivery.v1.QueryRandomAddressRequest\x1a,.shop.delivery.v1.QueryRandomAddressResponseB\xcf\x01\n" +
+	"\x12QueryRandomAddress\x12+.shop.delivery.v1.QueryRandomAddressRequest\x1a,.shop.delivery.v1.QueryRandomAddressResponse\x12x\n" +
+	"\x15QueryDeliveryTracking\x12..shop.delivery.v1.QueryDeliveryTrackingRequest\x1a/.shop.delivery.v1.QueryDeliveryTrackingResponseB\xcf\x01\n" +
 	"\x14com.shop.delivery.v1B\fServiceProtoP\x01ZGgithub.com/shortlink-org/shop/delivery-graphql/pkg/generated/service/v1\xa2\x02\x03SDX\xaa\x02\x10Shop.Delivery.V1\xca\x02\x10Shop\\Delivery\\V1\xe2\x02\x1cShop\\Delivery\\V1\\GPBMetadata\xea\x02\x12Shop::Delivery::V1b\x06proto3"
 
 var (
@@ -263,23 +635,38 @@ func file_service_v1_service_proto_rawDescGZIP() []byte {
 	return file_service_v1_service_proto_rawDescData
 }
 
-var file_service_v1_service_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_service_v1_service_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_service_v1_service_proto_goTypes = []any{
-	(*QueryRandomAddressRequest)(nil),  // 0: shop.delivery.v1.QueryRandomAddressRequest
-	(*QueryRandomAddressResponse)(nil), // 1: shop.delivery.v1.QueryRandomAddressResponse
-	(*RandomAddressResponse)(nil),      // 2: shop.delivery.v1.RandomAddressResponse
-	(*Address)(nil),                    // 3: shop.delivery.v1.Address
+	(*QueryRandomAddressRequest)(nil),     // 0: shop.delivery.v1.QueryRandomAddressRequest
+	(*QueryRandomAddressResponse)(nil),    // 1: shop.delivery.v1.QueryRandomAddressResponse
+	(*QueryDeliveryTrackingRequest)(nil),  // 2: shop.delivery.v1.QueryDeliveryTrackingRequest
+	(*QueryDeliveryTrackingResponse)(nil), // 3: shop.delivery.v1.QueryDeliveryTrackingResponse
+	(*RandomAddressResponse)(nil),         // 4: shop.delivery.v1.RandomAddressResponse
+	(*Address)(nil),                       // 5: shop.delivery.v1.Address
+	(*DeliveryLocation)(nil),              // 6: shop.delivery.v1.DeliveryLocation
+	(*DeliveryCourier)(nil),               // 7: shop.delivery.v1.DeliveryCourier
+	(*DeliveryTracking)(nil),              // 8: shop.delivery.v1.DeliveryTracking
+	(*timestamppb.Timestamp)(nil),         // 9: google.protobuf.Timestamp
 }
 var file_service_v1_service_proto_depIdxs = []int32{
-	2, // 0: shop.delivery.v1.QueryRandomAddressResponse.random_address:type_name -> shop.delivery.v1.RandomAddressResponse
-	3, // 1: shop.delivery.v1.RandomAddressResponse.address:type_name -> shop.delivery.v1.Address
-	0, // 2: shop.delivery.v1.Delivery.QueryRandomAddress:input_type -> shop.delivery.v1.QueryRandomAddressRequest
-	1, // 3: shop.delivery.v1.Delivery.QueryRandomAddress:output_type -> shop.delivery.v1.QueryRandomAddressResponse
-	3, // [3:4] is the sub-list for method output_type
-	2, // [2:3] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	4,  // 0: shop.delivery.v1.QueryRandomAddressResponse.random_address:type_name -> shop.delivery.v1.RandomAddressResponse
+	8,  // 1: shop.delivery.v1.QueryDeliveryTrackingResponse.delivery_tracking:type_name -> shop.delivery.v1.DeliveryTracking
+	5,  // 2: shop.delivery.v1.RandomAddressResponse.address:type_name -> shop.delivery.v1.Address
+	6,  // 3: shop.delivery.v1.DeliveryCourier.current_location:type_name -> shop.delivery.v1.DeliveryLocation
+	9,  // 4: shop.delivery.v1.DeliveryCourier.last_active_at:type_name -> google.protobuf.Timestamp
+	7,  // 5: shop.delivery.v1.DeliveryTracking.courier:type_name -> shop.delivery.v1.DeliveryCourier
+	9,  // 6: shop.delivery.v1.DeliveryTracking.estimated_arrival_at:type_name -> google.protobuf.Timestamp
+	9,  // 7: shop.delivery.v1.DeliveryTracking.assigned_at:type_name -> google.protobuf.Timestamp
+	9,  // 8: shop.delivery.v1.DeliveryTracking.delivered_at:type_name -> google.protobuf.Timestamp
+	0,  // 9: shop.delivery.v1.Delivery.QueryRandomAddress:input_type -> shop.delivery.v1.QueryRandomAddressRequest
+	2,  // 10: shop.delivery.v1.Delivery.QueryDeliveryTracking:input_type -> shop.delivery.v1.QueryDeliveryTrackingRequest
+	1,  // 11: shop.delivery.v1.Delivery.QueryRandomAddress:output_type -> shop.delivery.v1.QueryRandomAddressResponse
+	3,  // 12: shop.delivery.v1.Delivery.QueryDeliveryTracking:output_type -> shop.delivery.v1.QueryDeliveryTrackingResponse
+	11, // [11:13] is the sub-list for method output_type
+	9,  // [9:11] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_service_v1_service_proto_init() }
@@ -287,13 +674,14 @@ func file_service_v1_service_proto_init() {
 	if File_service_v1_service_proto != nil {
 		return
 	}
+	file_service_v1_service_proto_msgTypes[8].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_service_v1_service_proto_rawDesc), len(file_service_v1_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

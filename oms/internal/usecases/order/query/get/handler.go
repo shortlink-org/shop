@@ -49,6 +49,10 @@ func (h *Handler) Handle(ctx context.Context, q Query) (Result, error) {
 		return nil, err
 	}
 
+	if q.CustomerID != nil && order.GetCustomerId() != *q.CustomerID {
+		return nil, ports.ErrNotFound
+	}
+
 	// Commit transaction (read-only)
 	if err := h.uow.Commit(ctx); err != nil {
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)

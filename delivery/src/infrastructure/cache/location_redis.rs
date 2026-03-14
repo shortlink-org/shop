@@ -219,11 +219,15 @@ impl LocationCache for RedisLocationCache {
 mod tests {
     use super::*;
     use chrono::Utc;
-    use testcontainers::{runners::AsyncRunner, ContainerAsync, ImageExt};
+    use testcontainers::{runners::AsyncRunner, ImageExt};
     use testcontainers_modules::redis::Redis;
 
-    async fn setup_redis() -> (ContainerAsync<Redis>, RedisLocationCache) {
-        let container = Redis::default().with_tag("7-alpine").start().await.unwrap();
+    use crate::test_support::ManagedAsyncContainer;
+
+    async fn setup_redis() -> (ManagedAsyncContainer<Redis>, RedisLocationCache) {
+        let container = ManagedAsyncContainer::new(
+            Redis::default().with_tag("7-alpine").start().await.unwrap(),
+        );
         let port = container.get_host_port_ipv4(6379).await.unwrap();
         let url = format!("redis://localhost:{}", port);
 

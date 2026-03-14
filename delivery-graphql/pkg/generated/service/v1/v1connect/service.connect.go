@@ -36,12 +36,17 @@ const (
 	// DeliveryQueryRandomAddressProcedure is the fully-qualified name of the Delivery's
 	// QueryRandomAddress RPC.
 	DeliveryQueryRandomAddressProcedure = "/shop.delivery.v1.Delivery/QueryRandomAddress"
+	// DeliveryQueryDeliveryTrackingProcedure is the fully-qualified name of the Delivery's
+	// QueryDeliveryTracking RPC.
+	DeliveryQueryDeliveryTrackingProcedure = "/shop.delivery.v1.Delivery/QueryDeliveryTracking"
 )
 
 // DeliveryClient is a client for the shop.delivery.v1.Delivery service.
 type DeliveryClient interface {
 	// Query.randomAddress
 	QueryRandomAddress(context.Context, *connect.Request[v1.QueryRandomAddressRequest]) (*connect.Response[v1.QueryRandomAddressResponse], error)
+	// Query.deliveryTracking
+	QueryDeliveryTracking(context.Context, *connect.Request[v1.QueryDeliveryTrackingRequest]) (*connect.Response[v1.QueryDeliveryTrackingResponse], error)
 }
 
 // NewDeliveryClient constructs a client for the shop.delivery.v1.Delivery service. By default, it
@@ -61,12 +66,19 @@ func NewDeliveryClient(httpClient connect.HTTPClient, baseURL string, opts ...co
 			connect.WithSchema(deliveryMethods.ByName("QueryRandomAddress")),
 			connect.WithClientOptions(opts...),
 		),
+		queryDeliveryTracking: connect.NewClient[v1.QueryDeliveryTrackingRequest, v1.QueryDeliveryTrackingResponse](
+			httpClient,
+			baseURL+DeliveryQueryDeliveryTrackingProcedure,
+			connect.WithSchema(deliveryMethods.ByName("QueryDeliveryTracking")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // deliveryClient implements DeliveryClient.
 type deliveryClient struct {
-	queryRandomAddress *connect.Client[v1.QueryRandomAddressRequest, v1.QueryRandomAddressResponse]
+	queryRandomAddress    *connect.Client[v1.QueryRandomAddressRequest, v1.QueryRandomAddressResponse]
+	queryDeliveryTracking *connect.Client[v1.QueryDeliveryTrackingRequest, v1.QueryDeliveryTrackingResponse]
 }
 
 // QueryRandomAddress calls shop.delivery.v1.Delivery.QueryRandomAddress.
@@ -74,10 +86,17 @@ func (c *deliveryClient) QueryRandomAddress(ctx context.Context, req *connect.Re
 	return c.queryRandomAddress.CallUnary(ctx, req)
 }
 
+// QueryDeliveryTracking calls shop.delivery.v1.Delivery.QueryDeliveryTracking.
+func (c *deliveryClient) QueryDeliveryTracking(ctx context.Context, req *connect.Request[v1.QueryDeliveryTrackingRequest]) (*connect.Response[v1.QueryDeliveryTrackingResponse], error) {
+	return c.queryDeliveryTracking.CallUnary(ctx, req)
+}
+
 // DeliveryHandler is an implementation of the shop.delivery.v1.Delivery service.
 type DeliveryHandler interface {
 	// Query.randomAddress
 	QueryRandomAddress(context.Context, *connect.Request[v1.QueryRandomAddressRequest]) (*connect.Response[v1.QueryRandomAddressResponse], error)
+	// Query.deliveryTracking
+	QueryDeliveryTracking(context.Context, *connect.Request[v1.QueryDeliveryTrackingRequest]) (*connect.Response[v1.QueryDeliveryTrackingResponse], error)
 }
 
 // NewDeliveryHandler builds an HTTP handler from the service implementation. It returns the path on
@@ -93,10 +112,18 @@ func NewDeliveryHandler(svc DeliveryHandler, opts ...connect.HandlerOption) (str
 		connect.WithSchema(deliveryMethods.ByName("QueryRandomAddress")),
 		connect.WithHandlerOptions(opts...),
 	)
+	deliveryQueryDeliveryTrackingHandler := connect.NewUnaryHandler(
+		DeliveryQueryDeliveryTrackingProcedure,
+		svc.QueryDeliveryTracking,
+		connect.WithSchema(deliveryMethods.ByName("QueryDeliveryTracking")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/shop.delivery.v1.Delivery/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case DeliveryQueryRandomAddressProcedure:
 			deliveryQueryRandomAddressHandler.ServeHTTP(w, r)
+		case DeliveryQueryDeliveryTrackingProcedure:
+			deliveryQueryDeliveryTrackingHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -108,4 +135,8 @@ type UnimplementedDeliveryHandler struct{}
 
 func (UnimplementedDeliveryHandler) QueryRandomAddress(context.Context, *connect.Request[v1.QueryRandomAddressRequest]) (*connect.Response[v1.QueryRandomAddressResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("shop.delivery.v1.Delivery.QueryRandomAddress is not implemented"))
+}
+
+func (UnimplementedDeliveryHandler) QueryDeliveryTracking(context.Context, *connect.Request[v1.QueryDeliveryTrackingRequest]) (*connect.Response[v1.QueryDeliveryTrackingResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("shop.delivery.v1.Delivery.QueryDeliveryTracking is not implemented"))
 }

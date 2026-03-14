@@ -13,12 +13,14 @@ use tokio::sync::broadcast;
 use tracing::{error, info};
 use uuid::Uuid;
 
+use crate::domain::model::package::PackageId;
 use crate::domain::model::package::PackageStatus;
 use crate::domain::model::vo::location::Location;
 use crate::domain::ports::{
     CommandHandlerWithResult, CourierCache, CourierRepository, GeolocationService,
     PackageRepository,
 };
+use crate::infrastructure::messaging::RedisTrackingPubSub;
 use crate::usecases::package::command::{
     deliver_order, pick_up_order, DeliverOrderError, DeliverOrderHandler, PickUpOrderError,
     PickUpOrderHandler,
@@ -119,6 +121,7 @@ where
     courier_cache: Arc<C>,
     package_repo: Arc<P>,
     geolocation_service: Arc<G>,
+    tracking_pubsub: Arc<RedisTrackingPubSub>,
     config: EmulationConsumerConfig,
     shutdown_rx: broadcast::Receiver<()>,
 }
@@ -137,6 +140,7 @@ where
         courier_cache: Arc<C>,
         package_repo: Arc<P>,
         geolocation_service: Arc<G>,
+        tracking_pubsub: Arc<RedisTrackingPubSub>,
         shutdown_rx: broadcast::Receiver<()>,
     ) -> Result<Self, String> {
         let consumer: StreamConsumer = ClientConfig::new()
@@ -165,6 +169,7 @@ where
             courier_cache,
             package_repo,
             geolocation_service,
+            tracking_pubsub,
             config,
             shutdown_rx,
         })
@@ -237,6 +242,7 @@ where
             .await
         {
             Ok(_) => {
+                self.notify_tracking_for_package(package_id).await;
                 info!(package_id = %package_id, courier_id = %courier_id, "Processed pickup event from courier-emulation");
                 Ok(())
             }
@@ -286,6 +292,7 @@ where
 
         match handler.handle(cmd).await {
             Ok(_) => {
+                self.notify_tracking_for_package(package_id).await;
                 info!(package_id = %package_id, courier_id = %courier_id, "Processed delivery event from courier-emulation");
                 Ok(())
             }
@@ -300,6 +307,22 @@ where
                 Ok(())
             }
             Err(err) => Err(format!("delivery command failed: {err}")),
+        }
+    }
+
+    async fn notify_tracking_for_package(&self, package_id: Uuid) {
+        if let Ok(Some(package)) = self
+            .package_repo
+            .find_by_id(PackageId::from_uuid(package_id))
+            .await
+        {
+            if let Err(err) = self
+                .tracking_pubsub
+                .publish_order_update(package.order_id())
+                .await
+            {
+                error!(order_id = %package.order_id(), error = %err, "Failed to publish tracking update");
+            }
         }
     }
 }

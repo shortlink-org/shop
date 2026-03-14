@@ -8,6 +8,7 @@ use chrono::{DateTime, Utc};
 use prost_types::Timestamp;
 use tonic::{Response, Status};
 use tracing::{error, info};
+use uuid::Uuid;
 
 use crate::di::AppState;
 use crate::domain::model::package::{PackageStatus, Priority};
@@ -69,6 +70,10 @@ fn datetime_to_timestamp(dt: DateTime<Utc>) -> Timestamp {
         seconds: dt.timestamp(),
         nanos: dt.timestamp_subsec_nanos() as i32,
     }
+}
+
+async fn publish_tracking_update_for_package(state: &Arc<AppState>, package_id: Uuid) {
+    state.publish_tracking_update_for_package(package_id).await;
 }
 
 /// Handle AcceptOrder request
@@ -193,6 +198,8 @@ pub async fn accept_order(
         created_at: Some(datetime_to_timestamp(result.created_at)),
     };
 
+    state.publish_tracking_update(order_id).await;
+
     Ok(Response::new(response))
 }
 
@@ -267,6 +274,8 @@ pub async fn assign_order(
         estimated_delivery_minutes: result.estimated_delivery_minutes as i32,
     };
 
+    publish_tracking_update_for_package(state, result.package_id).await;
+
     Ok(Response::new(response))
 }
 
@@ -326,6 +335,8 @@ pub async fn pick_up_order(
         status: domain_to_proto_status(result.status),
         picked_up_at: Some(datetime_to_timestamp(result.picked_up_at)),
     };
+
+    publish_tracking_update_for_package(state, result.package_id).await;
 
     Ok(Response::new(response))
 }
@@ -449,6 +460,8 @@ pub async fn deliver_order(
         status: domain_to_proto_status(result.status),
         updated_at: Some(datetime_to_timestamp(result.updated_at)),
     };
+
+    publish_tracking_update_for_package(state, result.package_id).await;
 
     Ok(Response::new(response))
 }

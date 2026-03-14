@@ -271,15 +271,19 @@ mod tests {
     use chrono::NaiveTime;
     use migration::{Migrator, MigratorTrait};
     use sea_orm::Database;
-    use testcontainers::{runners::AsyncRunner, ContainerAsync, ImageExt};
+    use testcontainers::{runners::AsyncRunner, ImageExt};
     use testcontainers_modules::postgres::Postgres;
 
-    async fn setup_db() -> (ContainerAsync<Postgres>, DatabaseConnection) {
-        let container = Postgres::default()
-            .with_tag("18-alpine")
-            .start()
-            .await
-            .unwrap();
+    use crate::test_support::ManagedAsyncContainer;
+
+    async fn setup_db() -> (ManagedAsyncContainer<Postgres>, DatabaseConnection) {
+        let container = ManagedAsyncContainer::new(
+            Postgres::default()
+                .with_tag("18-alpine")
+                .start()
+                .await
+                .unwrap(),
+        );
         let port = container.get_host_port_ipv4(5432).await.unwrap();
         let url = format!("postgres://postgres:postgres@localhost:{}/postgres", port);
         let db = Database::connect(&url).await.unwrap();

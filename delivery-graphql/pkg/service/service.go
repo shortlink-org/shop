@@ -74,6 +74,7 @@ func Start(ctx context.Context) error {
 	mux := http.NewServeMux()
 	path, handler := serviceconnect.NewDeliveryHandler(svc)
 	mux.Handle(path, handler)
+	mux.Handle("/graphql", newGraphQLHandler(svc))
 	mux.Handle("/healthz", http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("ok")) //nolint:errcheck // healthz best-effort
@@ -112,9 +113,7 @@ func (s *Service) QueryRandomAddress(
 	ctx context.Context,
 	req *connect.Request[servicepb.QueryRandomAddressRequest],
 ) (*connect.Response[servicepb.QueryRandomAddressResponse], error) {
-	_ = req
-
-	resp, err := s.deliveryClient.GetRandomAddress(ctx, &deliverygrpc.GetRandomAddressRequest{})
+	resp, err := s.getRandomAddress(ctx, req.Header())
 	if err != nil {
 		return nil, grpcError(err)
 	}
@@ -138,6 +137,70 @@ func (s *Service) QueryRandomAddress(
 			},
 		},
 	}), nil
+}
+
+func (s *Service) QueryDeliveryTracking(
+	ctx context.Context,
+	req *connect.Request[servicepb.QueryDeliveryTrackingRequest],
+) (*connect.Response[servicepb.QueryDeliveryTrackingResponse], error) {
+	resp, err := s.getOrderTracking(ctx, req.Header(), req.Msg.GetOrderId())
+	if err != nil {
+		return nil, grpcError(err)
+	}
+	if resp == nil {
+		return connect.NewResponse(&servicepb.QueryDeliveryTrackingResponse{}), nil
+	}
+
+	return connect.NewResponse(&servicepb.QueryDeliveryTrackingResponse{
+		DeliveryTracking: deliveryTrackingToService(resp),
+	}), nil
+}
+
+func deliveryTrackingToService(resp *deliverygrpc.GetOrderTrackingResponse) *servicepb.DeliveryTracking {
+	if resp == nil {
+		return nil
+	}
+
+	var courier *servicepb.DeliveryCourier
+	if source := resp.GetCourier(); source != nil {
+		courier = &servicepb.DeliveryCourier{
+			CourierId:     source.GetCourierId(),
+			Name:          source.GetName(),
+			Phone:         source.GetPhone(),
+			TransportType: enumName(source.GetTransportType().String(), "TRANSPORT_TYPE_"),
+			Status:        enumName(source.GetStatus().String(), "COURIER_STATUS_"),
+			LastActiveAt:  source.GetLastActiveAt(),
+		}
+		if location := source.GetCurrentLocation(); location != nil {
+			courier.CurrentLocation = &servicepb.DeliveryLocation{
+				Latitude:  location.GetLatitude(),
+				Longitude: location.GetLongitude(),
+			}
+		}
+	}
+
+	tracking := &servicepb.DeliveryTracking{
+		OrderId:            resp.GetOrderId(),
+		PackageId:          resp.GetPackageId(),
+		Status:             enumName(resp.GetStatus().String(), "PACKAGE_STATUS_"),
+		Courier:            courier,
+		EstimatedArrivalAt: resp.GetEstimatedArrivalAt(),
+		AssignedAt:         resp.GetAssignedAt(),
+		DeliveredAt:        resp.GetDeliveredAt(),
+	}
+
+	if resp.EstimatedMinutesRemaining != nil {
+		tracking.EstimatedMinutesRemaining = resp.EstimatedMinutesRemaining
+	}
+	if resp.DistanceKmRemaining != nil {
+		tracking.DistanceKmRemaining = resp.DistanceKmRemaining
+	}
+
+	return tracking
+}
+
+func enumName(value, prefix string) string {
+	return strings.TrimPrefix(value, prefix)
 }
 
 func grpcError(err error) error {

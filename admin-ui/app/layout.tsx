@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
-import { Suspense } from 'react';
-import { RefineProvider } from '@/providers/refine-provider';
+import { AdminShell } from '@/components/admin/admin-shell';
+import { AdminProviders } from '@/providers/admin-providers';
+import '@shortlink-org/ui-kit/dist/assets/index.css';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -14,11 +15,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ru">
+    <html lang="en" suppressHydrationWarning>
       <body>
-        <Suspense fallback={<div>Loading...</div>}>
-          <RefineProvider>{children}</RefineProvider>
-        </Suspense>
+        <AdminProviders>
+          <AdminShell>{children}</AdminShell>
+        </AdminProviders>
       </body>
     </html>
   );

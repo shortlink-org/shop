@@ -7,6 +7,7 @@ import (
 
 	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/dto"
 	v1 "github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/order/v1/model/v1"
+	"github.com/shortlink-org/shop/oms/internal/infrastructure/rpc/rpcmeta"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/query/get"
 )
 
@@ -17,8 +18,13 @@ func (o *OrderRPC) Get(ctx context.Context, in *v1.GetRequest) (*v1.GetResponse,
 		return nil, err
 	}
 
+	customerID, err := rpcmeta.CustomerIDFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	// Create query and execute handler
-	query := get.NewQuery(orderId)
+	query := get.NewCustomerScopedQuery(orderId, customerID)
 
 	orderState, err := o.getHandler.Handle(ctx, query)
 	if err != nil {

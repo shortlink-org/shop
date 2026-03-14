@@ -7,8 +7,8 @@
  * Redirects to login if not authenticated
  */
 
+import { Button, FeedbackPanel } from '@shortlink-org/ui-kit';
 import React, { ReactNode, useState, useEffect } from 'react';
-import { Spin, Result, Button } from 'antd';
 import { Session } from '@ory/client';
 
 import { SessionProvider } from '@/contexts/SessionContext';
@@ -48,8 +48,15 @@ export function SessionWrapper({ children, requireAuth = true }: SessionWrapperP
   // Loading state
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Spin size="large" tip="Загрузка..." />
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <div className="admin-card w-full max-w-xl p-8">
+          <FeedbackPanel
+            variant="loading"
+            eyebrow="Authorization"
+            title="Loading session"
+            message="Checking your Ory session before rendering the admin workspace."
+          />
+        </div>
       </div>
     );
   }
@@ -57,35 +64,47 @@ export function SessionWrapper({ children, requireAuth = true }: SessionWrapperP
   // Error state
   if (error) {
     return (
-      <Result
-        status="error"
-        title="Ошибка авторизации"
-        subTitle={error.message}
-        extra={[
-          <Button type="primary" key="login" href={getLoginUrl()}>
-            Войти
-          </Button>,
-          <Button key="retry" onClick={() => window.location.reload()}>
-            Повторить
-          </Button>,
-        ]}
-      />
+      <div className="flex min-h-screen items-center justify-center px-4 py-10">
+        <div className="admin-card w-full max-w-2xl p-8">
+          <FeedbackPanel
+            variant="error"
+            eyebrow="Authorization"
+            title="Authorization error"
+            message={error.message}
+            action={
+              <div className="flex flex-wrap gap-3">
+                <Button as="a" asProps={{ href: getLoginUrl() }}>
+                  Sign in
+                </Button>
+                <Button variant="secondary" onClick={() => window.location.reload()}>
+                  Retry
+                </Button>
+              </div>
+            }
+          />
+        </div>
+      </div>
     );
   }
 
   // Not authenticated (and requireAuth is true)
   if (requireAuth && !session) {
     return (
-      <Result
-        status="403"
-        title="Требуется авторизация"
-        subTitle="Пожалуйста, войдите в систему для доступа к админ-панели"
-        extra={
-          <Button type="primary" href={getLoginUrl()}>
-            Войти
-          </Button>
-        }
-      />
+      <div className="flex min-h-screen items-center justify-center px-4 py-10">
+        <div className="admin-card w-full max-w-2xl p-8">
+          <FeedbackPanel
+            variant="empty"
+            eyebrow="Authorization"
+            title="Authorization required"
+            message="Please sign in to access the admin panel."
+            action={
+              <Button as="a" asProps={{ href: getLoginUrl() }}>
+                Sign in
+              </Button>
+            }
+          />
+        </div>
+      </div>
     );
   }
 

@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Delivery_QueryRandomAddress_FullMethodName = "/shop.delivery.v1.Delivery/QueryRandomAddress"
+	Delivery_QueryRandomAddress_FullMethodName    = "/shop.delivery.v1.Delivery/QueryRandomAddress"
+	Delivery_QueryDeliveryTracking_FullMethodName = "/shop.delivery.v1.Delivery/QueryDeliveryTracking"
 )
 
 // DeliveryClient is the client API for Delivery service.
@@ -31,6 +32,8 @@ const (
 type DeliveryClient interface {
 	// Query.randomAddress
 	QueryRandomAddress(ctx context.Context, in *QueryRandomAddressRequest, opts ...grpc.CallOption) (*QueryRandomAddressResponse, error)
+	// Query.deliveryTracking
+	QueryDeliveryTracking(ctx context.Context, in *QueryDeliveryTrackingRequest, opts ...grpc.CallOption) (*QueryDeliveryTrackingResponse, error)
 }
 
 type deliveryClient struct {
@@ -51,6 +54,16 @@ func (c *deliveryClient) QueryRandomAddress(ctx context.Context, in *QueryRandom
 	return out, nil
 }
 
+func (c *deliveryClient) QueryDeliveryTracking(ctx context.Context, in *QueryDeliveryTrackingRequest, opts ...grpc.CallOption) (*QueryDeliveryTrackingResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(QueryDeliveryTrackingResponse)
+	err := c.cc.Invoke(ctx, Delivery_QueryDeliveryTracking_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DeliveryServer is the server API for Delivery service.
 // All implementations must embed UnimplementedDeliveryServer
 // for forward compatibility.
@@ -60,6 +73,8 @@ func (c *deliveryClient) QueryRandomAddress(ctx context.Context, in *QueryRandom
 type DeliveryServer interface {
 	// Query.randomAddress
 	QueryRandomAddress(context.Context, *QueryRandomAddressRequest) (*QueryRandomAddressResponse, error)
+	// Query.deliveryTracking
+	QueryDeliveryTracking(context.Context, *QueryDeliveryTrackingRequest) (*QueryDeliveryTrackingResponse, error)
 	mustEmbedUnimplementedDeliveryServer()
 }
 
@@ -72,6 +87,9 @@ type UnimplementedDeliveryServer struct{}
 
 func (UnimplementedDeliveryServer) QueryRandomAddress(context.Context, *QueryRandomAddressRequest) (*QueryRandomAddressResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method QueryRandomAddress not implemented")
+}
+func (UnimplementedDeliveryServer) QueryDeliveryTracking(context.Context, *QueryDeliveryTrackingRequest) (*QueryDeliveryTrackingResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method QueryDeliveryTracking not implemented")
 }
 func (UnimplementedDeliveryServer) mustEmbedUnimplementedDeliveryServer() {}
 func (UnimplementedDeliveryServer) testEmbeddedByValue()                  {}
@@ -112,6 +130,24 @@ func _Delivery_QueryRandomAddress_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Delivery_QueryDeliveryTracking_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDeliveryTrackingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DeliveryServer).QueryDeliveryTracking(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Delivery_QueryDeliveryTracking_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DeliveryServer).QueryDeliveryTracking(ctx, req.(*QueryDeliveryTrackingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Delivery_ServiceDesc is the grpc.ServiceDesc for Delivery service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -122,6 +158,10 @@ var Delivery_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "QueryRandomAddress",
 			Handler:    _Delivery_QueryRandomAddress_Handler,
+		},
+		{
+			MethodName: "QueryDeliveryTracking",
+			Handler:    _Delivery_QueryDeliveryTracking_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

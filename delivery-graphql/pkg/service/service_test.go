@@ -3,6 +3,7 @@ package service //nolint:testpackage // testing exported API only
 import (
 	"context"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"connectrpc.com/connect"
 	"google.golang.org/grpc"
 	grpccodes "google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	grpcstatus "google.golang.org/grpc/status"
 
 	deliverygrpc "github.com/shortlink-org/shop/delivery-graphql/pkg/generated/infrastructure/rpc/delivery/v1"
@@ -154,6 +156,87 @@ func TestDeliveryHandlerQueryRandomAddressOverConnect(t *testing.T) {
 	}
 }
 
+func TestQueryDeliveryTrackingMapsCourierAndEta(t *testing.T) {
+	t.Parallel()
+
+	client := &stubDeliveryClient{
+		getOrderTrackingFunc: func(ctx context.Context, _ *deliverygrpc.GetOrderTrackingRequest, _ ...grpc.CallOption) (*deliverygrpc.GetOrderTrackingResponse, error) {
+			return &deliverygrpc.GetOrderTrackingResponse{
+				OrderId:                   "ord-1",
+				PackageId:                 "pkg-1",
+				Status:                    deliverygrpc.PackageStatus_PACKAGE_STATUS_IN_TRANSIT,
+				EstimatedMinutesRemaining: ptrInt32(14),
+				DistanceKmRemaining:       ptrFloat64(3.4),
+				Courier: &deliverygrpc.TrackingCourier{
+					CourierId:     "courier-7",
+					Name:          "Alex Rider",
+					Phone:         "+4912345678",
+					TransportType: deliverygrpc.TransportType_TRANSPORT_TYPE_BICYCLE,
+					Status:        deliverygrpc.CourierStatus_COURIER_STATUS_BUSY,
+					CurrentLocation: &deliverygrpc.Location{
+						Latitude:  52.52,
+						Longitude: 13.41,
+					},
+				},
+			}, nil
+		},
+	}
+
+	svc := New(nil, client)
+	req := connect.NewRequest(&servicepb.QueryDeliveryTrackingRequest{OrderId: "ord-1"})
+	req.Header().Set("X-User-ID", "550e8400-e29b-41d4-a716-446655440000")
+
+	resp, err := svc.QueryDeliveryTracking(context.Background(), req)
+	if err != nil {
+		t.Fatalf("QueryDeliveryTracking returned error: %v", err)
+	}
+
+	tracking := resp.Msg.GetDeliveryTracking()
+	if tracking == nil {
+		t.Fatal("expected tracking payload")
+	}
+	if tracking.GetOrderId() != "ord-1" {
+		t.Fatalf("expected order_id ord-1, got %s", tracking.GetOrderId())
+	}
+	if tracking.GetPackageId() != "pkg-1" {
+		t.Fatalf("expected package_id pkg-1, got %s", tracking.GetPackageId())
+	}
+	if tracking.GetStatus() != "IN_TRANSIT" {
+		t.Fatalf("expected status IN_TRANSIT, got %s", tracking.GetStatus())
+	}
+	if tracking.GetEstimatedMinutesRemaining() != 14 {
+		t.Fatalf("expected eta 14, got %d", tracking.GetEstimatedMinutesRemaining())
+	}
+	if tracking.GetCourier() == nil || tracking.GetCourier().GetCourierId() != "courier-7" {
+		t.Fatalf("expected courier courier-7, got %+v", tracking.GetCourier())
+	}
+	if tracking.GetCourier().GetTransportType() != "BICYCLE" {
+		t.Fatalf("expected transport BICYCLE, got %s", tracking.GetCourier().GetTransportType())
+	}
+}
+
+func TestQueryDeliveryTrackingReturnsNilOnNotFound(t *testing.T) {
+	t.Parallel()
+
+	client := &stubDeliveryClient{
+		getOrderTrackingFunc: func(ctx context.Context, _ *deliverygrpc.GetOrderTrackingRequest, _ ...grpc.CallOption) (*deliverygrpc.GetOrderTrackingResponse, error) {
+			return nil, grpcstatus.Error(grpccodes.NotFound, "tracking not found")
+		},
+	}
+
+	svc := New(nil, client)
+	req := connect.NewRequest(&servicepb.QueryDeliveryTrackingRequest{OrderId: "ord-missing"})
+	req.Header().Set("X-User-ID", "550e8400-e29b-41d4-a716-446655440000")
+
+	resp, err := svc.QueryDeliveryTracking(context.Background(), req)
+	if err != nil {
+		t.Fatalf("expected nil error for not found, got %v", err)
+	}
+	if resp.Msg.GetDeliveryTracking() != nil {
+		t.Fatalf("expected nil tracking, got %+v", resp.Msg.GetDeliveryTracking())
+	}
+}
+
 func TestEnvOrDefault(t *testing.T) {
 	t.Run("returns value when set", func(t *testing.T) {
 		t.Setenv("TEST_KEY", "custom")
@@ -230,7 +313,9 @@ func TestNormalizeGRPCTarget(t *testing.T) {
 
 // stubDeliveryClient implements deliverygrpc.DeliveryServiceClient for tests.
 type stubDeliveryClient struct {
-	getRandomAddressFunc func(context.Context, *deliverygrpc.GetRandomAddressRequest, ...grpc.CallOption) (*deliverygrpc.GetRandomAddressResponse, error)
+	getRandomAddressFunc       func(context.Context, *deliverygrpc.GetRandomAddressRequest, ...grpc.CallOption) (*deliverygrpc.GetRandomAddressResponse, error)
+	getOrderTrackingFunc       func(context.Context, *deliverygrpc.GetOrderTrackingRequest, ...grpc.CallOption) (*deliverygrpc.GetOrderTrackingResponse, error)
+	subscribeOrderTrackingFunc func(context.Context, *deliverygrpc.GetOrderTrackingRequest, ...grpc.CallOption) (grpc.ServerStreamingClient[deliverygrpc.GetOrderTrackingResponse], error)
 }
 
 func (s *stubDeliveryClient) GetRandomAddress(
@@ -244,45 +329,58 @@ func (s *stubDeliveryClient) GetRandomAddress(
 	return &deliverygrpc.GetRandomAddressResponse{}, nil
 }
 
-func (s *stubDeliveryClient) GetCourier(context.Context, *deliverygrpc.GetCourierRequest, ...grpc.CallOption) (*deliverygrpc.GetCourierResponse, error) {
-	return nil, nil
+func (s *stubDeliveryClient) GetOrderTracking(
+	ctx context.Context,
+	in *deliverygrpc.GetOrderTrackingRequest,
+	opts ...grpc.CallOption,
+) (*deliverygrpc.GetOrderTrackingResponse, error) {
+	if s.getOrderTrackingFunc != nil {
+		return s.getOrderTrackingFunc(ctx, in, opts...)
+	}
+	return &deliverygrpc.GetOrderTrackingResponse{}, nil
 }
-func (s *stubDeliveryClient) GetCourierPool(context.Context, *deliverygrpc.GetCourierPoolRequest, ...grpc.CallOption) (*deliverygrpc.GetCourierPoolResponse, error) {
-	return nil, nil
+
+func (s *stubDeliveryClient) SubscribeOrderTracking(
+	ctx context.Context,
+	in *deliverygrpc.GetOrderTrackingRequest,
+	opts ...grpc.CallOption,
+) (grpc.ServerStreamingClient[deliverygrpc.GetOrderTrackingResponse], error) {
+	if s.subscribeOrderTrackingFunc != nil {
+		return s.subscribeOrderTrackingFunc(ctx, in, opts...)
+	}
+	return &stubTrackingStream{ctx: ctx}, nil
 }
-func (s *stubDeliveryClient) RegisterCourier(context.Context, *deliverygrpc.RegisterCourierRequest, ...grpc.CallOption) (*deliverygrpc.RegisterCourierResponse, error) {
-	return nil, nil
+
+type stubTrackingStream struct {
+	ctx       context.Context
+	responses []*deliverygrpc.GetOrderTrackingResponse
+	index     int
 }
-func (s *stubDeliveryClient) ActivateCourier(context.Context, *deliverygrpc.ActivateCourierRequest, ...grpc.CallOption) (*deliverygrpc.ActivateCourierResponse, error) {
-	return nil, nil
+
+func (s *stubTrackingStream) Header() (metadata.MD, error) { return metadata.MD{}, nil }
+func (s *stubTrackingStream) Trailer() metadata.MD         { return metadata.MD{} }
+func (s *stubTrackingStream) CloseSend() error             { return nil }
+func (s *stubTrackingStream) Context() context.Context {
+	if s.ctx != nil {
+		return s.ctx
+	}
+	return context.Background()
 }
-func (s *stubDeliveryClient) DeactivateCourier(context.Context, *deliverygrpc.DeactivateCourierRequest, ...grpc.CallOption) (*deliverygrpc.DeactivateCourierResponse, error) {
-	return nil, nil
+func (s *stubTrackingStream) SendMsg(any) error { return nil }
+func (s *stubTrackingStream) RecvMsg(any) error { return nil }
+func (s *stubTrackingStream) Recv() (*deliverygrpc.GetOrderTrackingResponse, error) {
+	if s.index >= len(s.responses) {
+		return nil, io.EOF
+	}
+	resp := s.responses[s.index]
+	s.index++
+	return resp, nil
 }
-func (s *stubDeliveryClient) ArchiveCourier(context.Context, *deliverygrpc.ArchiveCourierRequest, ...grpc.CallOption) (*deliverygrpc.ArchiveCourierResponse, error) {
-	return nil, nil
+
+func ptrInt32(v int32) *int32 {
+	return &v
 }
-func (s *stubDeliveryClient) UpdateContactInfo(context.Context, *deliverygrpc.UpdateContactInfoRequest, ...grpc.CallOption) (*deliverygrpc.UpdateContactInfoResponse, error) {
-	return nil, nil
-}
-func (s *stubDeliveryClient) UpdateWorkSchedule(context.Context, *deliverygrpc.UpdateWorkScheduleRequest, ...grpc.CallOption) (*deliverygrpc.UpdateWorkScheduleResponse, error) {
-	return nil, nil
-}
-func (s *stubDeliveryClient) ChangeTransportType(context.Context, *deliverygrpc.ChangeTransportTypeRequest, ...grpc.CallOption) (*deliverygrpc.ChangeTransportTypeResponse, error) {
-	return nil, nil
-}
-func (s *stubDeliveryClient) AcceptOrder(context.Context, *deliverygrpc.AcceptOrderRequest, ...grpc.CallOption) (*deliverygrpc.AcceptOrderResponse, error) {
-	return nil, nil
-}
-func (s *stubDeliveryClient) AssignOrder(context.Context, *deliverygrpc.AssignOrderRequest, ...grpc.CallOption) (*deliverygrpc.AssignOrderResponse, error) {
-	return nil, nil
-}
-func (s *stubDeliveryClient) PickUpOrder(context.Context, *deliverygrpc.PickUpOrderRequest, ...grpc.CallOption) (*deliverygrpc.PickUpOrderResponse, error) {
-	return nil, nil
-}
-func (s *stubDeliveryClient) DeliverOrder(context.Context, *deliverygrpc.DeliverOrderRequest, ...grpc.CallOption) (*deliverygrpc.DeliverOrderResponse, error) {
-	return nil, nil
-}
-func (s *stubDeliveryClient) GetCourierDeliveries(context.Context, *deliverygrpc.GetCourierDeliveriesRequest, ...grpc.CallOption) (*deliverygrpc.GetCourierDeliveriesResponse, error) {
-	return nil, nil
+
+func ptrFloat64(v float64) *float64 {
+	return &v
 }

@@ -2,6 +2,7 @@
 //!
 //! Provides application state and dependency wiring.
 
+use std::collections::HashSet;
 use std::sync::Arc;
 
 use migration::{Migrator, MigratorTrait};
@@ -9,15 +10,17 @@ use redis::aio::ConnectionManager;
 use sea_orm::{Database, DatabaseConnection};
 use thiserror::Error;
 use tokio::sync::broadcast;
-use tracing::info;
+use tracing::{info, warn};
 
 use crate::config::{Config, RandomAddressBbox, TemporalConfig};
+use crate::domain::model::package::{PackageId, PackageStatus};
+use crate::domain::ports::PackageRepository;
 use crate::infrastructure::cache::{CourierRedisCache, RedisLocationCache};
 use crate::infrastructure::geolocation::StubGeolocationService;
 use crate::infrastructure::messaging::{
     emulation_consumer::EmulationConsumerConfig, kafka_publisher::KafkaPublisherConfig,
     location_consumer::LocationConsumerConfig, outbox_forwarder::OutboxForwarderConfig,
-    EmulationConsumer, KafkaEventPublisher, LocationConsumer, OutboxForwarder,
+    EmulationConsumer, KafkaEventPublisher, LocationConsumer, OutboxForwarder, RedisTrackingPubSub,
 };
 use crate::infrastructure::notifications::StubNotificationService;
 use crate::infrastructure::repository::{
@@ -82,6 +85,9 @@ pub struct AppState {
     /// Shutdown signal sender
     pub shutdown_tx: broadcast::Sender<()>,
 
+    /// Redis-backed tracking pub/sub for cross-pod subscription fan-out
+    pub tracking_pubsub: Arc<RedisTrackingPubSub>,
+
     /// Bounding box for GetRandomAddress (optional)
     pub random_address_bbox: Option<RandomAddressBbox>,
 }
@@ -109,7 +115,7 @@ impl AppState {
         info!("Connecting to Redis...");
         let redis_client = redis::Client::open(config.redis_url.as_str())
             .map_err(|e| DiError::RedisError(e.to_string()))?;
-        let redis_conn = ConnectionManager::new(redis_client)
+        let redis_conn = ConnectionManager::new(redis_client.clone())
             .await
             .map_err(|e| DiError::RedisError(e.to_string()))?;
         info!("Redis connected");
@@ -129,11 +135,12 @@ impl AppState {
         let location_repo = Arc::new(LocationPostgresRepository::new(db.clone()));
         let outbox_repo = Arc::new(OutboxPostgresRepository::new(db.clone()));
         let courier_cache = Arc::new(CourierRedisCache::new(redis_conn.clone()));
-        let location_cache = Arc::new(RedisLocationCache::new(redis_conn));
+        let location_cache = Arc::new(RedisLocationCache::new(redis_conn.clone()));
         let geolocation_service = Arc::new(StubGeolocationService::new(
             location_cache.clone(),
             location_repo.clone(),
         ));
+        let tracking_pubsub = Arc::new(RedisTrackingPubSub::new(redis_client, redis_conn));
 
         // Create notification service (stub for now)
         let notification_service = Arc::new(StubNotificationService::new());
@@ -155,6 +162,7 @@ impl AppState {
             outbox_repo,
             db,
             shutdown_tx,
+            tracking_pubsub,
             random_address_bbox: config.random_address_bbox.clone(),
         })
     }
@@ -183,9 +191,18 @@ impl AppState {
         let consumer_config = LocationConsumerConfig::from_env();
         let location_cache = self.location_cache.clone();
         let location_repo = self.location_repo.clone();
+        let package_repo = self.package_repo.clone();
+        let tracking_pubsub = self.tracking_pubsub.clone();
         let shutdown_rx = self.shutdown_tx.subscribe();
 
-        match LocationConsumer::new(consumer_config, location_cache, location_repo, shutdown_rx) {
+        match LocationConsumer::new(
+            consumer_config,
+            location_cache,
+            location_repo,
+            package_repo,
+            tracking_pubsub,
+            shutdown_rx,
+        ) {
             Ok(consumer) => {
                 tokio::spawn(async move {
                     consumer.run().await;
@@ -206,6 +223,7 @@ impl AppState {
             self.courier_cache.clone(),
             self.package_repo.clone(),
             self.geolocation_service.clone(),
+            self.tracking_pubsub.clone(),
             emulation_shutdown_rx,
         ) {
             Ok(emulation_consumer) => {
@@ -228,6 +246,39 @@ impl AppState {
     pub fn shutdown(&self) {
         info!("Sending shutdown signal...");
         let _ = self.shutdown_tx.send(());
+    }
+
+    pub async fn publish_tracking_update(&self, order_id: uuid::Uuid) {
+        if let Err(err) = self.tracking_pubsub.publish_order_update(order_id).await {
+            warn!(order_id = %order_id, error = %err, "failed to publish tracking update");
+        }
+    }
+
+    pub async fn publish_tracking_update_for_package(&self, package_id: uuid::Uuid) {
+        let package_id = PackageId::from_uuid(package_id);
+        if let Ok(Some(package)) = self.package_repo.find_by_id(package_id).await {
+            self.publish_tracking_update(package.order_id()).await;
+        }
+    }
+
+    pub async fn publish_tracking_updates_for_courier(&self, courier_id: uuid::Uuid) {
+        let Ok(packages) = self.package_repo.find_by_courier(courier_id).await else {
+            return;
+        };
+
+        let mut order_ids = HashSet::new();
+        for package in packages {
+            if matches!(
+                package.status(),
+                PackageStatus::Assigned | PackageStatus::InTransit
+            ) {
+                order_ids.insert(package.order_id());
+            }
+        }
+
+        for order_id in order_ids {
+            self.publish_tracking_update(order_id).await;
+        }
     }
 
     /// Initialize Temporal worker configuration

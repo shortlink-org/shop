@@ -41,7 +41,7 @@ const retryLink = new RetryLink({
 });
 
 // Add auth token to requests
-const authLink = new SetContextLink((prevContext, _operation) => {
+const authLink = new SetContextLink((prevContext) => {
   const token =
     typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
   const headers = (prevContext.headers ?? {}) as Record<string, string>;

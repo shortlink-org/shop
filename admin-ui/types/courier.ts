@@ -80,20 +80,20 @@ export interface CourierListResponse {
 
 // Transport type labels
 export const TRANSPORT_LABELS: Record<TransportType, string> = {
-  UNSPECIFIED: 'Не указан',
-  WALKING: 'Пешком',
-  BICYCLE: 'Велосипед',
-  MOTORCYCLE: 'Мотоцикл',
-  CAR: 'Автомобиль',
+  UNSPECIFIED: 'Unspecified',
+  WALKING: 'Walking',
+  BICYCLE: 'Bicycle',
+  MOTORCYCLE: 'Motorcycle',
+  CAR: 'Car',
 };
 
 // Status labels
 export const STATUS_LABELS: Record<CourierStatus, string> = {
-  UNSPECIFIED: 'Не указан',
-  UNAVAILABLE: 'Недоступен',
-  FREE: 'Свободен',
-  BUSY: 'Занят',
-  ARCHIVED: 'В архиве',
+  UNSPECIFIED: 'Unspecified',
+  UNAVAILABLE: 'Unavailable',
+  FREE: 'Available',
+  BUSY: 'Busy',
+  ARCHIVED: 'Archived',
 };
 
 // Status colors for Ant Design Tag

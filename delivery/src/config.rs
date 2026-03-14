@@ -155,21 +155,31 @@ impl RandomAddressBbox {
         let min_lat = env::var("RANDOM_ADDRESS_MIN_LAT")
             .map_err(|_| ConfigError::MissingEnv("RANDOM_ADDRESS_MIN_LAT".to_string()))?
             .parse::<f64>()
-            .map_err(|e| ConfigError::InvalidValue("RANDOM_ADDRESS_MIN_LAT".to_string(), e.to_string()))?;
+            .map_err(|e| {
+                ConfigError::InvalidValue("RANDOM_ADDRESS_MIN_LAT".to_string(), e.to_string())
+            })?;
         let max_lat = env::var("RANDOM_ADDRESS_MAX_LAT")
             .map_err(|_| ConfigError::MissingEnv("RANDOM_ADDRESS_MAX_LAT".to_string()))?
             .parse::<f64>()
-            .map_err(|e| ConfigError::InvalidValue("RANDOM_ADDRESS_MAX_LAT".to_string(), e.to_string()))?;
+            .map_err(|e| {
+                ConfigError::InvalidValue("RANDOM_ADDRESS_MAX_LAT".to_string(), e.to_string())
+            })?;
         let min_lon = env::var("RANDOM_ADDRESS_MIN_LON")
             .map_err(|_| ConfigError::MissingEnv("RANDOM_ADDRESS_MIN_LON".to_string()))?
             .parse::<f64>()
-            .map_err(|e| ConfigError::InvalidValue("RANDOM_ADDRESS_MIN_LON".to_string(), e.to_string()))?;
+            .map_err(|e| {
+                ConfigError::InvalidValue("RANDOM_ADDRESS_MIN_LON".to_string(), e.to_string())
+            })?;
         let max_lon = env::var("RANDOM_ADDRESS_MAX_LON")
             .map_err(|_| ConfigError::MissingEnv("RANDOM_ADDRESS_MAX_LON".to_string()))?
             .parse::<f64>()
-            .map_err(|e| ConfigError::InvalidValue("RANDOM_ADDRESS_MAX_LON".to_string(), e.to_string()))?;
-        let default_city = env::var("RANDOM_ADDRESS_DEFAULT_CITY").unwrap_or_else(|_| "Berlin".to_string());
-        let default_country = env::var("RANDOM_ADDRESS_DEFAULT_COUNTRY").unwrap_or_else(|_| "Germany".to_string());
+            .map_err(|e| {
+                ConfigError::InvalidValue("RANDOM_ADDRESS_MAX_LON".to_string(), e.to_string())
+            })?;
+        let default_city =
+            env::var("RANDOM_ADDRESS_DEFAULT_CITY").unwrap_or_else(|_| "Berlin".to_string());
+        let default_country =
+            env::var("RANDOM_ADDRESS_DEFAULT_COUNTRY").unwrap_or_else(|_| "Germany".to_string());
         Ok(Self {
             min_lat,
             max_lat,

@@ -75,6 +75,7 @@ cors:
   allow_headers:
     - "Content-Type"
     - "Authorization"
+    - "X-User-ID"
     - "X-Request-ID"
     - "traceparent"
     - "trace-id"
@@ -89,11 +90,28 @@ headers:
       - op: propagate
         named: Authorization
       - op: propagate
+        named: X-User-ID
+      - op: propagate
         named: Cookie
       - op: propagate
         named: traceparent
       - op: propagate
         named: trace-id
+
+websocket:
+  authentication:
+    from_initial_payload:
+      enabled: true
+      key: Authorization
+      export_token:
+        enabled: true
+        header_key: Authorization
+    forward_upgrade_headers:
+      enabled: true
+      allow_list:
+        - Authorization
+        - traceparent
+        - trace-id
 
 # Telemetry configuration
 telemetry:

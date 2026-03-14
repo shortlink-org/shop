@@ -19,44 +19,18 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	DeliveryService_GetCourier_FullMethodName           = "/infrastructure.rpc.delivery.v1.DeliveryService/GetCourier"
-	DeliveryService_GetCourierPool_FullMethodName       = "/infrastructure.rpc.delivery.v1.DeliveryService/GetCourierPool"
-	DeliveryService_RegisterCourier_FullMethodName      = "/infrastructure.rpc.delivery.v1.DeliveryService/RegisterCourier"
-	DeliveryService_ActivateCourier_FullMethodName      = "/infrastructure.rpc.delivery.v1.DeliveryService/ActivateCourier"
-	DeliveryService_DeactivateCourier_FullMethodName    = "/infrastructure.rpc.delivery.v1.DeliveryService/DeactivateCourier"
-	DeliveryService_ArchiveCourier_FullMethodName       = "/infrastructure.rpc.delivery.v1.DeliveryService/ArchiveCourier"
-	DeliveryService_UpdateContactInfo_FullMethodName    = "/infrastructure.rpc.delivery.v1.DeliveryService/UpdateContactInfo"
-	DeliveryService_UpdateWorkSchedule_FullMethodName   = "/infrastructure.rpc.delivery.v1.DeliveryService/UpdateWorkSchedule"
-	DeliveryService_ChangeTransportType_FullMethodName  = "/infrastructure.rpc.delivery.v1.DeliveryService/ChangeTransportType"
-	DeliveryService_AcceptOrder_FullMethodName          = "/infrastructure.rpc.delivery.v1.DeliveryService/AcceptOrder"
-	DeliveryService_AssignOrder_FullMethodName          = "/infrastructure.rpc.delivery.v1.DeliveryService/AssignOrder"
-	DeliveryService_PickUpOrder_FullMethodName          = "/infrastructure.rpc.delivery.v1.DeliveryService/PickUpOrder"
-	DeliveryService_DeliverOrder_FullMethodName         = "/infrastructure.rpc.delivery.v1.DeliveryService/DeliverOrder"
-	DeliveryService_GetCourierDeliveries_FullMethodName = "/infrastructure.rpc.delivery.v1.DeliveryService/GetCourierDeliveries"
-	DeliveryService_GetRandomAddress_FullMethodName     = "/infrastructure.rpc.delivery.v1.DeliveryService/GetRandomAddress"
+	DeliveryService_GetRandomAddress_FullMethodName       = "/infrastructure.rpc.delivery.v1.DeliveryService/GetRandomAddress"
+	DeliveryService_GetOrderTracking_FullMethodName       = "/infrastructure.rpc.delivery.v1.DeliveryService/GetOrderTracking"
+	DeliveryService_SubscribeOrderTracking_FullMethodName = "/infrastructure.rpc.delivery.v1.DeliveryService/SubscribeOrderTracking"
 )
 
 // DeliveryServiceClient is the client API for DeliveryService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-//
-// DeliveryService provides gRPC API for delivery operations (backend)
 type DeliveryServiceClient interface {
-	GetCourier(ctx context.Context, in *GetCourierRequest, opts ...grpc.CallOption) (*GetCourierResponse, error)
-	GetCourierPool(ctx context.Context, in *GetCourierPoolRequest, opts ...grpc.CallOption) (*GetCourierPoolResponse, error)
-	RegisterCourier(ctx context.Context, in *RegisterCourierRequest, opts ...grpc.CallOption) (*RegisterCourierResponse, error)
-	ActivateCourier(ctx context.Context, in *ActivateCourierRequest, opts ...grpc.CallOption) (*ActivateCourierResponse, error)
-	DeactivateCourier(ctx context.Context, in *DeactivateCourierRequest, opts ...grpc.CallOption) (*DeactivateCourierResponse, error)
-	ArchiveCourier(ctx context.Context, in *ArchiveCourierRequest, opts ...grpc.CallOption) (*ArchiveCourierResponse, error)
-	UpdateContactInfo(ctx context.Context, in *UpdateContactInfoRequest, opts ...grpc.CallOption) (*UpdateContactInfoResponse, error)
-	UpdateWorkSchedule(ctx context.Context, in *UpdateWorkScheduleRequest, opts ...grpc.CallOption) (*UpdateWorkScheduleResponse, error)
-	ChangeTransportType(ctx context.Context, in *ChangeTransportTypeRequest, opts ...grpc.CallOption) (*ChangeTransportTypeResponse, error)
-	AcceptOrder(ctx context.Context, in *AcceptOrderRequest, opts ...grpc.CallOption) (*AcceptOrderResponse, error)
-	AssignOrder(ctx context.Context, in *AssignOrderRequest, opts ...grpc.CallOption) (*AssignOrderResponse, error)
-	PickUpOrder(ctx context.Context, in *PickUpOrderRequest, opts ...grpc.CallOption) (*PickUpOrderResponse, error)
-	DeliverOrder(ctx context.Context, in *DeliverOrderRequest, opts ...grpc.CallOption) (*DeliverOrderResponse, error)
-	GetCourierDeliveries(ctx context.Context, in *GetCourierDeliveriesRequest, opts ...grpc.CallOption) (*GetCourierDeliveriesResponse, error)
 	GetRandomAddress(ctx context.Context, in *GetRandomAddressRequest, opts ...grpc.CallOption) (*GetRandomAddressResponse, error)
+	GetOrderTracking(ctx context.Context, in *GetOrderTrackingRequest, opts ...grpc.CallOption) (*GetOrderTrackingResponse, error)
+	SubscribeOrderTracking(ctx context.Context, in *GetOrderTrackingRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[GetOrderTrackingResponse], error)
 }
 
 type deliveryServiceClient struct {
@@ -65,146 +39,6 @@ type deliveryServiceClient struct {
 
 func NewDeliveryServiceClient(cc grpc.ClientConnInterface) DeliveryServiceClient {
 	return &deliveryServiceClient{cc}
-}
-
-func (c *deliveryServiceClient) GetCourier(ctx context.Context, in *GetCourierRequest, opts ...grpc.CallOption) (*GetCourierResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetCourierResponse)
-	err := c.cc.Invoke(ctx, DeliveryService_GetCourier_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *deliveryServiceClient) GetCourierPool(ctx context.Context, in *GetCourierPoolRequest, opts ...grpc.CallOption) (*GetCourierPoolResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetCourierPoolResponse)
-	err := c.cc.Invoke(ctx, DeliveryService_GetCourierPool_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *deliveryServiceClient) RegisterCourier(ctx context.Context, in *RegisterCourierRequest, opts ...grpc.CallOption) (*RegisterCourierResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(RegisterCourierResponse)
-	err := c.cc.Invoke(ctx, DeliveryService_RegisterCourier_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *deliveryServiceClient) ActivateCourier(ctx context.Context, in *ActivateCourierRequest, opts ...grpc.CallOption) (*ActivateCourierResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ActivateCourierResponse)
-	err := c.cc.Invoke(ctx, DeliveryService_ActivateCourier_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *deliveryServiceClient) DeactivateCourier(ctx context.Context, in *DeactivateCourierRequest, opts ...grpc.CallOption) (*DeactivateCourierResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(DeactivateCourierResponse)
-	err := c.cc.Invoke(ctx, DeliveryService_DeactivateCourier_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *deliveryServiceClient) ArchiveCourier(ctx context.Context, in *ArchiveCourierRequest, opts ...grpc.CallOption) (*ArchiveCourierResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ArchiveCourierResponse)
-	err := c.cc.Invoke(ctx, DeliveryService_ArchiveCourier_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *deliveryServiceClient) UpdateContactInfo(ctx context.Context, in *UpdateContactInfoRequest, opts ...grpc.CallOption) (*UpdateContactInfoResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(UpdateContactInfoResponse)
-	err := c.cc.Invoke(ctx, DeliveryService_UpdateContactInfo_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *deliveryServiceClient) UpdateWorkSchedule(ctx context.Context, in *UpdateWorkScheduleRequest, opts ...grpc.CallOption) (*UpdateWorkScheduleResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(UpdateWorkScheduleResponse)
-	err := c.cc.Invoke(ctx, DeliveryService_UpdateWorkSchedule_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *deliveryServiceClient) ChangeTransportType(ctx context.Context, in *ChangeTransportTypeRequest, opts ...grpc.CallOption) (*ChangeTransportTypeResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ChangeTransportTypeResponse)
-	err := c.cc.Invoke(ctx, DeliveryService_ChangeTransportType_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *deliveryServiceClient) AcceptOrder(ctx context.Context, in *AcceptOrderRequest, opts ...grpc.CallOption) (*AcceptOrderResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(AcceptOrderResponse)
-	err := c.cc.Invoke(ctx, DeliveryService_AcceptOrder_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *deliveryServiceClient) AssignOrder(ctx context.Context, in *AssignOrderRequest, opts ...grpc.CallOption) (*AssignOrderResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(AssignOrderResponse)
-	err := c.cc.Invoke(ctx, DeliveryService_AssignOrder_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *deliveryServiceClient) PickUpOrder(ctx context.Context, in *PickUpOrderRequest, opts ...grpc.CallOption) (*PickUpOrderResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(PickUpOrderResponse)
-	err := c.cc.Invoke(ctx, DeliveryService_PickUpOrder_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *deliveryServiceClient) DeliverOrder(ctx context.Context, in *DeliverOrderRequest, opts ...grpc.CallOption) (*DeliverOrderResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(DeliverOrderResponse)
-	err := c.cc.Invoke(ctx, DeliveryService_DeliverOrder_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *deliveryServiceClient) GetCourierDeliveries(ctx context.Context, in *GetCourierDeliveriesRequest, opts ...grpc.CallOption) (*GetCourierDeliveriesResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetCourierDeliveriesResponse)
-	err := c.cc.Invoke(ctx, DeliveryService_GetCourierDeliveries_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *deliveryServiceClient) GetRandomAddress(ctx context.Context, in *GetRandomAddressRequest, opts ...grpc.CallOption) (*GetRandomAddressResponse, error) {
@@ -217,27 +51,42 @@ func (c *deliveryServiceClient) GetRandomAddress(ctx context.Context, in *GetRan
 	return out, nil
 }
 
+func (c *deliveryServiceClient) GetOrderTracking(ctx context.Context, in *GetOrderTrackingRequest, opts ...grpc.CallOption) (*GetOrderTrackingResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetOrderTrackingResponse)
+	err := c.cc.Invoke(ctx, DeliveryService_GetOrderTracking_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *deliveryServiceClient) SubscribeOrderTracking(ctx context.Context, in *GetOrderTrackingRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[GetOrderTrackingResponse], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &DeliveryService_ServiceDesc.Streams[0], DeliveryService_SubscribeOrderTracking_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[GetOrderTrackingRequest, GetOrderTrackingResponse]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type DeliveryService_SubscribeOrderTrackingClient = grpc.ServerStreamingClient[GetOrderTrackingResponse]
+
 // DeliveryServiceServer is the server API for DeliveryService service.
 // All implementations must embed UnimplementedDeliveryServiceServer
 // for forward compatibility.
-//
-// DeliveryService provides gRPC API for delivery operations (backend)
 type DeliveryServiceServer interface {
-	GetCourier(context.Context, *GetCourierRequest) (*GetCourierResponse, error)
-	GetCourierPool(context.Context, *GetCourierPoolRequest) (*GetCourierPoolResponse, error)
-	RegisterCourier(context.Context, *RegisterCourierRequest) (*RegisterCourierResponse, error)
-	ActivateCourier(context.Context, *ActivateCourierRequest) (*ActivateCourierResponse, error)
-	DeactivateCourier(context.Context, *DeactivateCourierRequest) (*DeactivateCourierResponse, error)
-	ArchiveCourier(context.Context, *ArchiveCourierRequest) (*ArchiveCourierResponse, error)
-	UpdateContactInfo(context.Context, *UpdateContactInfoRequest) (*UpdateContactInfoResponse, error)
-	UpdateWorkSchedule(context.Context, *UpdateWorkScheduleRequest) (*UpdateWorkScheduleResponse, error)
-	ChangeTransportType(context.Context, *ChangeTransportTypeRequest) (*ChangeTransportTypeResponse, error)
-	AcceptOrder(context.Context, *AcceptOrderRequest) (*AcceptOrderResponse, error)
-	AssignOrder(context.Context, *AssignOrderRequest) (*AssignOrderResponse, error)
-	PickUpOrder(context.Context, *PickUpOrderRequest) (*PickUpOrderResponse, error)
-	DeliverOrder(context.Context, *DeliverOrderRequest) (*DeliverOrderResponse, error)
-	GetCourierDeliveries(context.Context, *GetCourierDeliveriesRequest) (*GetCourierDeliveriesResponse, error)
 	GetRandomAddress(context.Context, *GetRandomAddressRequest) (*GetRandomAddressResponse, error)
+	GetOrderTracking(context.Context, *GetOrderTrackingRequest) (*GetOrderTrackingResponse, error)
+	SubscribeOrderTracking(*GetOrderTrackingRequest, grpc.ServerStreamingServer[GetOrderTrackingResponse]) error
 	mustEmbedUnimplementedDeliveryServiceServer()
 }
 
@@ -248,50 +97,14 @@ type DeliveryServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedDeliveryServiceServer struct{}
 
-func (UnimplementedDeliveryServiceServer) GetCourier(context.Context, *GetCourierRequest) (*GetCourierResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetCourier not implemented")
-}
-func (UnimplementedDeliveryServiceServer) GetCourierPool(context.Context, *GetCourierPoolRequest) (*GetCourierPoolResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetCourierPool not implemented")
-}
-func (UnimplementedDeliveryServiceServer) RegisterCourier(context.Context, *RegisterCourierRequest) (*RegisterCourierResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method RegisterCourier not implemented")
-}
-func (UnimplementedDeliveryServiceServer) ActivateCourier(context.Context, *ActivateCourierRequest) (*ActivateCourierResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ActivateCourier not implemented")
-}
-func (UnimplementedDeliveryServiceServer) DeactivateCourier(context.Context, *DeactivateCourierRequest) (*DeactivateCourierResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method DeactivateCourier not implemented")
-}
-func (UnimplementedDeliveryServiceServer) ArchiveCourier(context.Context, *ArchiveCourierRequest) (*ArchiveCourierResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ArchiveCourier not implemented")
-}
-func (UnimplementedDeliveryServiceServer) UpdateContactInfo(context.Context, *UpdateContactInfoRequest) (*UpdateContactInfoResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method UpdateContactInfo not implemented")
-}
-func (UnimplementedDeliveryServiceServer) UpdateWorkSchedule(context.Context, *UpdateWorkScheduleRequest) (*UpdateWorkScheduleResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method UpdateWorkSchedule not implemented")
-}
-func (UnimplementedDeliveryServiceServer) ChangeTransportType(context.Context, *ChangeTransportTypeRequest) (*ChangeTransportTypeResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ChangeTransportType not implemented")
-}
-func (UnimplementedDeliveryServiceServer) AcceptOrder(context.Context, *AcceptOrderRequest) (*AcceptOrderResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method AcceptOrder not implemented")
-}
-func (UnimplementedDeliveryServiceServer) AssignOrder(context.Context, *AssignOrderRequest) (*AssignOrderResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method AssignOrder not implemented")
-}
-func (UnimplementedDeliveryServiceServer) PickUpOrder(context.Context, *PickUpOrderRequest) (*PickUpOrderResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method PickUpOrder not implemented")
-}
-func (UnimplementedDeliveryServiceServer) DeliverOrder(context.Context, *DeliverOrderRequest) (*DeliverOrderResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method DeliverOrder not implemented")
-}
-func (UnimplementedDeliveryServiceServer) GetCourierDeliveries(context.Context, *GetCourierDeliveriesRequest) (*GetCourierDeliveriesResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetCourierDeliveries not implemented")
-}
 func (UnimplementedDeliveryServiceServer) GetRandomAddress(context.Context, *GetRandomAddressRequest) (*GetRandomAddressResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetRandomAddress not implemented")
+}
+func (UnimplementedDeliveryServiceServer) GetOrderTracking(context.Context, *GetOrderTrackingRequest) (*GetOrderTrackingResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetOrderTracking not implemented")
+}
+func (UnimplementedDeliveryServiceServer) SubscribeOrderTracking(*GetOrderTrackingRequest, grpc.ServerStreamingServer[GetOrderTrackingResponse]) error {
+	return status.Error(codes.Unimplemented, "method SubscribeOrderTracking not implemented")
 }
 func (UnimplementedDeliveryServiceServer) mustEmbedUnimplementedDeliveryServiceServer() {}
 func (UnimplementedDeliveryServiceServer) testEmbeddedByValue()                         {}
@@ -314,258 +127,6 @@ func RegisterDeliveryServiceServer(s grpc.ServiceRegistrar, srv DeliveryServiceS
 	s.RegisterService(&DeliveryService_ServiceDesc, srv)
 }
 
-func _DeliveryService_GetCourier_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetCourierRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DeliveryServiceServer).GetCourier(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DeliveryService_GetCourier_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DeliveryServiceServer).GetCourier(ctx, req.(*GetCourierRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DeliveryService_GetCourierPool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetCourierPoolRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DeliveryServiceServer).GetCourierPool(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DeliveryService_GetCourierPool_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DeliveryServiceServer).GetCourierPool(ctx, req.(*GetCourierPoolRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DeliveryService_RegisterCourier_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RegisterCourierRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DeliveryServiceServer).RegisterCourier(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DeliveryService_RegisterCourier_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DeliveryServiceServer).RegisterCourier(ctx, req.(*RegisterCourierRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DeliveryService_ActivateCourier_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ActivateCourierRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DeliveryServiceServer).ActivateCourier(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DeliveryService_ActivateCourier_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DeliveryServiceServer).ActivateCourier(ctx, req.(*ActivateCourierRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DeliveryService_DeactivateCourier_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeactivateCourierRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DeliveryServiceServer).DeactivateCourier(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DeliveryService_DeactivateCourier_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DeliveryServiceServer).DeactivateCourier(ctx, req.(*DeactivateCourierRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DeliveryService_ArchiveCourier_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ArchiveCourierRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DeliveryServiceServer).ArchiveCourier(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DeliveryService_ArchiveCourier_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DeliveryServiceServer).ArchiveCourier(ctx, req.(*ArchiveCourierRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DeliveryService_UpdateContactInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateContactInfoRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DeliveryServiceServer).UpdateContactInfo(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DeliveryService_UpdateContactInfo_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DeliveryServiceServer).UpdateContactInfo(ctx, req.(*UpdateContactInfoRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DeliveryService_UpdateWorkSchedule_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateWorkScheduleRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DeliveryServiceServer).UpdateWorkSchedule(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DeliveryService_UpdateWorkSchedule_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DeliveryServiceServer).UpdateWorkSchedule(ctx, req.(*UpdateWorkScheduleRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DeliveryService_ChangeTransportType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ChangeTransportTypeRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DeliveryServiceServer).ChangeTransportType(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DeliveryService_ChangeTransportType_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DeliveryServiceServer).ChangeTransportType(ctx, req.(*ChangeTransportTypeRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DeliveryService_AcceptOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AcceptOrderRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DeliveryServiceServer).AcceptOrder(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DeliveryService_AcceptOrder_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DeliveryServiceServer).AcceptOrder(ctx, req.(*AcceptOrderRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DeliveryService_AssignOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AssignOrderRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DeliveryServiceServer).AssignOrder(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DeliveryService_AssignOrder_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DeliveryServiceServer).AssignOrder(ctx, req.(*AssignOrderRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DeliveryService_PickUpOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PickUpOrderRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DeliveryServiceServer).PickUpOrder(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DeliveryService_PickUpOrder_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DeliveryServiceServer).PickUpOrder(ctx, req.(*PickUpOrderRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DeliveryService_DeliverOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeliverOrderRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DeliveryServiceServer).DeliverOrder(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DeliveryService_DeliverOrder_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DeliveryServiceServer).DeliverOrder(ctx, req.(*DeliverOrderRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DeliveryService_GetCourierDeliveries_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetCourierDeliveriesRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DeliveryServiceServer).GetCourierDeliveries(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DeliveryService_GetCourierDeliveries_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DeliveryServiceServer).GetCourierDeliveries(ctx, req.(*GetCourierDeliveriesRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _DeliveryService_GetRandomAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetRandomAddressRequest)
 	if err := dec(in); err != nil {
@@ -584,6 +145,35 @@ func _DeliveryService_GetRandomAddress_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DeliveryService_GetOrderTracking_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetOrderTrackingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DeliveryServiceServer).GetOrderTracking(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DeliveryService_GetOrderTracking_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DeliveryServiceServer).GetOrderTracking(ctx, req.(*GetOrderTrackingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DeliveryService_SubscribeOrderTracking_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetOrderTrackingRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(DeliveryServiceServer).SubscribeOrderTracking(m, &grpc.GenericServerStream[GetOrderTrackingRequest, GetOrderTrackingResponse]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type DeliveryService_SubscribeOrderTrackingServer = grpc.ServerStreamingServer[GetOrderTrackingResponse]
+
 // DeliveryService_ServiceDesc is the grpc.ServiceDesc for DeliveryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -592,66 +182,20 @@ var DeliveryService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*DeliveryServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetCourier",
-			Handler:    _DeliveryService_GetCourier_Handler,
-		},
-		{
-			MethodName: "GetCourierPool",
-			Handler:    _DeliveryService_GetCourierPool_Handler,
-		},
-		{
-			MethodName: "RegisterCourier",
-			Handler:    _DeliveryService_RegisterCourier_Handler,
-		},
-		{
-			MethodName: "ActivateCourier",
-			Handler:    _DeliveryService_ActivateCourier_Handler,
-		},
-		{
-			MethodName: "DeactivateCourier",
-			Handler:    _DeliveryService_DeactivateCourier_Handler,
-		},
-		{
-			MethodName: "ArchiveCourier",
-			Handler:    _DeliveryService_ArchiveCourier_Handler,
-		},
-		{
-			MethodName: "UpdateContactInfo",
-			Handler:    _DeliveryService_UpdateContactInfo_Handler,
-		},
-		{
-			MethodName: "UpdateWorkSchedule",
-			Handler:    _DeliveryService_UpdateWorkSchedule_Handler,
-		},
-		{
-			MethodName: "ChangeTransportType",
-			Handler:    _DeliveryService_ChangeTransportType_Handler,
-		},
-		{
-			MethodName: "AcceptOrder",
-			Handler:    _DeliveryService_AcceptOrder_Handler,
-		},
-		{
-			MethodName: "AssignOrder",
-			Handler:    _DeliveryService_AssignOrder_Handler,
-		},
-		{
-			MethodName: "PickUpOrder",
-			Handler:    _DeliveryService_PickUpOrder_Handler,
-		},
-		{
-			MethodName: "DeliverOrder",
-			Handler:    _DeliveryService_DeliverOrder_Handler,
-		},
-		{
-			MethodName: "GetCourierDeliveries",
-			Handler:    _DeliveryService_GetCourierDeliveries_Handler,
-		},
-		{
 			MethodName: "GetRandomAddress",
 			Handler:    _DeliveryService_GetRandomAddress_Handler,
 		},
+		{
+			MethodName: "GetOrderTracking",
+			Handler:    _DeliveryService_GetOrderTracking_Handler,
+		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "SubscribeOrderTracking",
+			Handler:       _DeliveryService_SubscribeOrderTracking_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "infrastructure/rpc/delivery/v1/delivery.proto",
 }
