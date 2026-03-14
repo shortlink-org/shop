@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@shortlink-org/ui-kit';
+import { Temporal } from '@js-temporal/polyfill';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -26,16 +27,42 @@ const COUNTRY_VALUES = [
   'France'
 ] as const;
 
+const MIN_DELIVERY_OFFSET_DAYS = 1;
+const MAX_DELIVERY_OFFSET_DAYS = 14;
+
+function getToday(): Temporal.PlainDate {
+  return Temporal.Now.plainDateISO();
+}
+
 function getMinDate(): string {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  return tomorrow.toISOString().split('T')[0] ?? '';
+  return getToday().add({ days: MIN_DELIVERY_OFFSET_DAYS }).toString();
 }
 
 function getMaxDate(): string {
-  const maxDate = new Date();
-  maxDate.setDate(maxDate.getDate() + 14);
-  return maxDate.toISOString().split('T')[0] ?? '';
+  return getToday().add({ days: MAX_DELIVERY_OFFSET_DAYS }).toString();
+}
+
+function parseDeliveryDate(value: string): Temporal.PlainDate | null {
+  try {
+    return Temporal.PlainDate.from(value);
+  } catch {
+    return null;
+  }
+}
+
+function createDeliveryTimestamp(deliveryDate: string, time: string): string {
+  const plainDate = Temporal.PlainDate.from(deliveryDate);
+  const [hour, minute] = time.split(':').map(Number);
+  const zonedDateTime = Temporal.ZonedDateTime.from({
+    timeZone: Temporal.Now.timeZoneId(),
+    year: plainDate.year,
+    month: plainDate.month,
+    day: plainDate.day,
+    hour,
+    minute
+  });
+
+  return zonedDateTime.toInstant().toString();
 }
 
 const countrySchema = z.enum(COUNTRY_VALUES);
@@ -78,16 +105,14 @@ const checkoutFormInputSchema = z
   })
   .refine(
     (data) => {
-      const date = data.deliveryDate ? new Date(data.deliveryDate + 'T12:00:00') : null;
-      if (!date || isNaN(date.getTime())) return true;
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(0, 0, 0, 0);
-      const max = new Date();
-      max.setDate(max.getDate() + 14);
-      max.setHours(23, 59, 59, 999);
-      date.setHours(12, 0, 0, 0);
-      return date >= tomorrow && date <= max;
+      const date = parseDeliveryDate(data.deliveryDate);
+      if (!date) return false;
+
+      const today = getToday();
+      const tomorrow = today.add({ days: MIN_DELIVERY_OFFSET_DAYS });
+      const max = today.add({ days: MAX_DELIVERY_OFFSET_DAYS });
+
+      return Temporal.PlainDate.compare(date, tomorrow) >= 0 && Temporal.PlainDate.compare(date, max) <= 0;
     },
     {
       message: 'Delivery date must be between tomorrow and 14 days from now',
@@ -96,8 +121,8 @@ const checkoutFormInputSchema = z
   )
   .transform((data) => {
     const slot = TIME_SLOTS.find((s) => s.label === data.selectedTimeSlot);
-    const startTime = slot ? new Date(`${data.deliveryDate}T${slot.start}:00`).toISOString() : '';
-    const endTime = slot ? new Date(`${data.deliveryDate}T${slot.end}:00`).toISOString() : '';
+    const startTime = slot ? createDeliveryTimestamp(data.deliveryDate, slot.start) : '';
+    const endTime = slot ? createDeliveryTimestamp(data.deliveryDate, slot.end) : '';
     return {
       deliveryAddress: {
         ...data.deliveryAddress,
@@ -162,6 +187,7 @@ export default function CheckoutForm({
   const recipientPhone = watch('recipientContacts.recipientPhone');
   const recipientEmail = watch('recipientContacts.recipientEmail');
   const tomorrowDate = getMinDate();
+  const maxDeliveryDate = getMaxDate();
   const [randomAddressLoading, setRandomAddressLoading] = useState(false);
 
   const handleRandomAddress = useCallback(async () => {
@@ -443,7 +469,7 @@ export default function CheckoutForm({
             id="deliveryDate"
             {...register('deliveryDate')}
             min={tomorrowDate}
-            max={getMaxDate()}
+            max={maxDeliveryDate}
             className={`mt-1 block w-full rounded-md border bg-[var(--color-surface)] px-3 py-2 text-[var(--color-foreground)] shadow-sm focus:ring-2 focus:ring-[var(--color-primary)] focus:outline-none ${
               errors.deliveryDate
                 ? 'border-[var(--color-destructive)]'
