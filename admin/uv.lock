@@ -217,11 +217,11 @@ wheels = [
 
 [[package]]
 name = "django-map-widgets"
-version = "0.5.1"
+version = "0.5.2"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/78/50/651dae7335fc9c6df7b1ab27c49b1cc98245ac0d61750538a192da19e671/django_map_widgets-0.5.1.tar.gz", hash = "sha256:68e81f9c58c1cd6d180421220a4d100a185c8062ae0ca7be790658fcfd4eda1d", size = 160819, upload-time = "2024-07-09T17:37:50.717Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/10/8e/85ecfeb9fa18c026058cdb113cc9b7eca38ebcee2cf7a6d4ccf42f998b88/django_map_widgets-0.5.2.tar.gz", hash = "sha256:08e20134c93c346d37b5ca9bf80b9a5cb3c76d450752dc31bb8932c3022d3221", size = 158178, upload-time = "2026-03-07T19:14:07.486Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6e/75/7f1782c9fa3c07c2ca63ce7b65c4838afb568a5ea71aa119aaa9dc456d8b/django_map_widgets-0.5.1-py3-none-any.whl", hash = "sha256:7307935163b46c6a2a225c85c91c7262a8b47a5c3aefbbc6d8fc7a5fda53b7cd", size = 256008, upload-time = "2024-07-09T17:37:48.941Z" },
+    { url = "https://files.pythonhosted.org/packages/13/ab/1806797562ecbfcc5ad063dec707b888f68e69f6b06b19f718d5ae0f1900/django_map_widgets-0.5.2-py3-none-any.whl", hash = "sha256:b694f013ccb86f8e48b6eeb19d33c322d01a085de559dd52ff7e73df1e62a3c9", size = 192488, upload-time = "2026-03-07T19:14:05.995Z" },
 ]
 
 [[package]]
@@ -1176,7 +1176,7 @@ requires-dist = [
     { name = "django-filter" },
     { name = "django-health-check", specifier = "==4.1.2" },
     { name = "django-import-export", specifier = ">=4.4.0" },
-    { name = "django-map-widgets", specifier = ">=0.5.1" },
+    { name = "django-map-widgets", specifier = ">=0.5.2" },
     { name = "django-money", specifier = ">=3.6.0" },
     { name = "django-ory-auth", git = "https://github.com/micro-company/django_ory_auth?rev=master" },
     { name = "django-prometheus", specifier = "==2.5.0.dev12" },
