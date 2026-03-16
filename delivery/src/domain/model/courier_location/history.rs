@@ -68,55 +68,38 @@ impl LocationHistoryEntry {
         }
     }
 
-    // === Getters ===
-
-    /// Get entry ID
-    pub fn id(&self) -> Uuid {
+    /// Return the unique identifier of this stored entry.
+    pub fn entry_id(&self) -> Uuid {
         self.id
     }
 
-    /// Get courier ID
-    pub fn courier_id(&self) -> Uuid {
+    /// Return the courier that reported this location.
+    pub fn reported_by(&self) -> Uuid {
         self.courier_id
     }
 
-    /// Get location
-    pub fn location(&self) -> &Location {
+    /// Return the reported position.
+    pub fn reported_position(&self) -> &Location {
         &self.location
     }
 
-    /// Get latitude
-    pub fn latitude(&self) -> f64 {
-        self.location.latitude()
-    }
-
-    /// Get longitude
-    pub fn longitude(&self) -> f64 {
-        self.location.longitude()
-    }
-
-    /// Get accuracy
-    pub fn accuracy(&self) -> f64 {
-        self.location.accuracy()
-    }
-
-    /// Get timestamp
-    pub fn timestamp(&self) -> DateTime<Utc> {
+    /// Return when this position was recorded.
+    pub fn recorded_at(&self) -> DateTime<Utc> {
         self.timestamp
     }
 
-    /// Get speed
-    pub fn speed(&self) -> Option<f64> {
+    /// Return the reported travel speed in km/h.
+    pub fn travel_speed_kmh(&self) -> Option<f64> {
         self.speed
     }
 
-    /// Get heading
-    pub fn heading(&self) -> Option<f64> {
+    /// Return the reported bearing in degrees.
+    pub fn bearing_degrees(&self) -> Option<f64> {
         self.heading
     }
 
-    /// Get created_at
-    pub fn created_at(&self) -> DateTime<Utc> {
+    /// Return when this entry was stored.
+    pub fn stored_at(&self) -> DateTime<Utc> {
         self.created_at
     }
 }
@@ -184,12 +167,12 @@ mod tests {
         let entry =
             LocationHistoryEntry::new(courier_id, location, timestamp, Some(35.0), Some(180.0));
 
-        assert_eq!(entry.courier_id(), courier_id);
-        assert_eq!(entry.latitude(), 52.52);
-        assert_eq!(entry.longitude(), 13.405);
-        assert_eq!(entry.speed(), Some(35.0));
-        assert_eq!(entry.heading(), Some(180.0));
-        assert!(entry.id() != Uuid::nil());
+        assert_eq!(entry.reported_by(), courier_id);
+        assert_eq!(entry.reported_position().latitude(), 52.52);
+        assert_eq!(entry.reported_position().longitude(), 13.405);
+        assert_eq!(entry.travel_speed_kmh(), Some(35.0));
+        assert_eq!(entry.bearing_degrees(), Some(180.0));
+        assert!(entry.entry_id() != Uuid::nil());
     }
 
     #[test]

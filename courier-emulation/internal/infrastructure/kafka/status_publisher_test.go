@@ -1,3 +1,4 @@
+//nolint:revive,testifylint // Kafka status publisher tests keep literal fixtures and direct error assertions readable.
 package kafka
 
 import (

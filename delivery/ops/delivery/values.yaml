@@ -131,6 +131,10 @@ deploy:
     RANDOM_ADDRESS_MAX_LON: "13.761"
     RANDOM_ADDRESS_DEFAULT_CITY: "Berlin"
     RANDOM_ADDRESS_DEFAULT_COUNTRY: "Germany"
+    OSRM_URL: http://osrm.shortlink-shop.svc.cluster.local:5000
+    OSRM_TIMEOUT_MS: "3000"
+    OSRM_AUTH_HEADER_NAME: x-osrm-auth
+    OSRM_AUTH_HEADER_VALUE: shortlink-shop-osrm-internal
 
   envSecret:
     # PostgreSQL connection (from Crunchy Data operator secret)

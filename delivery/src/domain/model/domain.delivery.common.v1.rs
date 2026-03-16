@@ -6,8 +6,6 @@ pub struct Address {
     pub street: ::prost::alloc::string::String,
     #[prost(string, tag = "2")]
     pub city: ::prost::alloc::string::String,
-    #[prost(string, tag = "3")]
-    pub postal_code: ::prost::alloc::string::String,
     #[prost(string, tag = "4")]
     pub country: ::prost::alloc::string::String,
     #[prost(double, tag = "5")]

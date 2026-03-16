@@ -1,3 +1,4 @@
+//nolint:revive,testifylint // Route generator tests keep literal OSRM fixtures and direct equality checks readable.
 package services
 
 import (
@@ -13,16 +14,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type routeServerResponse struct {
+	Code   string             `json:"code"`
+	Routes []routeServerRoute `json:"routes"`
+}
+
+type routeServerRoute struct {
+	Distance float64 `json:"distance"`
+	Duration float64 `json:"duration"`
+	Geometry string  `json:"geometry"`
+}
+
 func TestRouteGenerator_GenerateRoute(t *testing.T) {
 	// Create mock OSRM server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		resp := OSRMResponse{
+		resp := routeServerResponse{
 			Code: "Ok",
-			Routes: []struct {
-				Distance float64 `json:"distance"`
-				Duration float64 `json:"duration"`
-				Geometry string  `json:"geometry"`
-			}{
+			Routes: []routeServerRoute{
 				{
 					Distance: 1885.4,
 					Duration: 259.5,
@@ -62,7 +70,7 @@ func TestRouteGenerator_GenerateRoute(t *testing.T) {
 
 func TestRouteGenerator_GenerateRoute_NoRoute(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		resp := OSRMResponse{
+		resp := routeServerResponse{
 			Code:   "NoRoute",
 			Routes: nil,
 		}
@@ -107,13 +115,9 @@ func TestRouteGenerator_GenerateRoute_ServiceUnavailable(t *testing.T) {
 
 func TestRouteGenerator_GenerateRandomRoute(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		resp := OSRMResponse{
+		resp := routeServerResponse{
 			Code: "Ok",
-			Routes: []struct {
-				Distance float64 `json:"distance"`
-				Duration float64 `json:"duration"`
-				Geometry string  `json:"geometry"`
-			}{
+			Routes: []routeServerRoute{
 				{
 					Distance: 2000.0,
 					Duration: 300.0,
@@ -149,13 +153,9 @@ func TestRouteGenerator_GenerateBatch(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requestCount++
-		resp := OSRMResponse{
+		resp := routeServerResponse{
 			Code: "Ok",
-			Routes: []struct {
-				Distance float64 `json:"distance"`
-				Duration float64 `json:"duration"`
-				Geometry string  `json:"geometry"`
-			}{
+			Routes: []routeServerRoute{
 				{
 					Distance: 2000.0,
 					Duration: 300.0,
@@ -192,13 +192,9 @@ func TestRouteGenerator_CacheHit(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requestCount++
-		resp := OSRMResponse{
+		resp := routeServerResponse{
 			Code: "Ok",
-			Routes: []struct {
-				Distance float64 `json:"distance"`
-				Duration float64 `json:"duration"`
-				Geometry string  `json:"geometry"`
-			}{
+			Routes: []routeServerRoute{
 				{
 					Distance: 1885.4,
 					Duration: 259.5,

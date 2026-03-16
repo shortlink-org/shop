@@ -1,3 +1,4 @@
+//nolint:revive // Polyline fixtures are easier to validate with literal coordinate expectations in tests.
 package vo
 
 import (

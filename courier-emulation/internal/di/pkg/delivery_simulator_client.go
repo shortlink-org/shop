@@ -9,6 +9,17 @@ import (
 	"github.com/spf13/viper"
 )
 
+const (
+	// defaultDeliverySimulationSpeedKmH is the baseline courier speed for delivery simulation.
+	defaultDeliverySimulationSpeedKmH = 30.0
+	// defaultDeliveryFailureRate is the default probability of a simulated failed delivery.
+	defaultDeliveryFailureRate = 0.05
+	// defaultPickupWait is the pause spent at pickup before switching to delivery.
+	defaultPickupWait = 30 * time.Second
+	// defaultDeliveryWait is the pause spent at the destination before completing delivery.
+	defaultDeliveryWait = 60 * time.Second
+)
+
 // NewDeliverySimulator creates the delivery simulator with configuration.
 func NewDeliverySimulator(
 	cfg *config.Config,
@@ -18,11 +29,11 @@ func NewDeliverySimulator(
 ) *services.DeliverySimulator {
 	// Set defaults
 	viper.SetDefault("SIMULATION_UPDATE_INTERVAL", 5*time.Second)
-	viper.SetDefault("SIMULATION_SPEED_KMH", 30.0)
+	viper.SetDefault("SIMULATION_SPEED_KMH", defaultDeliverySimulationSpeedKmH)
 	viper.SetDefault("SIMULATION_TIME_MULTIPLIER", 1.0)
-	viper.SetDefault("SIMULATION_PICKUP_WAIT", 30*time.Second)
-	viper.SetDefault("SIMULATION_DELIVERY_WAIT", 60*time.Second)
-	viper.SetDefault("SIMULATION_FAILURE_RATE", 0.05)
+	viper.SetDefault("SIMULATION_PICKUP_WAIT", defaultPickupWait)
+	viper.SetDefault("SIMULATION_DELIVERY_WAIT", defaultDeliveryWait)
+	viper.SetDefault("SIMULATION_FAILURE_RATE", defaultDeliveryFailureRate)
 
 	// Read configuration
 	updateInterval := cfg.GetDuration("SIMULATION_UPDATE_INTERVAL")

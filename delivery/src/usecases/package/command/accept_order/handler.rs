@@ -78,15 +78,8 @@ where
     }
 
     /// Derive work zone from delivery address (simplified)
-    fn derive_zone(city: &str, postal_code: &str) -> String {
-        // Simple zone derivation: City-PostalCodePrefix
-        // In real implementation, this would use a proper zone mapping service
-        let postal_prefix = if postal_code.len() >= 3 {
-            &postal_code[..3]
-        } else {
-            postal_code
-        };
-        format!("{}-{}", city, postal_prefix)
+    fn derive_zone(city: &str) -> String {
+        city.trim().to_string()
     }
 }
 
@@ -135,10 +128,7 @@ where
             .map_err(AcceptOrderError::InvalidDeliveryPeriod)?;
 
         // 4. Derive zone from delivery address
-        let zone = Self::derive_zone(
-            &cmd.delivery_address.city,
-            &cmd.delivery_address.postal_code,
-        );
+        let zone = Self::derive_zone(&cmd.delivery_address.city);
 
         // 5. Create Package aggregate with ACCEPTED status
         let mut package = Package::new(
@@ -285,7 +275,6 @@ mod tests {
         AddressInput {
             street: "123 Main St".to_string(),
             city: "Berlin".to_string(),
-            postal_code: "10115".to_string(),
             country: "Germany".to_string(),
             latitude: 52.52,
             longitude: 13.405,

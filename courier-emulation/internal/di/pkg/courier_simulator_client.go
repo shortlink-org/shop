@@ -9,10 +9,13 @@ import (
 	"github.com/spf13/viper"
 )
 
+// defaultSimulationSpeedKmH is the baseline courier speed for idle route simulation.
+const defaultSimulationSpeedKmH = 30.0
+
 // NewCourierSimulator creates the courier simulator.
 func NewCourierSimulator(cfg *config.Config, routeGen *services.RouteGenerator, publisher *kafka.LocationPublisher) *services.CourierSimulator {
 	viper.SetDefault("SIMULATION_UPDATE_INTERVAL", 5*time.Second)
-	viper.SetDefault("SIMULATION_SPEED_KMH", 30.0)
+	viper.SetDefault("SIMULATION_SPEED_KMH", defaultSimulationSpeedKmH)
 	viper.SetDefault("SIMULATION_TIME_MULTIPLIER", 1.0)
 
 	updateInterval := cfg.GetDuration("SIMULATION_UPDATE_INTERVAL")

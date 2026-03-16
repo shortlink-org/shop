@@ -23,6 +23,7 @@ use crate::infrastructure::messaging::{
     EmulationConsumer, KafkaEventPublisher, LocationConsumer, OutboxForwarder, RedisTrackingPubSub,
 };
 use crate::infrastructure::notifications::StubNotificationService;
+use crate::infrastructure::osrm::OsrmClient;
 use crate::infrastructure::repository::{
     CourierPostgresRepository, LocationPostgresRepository, OutboxPostgresRepository,
     PackagePostgresRepository,
@@ -44,6 +45,9 @@ pub enum DiError {
 
     #[error("Kafka connection failed: {0}")]
     KafkaError(String),
+
+    #[error("OSRM client initialization failed: {0}")]
+    OsrmError(String),
 
     #[error("Temporal worker error: {0}")]
     TemporalError(String),
@@ -87,6 +91,9 @@ pub struct AppState {
 
     /// Redis-backed tracking pub/sub for cross-pod subscription fan-out
     pub tracking_pubsub: Arc<RedisTrackingPubSub>,
+
+    /// OSRM HTTP client for routing and nearest-road lookups
+    pub osrm_client: Arc<OsrmClient>,
 
     /// Bounding box for GetRandomAddress (optional)
     pub random_address_bbox: Option<RandomAddressBbox>,
@@ -144,6 +151,15 @@ impl AppState {
 
         // Create notification service (stub for now)
         let notification_service = Arc::new(StubNotificationService::new());
+        let osrm_client = Arc::new(
+            OsrmClient::new(
+                config.osrm.base_url.clone(),
+                config.osrm.timeout,
+                config.osrm.auth_header_name.as_deref(),
+                config.osrm.auth_header_value.as_deref(),
+            )
+            .map_err(|e| DiError::OsrmError(e.to_string()))?,
+        );
 
         // Create shutdown channel
         let (shutdown_tx, _) = broadcast::channel(1);
@@ -163,6 +179,7 @@ impl AppState {
             db,
             shutdown_tx,
             tracking_pubsub,
+            osrm_client,
             random_address_bbox: config.random_address_bbox.clone(),
         })
     }

@@ -135,7 +135,7 @@ where
     ) -> CourierForDispatch {
         // Try to get location from cache
         let current_location = match self.location_cache.get_location(courier.id().0).await {
-            Ok(Some(loc)) => Some(loc.location().clone()),
+            Ok(Some(loc)) => Some(*loc.reported_position()),
             Ok(None) => None,
             Err(e) => {
                 warn!(
@@ -220,7 +220,7 @@ where
                 // Create PackageForDispatch
                 let package_for_dispatch = PackageForDispatch {
                     id: package.id().0.to_string(),
-                    pickup_location: package.pickup_address().location.clone(),
+                    pickup_location: package.pickup_address().location,
                     delivery_zone: zone.to_string(),
                     is_urgent: package.priority()
                         == crate::domain::model::package::Priority::Urgent,
@@ -272,7 +272,7 @@ where
                 // Get distance from location cache for validation
                 let distance_to_courier = match self.location_cache.get_location(courier_id).await {
                     Ok(Some(loc)) => loc
-                        .location()
+                        .reported_position()
                         .distance_to(&package.pickup_address().location),
                     _ => 0.0, // Default to 0 if location not available
                 };
@@ -346,7 +346,6 @@ where
             pickup_address: Some(proto_common::Address {
                 street: package.pickup_address().street.clone(),
                 city: package.pickup_address().city.clone(),
-                postal_code: package.pickup_address().postal_code.clone(),
                 country: String::new(),
                 latitude: package.pickup_address().location.latitude(),
                 longitude: package.pickup_address().location.longitude(),
@@ -354,7 +353,6 @@ where
             delivery_address: Some(proto_common::Address {
                 street: package.delivery_address().street.clone(),
                 city: package.delivery_address().city.clone(),
-                postal_code: package.delivery_address().postal_code.clone(),
                 country: String::new(),
                 latitude: package.delivery_address().location.latitude(),
                 longitude: package.delivery_address().location.longitude(),
@@ -391,9 +389,9 @@ where
             let notification = OrderAssignedNotification {
                 package_id: package.id().0,
                 pickup_address: package.pickup_address().street.clone(),
-                pickup_location: package.pickup_address().location.clone(),
+                pickup_location: package.pickup_address().location,
                 delivery_address: package.delivery_address().street.clone(),
-                delivery_location: package.delivery_address().location.clone(),
+                delivery_location: package.delivery_address().location,
                 customer_phone: String::new(),
                 delivery_start: package.delivery_period().start().to_rfc3339(),
                 delivery_end: package.delivery_period().end().to_rfc3339(),
@@ -769,7 +767,6 @@ mod tests {
         Address::new(
             "123 Main St".to_string(),
             "Berlin".to_string(),
-            "10115".to_string(),
             Location::new(52.52, 13.405, 10.0).unwrap(),
         )
     }

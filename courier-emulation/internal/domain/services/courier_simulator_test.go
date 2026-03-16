@@ -1,3 +1,4 @@
+//nolint:gocritic,revive,testifylint // Tests keep literal route fixtures and direct comparisons readable.
 package services
 
 import (

@@ -259,7 +259,7 @@ impl CourierRepository for CourierPostgresRepository {
             .await
             .map_err(|e| RepositoryError::QueryError(e.to_string()))?;
 
-        Ok(count as u64)
+        Ok(count)
     }
 }
 

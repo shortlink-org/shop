@@ -5,6 +5,17 @@ import (
 	"fmt"
 )
 
+const (
+	// polylineASCIIShift converts encoded bytes to/from printable ASCII.
+	polylineASCIIShift = 63
+	// polylineChunkMask extracts the 5-bit payload from each encoded chunk.
+	polylineChunkMask = 0x1f
+	// polylineContinuationMask marks chunks that have more bytes following.
+	polylineContinuationMask = 0x20
+	// polylinePrecision is the fixed scaling factor used by Google polyline encoding.
+	polylinePrecision = 1e5
+)
+
 // Polyline validation errors
 var (
 	ErrEmptyPolyline = errors.New("polyline cannot be empty")
@@ -62,12 +73,12 @@ func (p Polyline) Decode() ([]Location, error) {
 		result := 0
 
 		for index < len(p.encoded) {
-			b := int(p.encoded[index]) - 63
+			b := int(p.encoded[index]) - polylineASCIIShift
 			index++
-			result |= (b & 0x1f) << shift
+			result |= (b & polylineChunkMask) << shift
 			shift += 5
 
-			if b < 0x20 {
+			if b < polylineContinuationMask {
 				break
 			}
 		}
@@ -83,12 +94,12 @@ func (p Polyline) Decode() ([]Location, error) {
 		result = 0
 
 		for index < len(p.encoded) {
-			b := int(p.encoded[index]) - 63
+			b := int(p.encoded[index]) - polylineASCIIShift
 			index++
-			result |= (b & 0x1f) << shift
+			result |= (b & polylineChunkMask) << shift
 			shift += 5
 
-			if b < 0x20 {
+			if b < polylineContinuationMask {
 				break
 			}
 		}
@@ -100,8 +111,8 @@ func (p Polyline) Decode() ([]Location, error) {
 		}
 
 		// Convert to degrees (polyline uses 1e5 precision)
-		latitude := float64(lat) / 1e5
-		longitude := float64(lng) / 1e5
+		latitude := float64(lat) / polylinePrecision
+		longitude := float64(lng) / polylinePrecision
 
 		loc, err := NewLocation(latitude, longitude)
 		if err != nil {

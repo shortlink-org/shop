@@ -1,3 +1,4 @@
+//nolint:gocritic // DeliveryOrder is an immutable value object; value receivers preserve copy semantics.
 package vo
 
 import (
@@ -14,6 +15,8 @@ type DeliveryOrder struct {
 }
 
 // NewDeliveryOrder creates a new DeliveryOrder.
+//
+//nolint:whitespace // Multiline constructor signature is kept compact for readability.
 func NewDeliveryOrder(
 	orderID string,
 	packageID string,

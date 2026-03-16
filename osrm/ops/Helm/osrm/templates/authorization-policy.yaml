@@ -1,0 +1,28 @@
+{{- if .Values.authorizationPolicy.enabled }}
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: {{ .Release.Name }}-osrm-source-guard
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "shortlink-common.matchLabels" . | nindent 6 }}
+  action: ALLOW
+  rules:
+    - to:
+        - operation:
+            paths: ["/health"]
+    - from:
+        - source:
+            principals:
+              {{- range .Values.authorizationPolicy.allowedServiceAccounts }}
+              - "cluster.local/ns/{{ $.Release.Namespace }}/sa/{{ . }}"
+              {{- end }}
+      to:
+        - operation:
+            ports: ["5000"]
+      when:
+        - key: "request.headers[{{ .Values.authorizationPolicy.requiredHeader.name | lower }}]"
+          values: ["{{ .Values.authorizationPolicy.requiredHeader.value }}"]
+{{- end }}

@@ -56,7 +56,7 @@ where
     C: CourierCache + Send + Sync + 'static,
 {
     async fn get_free_couriers(&self, zone: &str) -> Result<String, ActivityError> {
-        self.get_free_couriers_in_zone(&zone)
+        self.get_free_couriers_in_zone(zone)
             .await
             .map(|couriers| {
                 couriers

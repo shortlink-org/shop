@@ -1,15 +1,15 @@
+//nolint:revive,mnd // Route generator fixtures keep canonical map coordinates inline for readability.
 package services
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/dgraph-io/ristretto/v2"
 	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/domain/vo"
+	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/infrastructure/osrm"
 )
 
 const (
@@ -18,6 +18,8 @@ const (
 	routeCacheMaxCost     = 50_000_00 // ~50MB
 	routeCacheBufferItems = 64
 	routeCacheTTL         = 24 * time.Hour // routes rarely change
+	// defaultOSRMTimeout bounds a single OSRM request when no explicit timeout is configured.
+	defaultOSRMTimeout = 10 * time.Second
 )
 
 // RouteGenerator errors
@@ -27,34 +29,26 @@ var (
 	ErrInvalidResponse = errors.New("invalid OSRM response")
 )
 
-// OSRMResponse represents the response from OSRM routing API.
-type OSRMResponse struct {
-	Code   string `json:"code"`
-	Routes []struct {
-		Distance float64 `json:"distance"` // meters
-		Duration float64 `json:"duration"` // seconds
-		Geometry string  `json:"geometry"` // encoded polyline
-	} `json:"routes"`
-}
-
 // RouteGeneratorConfig holds configuration for the route generator.
 type RouteGeneratorConfig struct {
-	OSRMBaseURL string
-	Timeout     time.Duration
+	OSRMBaseURL     string
+	Timeout         time.Duration
+	AuthHeaderName  string
+	AuthHeaderValue string
 }
 
 // DefaultRouteGeneratorConfig returns default configuration.
 func DefaultRouteGeneratorConfig() RouteGeneratorConfig {
 	return RouteGeneratorConfig{
 		OSRMBaseURL: "http://localhost:5000",
-		Timeout:     10 * time.Second,
+		Timeout:     defaultOSRMTimeout,
 	}
 }
 
 // RouteGenerator is a domain service for generating routes via OSRM.
 type RouteGenerator struct {
 	config     RouteGeneratorConfig
-	httpClient *http.Client
+	osrmClient *osrm.Client
 	idCounter  int
 	cache      *ristretto.Cache[string, vo.Route]
 }
@@ -70,13 +64,21 @@ func NewRouteGenerator(config RouteGeneratorConfig) (*RouteGenerator, error) {
 		return nil, fmt.Errorf("failed to create route cache: %w", err)
 	}
 
+	osrmClient, err := osrm.NewClient(
+		config.OSRMBaseURL,
+		config.Timeout,
+		config.AuthHeaderName,
+		config.AuthHeaderValue,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create osrm client: %w", err)
+	}
+
 	return &RouteGenerator{
-		config: config,
-		httpClient: &http.Client{
-			Timeout: config.Timeout,
-		},
-		idCounter: 0,
-		cache:     cache,
+		config:     config,
+		osrmClient: osrmClient,
+		idCounter:  0,
+		cache:      cache,
 	}, nil
 }
 
@@ -112,42 +114,17 @@ func (rg *RouteGenerator) GenerateRoute(ctx context.Context, origin, destination
 
 // fetchRouteFromOSRM fetches a route from the OSRM API.
 func (rg *RouteGenerator) fetchRouteFromOSRM(ctx context.Context, origin, destination vo.Location) (vo.Route, error) {
-	url := fmt.Sprintf("%s/route/v1/driving/%s;%s?overview=full",
-		rg.config.OSRMBaseURL,
-		origin.ToOSRMFormat(),
-		destination.ToOSRMFormat(),
-	)
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
+	osrmRoute, err := rg.osrmClient.Route(ctx, origin.ToOSRMFormat(), destination.ToOSRMFormat())
 	if err != nil {
-		return vo.Route{}, fmt.Errorf("failed to create request: %w", err)
+		switch {
+		case errors.Is(err, osrm.ErrNoRouteFound):
+			return vo.Route{}, ErrNoRouteFound
+		case errors.Is(err, osrm.ErrInvalidResponse):
+			return vo.Route{}, fmt.Errorf("%w: %w", ErrInvalidResponse, err)
+		default:
+			return vo.Route{}, fmt.Errorf("%w: %w", ErrOSRMUnavailable, err)
+		}
 	}
-
-	resp, err := rg.httpClient.Do(req)
-	if err != nil {
-		return vo.Route{}, fmt.Errorf("%w: %w", ErrOSRMUnavailable, err)
-	}
-
-	defer func() {
-		_ = resp.Body.Close() //nolint:errcheck // best-effort close on defer
-	}()
-
-	if resp.StatusCode != http.StatusOK {
-		return vo.Route{}, fmt.Errorf("%w: status code %d", ErrOSRMUnavailable, resp.StatusCode)
-	}
-
-	var osrmResp OSRMResponse
-
-	decodeErr := json.NewDecoder(resp.Body).Decode(&osrmResp)
-	if decodeErr != nil {
-		return vo.Route{}, fmt.Errorf("%w: %w", ErrInvalidResponse, decodeErr)
-	}
-
-	if osrmResp.Code != "Ok" || len(osrmResp.Routes) == 0 {
-		return vo.Route{}, ErrNoRouteFound
-	}
-
-	osrmRoute := osrmResp.Routes[0]
 
 	polyline, err := vo.NewPolyline(osrmRoute.Geometry)
 	if err != nil {
@@ -162,8 +139,8 @@ func (rg *RouteGenerator) fetchRouteFromOSRM(ctx context.Context, origin, destin
 		origin,
 		destination,
 		polyline,
-		osrmRoute.Distance,
-		time.Duration(osrmRoute.Duration)*time.Second,
+		osrmRoute.DistanceMeters,
+		osrmRoute.Duration,
 	)
 	if err != nil {
 		return vo.Route{}, fmt.Errorf("new route: %w", err)

@@ -1,3 +1,4 @@
+//nolint:revive,mnd // Simulation defaults and bearing math keep domain numbers inline for readability.
 package services
 
 import (
@@ -10,6 +11,8 @@ import (
 	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/domain"
 	"github.com/shortlink-org/shortlink/boundaries/shop/courier-emulation/internal/domain/vo"
 )
+
+const minRoutePoints = 2
 
 // LocationPublisher interface for publishing location events.
 type LocationPublisher interface {
@@ -65,6 +68,8 @@ type CourierSimulator struct {
 }
 
 // NewCourierSimulator creates a new courier simulator.
+//
+//nolint:whitespace // Constructor signature is kept compact; gofumpt handles canonical formatting.
 func NewCourierSimulator(
 	config CourierSimulatorConfig,
 	routeGenerator *RouteGenerator,
@@ -91,6 +96,8 @@ func (cs *CourierSimulator) StartCourier(ctx context.Context, courierID string, 
 }
 
 // StartCourierWithRoute starts a courier simulation with a specific route.
+//
+//nolint:gocritic // Route is an immutable value object; this API intentionally accepts it by value.
 func (cs *CourierSimulator) StartCourierWithRoute(ctx context.Context, courierID string, route vo.Route) error {
 	// Decode polyline to get route points
 	points, err := route.Points()
@@ -98,7 +105,7 @@ func (cs *CourierSimulator) StartCourierWithRoute(ctx context.Context, courierID
 		return fmt.Errorf("failed to decode route points: %w", err)
 	}
 
-	if len(points) < 2 {
+	if len(points) < minRoutePoints {
 		return domain.ErrRouteTooShort
 	}
 

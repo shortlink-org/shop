@@ -53,20 +53,32 @@ impl RedisLocationCache {
 impl LocationCache for RedisLocationCache {
     async fn set_location(&self, location: &CourierLocation) -> Result<(), LocationCacheError> {
         let mut conn = self.conn.clone();
-        let key = Self::location_key(location.courier_id());
-        let courier_id_str = location.courier_id().to_string();
+        let key = Self::location_key(location.reported_by());
+        let courier_id_str = location.reported_by().to_string();
 
         // Store location as hash with TTL
         let mut pipe = redis::pipe();
-        pipe.hset(&key, "latitude", location.latitude().to_string())
-            .hset(&key, "longitude", location.longitude().to_string())
-            .hset(&key, "accuracy", location.accuracy().to_string())
-            .hset(&key, "timestamp", location.timestamp().to_rfc3339());
+        pipe.hset(
+            &key,
+            "latitude",
+            location.reported_position().latitude().to_string(),
+        )
+        .hset(
+            &key,
+            "longitude",
+            location.reported_position().longitude().to_string(),
+        )
+        .hset(
+            &key,
+            "accuracy",
+            location.reported_position().accuracy().to_string(),
+        )
+        .hset(&key, "timestamp", location.recorded_at().to_rfc3339());
 
-        if let Some(speed) = location.speed() {
+        if let Some(speed) = location.travel_speed_kmh() {
             pipe.hset(&key, "speed", speed.to_string());
         }
-        if let Some(heading) = location.heading() {
+        if let Some(heading) = location.bearing_degrees() {
             pipe.hset(&key, "heading", heading.to_string());
         }
 
@@ -256,11 +268,11 @@ mod tests {
         assert!(retrieved.is_some());
 
         let retrieved = retrieved.unwrap();
-        assert_eq!(retrieved.courier_id(), courier_id);
-        assert!((retrieved.latitude() - 52.52).abs() < 0.001);
-        assert!((retrieved.longitude() - 13.405).abs() < 0.001);
-        assert_eq!(retrieved.speed(), Some(35.0));
-        assert_eq!(retrieved.heading(), Some(180.0));
+        assert_eq!(retrieved.reported_by(), courier_id);
+        assert!((retrieved.reported_position().latitude() - 52.52).abs() < 0.001);
+        assert!((retrieved.reported_position().longitude() - 13.405).abs() < 0.001);
+        assert_eq!(retrieved.travel_speed_kmh(), Some(35.0));
+        assert_eq!(retrieved.bearing_degrees(), Some(180.0));
     }
 
     #[tokio::test]

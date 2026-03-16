@@ -17,7 +17,14 @@ import (
 	"github.com/spf13/viper"
 )
 
+// gracefulShutdownExitCode matches the conventional SIGTERM exit status (128 + 15).
+const gracefulShutdownExitCode = 143
+
 func main() {
+	os.Exit(run())
+}
+
+func run() int {
 	viper.SetDefault("SERVICE_NAME", "shortlink-courier-emulation")
 
 	// Init a new service
@@ -41,9 +48,12 @@ func main() {
 	err = service.DeliverySubscriber.Start(ctx)
 	if err != nil {
 		service.Log.Error("Failed to start delivery subscriber", slog.String("error", err.Error()))
+		cancel(fmt.Errorf("delivery subscriber start failed: %w", err)) //nolint:err113 // startup error should be attached to context cause
 		cleanup()
-		os.Exit(1)
+
+		return 1
 	}
+
 	service.Log.Info("Delivery subscriber started, listening for package assignments")
 
 	service.Log.Info("Courier Emulation Service running")
@@ -60,5 +70,6 @@ func main() {
 	service.Log.Info("Courier Emulation Service stopped", slog.String("signal", signal.String()))
 
 	// Exit Code 143: Graceful Termination (SIGTERM)
-	os.Exit(143) //nolint:gocritic // exit code 143 is used to indicate graceful termination
+
+	return gracefulShutdownExitCode
 }

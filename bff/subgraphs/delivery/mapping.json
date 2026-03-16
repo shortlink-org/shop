@@ -73,11 +73,6 @@
           "argumentMappings": []
         },
         {
-          "original": "postalCode",
-          "mapped": "postal_code",
-          "argumentMappings": []
-        },
-        {
           "original": "country",
           "mapped": "country",
           "argumentMappings": []

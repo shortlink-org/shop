@@ -1,6 +1,7 @@
 package pkg_di
 
 import (
+	"fmt"
 	"log/slog"
 
 	"github.com/shortlink-org/go-sdk/config"
@@ -16,7 +17,7 @@ func NewStatusPublisher(cfg *config.Config, log logger.Logger) (*kafka.KafkaStat
 
 	publisher, err := sdkkafka.NewPublisherFromConfig(log, cfg)
 	if err != nil {
-		return nil, func() {}, err
+		return nil, func() {}, fmt.Errorf("new status publisher: %w", err)
 	}
 
 	cleanup := func() {

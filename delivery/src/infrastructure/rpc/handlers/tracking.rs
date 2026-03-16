@@ -105,21 +105,16 @@ pub async fn build_order_tracking_response(
         phone: courier.phone().to_string(),
         transport_type: domain_to_proto_transport(courier.transport_type()).into(),
         status: courier_status.into(),
-        current_location: current_location.as_ref().map(|location| {
-            crate::infrastructure::rpc::Location {
-                latitude: location.latitude(),
-                longitude: location.longitude(),
-            }
-        }),
+        current_location: current_location.as_ref().map(|location| location.location().into()),
         last_active_at: current_location
             .as_ref()
-            .map(|location| datetime_to_timestamp(location.timestamp())),
+            .map(|location| datetime_to_timestamp(location.recorded_at())),
     };
 
     if matches!(status, PackageStatus::Assigned | PackageStatus::InTransit) {
         if let Some(location) = current_location.as_ref() {
             let distance_km = location
-                .location()
+                .reported_position()
                 .distance_to(&package.delivery_address().location);
             let eta_minutes = courier
                 .transport_type()

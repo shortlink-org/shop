@@ -200,7 +200,7 @@ mod tests {
     fn test_create_entry() {
         let courier_id = Uuid::new_v4();
         let entry = create_test_entry(courier_id);
-        assert_eq!(entry.courier_id(), courier_id);
-        assert!((entry.latitude() - 52.52).abs() < 0.001);
+        assert_eq!(entry.reported_by(), courier_id);
+        assert!((entry.reported_position().latitude() - 52.52).abs() < 0.001);
     }
 }

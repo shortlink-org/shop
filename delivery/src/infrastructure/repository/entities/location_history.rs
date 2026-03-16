@@ -49,15 +49,15 @@ impl From<&LocationHistoryEntry> for ActiveModel {
         use sea_orm::ActiveValue::Set;
 
         Self {
-            id: Set(entry.id()),
-            courier_id: Set(entry.courier_id()),
-            latitude: Set(entry.latitude()),
-            longitude: Set(entry.longitude()),
-            accuracy: Set(entry.accuracy()),
-            timestamp: Set(entry.timestamp()),
-            speed: Set(entry.speed()),
-            heading: Set(entry.heading()),
-            created_at: Set(entry.created_at()),
+            id: Set(entry.entry_id()),
+            courier_id: Set(entry.reported_by()),
+            latitude: Set(entry.reported_position().latitude()),
+            longitude: Set(entry.reported_position().longitude()),
+            accuracy: Set(entry.reported_position().accuracy()),
+            timestamp: Set(entry.recorded_at()),
+            speed: Set(entry.travel_speed_kmh()),
+            heading: Set(entry.bearing_degrees()),
+            created_at: Set(entry.stored_at()),
         }
     }
 }

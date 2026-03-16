@@ -8,6 +8,8 @@ import (
 )
 
 // NewPickUpOrderEvent creates a package picked up event from domain objects.
+//
+//nolint:gocritic // DeliveryOrder is an immutable value object in this boundary.
 func NewPickUpOrderEvent(courierID string, order vo.DeliveryOrder, location vo.Location) PickUpOrderEvent {
 	now := time.Now().UTC()
 
@@ -26,6 +28,8 @@ func NewPickUpOrderEvent(courierID string, order vo.DeliveryOrder, location vo.L
 
 // NewDeliverOrderEvent creates a package delivery result event from domain objects.
 // Validates: when delivered is true, reason must be empty; when false, reason must be from whitelist (or OTHER).
+//
+//nolint:gocritic,whitespace // DeliveryOrder is immutable here; the multiline signature stays compact for readability.
 func NewDeliverOrderEvent(
 	courierID string,
 	order vo.DeliveryOrder,

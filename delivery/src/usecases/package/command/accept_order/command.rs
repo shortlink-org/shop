@@ -42,8 +42,6 @@ pub struct AddressInput {
     pub street: String,
     /// City
     pub city: String,
-    /// Postal code
-    pub postal_code: String,
     /// Country
     pub country: String,
     /// Latitude
@@ -64,7 +62,6 @@ impl AddressInput {
         Ok(Address::new(
             self.street.clone(),
             self.city.clone(),
-            self.postal_code.clone(),
             location,
         ))
     }
@@ -198,7 +195,6 @@ mod tests {
         AddressInput {
             street: "123 Main St".to_string(),
             city: "Berlin".to_string(),
-            postal_code: "10115".to_string(),
             country: "Germany".to_string(),
             latitude: 52.52,
             longitude: 13.405,

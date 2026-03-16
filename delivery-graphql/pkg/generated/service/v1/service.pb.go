@@ -238,7 +238,6 @@ type Address struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Street        string                 `protobuf:"bytes,1,opt,name=street,proto3" json:"street,omitempty"`
 	City          string                 `protobuf:"bytes,2,opt,name=city,proto3" json:"city,omitempty"`
-	PostalCode    string                 `protobuf:"bytes,3,opt,name=postal_code,json=postalCode,proto3" json:"postal_code,omitempty"`
 	Country       string                 `protobuf:"bytes,4,opt,name=country,proto3" json:"country,omitempty"`
 	Latitude      float64                `protobuf:"fixed64,5,opt,name=latitude,proto3" json:"latitude,omitempty"`
 	Longitude     float64                `protobuf:"fixed64,6,opt,name=longitude,proto3" json:"longitude,omitempty"`
@@ -286,13 +285,6 @@ func (x *Address) GetStreet() string {
 func (x *Address) GetCity() string {
 	if x != nil {
 		return x.City
-	}
-	return ""
-}
-
-func (x *Address) GetPostalCode() string {
-	if x != nil {
-		return x.PostalCode
 	}
 	return ""
 }
@@ -583,12 +575,10 @@ const file_service_v1_service_proto_rawDesc = "" +
 	"\x1dQueryDeliveryTrackingResponse\x12O\n" +
 	"\x11delivery_tracking\x18\x01 \x01(\v2\".shop.delivery.v1.DeliveryTrackingR\x10deliveryTracking\"L\n" +
 	"\x15RandomAddressResponse\x123\n" +
-	"\aaddress\x18\x01 \x01(\v2\x19.shop.delivery.v1.AddressR\aaddress\"\xaa\x01\n" +
+	"\aaddress\x18\x01 \x01(\v2\x19.shop.delivery.v1.AddressR\aaddress\"\x89\x01\n" +
 	"\aAddress\x12\x16\n" +
 	"\x06street\x18\x01 \x01(\tR\x06street\x12\x12\n" +
-	"\x04city\x18\x02 \x01(\tR\x04city\x12\x1f\n" +
-	"\vpostal_code\x18\x03 \x01(\tR\n" +
-	"postalCode\x12\x18\n" +
+	"\x04city\x18\x02 \x01(\tR\x04city\x12\x18\n" +
 	"\acountry\x18\x04 \x01(\tR\acountry\x12\x1a\n" +
 	"\blatitude\x18\x05 \x01(\x01R\blatitude\x12\x1c\n" +
 	"\tlongitude\x18\x06 \x01(\x01R\tlongitude\"L\n" +

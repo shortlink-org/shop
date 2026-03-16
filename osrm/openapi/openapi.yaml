@@ -1,0 +1,606 @@
+openapi: 3.0.3
+info:
+  title: OSRM HTTP API
+  version: 5.24.0
+  description: >
+    Locally maintained OpenAPI description for the OSRM HTTP API used by the shop
+    services. It is intentionally scoped to the endpoints and response fields
+    consumed by this repository.
+servers:
+  - url: http://localhost:5000
+    description: Local OSRM instance
+tags:
+  - name: nearest
+  - name: route
+  - name: table
+  - name: trip
+  - name: match
+paths:
+  /nearest/v1/{profile}/{coordinates}:
+    get:
+      tags: [nearest]
+      operationId: nearest
+      summary: Snap a coordinate to the road network
+      parameters:
+        - $ref: '#/components/parameters/Profile'
+        - $ref: '#/components/parameters/Coordinates'
+        - $ref: '#/components/parameters/GenerateHints'
+        - $ref: '#/components/parameters/Exclude'
+        - $ref: '#/components/parameters/SkipWaypoints'
+        - name: number
+          in: query
+          description: Number of nearest segments to return.
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Nearest road segments returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NearestResponse'
+        '400':
+          description: Invalid nearest request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /route/v1/{profile}/{coordinates}:
+    get:
+      tags: [route]
+      operationId: route
+      summary: Build routes between coordinates
+      parameters:
+        - $ref: '#/components/parameters/Profile'
+        - $ref: '#/components/parameters/Coordinates'
+        - $ref: '#/components/parameters/GenerateHints'
+        - $ref: '#/components/parameters/Hints'
+        - $ref: '#/components/parameters/Bearings'
+        - $ref: '#/components/parameters/Radiuses'
+        - $ref: '#/components/parameters/Approaches'
+        - $ref: '#/components/parameters/Exclude'
+        - $ref: '#/components/parameters/SkipWaypoints'
+        - name: alternatives
+          in: query
+          schema:
+            oneOf:
+              - type: boolean
+              - type: integer
+                minimum: 1
+        - name: steps
+          in: query
+          schema:
+            type: boolean
+        - name: annotations
+          in: query
+          schema:
+            type: string
+        - name: geometries
+          in: query
+          schema:
+            type: string
+            enum: [polyline, polyline6, geojson]
+        - name: overview
+          in: query
+          schema:
+            type: string
+            enum: [simplified, full, 'false']
+        - name: continue_straight
+          in: query
+          schema:
+            type: string
+            enum: [default, 'true', 'false']
+        - name: waypoints
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Route response returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouteResponse'
+        '400':
+          description: Invalid route request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /table/v1/{profile}/{coordinates}:
+    get:
+      tags: [table]
+      operationId: table
+      summary: Build a duration or distance matrix
+      parameters:
+        - $ref: '#/components/parameters/Profile'
+        - $ref: '#/components/parameters/Coordinates'
+        - $ref: '#/components/parameters/GenerateHints'
+        - $ref: '#/components/parameters/Hints'
+        - $ref: '#/components/parameters/Bearings'
+        - $ref: '#/components/parameters/Radiuses'
+        - $ref: '#/components/parameters/Approaches'
+        - $ref: '#/components/parameters/Exclude'
+        - $ref: '#/components/parameters/SkipWaypoints'
+        - name: sources
+          in: query
+          schema:
+            type: string
+        - name: destinations
+          in: query
+          schema:
+            type: string
+        - name: annotations
+          in: query
+          schema:
+            type: string
+            enum: [duration, distance, duration,distance]
+        - name: fallback_speed
+          in: query
+          schema:
+            type: number
+            format: double
+            minimum: 0
+        - name: fallback_coordinate
+          in: query
+          schema:
+            type: string
+            enum: [input, snapped]
+        - name: scale_factor
+          in: query
+          schema:
+            type: number
+            format: double
+      responses:
+        '200':
+          description: Table response returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableResponse'
+        '400':
+          description: Invalid table request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /trip/v1/{profile}/{coordinates}:
+    get:
+      tags: [trip]
+      operationId: trip
+      summary: Solve a trip for the supplied coordinates
+      parameters:
+        - $ref: '#/components/parameters/Profile'
+        - $ref: '#/components/parameters/Coordinates'
+        - $ref: '#/components/parameters/GenerateHints'
+        - $ref: '#/components/parameters/Hints'
+        - $ref: '#/components/parameters/Bearings'
+        - $ref: '#/components/parameters/Radiuses'
+        - $ref: '#/components/parameters/Approaches'
+        - $ref: '#/components/parameters/Exclude'
+        - $ref: '#/components/parameters/SkipWaypoints'
+        - name: roundtrip
+          in: query
+          schema:
+            type: boolean
+        - name: source
+          in: query
+          schema:
+            type: string
+            enum: [any, first]
+        - name: destination
+          in: query
+          schema:
+            type: string
+            enum: [any, last]
+        - name: steps
+          in: query
+          schema:
+            type: boolean
+        - name: annotations
+          in: query
+          schema:
+            type: string
+        - name: geometries
+          in: query
+          schema:
+            type: string
+            enum: [polyline, polyline6, geojson]
+        - name: overview
+          in: query
+          schema:
+            type: string
+            enum: [simplified, full, 'false']
+      responses:
+        '200':
+          description: Trip response returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripResponse'
+        '400':
+          description: Invalid trip request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /match/v1/{profile}/{coordinates}:
+    get:
+      tags: [match]
+      operationId: matchTrace
+      summary: Match a trace to the road network
+      parameters:
+        - $ref: '#/components/parameters/Profile'
+        - $ref: '#/components/parameters/Coordinates'
+        - $ref: '#/components/parameters/GenerateHints'
+        - $ref: '#/components/parameters/Hints'
+        - $ref: '#/components/parameters/Bearings'
+        - $ref: '#/components/parameters/Radiuses'
+        - $ref: '#/components/parameters/Approaches'
+        - $ref: '#/components/parameters/Exclude'
+        - $ref: '#/components/parameters/SkipWaypoints'
+        - name: steps
+          in: query
+          schema:
+            type: boolean
+        - name: annotations
+          in: query
+          schema:
+            type: string
+        - name: geometries
+          in: query
+          schema:
+            type: string
+            enum: [polyline, polyline6, geojson]
+        - name: overview
+          in: query
+          schema:
+            type: string
+            enum: [simplified, full, 'false']
+        - name: timestamps
+          in: query
+          schema:
+            type: string
+        - name: gaps
+          in: query
+          schema:
+            type: string
+            enum: [split, ignore]
+        - name: tidy
+          in: query
+          schema:
+            type: boolean
+        - name: waypoints
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Match response returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchResponse'
+        '400':
+          description: Invalid match request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  parameters:
+    Profile:
+      name: profile
+      in: path
+      required: true
+      schema:
+        type: string
+      description: OSRM routing profile, for example driving, cycling, or walking.
+    Coordinates:
+      name: coordinates
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Semicolon-separated longitude,latitude coordinate pairs.
+    GenerateHints:
+      name: generate_hints
+      in: query
+      schema:
+        type: boolean
+    Hints:
+      name: hints
+      in: query
+      schema:
+        type: string
+    Bearings:
+      name: bearings
+      in: query
+      schema:
+        type: string
+    Radiuses:
+      name: radiuses
+      in: query
+      schema:
+        type: string
+    Approaches:
+      name: approaches
+      in: query
+      schema:
+        type: string
+    Exclude:
+      name: exclude
+      in: query
+      schema:
+        type: string
+    SkipWaypoints:
+      name: skip_waypoints
+      in: query
+      schema:
+        type: boolean
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      additionalProperties: true
+    GeoJsonLineString:
+      type: object
+      required: [type, coordinates]
+      properties:
+        type:
+          type: string
+          enum: [LineString]
+        coordinates:
+          type: array
+          items:
+            type: array
+            minItems: 2
+            maxItems: 2
+            items:
+              type: number
+              format: double
+    Geometry:
+      oneOf:
+        - type: string
+        - $ref: '#/components/schemas/GeoJsonLineString'
+    AnnotationMetadata:
+      type: object
+      properties:
+        datasource_names:
+          type: array
+          items:
+            type: string
+      additionalProperties: true
+    Annotation:
+      type: object
+      properties:
+        distance:
+          type: array
+          items:
+            type: number
+            format: double
+        duration:
+          type: array
+          items:
+            type: number
+            format: double
+        datasources:
+          type: array
+          items:
+            type: integer
+        nodes:
+          type: array
+          items:
+            type: integer
+            format: int64
+        speed:
+          type: array
+          items:
+            type: number
+            format: double
+        weight:
+          type: array
+          items:
+            type: number
+            format: double
+        metadata:
+          $ref: '#/components/schemas/AnnotationMetadata'
+      additionalProperties: true
+    RouteStep:
+      type: object
+      properties:
+        distance:
+          type: number
+          format: double
+        duration:
+          type: number
+          format: double
+        weight:
+          type: number
+          format: double
+        name:
+          type: string
+        mode:
+          type: string
+        geometry:
+          $ref: '#/components/schemas/Geometry'
+      additionalProperties: true
+    RouteLeg:
+      type: object
+      properties:
+        summary:
+          type: string
+        weight:
+          type: number
+          format: double
+        duration:
+          type: number
+          format: double
+        distance:
+          type: number
+          format: double
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/RouteStep'
+        annotation:
+          $ref: '#/components/schemas/Annotation'
+      additionalProperties: true
+    Route:
+      type: object
+      properties:
+        weight_name:
+          type: string
+        weight:
+          type: number
+          format: double
+        duration:
+          type: number
+          format: double
+        distance:
+          type: number
+          format: double
+        geometry:
+          $ref: '#/components/schemas/Geometry'
+        legs:
+          type: array
+          items:
+            $ref: '#/components/schemas/RouteLeg'
+        confidence:
+          type: number
+          format: double
+      additionalProperties: true
+    Waypoint:
+      type: object
+      properties:
+        hint:
+          type: string
+        distance:
+          type: number
+          format: double
+        name:
+          type: string
+        location:
+          type: array
+          minItems: 2
+          maxItems: 2
+          items:
+            type: number
+            format: double
+        nodes:
+          type: array
+          items:
+            type: integer
+            format: int64
+        waypoint_index:
+          type: integer
+        trips_index:
+          type: integer
+        matchings_index:
+          type: integer
+        alternatives_count:
+          type: integer
+      additionalProperties: true
+    NearestResponse:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+        waypoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/Waypoint'
+      additionalProperties: true
+    RouteResponse:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+        routes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Route'
+        waypoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/Waypoint'
+      additionalProperties: true
+    TableCell:
+      type: number
+      format: double
+      nullable: true
+    TableMatrix:
+      type: array
+      items:
+        type: array
+        items:
+          $ref: '#/components/schemas/TableCell'
+    TableResponse:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/Waypoint'
+        destinations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Waypoint'
+        durations:
+          $ref: '#/components/schemas/TableMatrix'
+        distances:
+          $ref: '#/components/schemas/TableMatrix'
+        fallback_speed_cells:
+          type: array
+          items:
+            type: array
+            minItems: 2
+            maxItems: 2
+            items:
+              type: integer
+      additionalProperties: true
+    TripResponse:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+        trips:
+          type: array
+          items:
+            $ref: '#/components/schemas/Route'
+        waypoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/Waypoint'
+      additionalProperties: true
+    MatchTracepoint:
+      allOf:
+        - $ref: '#/components/schemas/Waypoint'
+      nullable: true
+    MatchResponse:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+        tracepoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchTracepoint'
+        matchings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Route'
+      additionalProperties: true

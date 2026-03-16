@@ -209,7 +209,7 @@ where
         // Create CourierLocation entity (skip timestamp validation for incoming events)
         let courier_location = CourierLocation::from_stored(
             courier_id,
-            location.clone(),
+            location,
             timestamp,
             event.speed,
             event.heading,

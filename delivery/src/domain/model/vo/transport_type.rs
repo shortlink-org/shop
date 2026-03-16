@@ -97,7 +97,7 @@ mod tests {
     fn test_clone_and_copy() {
         let t1 = TransportType::Motorcycle;
         let t2 = t1; // Copy
-        let t3 = t1.clone();
+        let t3 = t1;
 
         assert_eq!(t1, t2);
         assert_eq!(t1, t3);

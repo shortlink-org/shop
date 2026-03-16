@@ -1,0 +1,20 @@
+[package]
+name = "shop-osrm-client"
+version = "0.1.0"
+authors = ["OpenAPI Generator team and contributors"]
+description = "Locally maintained OpenAPI description for the OSRM HTTP API used by the shop services. It is intentionally scoped to the endpoints and response fields consumed by this repository. "
+# Override this license by providing a License Object in the OpenAPI.
+license = "Unlicense"
+edition = "2021"
+
+[dependencies]
+serde = { version = "^1.0", features = ["derive"] }
+serde_json = "^1.0"
+serde_repr = "^0.1"
+url = "^2.5"
+reqwest = { version = "^0.13", default-features = false, features = ["json", "multipart", "query", "form"] }
+
+[features]
+default = ["native-tls"]
+native-tls = ["reqwest/native-tls"]
+rustls = ["reqwest/rustls"]

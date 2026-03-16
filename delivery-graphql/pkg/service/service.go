@@ -127,12 +127,11 @@ func (s *Service) QueryRandomAddress(
 	return connect.NewResponse(&servicepb.QueryRandomAddressResponse{
 		RandomAddress: &servicepb.RandomAddressResponse{
 			Address: &servicepb.Address{
-				Street:     addr.GetStreet(),
-				City:       addr.GetCity(),
-				PostalCode: addr.GetPostalCode(),
-				Country:    addr.GetCountry(),
-				Latitude:   addr.GetLatitude(),
-				Longitude:  addr.GetLongitude(),
+				Street:    addr.GetStreet(),
+				City:      addr.GetCity(),
+				Country:   addr.GetCountry(),
+				Latitude:  addr.GetLatitude(),
+				Longitude: addr.GetLongitude(),
 			},
 		},
 	}), nil

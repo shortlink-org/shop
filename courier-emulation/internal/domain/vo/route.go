@@ -1,3 +1,4 @@
+//nolint:gocritic // Route is an immutable value object; value receivers preserve copy semantics.
 package vo
 
 import (
@@ -12,6 +13,8 @@ var (
 	ErrInvalidDuration = errors.New("duration must be positive")
 )
 
+const metersPerKilometer = 1000.0
+
 // Route represents a complete route as a value object.
 // Contains origin, destination, polyline, distance and duration.
 type Route struct {
@@ -25,8 +28,10 @@ type Route struct {
 }
 
 // NewRoute creates a new Route value object with validation.
+//
+//nolint:whitespace // Multiline constructor signature is kept compact for readability.
 func NewRoute(
-	id string,
+	routeID string,
 	origin, destination Location,
 	polyline Polyline,
 	distanceMeters float64,
@@ -41,7 +46,7 @@ func NewRoute(
 	}
 
 	return Route{
-		id:          id,
+		id:          routeID,
 		origin:      origin,
 		destination: destination,
 		polyline:    polyline,
@@ -78,7 +83,7 @@ func (r Route) Distance() float64 {
 
 // DistanceKm returns the distance in kilometers.
 func (r Route) DistanceKm() float64 {
-	return r.distance / 1000.0
+	return r.distance / metersPerKilometer
 }
 
 // Duration returns the estimated travel time.

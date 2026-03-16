@@ -125,7 +125,6 @@ pub(crate) struct KafkaOutboundRecord {
 struct OrderAssignedAddressPayload {
     street: String,
     city: String,
-    postal_code: String,
     country: String,
     latitude: f64,
     longitude: f64,
@@ -268,7 +267,6 @@ impl KafkaEventPublisher {
         Ok(OrderAssignedAddressPayload {
             street: address.street.clone(),
             city: address.city.clone(),
-            postal_code: address.postal_code.clone(),
             country: address.country.clone(),
             latitude: address.latitude,
             longitude: address.longitude,
@@ -417,7 +415,6 @@ mod tests {
             pickup_address: Some(Address {
                 street: "Pickup".to_string(),
                 city: "Berlin".to_string(),
-                postal_code: "10115".to_string(),
                 country: String::new(),
                 latitude: 52.52,
                 longitude: 13.40,
@@ -425,7 +422,6 @@ mod tests {
             delivery_address: Some(Address {
                 street: "Dropoff".to_string(),
                 city: "Berlin".to_string(),
-                postal_code: "10117".to_string(),
                 country: String::new(),
                 latitude: 52.53,
                 longitude: 13.41,
@@ -452,7 +448,7 @@ mod tests {
         assert_eq!(payload.package_id, "pkg-1");
         assert_eq!(payload.courier_id, "courier-1");
         assert_eq!(payload.pickup_address.city, "Berlin");
-        assert_eq!(payload.delivery_address.postal_code, "10117");
+        assert_eq!(payload.delivery_address.street, "Dropoff");
     }
 
     #[test]
@@ -487,7 +483,6 @@ mod tests {
             pickup_address: Some(Address {
                 street: "Pickup".to_string(),
                 city: "Berlin".to_string(),
-                postal_code: "10115".to_string(),
                 country: String::new(),
                 latitude: 52.52,
                 longitude: 13.40,
@@ -495,7 +490,6 @@ mod tests {
             delivery_address: Some(Address {
                 street: "Dropoff".to_string(),
                 city: "Berlin".to_string(),
-                postal_code: "10117".to_string(),
                 country: String::new(),
                 latitude: 52.53,
                 longitude: 13.41,

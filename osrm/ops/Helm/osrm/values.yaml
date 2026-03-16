@@ -16,6 +16,16 @@ httpRoute:
   enabled: false
 
 # ==============================================================================
+authorizationPolicy:
+  enabled: true
+  allowedServiceAccounts:
+    - shortlink-shop-delivery
+    - shortlink-shop-courier-emulation
+  requiredHeader:
+    name: x-osrm-auth
+    value: shortlink-shop-osrm-internal
+
+# ==============================================================================
 deploy:
   # type: Deployment, Rollout, StatefulSet
   type: Deployment

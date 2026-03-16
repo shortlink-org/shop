@@ -24,19 +24,18 @@ const (
 // Address represents a delivery address with location coordinates.
 // Matches proto: domain.delivery.common.v1.Address
 type Address struct {
-	Street     string  `json:"street,omitempty"`
-	City       string  `json:"city,omitempty"`
-	PostalCode string  `json:"postal_code,omitempty"`
-	Country    string  `json:"country,omitempty"`
-	Latitude   float64 `json:"latitude"`
-	Longitude  float64 `json:"longitude"`
+	Street    string  `json:"street,omitempty"`
+	City      string  `json:"city,omitempty"`
+	Country   string  `json:"country,omitempty"`
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
 }
 
 // DeliveryPeriod represents the desired delivery time window.
 // Matches proto: domain.delivery.common.v1.DeliveryPeriod
 type DeliveryPeriod struct {
-	StartTime time.Time `json:"start_time,omitempty"`
-	EndTime   time.Time `json:"end_time,omitempty"`
+	StartTime time.Time `json:"start_time"`
+	EndTime   time.Time `json:"end_time"`
 }
 
 // OrderAssignedEvent represents a package assigned to a courier.
@@ -48,13 +47,14 @@ type OrderAssignedEvent struct {
 	AssignedAt      time.Time      `json:"assigned_at"`
 	PickupAddress   Address        `json:"pickup_address"`
 	DeliveryAddress Address        `json:"delivery_address"`
-	DeliveryPeriod  DeliveryPeriod `json:"delivery_period,omitempty"`
+	DeliveryPeriod  DeliveryPeriod `json:"delivery_period"`
 	CustomerPhone   string         `json:"customer_phone,omitempty"`
-	OccurredAt      time.Time      `json:"occurred_at,omitempty"`
+	OccurredAt      time.Time      `json:"occurred_at"`
 }
 
 // OrderAssignmentHandler handles order assignment events.
 type OrderAssignmentHandler interface {
+	//nolint:gocritic // Kafka event payloads are intentionally passed by value as immutable messages.
 	HandleOrderAssigned(ctx context.Context, event OrderAssignedEvent) error
 }
 
@@ -81,6 +81,8 @@ type DeliverySubscriber struct {
 }
 
 // NewDeliverySubscriber creates a new Kafka delivery subscriber.
+//
+//nolint:whitespace // Multiline constructor signature is kept compact for readability.
 func NewDeliverySubscriber(
 	config DeliverySubscriberConfig,
 	handler OrderAssignmentHandler,
@@ -176,6 +178,7 @@ func (s *DeliverySubscriber) Stop() error {
 
 // DeliverySimulatorInterface defines the interface for starting deliveries.
 type DeliverySimulatorInterface interface {
+	//nolint:gocritic // DeliveryOrder is an immutable value object in this boundary.
 	StartDelivery(ctx context.Context, courierID string, order vo.DeliveryOrder) error
 }
 
@@ -192,6 +195,8 @@ func NewCourierEmulationHandler(deliverySimulator DeliverySimulatorInterface) *C
 }
 
 // HandleOrderAssigned handles a package assignment by starting a delivery simulation.
+//
+//nolint:gocritic // Kafka event payloads are intentionally passed by value as immutable messages.
 func (h *CourierEmulationHandler) HandleOrderAssigned(ctx context.Context, event OrderAssignedEvent) error {
 	// Extract coordinates from Address objects
 	pickup, err := vo.NewLocation(event.PickupAddress.Latitude, event.PickupAddress.Longitude)

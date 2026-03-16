@@ -63,19 +63,16 @@ pub struct Address {
     pub street: String,
     /// City
     pub city: String,
-    /// Postal code
-    pub postal_code: String,
     /// Location coordinates
     pub location: Location,
 }
 
 impl Address {
     /// Create a new address
-    pub fn new(street: String, city: String, postal_code: String, location: Location) -> Self {
+    pub fn new(street: String, city: String, location: Location) -> Self {
         Self {
             street,
             city,
-            postal_code,
             location,
         }
     }
@@ -455,7 +452,6 @@ mod tests {
         Address::new(
             "123 Main St".to_string(),
             "Berlin".to_string(),
-            "10115".to_string(),
             Location::new(52.52, 13.405, 10.0).unwrap(),
         )
     }

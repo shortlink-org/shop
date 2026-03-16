@@ -94,11 +94,11 @@ where
         {
             // Convert history entry to CourierLocation
             let location = CourierLocation::from_stored(
-                history_entry.courier_id(),
-                *history_entry.location(),
-                history_entry.timestamp(),
-                history_entry.speed(),
-                history_entry.heading(),
+                history_entry.reported_by(),
+                *history_entry.reported_position(),
+                history_entry.recorded_at(),
+                history_entry.travel_speed_kmh(),
+                history_entry.bearing_degrees(),
             )
             .ok();
 
@@ -177,7 +177,7 @@ mod tests {
             self.locations
                 .lock()
                 .unwrap()
-                .insert(location.courier_id(), location);
+                .insert(location.reported_by(), location);
         }
     }
 
@@ -187,7 +187,7 @@ mod tests {
             self.locations
                 .lock()
                 .unwrap()
-                .insert(location.courier_id(), location.clone());
+                .insert(location.reported_by(), location.clone());
             Ok(())
         }
 
@@ -269,7 +269,7 @@ mod tests {
                 .lock()
                 .unwrap()
                 .iter()
-                .filter(|e| e.courier_id() == courier_id && time_range.contains(e.timestamp()))
+                .filter(|e| e.reported_by() == courier_id && time_range.contains(e.recorded_at()))
                 .cloned()
                 .collect())
         }
@@ -298,8 +298,8 @@ mod tests {
                 .lock()
                 .unwrap()
                 .iter()
-                .filter(|e| e.courier_id() == courier_id)
-                .max_by_key(|e| e.timestamp())
+                .filter(|e| e.reported_by() == courier_id)
+                .max_by_key(|e| e.recorded_at())
                 .cloned())
         }
 
@@ -357,7 +357,7 @@ mod tests {
         let response = result.unwrap();
         assert!(response.location.is_some());
         assert!(response.from_cache);
-        assert_eq!(response.location.unwrap().latitude(), 52.52);
+        assert_eq!(response.location.unwrap().reported_position().latitude(), 52.52);
     }
 
     #[tokio::test]

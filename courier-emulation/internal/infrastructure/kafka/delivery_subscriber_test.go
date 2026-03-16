@@ -1,3 +1,4 @@
+//nolint:gocritic,revive // Test doubles mirror production signatures and keep literal Kafka fixtures readable.
 package kafka
 
 import (
@@ -31,7 +32,7 @@ func TestDeliverySubscriber_ProcessMessages_HandlesJSONAssignedEvent(t *testing.
 		stopCh:  make(chan struct{}),
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(t.Context())
 	defer cancel()
 
 	messages := make(chan *message.Message, 1)

@@ -54,7 +54,6 @@ message AcceptOrderRequest {
 message Address {
   string street = 1;
   string city = 2;
-  string postal_code = 3;
   string country = 4;
   double latitude = 5;
   double longitude = 6;

@@ -378,7 +378,7 @@ mod tests {
     #[test]
     fn test_clone() {
         let loc1 = Location::new(55.7558, 37.6173, 10.0).unwrap();
-        let loc2 = loc1.clone();
+        let loc2 = loc1;
 
         assert_eq!(loc1, loc2);
         assert_eq!(loc1.latitude(), loc2.latitude());

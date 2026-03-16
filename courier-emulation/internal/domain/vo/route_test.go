@@ -1,3 +1,4 @@
+//nolint:revive,testifylint // Route tests use literal geometry fixtures and straightforward error assertions for readability.
 package vo
 
 import (

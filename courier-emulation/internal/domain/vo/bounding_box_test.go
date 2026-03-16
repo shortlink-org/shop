@@ -1,3 +1,4 @@
+//nolint:revive,testifylint // Bounding-box tests keep literal Berlin coordinates and direct float checks for readability.
 package vo
 
 import (

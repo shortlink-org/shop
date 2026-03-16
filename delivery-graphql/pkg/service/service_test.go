@@ -27,12 +27,11 @@ func TestQueryRandomAddressMapsAddress(t *testing.T) {
 		getRandomAddressFunc: func(ctx context.Context, _ *deliverygrpc.GetRandomAddressRequest, _ ...grpc.CallOption) (*deliverygrpc.GetRandomAddressResponse, error) {
 			return &deliverygrpc.GetRandomAddressResponse{
 				Address: &deliverygrpc.Address{
-					Street:     "Alexanderplatz 1",
-					City:       "Berlin",
-					PostalCode: "10178",
-					Country:    "Germany",
-					Latitude:   52.5219,
-					Longitude:  13.4132,
+					Street:    "Alexanderplatz 1",
+					City:      "Berlin",
+					Country:   "Germany",
+					Latitude:  52.5219,
+					Longitude: 13.4132,
 				},
 			}, nil
 		},
@@ -56,9 +55,6 @@ func TestQueryRandomAddressMapsAddress(t *testing.T) {
 	}
 	if addr.GetCity() != "Berlin" {
 		t.Fatalf("expected city Berlin, got %s", addr.GetCity())
-	}
-	if addr.GetPostalCode() != "10178" {
-		t.Fatalf("expected postal_code 10178, got %s", addr.GetPostalCode())
 	}
 	if addr.GetCountry() != "Germany" {
 		t.Fatalf("expected country Germany, got %s", addr.GetCountry())

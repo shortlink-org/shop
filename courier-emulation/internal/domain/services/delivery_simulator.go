@@ -1,3 +1,4 @@
+//nolint:revive,mnd // Simulation timing and polyline constants stay inline here to keep the workflow math easy to follow.
 package services
 
 import (
@@ -63,6 +64,8 @@ type DeliverySimulator struct {
 }
 
 // NewDeliverySimulator creates a new delivery simulator.
+//
+//nolint:whitespace // Constructor signature is kept compact; gofumpt handles canonical formatting.
 func NewDeliverySimulator(
 	config DeliverySimulatorConfig,
 	routeGenerator *RouteGenerator,
@@ -76,11 +79,13 @@ func NewDeliverySimulator(
 		statusPub:      statusPub,
 		deliveries:     make(map[string]*DeliveryState),
 		stopCh:         make(chan struct{}),
-		rng:            rand.New(rand.NewSource(time.Now().UnixNano())),
+		rng:            rand.New(rand.NewSource(time.Now().UnixNano())), //nolint:gosec // Simulation randomness is non-security-sensitive.
 	}
 }
 
 // StartDelivery starts a delivery simulation for a courier with an assigned order.
+//
+//nolint:gocritic // DeliveryOrder is an immutable value object in this boundary.
 func (ds *DeliverySimulator) StartDelivery(ctx context.Context, courierID string, order vo.DeliveryOrder) error {
 	ds.mu.Lock()
 
@@ -108,7 +113,7 @@ func (ds *DeliverySimulator) StartDelivery(ctx context.Context, courierID string
 	}
 
 	points, err := route.Points()
-	if err != nil || len(points) < 2 {
+	if err != nil || len(points) < minimalRoutePoints {
 		// Create direct route
 		points = []vo.Location{startLocation, order.PickupLocation()}
 	}
@@ -142,27 +147,41 @@ func (ds *DeliverySimulator) StartDelivery(ctx context.Context, courierID string
 // minRouteDistanceMeters and minRouteDuration ensure vo.NewRoute accepts the route
 // when from == to (e.g. start at pickup, route "to pickup" in tests without OSRM).
 const (
+	// minRouteDistanceMeters prevents zero-length fallback routes from failing VO validation.
 	minRouteDistanceMeters = 1.0
-	minRouteDuration       = time.Second
+	// minRouteDuration prevents zero-duration fallback routes from failing VO validation.
+	minRouteDuration = time.Second
+	// secondsPerHour converts km/h into km/s for simulation step calculations.
+	secondsPerHour = 3600.0
+	// polylinePrecision matches Google polyline's fixed 1e5 coordinate scaling.
+	polylinePrecision = 1e5
+	// polylineChunkMask extracts the 5-bit payload from each encoded chunk.
+	polylineChunkMask = 0x1f
+	// polylineContinueMask marks chunks that have more bytes following.
+	polylineContinueMask = 0x20
+	// polylineASCIIShift converts encoded bytes to/from printable ASCII.
+	polylineASCIIShift = 63
+	// minimalRoutePoints is the minimum number of points required for a usable route.
+	minimalRoutePoints = 2
 )
 
 // createMinimalRoute creates a minimal route between two points.
-func (ds *DeliverySimulator) createMinimalRoute(from, to vo.Location) (vo.Route, error) {
+func (ds *DeliverySimulator) createMinimalRoute(from, destination vo.Location) (vo.Route, error) {
 	// Create a simple polyline with just two points
-	polyline := vo.MustNewPolyline(encodePolyline([]vo.Location{from, to}))
-	distanceKm := from.DistanceTo(to)
+	polyline := vo.MustNewPolyline(encodePolyline([]vo.Location{from, destination}))
+	distanceKm := from.DistanceTo(destination)
 
 	distanceMeters := distanceKm * 1000
 	if distanceMeters < minRouteDistanceMeters {
 		distanceMeters = minRouteDistanceMeters
 	}
 
-	duration := max(time.Duration(distanceKm/ds.config.SpeedKmH*3600)*time.Second, minRouteDuration)
+	duration := max(time.Duration(distanceKm/ds.config.SpeedKmH*secondsPerHour)*time.Second, minRouteDuration)
 
 	route, err := vo.NewRoute(
 		fmt.Sprintf("minimal_%d", time.Now().UnixNano()),
 		from,
-		to,
+		destination,
 		polyline,
 		distanceMeters,
 		duration,
@@ -180,25 +199,21 @@ func encodePolyline(points []vo.Location) string {
 		return ""
 	}
 
-	// Simple polyline encoding
-	result := ""
 	prevLat, prevLon := int64(0), int64(0)
 
-	var resultSb170 strings.Builder
+	var encodedPolyline strings.Builder
 
 	for _, p := range points {
-		lat := int64(p.Latitude() * 1e5)
-		lon := int64(p.Longitude() * 1e5)
+		lat := int64(p.Latitude() * polylinePrecision)
+		lon := int64(p.Longitude() * polylinePrecision)
 
-		resultSb170.WriteString(encodeNumber(lat - prevLat))
-		resultSb170.WriteString(encodeNumber(lon - prevLon))
+		encodedPolyline.WriteString(encodeNumber(lat - prevLat))
+		encodedPolyline.WriteString(encodeNumber(lon - prevLon))
 
 		prevLat, prevLon = lat, lon
 	}
 
-	result += resultSb170.String()
-
-	return result
+	return encodedPolyline.String()
 }
 
 func encodeNumber(num int64) string {
@@ -208,19 +223,15 @@ func encodeNumber(num int64) string {
 		num <<= 1
 	}
 
-	result := ""
-
-	var resultSb191 strings.Builder
-	for num >= 0x20 {
-		resultSb191.WriteRune(rune((0x20 | (num & 0x1f)) + 63))
+	var encodedNumber strings.Builder
+	for num >= polylineContinueMask {
+		encodedNumber.WriteByte(byte((polylineContinueMask | (num & polylineChunkMask)) + polylineASCIIShift)) //nolint:gosec // Encoded polyline bytes are constrained to ASCII range by the algorithm.
 		num >>= 5
 	}
 
-	result += resultSb191.String()
+	encodedNumber.WriteByte(byte(num + polylineASCIIShift)) //nolint:gosec // Encoded polyline bytes are constrained to ASCII range by the algorithm.
 
-	result += string(rune(num + 63))
-
-	return result
+	return encodedNumber.String()
 }
 
 // simulateDelivery runs the simulation loop for a delivery.
@@ -390,6 +401,8 @@ func (ds *DeliverySimulator) handleDeliveringPhase(ctx context.Context, state *D
 }
 
 // transitionPhase handles phase transitions.
+//
+//nolint:gocognit,funlen,maintidx // Delivery state transitions are kept explicit in one place to make the workflow easier to audit.
 func (ds *DeliverySimulator) transitionPhase(ctx context.Context, courierID string) (bool, error) {
 	ds.mu.Lock()
 
@@ -439,7 +452,7 @@ func (ds *DeliverySimulator) transitionPhase(ctx context.Context, courierID stri
 			}
 
 			points, err := route.Points()
-			if err != nil || len(points) < 2 {
+			if err != nil || len(points) < minimalRoutePoints {
 				points = []vo.Location{state.CurrentLocation, order.DeliveryLocation()}
 			}
 

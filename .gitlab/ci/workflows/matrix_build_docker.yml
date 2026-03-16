@@ -59,8 +59,8 @@
       # OSRM Routing Server (Berlin)
       - APPLICATION: osrm
         REGISTRY_IMAGE: $CI_REGISTRY_IMAGE/$APPLICATION
-        WORKDIR: courier-emulation
-        DOCKERFILE_PATH: ops/dockerfile/osrm.Dockerfile
+        WORKDIR: osrm
+        DOCKERFILE_PATH: ops/dockerfile/Dockerfile
 
       # UI - Shop Frontend (React/Next.js)
       - APPLICATION: ui

@@ -33,11 +33,14 @@ func (w *watermillLoggerAdapter) Trace(msg string, fields watermill.LogFields) {
 	w.log.Debug(msg)
 }
 
+//nolint:ireturn // Watermill requires this interface-returning method.
 func (w *watermillLoggerAdapter) With(fields watermill.LogFields) watermill.LoggerAdapter {
 	return w
 }
 
 // NewDeliverySubscriber creates the Kafka delivery subscriber with the handler.
+//
+//nolint:whitespace // Multiline constructor signature is kept compact for readability.
 func NewDeliverySubscriber(
 	cfg *config.Config,
 	log logger.Logger,
@@ -63,7 +66,7 @@ func NewDeliverySubscriber(
 
 	subscriber, err := kafka.NewDeliverySubscriber(subscriberConfig, handler, wmLogger)
 	if err != nil {
-		return nil, func() {}, err
+		return nil, func() {}, fmt.Errorf("new delivery subscriber: %w", err)
 	}
 
 	cleanup := func() {

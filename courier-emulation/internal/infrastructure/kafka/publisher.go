@@ -29,6 +29,8 @@ func NewLocationPublisher(publisher message.Publisher) *LocationPublisher {
 }
 
 // PublishLocation publishes a courier location event to Kafka.
+//
+//nolint:gocritic // CourierLocationEvent is an immutable value object in this boundary.
 func (p *LocationPublisher) PublishLocation(ctx context.Context, event vo.CourierLocationEvent) error {
 	payload, err := event.ToJSON()
 	if err != nil {
@@ -40,7 +42,8 @@ func (p *LocationPublisher) PublishLocation(ctx context.Context, event vo.Courie
 	// Set partition key to courier ID for ordered delivery per courier
 	msg.Metadata.Set("partition_key", event.CourierID)
 
-	if err := p.publisher.Publish(TopicCourierLocation, msg); err != nil {
+	err = p.publisher.Publish(TopicCourierLocation, msg)
+	if err != nil {
 		return fmt.Errorf("publish location: %w", err)
 	}
 
@@ -81,6 +84,8 @@ func (p *LocationPublisher) Close() error {
 }
 
 // StatusPublisher defines the interface for publishing delivery status events.
+//
+//nolint:iface // Consumed outside this package to keep simulators decoupled from Kafka implementation.
 type StatusPublisher interface {
 	PublishPickUp(ctx context.Context, event PickUpOrderEvent) error
 	PublishDelivery(ctx context.Context, event DeliverOrderEvent) error
@@ -100,6 +105,8 @@ func NewStatusPublisher(publisher message.Publisher) *KafkaStatusPublisher {
 }
 
 // PublishPickUp publishes a package picked up event.
+//
+//nolint:gocritic // Kafka event payloads are intentionally passed by value as immutable messages.
 func (p *KafkaStatusPublisher) PublishPickUp(ctx context.Context, event PickUpOrderEvent) error {
 	payload, err := json.Marshal(event)
 	if err != nil {
@@ -110,7 +117,8 @@ func (p *KafkaStatusPublisher) PublishPickUp(ctx context.Context, event PickUpOr
 	// Partition by package so lifecycle order is preserved.
 	msg.Metadata.Set(metadataKeyPartitionKey, event.PackageID)
 
-	if err := p.publisher.Publish(TopicPickUpOrder, msg); err != nil {
+	err = p.publisher.Publish(TopicPickUpOrder, msg)
+	if err != nil {
 		return fmt.Errorf("publish pickup: %w", err)
 	}
 
@@ -118,6 +126,8 @@ func (p *KafkaStatusPublisher) PublishPickUp(ctx context.Context, event PickUpOr
 }
 
 // PublishDelivery publishes a package delivery result event.
+//
+//nolint:gocritic // Kafka event payloads are intentionally passed by value as immutable messages.
 func (p *KafkaStatusPublisher) PublishDelivery(ctx context.Context, event DeliverOrderEvent) error {
 	payload, err := json.Marshal(event)
 	if err != nil {
@@ -128,7 +138,8 @@ func (p *KafkaStatusPublisher) PublishDelivery(ctx context.Context, event Delive
 	// Partition by package so lifecycle order is preserved.
 	msg.Metadata.Set(metadataKeyPartitionKey, event.PackageID)
 
-	if err := p.publisher.Publish(TopicDeliverOrder, msg); err != nil {
+	err = p.publisher.Publish(TopicDeliverOrder, msg)
+	if err != nil {
 		return fmt.Errorf("publish delivery: %w", err)
 	}
 

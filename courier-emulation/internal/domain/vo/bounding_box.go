@@ -1,3 +1,4 @@
+//nolint:revive,mnd // Geographic presets are clearer when the canonical coordinates remain inline.
 package vo
 
 import (
@@ -87,6 +88,8 @@ func (bb BoundingBox) MaxLon() float64 {
 }
 
 // RandomPoint generates a random location within the bounding box.
+//
+//nolint:gosec // Pseudo-random points are sufficient for simulation traffic generation.
 func (bb BoundingBox) RandomPoint() Location {
 	lat := rand.Float64()*(bb.maxLat-bb.minLat) + bb.minLat
 	lon := rand.Float64()*(bb.maxLon-bb.minLon) + bb.minLon

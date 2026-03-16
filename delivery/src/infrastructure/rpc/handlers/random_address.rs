@@ -1,6 +1,7 @@
-//! GetRandomAddress gRPC handler
+//! GetRandomAddress gRPC handler.
 //!
-//! Returns a random address within the configured bounding box (e.g. Berlin).
+//! Samples a random point inside the configured bbox and snaps it to the nearest
+//! routable road point through OSRM.
 
 use std::sync::Arc;
 
@@ -20,19 +21,26 @@ pub async fn get_random_address(
         Status::failed_precondition("Random address is not configured (set RANDOM_ADDRESS_* env)")
     })?;
 
-    let mut rng = rand::thread_rng();
-    let latitude = rng.gen_range(bbox.min_lat..=bbox.max_lat);
-    let longitude = rng.gen_range(bbox.min_lon..=bbox.max_lon);
+    let (latitude, longitude) = {
+        let mut rng = rand::thread_rng();
+        (
+            rng.gen_range(bbox.min_lat..=bbox.max_lat),
+            rng.gen_range(bbox.min_lon..=bbox.max_lon),
+        )
+    };
 
-    let street = format!("Random point ({:.5}, {:.5})", latitude, longitude);
+    let snapped_point = state
+        .osrm_client
+        .nearest_driving(latitude, longitude)
+        .await
+        .map_err(|error| Status::unavailable(format!("OSRM nearest failed: {error}")))?;
 
     let address = Address {
-        street,
+        street: snapped_point.street.unwrap_or_default(),
         city: bbox.default_city.clone(),
-        postal_code: String::new(),
         country: bbox.default_country.clone(),
-        latitude,
-        longitude,
+        latitude: snapped_point.latitude,
+        longitude: snapped_point.longitude,
     };
 
     Ok(Response::new(GetRandomAddressResponse {

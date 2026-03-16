@@ -77,12 +77,12 @@ impl From<&Package> for ActiveModel {
             recipient_email: Set(package.recipient_email().map(|s| s.to_string())),
             pickup_street: Set(pickup.street.clone()),
             pickup_city: Set(pickup.city.clone()),
-            pickup_postal_code: Set(pickup.postal_code.clone()),
+            pickup_postal_code: Set(String::new()),
             pickup_latitude: Set(pickup.location.latitude()),
             pickup_longitude: Set(pickup.location.longitude()),
             delivery_street: Set(delivery.street.clone()),
             delivery_city: Set(delivery.city.clone()),
-            delivery_postal_code: Set(delivery.postal_code.clone()),
+            delivery_postal_code: Set(String::new()),
             delivery_latitude: Set(delivery.location.latitude()),
             delivery_longitude: Set(delivery.location.longitude()),
             delivery_period_start: Set(period.start),
@@ -115,14 +115,12 @@ impl TryFrom<Model> for Package {
         let pickup_address = Address::new(
             model.pickup_street,
             model.pickup_city,
-            model.pickup_postal_code,
             pickup_location,
         );
 
         let delivery_address = Address::new(
             model.delivery_street,
             model.delivery_city,
-            model.delivery_postal_code,
             delivery_location,
         );
 

@@ -1,3 +1,4 @@
+//nolint:revive // Kafka publisher tests keep literal event fixtures readable.
 package kafka
 
 import (

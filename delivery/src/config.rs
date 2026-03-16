@@ -3,6 +3,7 @@
 //! Loads configuration from environment variables.
 
 use std::env;
+use std::time::Duration;
 
 use thiserror::Error;
 
@@ -47,8 +48,24 @@ pub struct Config {
     /// Temporal configuration
     pub temporal: TemporalConfig,
 
+    /// OSRM HTTP client configuration
+    pub osrm: OsrmConfig,
+
     /// Bounding box and defaults for GetRandomAddress (optional; if not set, RPC returns error)
     pub random_address_bbox: Option<RandomAddressBbox>,
+}
+
+/// OSRM HTTP client configuration
+#[derive(Debug, Clone)]
+pub struct OsrmConfig {
+    /// Base URL of the OSRM service
+    pub base_url: String,
+    /// Request timeout for OSRM HTTP calls
+    pub timeout: Duration,
+    /// Optional auth header name for OSRM requests
+    pub auth_header_name: Option<String>,
+    /// Optional auth header value for OSRM requests
+    pub auth_header_value: Option<String>,
 }
 
 /// Temporal workflow engine configuration
@@ -92,6 +109,12 @@ impl Config {
     /// - TEMPORAL_TASK_QUEUE_DELIVERY: Delivery task queue (default: DELIVERY_TASK_QUEUE)
     /// - TEMPORAL_WORKER_BUILD_ID: Worker build ID for versioning (default: delivery-rust-v1)
     ///
+    /// OSRM env vars:
+    /// - OSRM_URL: Base URL of the OSRM service (default: http://localhost:5000)
+    /// - OSRM_TIMEOUT_MS: Timeout for OSRM requests in milliseconds (default: 3000)
+    /// - OSRM_AUTH_HEADER_NAME: Optional auth header name for OSRM requests
+    /// - OSRM_AUTH_HEADER_VALUE: Optional auth header value for OSRM requests
+    ///
     /// Kafka env vars (read by KafkaPublisherConfig/LocationConsumerConfig):
     /// - KAFKA_BROKERS: Kafka bootstrap servers (default: localhost:9092)
     /// - KAFKA_CLIENT_ID: Kafka client ID (default: delivery-service)
@@ -128,6 +151,8 @@ impl Config {
         // Temporal configuration
         let temporal = TemporalConfig::from_env()?;
 
+        let osrm = OsrmConfig::from_env()?;
+
         // Optional random address bbox (e.g. Berlin: RANDOM_ADDRESS_MIN_LAT, _MAX_LAT, _MIN_LON, _MAX_LON)
         let random_address_bbox = RandomAddressBbox::from_env().ok();
 
@@ -137,6 +162,7 @@ impl Config {
             grpc_port,
             log_level,
             temporal,
+            osrm,
             random_address_bbox,
         })
     }
@@ -187,6 +213,37 @@ impl RandomAddressBbox {
             max_lon,
             default_city,
             default_country,
+        })
+    }
+}
+
+impl OsrmConfig {
+    /// Load OSRM configuration from environment variables.
+    pub fn from_env() -> Result<Self, ConfigError> {
+        let base_url = env::var("OSRM_URL").unwrap_or_else(|_| "http://localhost:5000".to_string());
+        let timeout_ms = env::var("OSRM_TIMEOUT_MS")
+            .unwrap_or_else(|_| "3000".to_string())
+            .parse::<u64>()
+            .map_err(|e| ConfigError::InvalidValue("OSRM_TIMEOUT_MS".to_string(), e.to_string()))?;
+        let auth_header_name = env::var("OSRM_AUTH_HEADER_NAME").ok();
+        let auth_header_value = env::var("OSRM_AUTH_HEADER_VALUE").ok();
+
+        match (&auth_header_name, &auth_header_value) {
+            (Some(_), None) | (None, Some(_)) => {
+                return Err(ConfigError::InvalidValue(
+                    "OSRM_AUTH_HEADER_*".to_string(),
+                    "both OSRM_AUTH_HEADER_NAME and OSRM_AUTH_HEADER_VALUE must be set together"
+                        .to_string(),
+                ));
+            }
+            _ => {}
+        }
+
+        Ok(Self {
+            base_url,
+            timeout: Duration::from_millis(timeout_ms),
+            auth_header_name,
+            auth_header_value,
         })
     }
 }

@@ -20,7 +20,9 @@ const (
 	MaxLongitude float64 = 180.0
 
 	// EarthRadiusKm is the Earth's radius in kilometers
-	EarthRadiusKm float64 = 6371.0
+	EarthRadiusKm    float64 = 6371.0
+	degreesPerRadian float64 = 180.0
+	halfTurn         float64 = 2.0
 )
 
 // Location represents a GPS location as a value object.
@@ -71,14 +73,14 @@ func (l Location) Longitude() float64 {
 // DistanceTo calculates the distance to another location using Haversine formula.
 // Returns distance in kilometers.
 func (l Location) DistanceTo(other Location) float64 {
-	lat1Rad := l.latitude * math.Pi / 180
-	lat2Rad := other.latitude * math.Pi / 180
-	deltaLat := (other.latitude - l.latitude) * math.Pi / 180
-	deltaLon := (other.longitude - l.longitude) * math.Pi / 180
+	lat1Rad := l.latitude * math.Pi / degreesPerRadian
+	lat2Rad := other.latitude * math.Pi / degreesPerRadian
+	deltaLat := (other.latitude - l.latitude) * math.Pi / degreesPerRadian
+	deltaLon := (other.longitude - l.longitude) * math.Pi / degreesPerRadian
 
-	a := math.Sin(deltaLat/2)*math.Sin(deltaLat/2) +
-		math.Cos(lat1Rad)*math.Cos(lat2Rad)*math.Sin(deltaLon/2)*math.Sin(deltaLon/2)
-	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
+	a := math.Sin(deltaLat/halfTurn)*math.Sin(deltaLat/halfTurn) +
+		math.Cos(lat1Rad)*math.Cos(lat2Rad)*math.Sin(deltaLon/halfTurn)*math.Sin(deltaLon/halfTurn)
+	c := halfTurn * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
 
 	return EarthRadiusKm * c
 }

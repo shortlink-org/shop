@@ -1,7 +1,6 @@
 type Address {
   street: String
   city: String
-  postalCode: String
   country: String
   latitude: Float
   longitude: Float

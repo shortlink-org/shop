@@ -87,7 +87,7 @@ impl CourierLocation {
     ) -> Result<Self, CourierLocationError> {
         // Validate speed
         if let Some(s) = speed {
-            if s < 0.0 || s > MAX_SPEED_KMH {
+            if !(0.0..=MAX_SPEED_KMH).contains(&s) {
                 return Err(CourierLocationError::InvalidSpeed(s));
             }
         }
@@ -134,7 +134,7 @@ impl CourierLocation {
     ) -> Result<Self, CourierLocationError> {
         // Validate speed
         if let Some(s) = speed {
-            if s < 0.0 || s > MAX_SPEED_KMH {
+            if !(0.0..=MAX_SPEED_KMH).contains(&s) {
                 return Err(CourierLocationError::InvalidSpeed(s));
             }
         }
@@ -155,51 +155,39 @@ impl CourierLocation {
         })
     }
 
-    // === Getters ===
-
-    /// Get the courier ID
-    pub fn courier_id(&self) -> Uuid {
+    /// Return the courier that reported this location.
+    pub fn reported_by(&self) -> Uuid {
         self.courier_id
     }
 
-    /// Get the location
-    pub fn location(&self) -> &Location {
+    /// Return the reported position.
+    pub fn reported_position(&self) -> &Location {
         &self.location
     }
 
-    /// Get latitude
-    pub fn latitude(&self) -> f64 {
-        self.location.latitude()
+    /// Return the location value object as-is.
+    pub fn location(&self) -> Location {
+        self.location
     }
 
-    /// Get longitude
-    pub fn longitude(&self) -> f64 {
-        self.location.longitude()
-    }
-
-    /// Get accuracy in meters
-    pub fn accuracy(&self) -> f64 {
-        self.location.accuracy()
-    }
-
-    /// Get the timestamp
-    pub fn timestamp(&self) -> DateTime<Utc> {
+    /// Return when this position was recorded.
+    pub fn recorded_at(&self) -> DateTime<Utc> {
         self.timestamp
     }
 
-    /// Get speed in km/h
-    pub fn speed(&self) -> Option<f64> {
+    /// Return the reported travel speed in km/h.
+    pub fn travel_speed_kmh(&self) -> Option<f64> {
         self.speed
     }
 
-    /// Get heading in degrees
-    pub fn heading(&self) -> Option<f64> {
+    /// Return the reported bearing in degrees.
+    pub fn bearing_degrees(&self) -> Option<f64> {
         self.heading
     }
 
     /// Calculate distance to another courier location in kilometers
     pub fn distance_to(&self, other: &CourierLocation) -> f64 {
-        self.location.distance_to(other.location())
+        self.location.distance_to(other.reported_position())
     }
 
     /// Check if this location is within a certain radius of another
@@ -232,11 +220,11 @@ mod tests {
 
         assert!(courier_loc.is_ok());
         let loc = courier_loc.unwrap();
-        assert_eq!(loc.courier_id(), courier_id);
-        assert_eq!(loc.latitude(), 52.52);
-        assert_eq!(loc.longitude(), 13.405);
-        assert_eq!(loc.speed(), Some(35.0));
-        assert_eq!(loc.heading(), Some(180.0));
+        assert_eq!(loc.reported_by(), courier_id);
+        assert_eq!(loc.reported_position().latitude(), 52.52);
+        assert_eq!(loc.reported_position().longitude(), 13.405);
+        assert_eq!(loc.travel_speed_kmh(), Some(35.0));
+        assert_eq!(loc.bearing_degrees(), Some(180.0));
     }
 
     #[test]
@@ -249,8 +237,8 @@ mod tests {
 
         assert!(courier_loc.is_ok());
         let loc = courier_loc.unwrap();
-        assert_eq!(loc.speed(), None);
-        assert_eq!(loc.heading(), None);
+        assert_eq!(loc.travel_speed_kmh(), None);
+        assert_eq!(loc.bearing_degrees(), None);
     }
 
     #[test]

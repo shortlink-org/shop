@@ -145,7 +145,7 @@ mod tests {
                 .lock()
                 .unwrap()
                 .iter()
-                .filter(|e| e.courier_id() == courier_id && time_range.contains(e.timestamp()))
+                .filter(|e| e.reported_by() == courier_id && time_range.contains(e.recorded_at()))
                 .cloned()
                 .collect())
         }
@@ -174,8 +174,8 @@ mod tests {
                 .lock()
                 .unwrap()
                 .iter()
-                .filter(|e| e.courier_id() == courier_id)
-                .max_by_key(|e| e.timestamp())
+                .filter(|e| e.reported_by() == courier_id)
+                .max_by_key(|e| e.recorded_at())
                 .cloned())
         }
 

@@ -71,11 +71,11 @@ where
         }
         if let Ok(Some(entry)) = self.location_repository.get_last_location(courier_id).await {
             let loc = CourierLocation::from_stored(
-                entry.courier_id(),
-                *entry.location(),
-                entry.timestamp(),
-                entry.speed(),
-                entry.heading(),
+                entry.reported_by(),
+                *entry.reported_position(),
+                entry.recorded_at(),
+                entry.travel_speed_kmh(),
+                entry.bearing_degrees(),
             )
             .map_err(GeolocationServiceError::InvalidLocation)?;
             return Ok(Some(loc));

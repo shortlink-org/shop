@@ -133,9 +133,9 @@ where
         let event = CourierLocationUpdatedEvent {
             courier_id: cmd.courier_id.to_string(),
             location: Some(proto_common::Location {
-                latitude: courier_location.latitude(),
-                longitude: courier_location.longitude(),
-                accuracy: courier_location.accuracy(),
+                latitude: courier_location.reported_position().latitude(),
+                longitude: courier_location.reported_position().longitude(),
+                accuracy: courier_location.reported_position().accuracy(),
                 timestamp: Some(pbjson_types::Timestamp {
                     seconds: cmd.timestamp.timestamp(),
                     nanos: cmd.timestamp.timestamp_subsec_nanos() as i32,
@@ -321,7 +321,7 @@ mod tests {
             self.locations
                 .lock()
                 .unwrap()
-                .insert(location.courier_id(), location.clone());
+                .insert(location.reported_by(), location.clone());
             Ok(())
         }
 
@@ -403,7 +403,7 @@ mod tests {
                 .lock()
                 .unwrap()
                 .iter()
-                .filter(|e| e.courier_id() == courier_id && time_range.contains(e.timestamp()))
+                .filter(|e| e.reported_by() == courier_id && time_range.contains(e.recorded_at()))
                 .cloned()
                 .collect())
         }
@@ -432,8 +432,8 @@ mod tests {
                 .lock()
                 .unwrap()
                 .iter()
-                .filter(|e| e.courier_id() == courier_id)
-                .max_by_key(|e| e.timestamp())
+                .filter(|e| e.reported_by() == courier_id)
+                .max_by_key(|e| e.recorded_at())
                 .cloned())
         }
 
@@ -492,7 +492,7 @@ mod tests {
         // Verify location was cached
         let cached = location_cache.get(courier_id);
         assert!(cached.is_some());
-        assert_eq!(cached.unwrap().latitude(), 52.52);
+        assert_eq!(cached.unwrap().reported_position().latitude(), 52.52);
 
         // Verify location was saved to history
         assert_eq!(location_repo.count(), 1);

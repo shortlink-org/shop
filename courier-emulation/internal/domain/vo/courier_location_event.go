@@ -1,3 +1,4 @@
+//nolint:gocritic // Value receivers keep this event immutable and support fluent builder-style updates.
 package vo
 
 import (

@@ -7,5 +7,6 @@ pub mod cache;
 pub mod geolocation;
 pub mod messaging;
 pub mod notifications;
+pub mod osrm;
 pub mod repository;
 pub mod rpc;

@@ -343,7 +343,7 @@ mod tests {
                 .collect();
 
             // Sort by created_at descending
-            result.sort_by(|a, b| b.created_at().cmp(&a.created_at()));
+            result.sort_by_key(|package| std::cmp::Reverse(package.created_at()));
 
             // Apply pagination
             let offset = offset as usize;
@@ -414,7 +414,6 @@ mod tests {
         Address::new(
             "123 Main St".to_string(),
             "Berlin".to_string(),
-            "10115".to_string(),
             Location::new(52.52, 13.405, 10.0).unwrap(),
         )
     }
@@ -576,7 +575,6 @@ mod tests {
             filter: super::super::query::PackageFilter::in_pool(),
             page: Some(1),
             page_size: Some(10),
-            ..Default::default()
         };
         let result = handler.handle(query).await;
 
@@ -594,7 +592,6 @@ mod tests {
             filter: super::super::query::PackageFilter::in_pool(),
             page: Some(2),
             page_size: Some(10),
-            ..Default::default()
         };
         let result = handler.handle(query).await;
 
@@ -608,7 +605,6 @@ mod tests {
             filter: super::super::query::PackageFilter::in_pool(),
             page: Some(3),
             page_size: Some(10),
-            ..Default::default()
         };
         let result = handler.handle(query).await;
 
@@ -628,7 +624,6 @@ mod tests {
             filter: super::super::query::PackageFilter::default(),
             page: Some(0),
             page_size: Some(10),
-            ..Default::default()
         };
         let result = handler.handle(query).await;
 
@@ -654,7 +649,6 @@ mod tests {
             filter: super::super::query::PackageFilter::in_pool(),
             page: Some(1),
             page_size: Some(500), // More than MAX_PAGE_SIZE
-            ..Default::default()
         };
         let result = handler.handle(query).await;
 

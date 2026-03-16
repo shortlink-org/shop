@@ -12,6 +12,7 @@ use crate::domain::model::package::{
     Address as DomainAddress, Package, PackageStatus as DomainPackageStatus,
     Priority as DomainPriority,
 };
+use crate::domain::model::vo::location::Location as DomainLocation;
 use crate::domain::model::vo::TransportType as DomainTransportType;
 use crate::domain::model::CourierLocation;
 use crate::domain::ports::CachedCourierState;
@@ -89,9 +90,15 @@ pub fn domain_to_proto_work_hours(wh: &DomainWorkHours) -> ProtoWorkHours {
 
 /// Convert domain CourierLocation to proto Location (for current_location in Courier)
 fn courier_location_to_proto_location(loc: &CourierLocation) -> super::Location {
-    super::Location {
-        latitude: loc.latitude(),
-        longitude: loc.longitude(),
+    loc.location().into()
+}
+
+impl From<DomainLocation> for super::Location {
+    fn from(location: DomainLocation) -> Self {
+        Self {
+            latitude: location.latitude(),
+            longitude: location.longitude(),
+        }
     }
 }
 
@@ -173,7 +180,6 @@ pub fn domain_to_proto_address(addr: &DomainAddress) -> ProtoAddress {
     ProtoAddress {
         street: addr.street.clone(),
         city: addr.city.clone(),
-        postal_code: addr.postal_code.clone(),
         country: String::new(), // Domain doesn't have country field
         latitude: addr.location.latitude(),
         longitude: addr.location.longitude(),

@@ -1,3 +1,4 @@
+//nolint:revive,testifylint // These tests use literal coordinates and direct assertions to keep geometry fixtures readable.
 package vo
 
 import (
