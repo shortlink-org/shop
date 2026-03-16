@@ -9,6 +9,7 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/shortlink-org/go-sdk/logger"
 
+	cartItemsv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/items/v1"
 	orderDomain "github.com/shortlink-org/shop/oms/internal/domain/order/v1"
 	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 )
@@ -16,7 +17,6 @@ import (
 var (
 	errEmptyCart            = errors.New("cannot create order from empty cart")
 	errInvalidDeliveryInfo  = errors.New("invalid delivery info")
-	errPricerClientRequired = errors.New("pricer client required for checkout")
 )
 
 // Result represents the result of creating an order from a cart.
@@ -97,25 +97,8 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (Result, error) {
 		return Result{}, errInvalidDeliveryInfo
 	}
 
-	// 5. Calculate pricing using Pricer service (required for taxes and correct charge)
-	if h.pricerClient == nil {
-		return Result{}, errPricerClientRequired
-	}
-
-	builder := NewPricerRequestBuilder(cart.GetCustomerId(), cartItems)
-
-	if cmd.DeliveryInfo != nil {
-		addr := cmd.DeliveryInfo.GetDeliveryAddress()
-		builder = builder.
-			WithTaxParam("country", addr.Country()).
-			WithTaxParam("city", addr.City()).
-			WithTaxParam("postalCode", addr.PostalCode())
-	}
-
-	pricingResp, err := h.pricerClient.CalculateTotal(ctx, builder.Build())
-	if err != nil {
-		return Result{}, fmt.Errorf("failed to calculate pricing: %w", err)
-	}
+	// TODO: replace local totals with pricer integration when the service is ready.
+	pricingResp := calculateOrderTotals(cartItems)
 
 	// 6. Prepare neutral lines from cart (application-layer mapping)
 	lines := cartItemsToLines(cartItems)
@@ -176,4 +159,24 @@ func (h *Handler) Handle(ctx context.Context, cmd Command) (Result, error) {
 		TotalTax:      pricingResp.TotalTax,
 		FinalPrice:    pricingResp.FinalPrice,
 	}, nil
+}
+
+func calculateOrderTotals(cartItems cartItemsv1.Items) ports.CalculateTotalResponse {
+	subtotal := decimal.Zero
+	totalDiscount := decimal.Zero
+	totalTax := decimal.Zero
+
+	for _, item := range cartItems {
+		quantity := decimal.NewFromInt32(item.GetQuantity())
+		subtotal = subtotal.Add(item.GetPrice().Mul(quantity))
+		totalDiscount = totalDiscount.Add(item.GetDiscount().Mul(quantity))
+		totalTax = totalTax.Add(item.GetTax().Mul(quantity))
+	}
+
+	return ports.CalculateTotalResponse{
+		Subtotal:      subtotal,
+		TotalDiscount: totalDiscount,
+		TotalTax:      totalTax,
+		FinalPrice:    subtotal.Sub(totalDiscount).Add(totalTax),
+	}
 }

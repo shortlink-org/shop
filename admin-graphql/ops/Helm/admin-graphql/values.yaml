@@ -25,6 +25,7 @@ deploy:
     # Django Admin API URL
     ADMIN_API_URL: http://shortlink-shop-admin.shortlink-shop:8000
     LISTEN_ADDR: "0.0.0.0:4012"
+    OTEL_EXPORTER_OTLP_ENDPOINT: http://grafana-tempo.grafana.svc.cluster.local:4318
 
   resources:
     limits:

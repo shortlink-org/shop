@@ -2,7 +2,6 @@ package create_order_from_cart
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/google/uuid"
@@ -15,7 +14,6 @@ import (
 	cartv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1"
 	itemv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/item/v1"
 	itemsv1 "github.com/shortlink-org/shop/oms/internal/domain/cart/v1/items/v1"
-	"github.com/shortlink-org/shop/oms/internal/domain/ports"
 	"github.com/shortlink-org/shop/oms/internal/usecases/order/command/create_order_from_cart/mocks"
 )
 
@@ -42,8 +40,6 @@ func TestHandler_Handle_WithPricer(t *testing.T) {
 	mockCartRepo := mocks.NewMockCartRepository(t)
 	mockOrderRepo := mocks.NewMockOrderRepository(t)
 	mockPublisher := mocks.NewMockEventPublisher(t)
-	mockPricer := mocks.NewMockPricerClient(t)
-
 	// Setup expectations
 	mockUoW.EXPECT().Begin(mock.Anything).Return(ctx, nil)
 	mockUoW.EXPECT().Commit(mock.Anything).Return(nil)
@@ -55,17 +51,6 @@ func TestHandler_Handle_WithPricer(t *testing.T) {
 
 	mockPublisher.EXPECT().Publish(mock.Anything, mock.Anything).Return(nil)
 
-	mockPricer.EXPECT().CalculateTotal(mock.Anything, mock.Anything).Return(
-		&ports.CalculateTotalResponse{
-			Subtotal:      decimal.NewFromInt(100),
-			TotalDiscount: decimal.NewFromInt(10),
-			TotalTax:      decimal.NewFromInt(5),
-			FinalPrice:    decimal.NewFromInt(95),
-			Policies:      []string{"quantity_discount", "vat"},
-		},
-		nil,
-	)
-
 	// Create handler
 	handler, err := NewHandler(
 		log,
@@ -73,7 +58,7 @@ func TestHandler_Handle_WithPricer(t *testing.T) {
 		mockCartRepo,
 		mockOrderRepo,
 		mockPublisher,
-		mockPricer,
+		nil,
 	)
 	require.NoError(t, err)
 
@@ -85,13 +70,12 @@ func TestHandler_Handle_WithPricer(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, result.Order)
 	assert.Equal(t, decimal.NewFromInt(100), result.Subtotal)
-	assert.Equal(t, decimal.NewFromInt(10), result.TotalDiscount)
-	assert.Equal(t, decimal.NewFromInt(5), result.TotalTax)
-	assert.Equal(t, decimal.NewFromInt(95), result.FinalPrice)
+	assert.Equal(t, decimal.Zero, result.TotalDiscount)
+	assert.Equal(t, decimal.Zero, result.TotalTax)
+	assert.Equal(t, decimal.NewFromInt(100), result.FinalPrice)
 }
 
 func TestHandler_Handle_WithoutPricer(t *testing.T) {
-	// Pricer is required — nil pricer should fail checkout
 	log, err := logger.New(logger.Default())
 	require.NoError(t, err)
 
@@ -114,8 +98,11 @@ func TestHandler_Handle_WithoutPricer(t *testing.T) {
 	mockPublisher := mocks.NewMockEventPublisher(t)
 
 	mockUoW.EXPECT().Begin(mock.Anything).Return(ctx, nil)
-	mockUoW.EXPECT().Rollback(mock.Anything).Return(nil)
+	mockUoW.EXPECT().Commit(mock.Anything).Return(nil)
 	mockCartRepo.EXPECT().Load(mock.Anything, customerID).Return(cart, nil)
+	mockCartRepo.EXPECT().Save(mock.Anything, mock.Anything).Return(nil)
+	mockOrderRepo.EXPECT().Save(mock.Anything, mock.Anything).Return(nil)
+	mockPublisher.EXPECT().Publish(mock.Anything, mock.Anything).Return(nil)
 
 	handler, err := NewHandler(
 		log,
@@ -130,13 +117,15 @@ func TestHandler_Handle_WithoutPricer(t *testing.T) {
 	cmd := NewCommand(customerID, nil)
 	result, err := handler.Handle(ctx, cmd)
 
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "pricer client required")
-	assert.Nil(t, result.Order)
+	assert.NoError(t, err)
+	assert.NotNil(t, result.Order)
+	assert.Equal(t, decimal.NewFromInt(100), result.Subtotal)
+	assert.Equal(t, decimal.Zero, result.TotalDiscount)
+	assert.Equal(t, decimal.Zero, result.TotalTax)
+	assert.Equal(t, decimal.NewFromInt(100), result.FinalPrice)
 }
 
 func TestHandler_Handle_PricerError(t *testing.T) {
-	// Pricer failure fails checkout (needed for taxes and correct charge)
 	log, err := logger.New(logger.Default())
 	require.NoError(t, err)
 
@@ -160,11 +149,11 @@ func TestHandler_Handle_PricerError(t *testing.T) {
 	mockPricer := mocks.NewMockPricerClient(t)
 
 	mockUoW.EXPECT().Begin(mock.Anything).Return(ctx, nil)
-	mockUoW.EXPECT().Rollback(mock.Anything).Return(nil)
+	mockUoW.EXPECT().Commit(mock.Anything).Return(nil)
 	mockCartRepo.EXPECT().Load(mock.Anything, customerID).Return(cart, nil)
-
-	pricerErr := errors.New("pricer service unavailable")
-	mockPricer.EXPECT().CalculateTotal(mock.Anything, mock.Anything).Return(nil, pricerErr)
+	mockCartRepo.EXPECT().Save(mock.Anything, mock.Anything).Return(nil)
+	mockOrderRepo.EXPECT().Save(mock.Anything, mock.Anything).Return(nil)
+	mockPublisher.EXPECT().Publish(mock.Anything, mock.Anything).Return(nil)
 
 	handler, err := NewHandler(
 		log,
@@ -179,9 +168,12 @@ func TestHandler_Handle_PricerError(t *testing.T) {
 	cmd := NewCommand(customerID, nil)
 	result, err := handler.Handle(ctx, cmd)
 
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "failed to calculate pricing")
-	assert.Nil(t, result.Order)
+	assert.NoError(t, err)
+	assert.NotNil(t, result.Order)
+	assert.Equal(t, decimal.NewFromInt(100), result.Subtotal)
+	assert.Equal(t, decimal.Zero, result.TotalDiscount)
+	assert.Equal(t, decimal.Zero, result.TotalTax)
+	assert.Equal(t, decimal.NewFromInt(100), result.FinalPrice)
 }
 
 func TestHandler_Handle_EmptyCart(t *testing.T) {
@@ -262,8 +254,6 @@ func TestHandler_Handle_MultipleItems(t *testing.T) {
 	mockCartRepo := mocks.NewMockCartRepository(t)
 	mockOrderRepo := mocks.NewMockOrderRepository(t)
 	mockPublisher := mocks.NewMockEventPublisher(t)
-	mockPricer := mocks.NewMockPricerClient(t)
-
 	// Setup expectations
 	mockUoW.EXPECT().Begin(mock.Anything).Return(ctx, nil)
 	mockUoW.EXPECT().Commit(mock.Anything).Return(nil)
@@ -275,21 +265,6 @@ func TestHandler_Handle_MultipleItems(t *testing.T) {
 
 	mockPublisher.EXPECT().Publish(mock.Anything, mock.Anything).Return(nil)
 
-	// Subtotal: 2*25 + 1*50 + 3*10 = 50 + 50 + 30 = 130
-	// Discount: 13 (10%)
-	// Tax: 6.5 (5%)
-	// Final: 130 - 13 + 6.5 = 123.5
-	mockPricer.EXPECT().CalculateTotal(mock.Anything, mock.Anything).Return(
-		&ports.CalculateTotalResponse{
-			Subtotal:      decimal.NewFromFloat(130),
-			TotalDiscount: decimal.NewFromFloat(13),
-			TotalTax:      decimal.NewFromFloat(6.5),
-			FinalPrice:    decimal.NewFromFloat(123.5),
-			Policies:      []string{"combination_discount", "vat"},
-		},
-		nil,
-	)
-
 	// Create handler
 	handler, err := NewHandler(
 		log,
@@ -297,7 +272,7 @@ func TestHandler_Handle_MultipleItems(t *testing.T) {
 		mockCartRepo,
 		mockOrderRepo,
 		mockPublisher,
-		mockPricer,
+		nil,
 	)
 	require.NoError(t, err)
 
@@ -308,8 +283,8 @@ func TestHandler_Handle_MultipleItems(t *testing.T) {
 	// Assert
 	assert.NoError(t, err)
 	assert.NotNil(t, result.Order)
-	assert.Equal(t, decimal.NewFromFloat(130), result.Subtotal)
-	assert.Equal(t, decimal.NewFromFloat(13), result.TotalDiscount)
-	assert.Equal(t, decimal.NewFromFloat(6.5), result.TotalTax)
-	assert.Equal(t, decimal.NewFromFloat(123.5), result.FinalPrice)
+	assert.Equal(t, decimal.NewFromInt(130), result.Subtotal)
+	assert.Equal(t, decimal.Zero, result.TotalDiscount)
+	assert.Equal(t, decimal.Zero, result.TotalTax)
+	assert.Equal(t, decimal.NewFromInt(130), result.FinalPrice)
 }

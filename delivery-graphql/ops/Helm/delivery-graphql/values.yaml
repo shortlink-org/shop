@@ -25,6 +25,7 @@ deploy:
     LISTEN_ADDR: "0.0.0.0:4013"
     # Delivery gRPC URL (host:port, no scheme)
     DELIVERY_GRPC_URL: "shortlink-shop-delivery.shortlink-shop:50051"
+    OTEL_EXPORTER_OTLP_ENDPOINT: http://grafana-tempo.grafana.svc.cluster.local:4318
 
   resources:
     limits:

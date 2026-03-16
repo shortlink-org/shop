@@ -115,6 +115,18 @@ websocket:
 
 # Telemetry configuration
 telemetry:
+  service_name: "shortlink-shop-bff"
+  tracing:
+    enabled: true
+    exporters:
+      - exporter: http
+        endpoint: http://grafana-tempo.grafana.svc.cluster.local:4318
+    propagation:
+      trace_context: true
+      baggage: false
+      jaeger: false
+      b3: false
+      datadog: false
   metrics:
     prometheus:
       enabled: true

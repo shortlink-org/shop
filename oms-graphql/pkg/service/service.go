@@ -15,6 +15,14 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"google.golang.org/grpc"
 	grpccodes "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
@@ -60,6 +68,15 @@ func New(logger *slog.Logger, cartClient cartgrpc.CartServiceClient, orderClient
 func Start(ctx context.Context) error {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	listenAddr := envOrDefault("LISTEN_ADDR", defaultListenAddr)
+	shutdownTracing, err := setupTracing(ctx, "shortlink-shop-oms-graphql")
+	if err != nil {
+		return fmt.Errorf("setup tracing: %w", err)
+	}
+	defer func() {
+		if shutdownErr := shutdownTracing(context.Background()); shutdownErr != nil {
+			logger.Error("shutdown tracing", "error", shutdownErr)
+		}
+	}()
 
 	omsTarget, err := normalizeGRPCTarget(envOrDefault("OMS_GRPC_URL", defaultOMSGRPCURL))
 	if err != nil {
@@ -69,6 +86,7 @@ func Start(ctx context.Context) error {
 	conn, err := grpc.NewClient(
 		omsTarget,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithStatsHandler(otelgrpc.NewClientHandler()),
 	)
 	if err != nil {
 		return fmt.Errorf("create oms grpc client: %w", err)
@@ -89,7 +107,7 @@ func Start(ctx context.Context) error {
 
 	server := &http.Server{
 		Addr:              listenAddr,
-		Handler:           h2c.NewHandler(mux, &http2.Server{}),
+		Handler:           otelhttp.NewHandler(h2c.NewHandler(mux, &http2.Server{}), "oms-graphql"),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
@@ -485,4 +503,35 @@ func okEmpty() *servicepb.Empty {
 	return &servicepb.Empty{
 		Ok: wrapperspb.Bool(true),
 	}
+}
+
+func setupTracing(ctx context.Context, serviceName string) (func(context.Context) error, error) {
+	if strings.TrimSpace(os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")) == "" {
+		return func(context.Context) error { return nil }, nil
+	}
+
+	exporter, err := otlptracehttp.New(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("create OTLP HTTP exporter: %w", err)
+	}
+
+	res, err := resource.Merge(
+		resource.Default(),
+		resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceName(serviceName),
+		),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("build tracing resource: %w", err)
+	}
+
+	provider := sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(exporter),
+		sdktrace.WithResource(res),
+	)
+	otel.SetTracerProvider(provider)
+	otel.SetTextMapPropagator(propagation.TraceContext{})
+
+	return provider.Shutdown, nil
 }

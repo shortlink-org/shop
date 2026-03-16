@@ -14,6 +14,13 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	servicepb "github.com/shortlink-org/shop/admin-graphql/pkg/generated/service/v1"
 	serviceconnect "github.com/shortlink-org/shop/admin-graphql/pkg/generated/service/v1/v1connect"
 	"golang.org/x/net/http2"
@@ -58,7 +65,12 @@ func New(logger *slog.Logger, adminAPIURL string, httpClient *http.Client) *Serv
 		logger = slog.Default()
 	}
 	if httpClient == nil {
-		httpClient = &http.Client{Timeout: 10 * time.Second}
+		httpClient = &http.Client{
+			Timeout:   10 * time.Second,
+			Transport: otelhttp.NewTransport(http.DefaultTransport),
+		}
+	} else if httpClient.Transport == nil {
+		httpClient.Transport = otelhttp.NewTransport(http.DefaultTransport)
 	}
 
 	return &Service{
@@ -72,6 +84,15 @@ func Start(ctx context.Context) error {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	listenAddr := envOrDefault("LISTEN_ADDR", defaultListenAddr)
 	adminAPIURL := envOrDefault("ADMIN_API_URL", defaultAdminAPI)
+	shutdownTracing, err := setupTracing(ctx, "shortlink-shop-admin-graphql")
+	if err != nil {
+		return fmt.Errorf("setup tracing: %w", err)
+	}
+	defer func() {
+		if shutdownErr := shutdownTracing(context.Background()); shutdownErr != nil {
+			logger.Error("shutdown tracing", "error", shutdownErr)
+		}
+	}()
 	svc := New(logger, adminAPIURL, nil)
 
 	mux := http.NewServeMux()
@@ -85,7 +106,7 @@ func Start(ctx context.Context) error {
 
 	server := &http.Server{
 		Addr:    listenAddr,
-		Handler: h2c.NewHandler(mux, &http2.Server{}),
+		Handler: otelhttp.NewHandler(h2c.NewHandler(mux, &http2.Server{}), "admin-graphql"),
 	}
 
 	logger.Info("starting admin-graphql grpc subgraph", "listen_addr", listenAddr, "admin_api_url", adminAPIURL)
@@ -240,4 +261,35 @@ func envOrDefault(key string, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+func setupTracing(ctx context.Context, serviceName string) (func(context.Context) error, error) {
+	if strings.TrimSpace(os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")) == "" {
+		return func(context.Context) error { return nil }, nil
+	}
+
+	exporter, err := otlptracehttp.New(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("create OTLP HTTP exporter: %w", err)
+	}
+
+	res, err := resource.Merge(
+		resource.Default(),
+		resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceName(serviceName),
+		),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("build tracing resource: %w", err)
+	}
+
+	provider := sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(exporter),
+		sdktrace.WithResource(res),
+	)
+	otel.SetTracerProvider(provider)
+	otel.SetTextMapPropagator(propagation.TraceContext{})
+
+	return provider.Shutdown, nil
 }

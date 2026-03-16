@@ -27,6 +27,7 @@ deploy:
     # OMS gRPC URL
     OMS_GRPC_URL: http://shortlink-shop-oms.shortlink-shop:50051
     LISTEN_ADDR: "0.0.0.0:4011"
+    OTEL_EXPORTER_OTLP_ENDPOINT: http://grafana-tempo.grafana.svc.cluster.local:4318
 
   resources:
     limits:
