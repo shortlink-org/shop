@@ -210,7 +210,7 @@ function DetailRow({ label, value }: { label: string; value: React.ReactNode }) 
 }
 
 export function OrderDetailView({ orderId }: { orderId: string }) {
-  const { data, loading, startPolling, stopPolling } = useQuery<OrderLookupQueryResult>(GET_ORDER_LOOKUP, {
+  const { data, loading, refetch, startPolling, stopPolling } = useQuery<OrderLookupQueryResult>(GET_ORDER_LOOKUP, {
     variables: { id: orderId },
     skip: !orderId,
     notifyOnNetworkStatusChange: true,

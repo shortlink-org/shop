@@ -185,7 +185,8 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 18rem;
-  min-width: 14rem;
+  min-width: 0;
+  width: 100%;
   border: 1px solid color-mix(in srgb, var(--color-border) 88%, transparent);
   border-radius: 1.5rem;
   background: linear-gradient(
@@ -196,8 +197,7 @@ body {
   box-shadow: 0 28px 70px -56px rgba(15, 23, 42, 0.55);
   overflow: hidden;
 }
-.shop-productgrid__card [class*='description'],
-.shop-productgrid__card p:not([class*='price']) {
+.shop-productgrid__card [class*='description'] {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;

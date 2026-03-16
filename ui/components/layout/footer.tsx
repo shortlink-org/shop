@@ -48,9 +48,9 @@ function FooterLink({
 
 export function Footer() {
   return (
-    <div className="border-t border-[var(--color-border)] bg-[linear-gradient(180deg,var(--color-background)_0%,color-mix(in_srgb,var(--color-surface)_82%,transparent)_100%)] px-4 pt-10 pb-8 sm:px-6 lg:px-8">
+    <div className="border-t border-[var(--color-border)] bg-[linear-gradient(180deg,var(--color-background)_0%,color-mix(in_srgb,var(--color-surface)_82%,transparent)_100%)] pt-10 pb-8">
       <UiKitFooter
-        className="mt-0 border border-[var(--color-border)]/80 bg-[color-mix(in_srgb,var(--color-surface)_88%,transparent)] shadow-[0_28px_80px_-52px_rgba(15,23,42,0.42)] backdrop-blur-xl"
+        className="mt-0 w-full max-w-none rounded-none border-x-0 border-b-0 border-[var(--color-border)]/80 bg-[color-mix(in_srgb,var(--color-surface)_88%,transparent)] shadow-none backdrop-blur-xl"
         links={footerLinks}
         socialLinks={socialLinks}
         LinkComponent={FooterLink}
