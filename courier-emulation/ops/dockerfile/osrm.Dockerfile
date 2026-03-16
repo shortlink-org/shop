@@ -56,6 +56,10 @@ WORKDIR /data
 # Copy only the processed OSRM files (not the source PBF)
 COPY --from=builder /data/${REGION_NAME}.osrm* /data/
 
+# The Helm chart runs the container as UID/GID 1000, so the prebuilt graph
+# files must be readable by that non-root user.
+RUN chown -R 1000:1000 /data && chmod -R a+rX /data
+
 EXPOSE 5000
 
 # Health check
