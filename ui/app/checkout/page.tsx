@@ -29,6 +29,8 @@ const DEFAULT_PACKAGE_INFO: PackageInfo = {
   weightKg: 1.0
 };
 
+const CHECKOUT_CONTAINER_CLASS = 'mx-auto w-full max-w-screen-2xl px-4 py-8 sm:px-6 lg:px-8';
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart, cartUnavailable } = useCart();
@@ -101,10 +103,10 @@ export default function CheckoutPage() {
   // Don't render until mounted to avoid hydration mismatch
   if (!mounted) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-8">
+      <div className={CHECKOUT_CONTAINER_CLASS}>
         <div className="animate-pulse">
           <div className="mb-8 h-8 w-48 rounded bg-[var(--color-muted)]" />
-          <div className="grid gap-8 lg:grid-cols-2">
+          <div className="grid gap-8 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.2fr)]">
             <div className="h-96 rounded-lg bg-[var(--color-muted)]" />
             <div className="h-96 rounded-lg bg-[var(--color-muted)]" />
           </div>
@@ -116,7 +118,7 @@ export default function CheckoutPage() {
   // Cart service unavailable
   if (cartUnavailable) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-8">
+      <div className={CHECKOUT_CONTAINER_CLASS}>
         <FeedbackPanel
           variant="error"
           eyebrow="Checkout"
@@ -135,7 +137,7 @@ export default function CheckoutPage() {
   // Empty cart state
   if (!cart || cart.lines.length === 0) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-8">
+      <div className={CHECKOUT_CONTAINER_CLASS}>
         <FeedbackPanel
           variant="empty"
           eyebrow="Checkout"
@@ -153,7 +155,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
+    <div className={CHECKOUT_CONTAINER_CLASS}>
       {/* Header */}
       <div className="mb-8">
         <Link
@@ -176,7 +178,7 @@ export default function CheckoutPage() {
         </div>
       )}
 
-      <div className="grid gap-8 lg:grid-cols-2">
+      <div className="grid gap-8 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.2fr)] xl:gap-10">
         {/* Order Summary */}
         <div className="order-2 lg:order-1">
           <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
