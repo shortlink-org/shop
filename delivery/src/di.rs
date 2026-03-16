@@ -371,7 +371,9 @@ impl AppState {
     /// Create delivery activities for use with Temporal worker
     pub fn create_delivery_activities(
         self: &Arc<Self>,
-    ) -> Arc<DeliveryActivities<CourierPostgresRepository, CourierRedisCache>> {
+    ) -> Arc<
+        DeliveryActivities<CourierPostgresRepository, CourierRedisCache, PackagePostgresRepository>,
+    > {
         let get_pool_handler = Arc::new(GetPoolHandler::new(
             self.courier_repo.clone(),
             self.courier_cache.clone(),
@@ -389,6 +391,7 @@ impl AppState {
             get_pool_handler,
             accept_package_handler,
             complete_delivery_handler,
+            self.package_repo.clone(),
         ))
     }
 }

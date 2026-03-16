@@ -48,8 +48,8 @@ where
     R: CourierRepository,
     C: CourierCache,
 {
-    repository: Arc<R>,
-    cache: Arc<C>,
+    courier_repo: Arc<R>,
+    courier_cache: Arc<C>,
 }
 
 impl<R, C> Handler<R, C>
@@ -58,8 +58,11 @@ where
     C: CourierCache,
 {
     /// Create a new handler instance.
-    pub fn new(repository: Arc<R>, cache: Arc<C>) -> Self {
-        Self { repository, cache }
+    pub fn new(courier_repo: Arc<R>, courier_cache: Arc<C>) -> Self {
+        Self {
+            courier_repo,
+            courier_cache,
+        }
     }
 }
 
@@ -72,7 +75,7 @@ where
 
     async fn handle(&self, cmd: Command) -> Result<Response, Self::Error> {
         let mut courier = self
-            .repository
+            .courier_repo
             .find_by_id(cmd.courier_id)
             .await?
             .ok_or(AcceptPackageError::NotFound(cmd.courier_id))?;
@@ -86,7 +89,7 @@ where
         );
 
         courier.accept_package()?;
-        self.repository.save(&courier).await?;
+        self.courier_repo.save(&courier).await?;
 
         info!(
             courier_id = %cmd.courier_id,
@@ -96,7 +99,7 @@ where
             "Courier saved after accept_package"
         );
 
-        if let Err(err) = self.cache.cache(&courier).await {
+        if let Err(err) = self.courier_cache.cache(&courier).await {
             warn!(
                 courier_id = %cmd.courier_id,
                 phase = "cache_updated",

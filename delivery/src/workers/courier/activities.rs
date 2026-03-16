@@ -260,7 +260,6 @@ where
 }
 
 // Note: Activity registration is done in `runner.rs` using the Temporal SDK.
-// Each activity method above is wrapped and registered with the worker there.
-//
-// Activity input/output types use simple strings for serialization compatibility
-// with the pre-alpha Temporal SDK.
+// The methods here use domain/application types; `runner.rs` provides the
+// Temporal-facing wrappers that serialize activity inputs/outputs as strings
+// for compatibility with the current pre-alpha SDK.

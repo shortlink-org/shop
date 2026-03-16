@@ -28,10 +28,10 @@ use temporalio_sdk_core::{CoreRuntime, RuntimeOptions, Url};
 
 use crate::config::TemporalConfig;
 use crate::domain::model::courier::CourierStatus;
-use crate::domain::ports::{CourierCache, CourierRepository};
+use crate::domain::ports::{CourierCache, CourierRepository, PackageRepository};
 
 use super::courier::activities::CourierActivities;
-use super::delivery::activities::DeliveryActivities;
+use super::delivery::activities::{DeliveryActivities, DeliveryActivityError};
 
 #[async_trait]
 trait CourierTemporalActivityApi: Send + Sync {
@@ -170,19 +170,22 @@ impl CourierTemporalActivities {
 #[async_trait]
 trait DeliveryTemporalActivityApi: Send + Sync {
     async fn get_dispatch_candidates(&self, zone: &str) -> Result<String, ActivityError>;
-    async fn assign_order(&self, courier_id: Uuid) -> Result<String, ActivityError>;
+    async fn assign_order(&self, courier_id: Uuid, order_id: Uuid)
+        -> Result<String, ActivityError>;
     async fn complete_delivery(
         &self,
         courier_id: Uuid,
+        order_id: Uuid,
         success: bool,
     ) -> Result<String, ActivityError>;
 }
 
 #[async_trait]
-impl<R, C> DeliveryTemporalActivityApi for DeliveryActivities<R, C>
+impl<R, C, P> DeliveryTemporalActivityApi for DeliveryActivities<R, C, P>
 where
     R: CourierRepository + Send + Sync + 'static,
     C: CourierCache + Send + Sync + 'static,
+    P: PackageRepository + Send + Sync + 'static,
 {
     async fn get_dispatch_candidates(&self, zone: &str) -> Result<String, ActivityError> {
         self.get_dispatch_candidates(zone)
@@ -194,25 +197,30 @@ where
                     .collect::<Vec<_>>()
                     .join(",")
             })
-            .map_err(activity_err)
+            .map_err(delivery_activity_err)
     }
 
-    async fn assign_order(&self, courier_id: Uuid) -> Result<String, ActivityError> {
-        self.assign_order(courier_id)
+    async fn assign_order(
+        &self,
+        courier_id: Uuid,
+        order_id: Uuid,
+    ) -> Result<String, ActivityError> {
+        self.assign_order(courier_id, order_id)
             .await
             .map(|_| "ok".to_string())
-            .map_err(activity_err)
+            .map_err(delivery_activity_err)
     }
 
     async fn complete_delivery(
         &self,
         courier_id: Uuid,
+        order_id: Uuid,
         success: bool,
     ) -> Result<String, ActivityError> {
-        self.complete_delivery(courier_id, success)
+        self.complete_delivery(courier_id, order_id, success)
             .await
             .map(|_| "ok".to_string())
-            .map_err(activity_err)
+            .map_err(delivery_activity_err)
     }
 }
 
@@ -238,10 +246,18 @@ impl DeliveryTemporalActivities {
     async fn assign_order(
         self: Arc<Self>,
         _ctx: ActivityContext,
-        courier_id: String,
+        input: String,
     ) -> Result<String, ActivityError> {
-        let courier_id = parse_uuid(&courier_id, "courier")?;
-        self.inner.assign_order(courier_id).await
+        let parts: Vec<&str> = input.split(':').collect();
+        if parts.len() != 2 {
+            return Err(ActivityError::from(anyhow!(
+                "Invalid input format, expected 'courier_id:order_id'"
+            )));
+        }
+
+        let courier_id = parse_uuid(parts[0], "courier")?;
+        let order_id = parse_uuid(parts[1], "order")?;
+        self.inner.assign_order(courier_id, order_id).await
     }
 
     #[allow(dead_code)]
@@ -252,16 +268,19 @@ impl DeliveryTemporalActivities {
         input: String,
     ) -> Result<String, ActivityError> {
         let parts: Vec<&str> = input.split(':').collect();
-        if parts.len() != 2 {
+        if parts.len() != 3 {
             return Err(ActivityError::from(anyhow!(
-                "Invalid input format, expected 'courier_id:success'"
+                "Invalid input format, expected 'courier_id:order_id:success'"
             )));
         }
 
         let courier_id = parse_uuid(parts[0], "courier")?;
-        let success = parts[1] == "true";
+        let order_id = parse_uuid(parts[1], "order")?;
+        let success = parts[2] == "true";
 
-        self.inner.complete_delivery(courier_id, success).await
+        self.inner
+            .complete_delivery(courier_id, order_id, success)
+            .await
     }
 }
 
@@ -351,13 +370,14 @@ impl TemporalWorkerRunner {
     /// This worker handles delivery workflows:
     /// - Order assignment to couriers
     /// - Delivery tracking and completion
-    pub async fn run_delivery_worker<R, C>(
+    pub async fn run_delivery_worker<R, C, P>(
         &self,
-        delivery_activities: Arc<DeliveryActivities<R, C>>,
+        delivery_activities: Arc<DeliveryActivities<R, C, P>>,
     ) -> Result<(), WorkerError>
     where
         R: CourierRepository + Send + Sync + 'static,
         C: CourierCache + Send + Sync + 'static,
+        P: PackageRepository + Send + Sync + 'static,
     {
         info!(
             "Starting delivery worker on task queue: {}",
@@ -432,6 +452,17 @@ where
     E: std::fmt::Display,
 {
     ActivityError::from(anyhow!("{error}"))
+}
+
+fn delivery_activity_err(error: DeliveryActivityError) -> ActivityError {
+    match error {
+        DeliveryActivityError::CourierUnavailable(courier_id) => {
+            ActivityError::NonRetryable(Box::new(DeliveryActivityError::CourierUnavailable(
+                courier_id,
+            )))
+        }
+        other => activity_err(other),
+    }
 }
 
 // =============================================================================

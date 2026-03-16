@@ -1,10 +1,28 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+const activeSpan = {
+  setAttribute: vi.fn(),
+  setStatus: vi.fn(),
+  recordException: vi.fn()
+};
+
+vi.mock('@opentelemetry/api', () => ({
+  SpanStatusCode: {
+    ERROR: 2
+  },
+  trace: {
+    getActiveSpan: () => activeSpan
+  }
+}));
+
 import { POST } from '../route';
 
 describe('POST /api/graphql sanitize goods page variable', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    activeSpan.setAttribute.mockClear();
+    activeSpan.setStatus.mockClear();
+    activeSpan.recordException.mockClear();
   });
 
   it('coerces UUID-like page value to 1 for GetGoodsList', async () => {
@@ -166,5 +184,31 @@ describe('POST /api/graphql sanitize goods page variable', () => {
     );
     expect(forwardedHeaders.get('trace-id')).toBe('4bf92f3577b34da6a3ce929d0e0e4736');
     expect(response.headers.get('trace-id')).toBe('4bf92f3577b34da6a3ce929d0e0e4736');
+  });
+
+  it('marks the active span as error for GraphQL errors', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ errors: [{ message: "Failed to fetch from Subgraph 'carts'." }] }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    );
+
+    const req = {
+      headers: new Headers({ 'content-type': 'application/json' }),
+      text: vi.fn().mockResolvedValue(
+        JSON.stringify({
+          query: 'query GetCart { getCart { state { cartId } } }'
+        })
+      )
+    } as never;
+
+    await POST(req);
+
+    expect(activeSpan.setStatus).toHaveBeenCalledWith({
+      code: 2,
+      message: "Failed to fetch from Subgraph 'carts'."
+    });
+    expect(activeSpan.recordException).toHaveBeenCalled();
   });
 });

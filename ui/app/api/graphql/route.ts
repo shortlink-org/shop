@@ -1,3 +1,4 @@
+import { SpanStatusCode, trace } from '@opentelemetry/api';
 import { NextRequest, NextResponse } from 'next/server';
 
 const BFF_GRAPHQL_URL =
@@ -33,6 +34,37 @@ function getTraceContext(request: NextRequest): { traceId?: string; traceparent?
   const parts = traceparent.split('-');
   const traceId = parts[1];
   return traceId && traceId.length === 32 ? { traceId, traceparent } : { traceparent };
+}
+
+function annotateActiveSpan(
+  operationName: string | null,
+  traceId: string | undefined,
+  status: number,
+  errorMessage?: string,
+  graphqlErrors?: string[]
+): void {
+  const activeSpan = trace.getActiveSpan();
+  if (!activeSpan) return;
+
+  activeSpan.setAttribute('graphql.operation.name', operationName ?? '(anonymous)');
+  activeSpan.setAttribute('graphql.response.status', status);
+  if (traceId) {
+    activeSpan.setAttribute('graphql.trace_id', traceId);
+  }
+
+  if (graphqlErrors?.length) {
+    activeSpan.setAttribute('graphql.errors.count', graphqlErrors.length);
+  }
+
+  if (!errorMessage) {
+    return;
+  }
+
+  activeSpan.setStatus({
+    code: SpanStatusCode.ERROR,
+    message: errorMessage
+  });
+  activeSpan.recordException(new Error(errorMessage));
 }
 
 /** If the request is GetGoodsList (goods(page: $page)), coerce variables.page to Int to avoid BFF error. */
@@ -112,13 +144,22 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     headers[TRACE_ID_HEADER] = traceId;
   }
 
-  const res = await fetch(BFF_GRAPHQL_URL, {
-    method: 'POST',
-    headers,
-    body
-  });
+  let res: Response;
+  try {
+    res = await fetch(BFF_GRAPHQL_URL, {
+      method: 'POST',
+      headers,
+      body
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to reach BFF GraphQL endpoint';
+    annotateActiveSpan(operationName, traceId, 0, message);
+    throw error;
+  }
 
   const text = await res.text();
+  let graphqlErrors: string[] = [];
+  let spanErrorMessage: string | undefined;
 
   // Log incoming request and outgoing response (with errors when present)
   const logPayload: Record<string, unknown> = {
@@ -127,17 +168,35 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     status: res.status
   };
   if (res.status >= 400) {
-    logPayload.responseError = text.slice(0, 500);
+    spanErrorMessage = text.slice(0, 500) || `BFF returned HTTP ${res.status}`;
+    logPayload.responseError = spanErrorMessage;
   } else {
     try {
-      const parsed = JSON.parse(text) as { errors?: Array<{ message?: string }> };
+      const parsed = JSON.parse(text) as {
+        errors?: Array<{ message?: string }>;
+        error?: {
+          message?: string;
+          extensions?: { errors?: Array<{ message?: string }> };
+        };
+      };
       if (Array.isArray(parsed?.errors) && parsed.errors.length > 0) {
-        logPayload.graphqlErrors = parsed.errors.map((e) => e?.message ?? String(e));
+        graphqlErrors = parsed.errors.map((e) => e?.message ?? String(e));
+      } else if (parsed?.error?.message) {
+        graphqlErrors = [
+          parsed.error.message,
+          ...(parsed.error.extensions?.errors?.map((e) => e?.message ?? String(e)) ?? [])
+        ];
+      }
+
+      if (graphqlErrors.length > 0) {
+        spanErrorMessage = graphqlErrors[0];
+        logPayload.graphqlErrors = graphqlErrors;
       }
     } catch {
       // not JSON or no errors
     }
   }
+  annotateActiveSpan(operationName, traceId, res.status, spanErrorMessage, graphqlErrors);
   console.info('[api/graphql]', logPayload);
 
   return new NextResponse(text, {
