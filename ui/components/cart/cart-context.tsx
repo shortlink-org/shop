@@ -3,14 +3,15 @@
 import { DEFAULT_OPTION } from 'lib/constants';
 import type { Cart, CartItem, Good, GoodVariant } from 'lib/shopify/types';
 import { CART_UNAVAILABLE, type CartLoadResult } from 'lib/shopify';
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useReducer } from 'react';
 
 type UpdateType = 'plus' | 'minus' | 'delete';
 
 type CartAction =
   | { type: 'UPDATE_ITEM'; payload: { merchandiseId: string; updateType: UpdateType } }
   | { type: 'ADD_ITEM'; payload: { variant: GoodVariant; good: Good } }
-  | { type: 'SET_CART_ID'; payload: { cartId: string } };
+  | { type: 'SET_CART_ID'; payload: { cartId: string } }
+  | { type: 'INIT'; payload: CartLoadResult };
 
 type CartContextType = {
   cart: Cart | undefined;
@@ -159,6 +160,25 @@ function cartReducer(state: Cart | undefined, action: CartAction): Cart {
   }
 }
 
+type CartProviderState = {
+  cart: Cart | undefined;
+  cartUnavailable: boolean;
+};
+
+function cartProviderReducer(
+  state: CartProviderState,
+  action: CartAction
+): CartProviderState {
+  if (action.type === 'INIT') {
+    if (action.payload === CART_UNAVAILABLE) {
+      return { cart: undefined, cartUnavailable: true };
+    }
+    return { cart: action.payload, cartUnavailable: false };
+  }
+  const cart = cartReducer(state.cart, action);
+  return { ...state, cart };
+}
+
 export function CartProvider({
   children,
   initialCartResult
@@ -166,48 +186,38 @@ export function CartProvider({
   children: React.ReactNode;
   initialCartResult: CartLoadResult;
 }) {
-  const initialCart = initialCartResult === CART_UNAVAILABLE ? undefined : initialCartResult;
-  const [cart, setCart] = useState<Cart | undefined>(initialCart);
-  const [cartUnavailable, setCartUnavailable] = useState(initialCartResult === CART_UNAVAILABLE);
+  const initialState: CartProviderState = {
+    cart: initialCartResult === CART_UNAVAILABLE ? undefined : initialCartResult,
+    cartUnavailable: initialCartResult === CART_UNAVAILABLE
+  };
+  const [state, dispatch] = useReducer(cartProviderReducer, initialState);
 
   useEffect(() => {
-    if (initialCartResult === CART_UNAVAILABLE) {
-      setCartUnavailable(true);
-      return;
-    }
-
-    setCartUnavailable(false);
-    setCart(initialCartResult);
+    queueMicrotask(() => dispatch({ type: 'INIT', payload: initialCartResult }));
   }, [initialCartResult]);
 
   const updateCartItem = (merchandiseId: string, updateType: UpdateType) => {
-    setCart((currentCart) =>
-      cartReducer(currentCart, { type: 'UPDATE_ITEM', payload: { merchandiseId, updateType } })
-    );
+    dispatch({ type: 'UPDATE_ITEM', payload: { merchandiseId, updateType } });
   };
 
   const addCartItem = (variant: GoodVariant, good: Good) => {
-    setCart((currentCart) =>
-      cartReducer(currentCart, { type: 'ADD_ITEM', payload: { variant, good } })
-    );
+    dispatch({ type: 'ADD_ITEM', payload: { variant, good } });
   };
 
   const setCartId = (cartId: string) => {
     if (!cartId) return;
-    setCart((currentCart) =>
-      cartReducer(currentCart, { type: 'SET_CART_ID', payload: { cartId } })
-    );
+    dispatch({ type: 'SET_CART_ID', payload: { cartId } });
   };
 
   const value = useMemo(
     () => ({
-      cart,
-      cartUnavailable,
+      cart: state.cart,
+      cartUnavailable: state.cartUnavailable,
       updateCartItem,
       addCartItem,
       setCartId
     }),
-    [cart, cartUnavailable]
+    [state.cart, state.cartUnavailable]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

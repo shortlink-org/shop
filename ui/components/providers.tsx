@@ -35,5 +35,3 @@ export function Providers({ children }: { children: ReactNode }) {
     </QueryClientProvider>
   );
 }
-
-export default Providers;

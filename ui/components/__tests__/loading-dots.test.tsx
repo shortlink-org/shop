@@ -37,8 +37,6 @@ describe('LoadingDots', () => {
 
   it('should have correct dot dimensions', () => {
     const { container } = render(<LoadingDots className="bg-white" />);
-    const dots = container.querySelectorAll('.w-1.h-1');
-    // Using class check for dimensions
     const allDots = container.querySelectorAll('.w-1');
     expect(allDots).toHaveLength(3);
   });

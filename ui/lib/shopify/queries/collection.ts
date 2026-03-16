@@ -1,4 +1,3 @@
-import goodFragment from '../fragments/good';
 import seoFragment from '../fragments/seo';
 
 const collectionFragment = /* GraphQL */ `

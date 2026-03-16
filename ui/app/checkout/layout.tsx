@@ -1,11 +1,14 @@
 import type { Metadata } from 'next';
-import { CheckoutPageClient } from './checkout-page-client';
 
 export const metadata: Metadata = {
   title: 'Checkout',
   description: 'Complete your order delivery details and place your order.'
 };
 
-export default function CheckoutPage() {
-  return <CheckoutPageClient />;
+export default function CheckoutLayout({
+  children
+}: {
+  children: React.ReactNode;
+}) {
+  return children;
 }

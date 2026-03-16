@@ -1,8 +1,6 @@
 import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
-const domain = process.env.API_URI ?? '';
-
 // This is called from `app/api/revalidate.ts` so providers can control revalidation logic.
 export async function revalidate(req: NextRequest): Promise<NextResponse> {
   // We always need to respond with a 200 status code to Shopify,

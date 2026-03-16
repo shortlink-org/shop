@@ -8,7 +8,7 @@
  */
 
 import { Button, FeedbackPanel } from '@shortlink-org/ui-kit';
-import React, { ReactNode, useState, useEffect } from 'react';
+import React, { ReactNode, useEffect, useReducer } from 'react';
 import { Session } from '@ory/client';
 
 import { SessionProvider } from '@/contexts/SessionContext';
@@ -19,33 +19,60 @@ interface SessionWrapperProps {
   requireAuth?: boolean;
 }
 
+type SessionState = {
+  session: Session | null;
+  isLoading: boolean;
+  error: Error | null;
+};
+
+type SessionAction =
+  | { type: 'LOADED'; payload: Session | null }
+  | { type: 'ERROR'; payload: Error };
+
+function sessionReducer(state: SessionState, action: SessionAction): SessionState {
+  switch (action.type) {
+    case 'LOADED':
+      return { session: action.payload, isLoading: false, error: null };
+    case 'ERROR':
+      return { ...state, error: action.payload, isLoading: false };
+    default:
+      return state;
+  }
+}
+
 export function SessionWrapper({ children, requireAuth = true }: SessionWrapperProps) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [state, dispatch] = useReducer(sessionReducer, {
+    session: null,
+    isLoading: true,
+    error: null
+  });
 
   useEffect(() => {
     const loadSession = async () => {
       try {
         const sessionData = await fetchSessionOptional();
-        setSession(sessionData);
-        
-        // Redirect to login if auth required and no session
+
         if (requireAuth && !sessionData) {
           window.location.href = getLoginUrl(window.location.href);
           return;
         }
+
+        queueMicrotask(() => dispatch({ type: 'LOADED', payload: sessionData }));
       } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to load session'));
-      } finally {
-        setIsLoading(false);
+        queueMicrotask(() =>
+          dispatch({
+            type: 'ERROR',
+            payload: err instanceof Error ? err : new Error('Failed to load session')
+          })
+        );
       }
     };
 
     loadSession();
   }, [requireAuth]);
 
-  // Loading state
+  const { session, isLoading, error } = state;
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center px-4">
@@ -109,10 +136,10 @@ export function SessionWrapper({ children, requireAuth = true }: SessionWrapperP
   }
 
   return (
-    <SessionProvider 
-      session={session} 
+    <SessionProvider
+      session={state.session}
       isLoading={false}
-      error={error}
+      error={state.error}
       onLogout={logout}
     >
       {children}
@@ -120,4 +147,3 @@ export function SessionWrapper({ children, requireAuth = true }: SessionWrapperP
   );
 }
 
-export default SessionWrapper;

@@ -5,16 +5,17 @@ import clsx from 'clsx';
 import { addItem, type AddItemResult } from 'components/cart/actions';
 import { DEFAULT_OPTION } from 'lib/constants';
 import { Good, GoodVariant } from 'lib/shopify/types';
-import { useEffect } from 'react';
-import { useFormState } from 'react-dom';
+import { useEffect, useActionState } from 'react';
 import { useCart } from './cart-context';
 
 function SubmitButton({
   availableForSale,
-  selectedVariantId
+  selectedVariantId,
+  isPending
 }: {
   availableForSale: boolean;
   selectedVariantId: string | undefined;
+  isPending: boolean;
 }) {
   const buttonClasses =
     'relative flex w-full items-center justify-center rounded-full bg-blue-600 p-4 tracking-wide text-white';
@@ -45,22 +46,25 @@ function SubmitButton({
 
   return (
     <button
+      type="submit"
       aria-label="Add to cart"
+      disabled={isPending}
       className={clsx(buttonClasses, {
-        'hover:opacity-90': true
+        'hover:opacity-90': !isPending,
+        [disabledClasses]: isPending
       })}
     >
       <div className="absolute left-0 ml-4">
-        <PlusIcon className="h-5" />
+        <PlusIcon className={clsx('h-5', isPending && 'animate-pulse')} />
       </div>
-      Add To Cart
+      {isPending ? 'Adding…' : 'Add To Cart'}
     </button>
   );
 }
 
 export function AddToCart({ good }: { good: Good }) {
   const { addCartItem, setCartId } = useCart();
-  const [result, formAction] = useFormState<AddItemResult | null, string | undefined>(
+  const [result, formAction, isPending] = useActionState<AddItemResult | null, string | undefined>(
     addItem,
     null
   );
@@ -75,7 +79,7 @@ export function AddToCart({ good }: { good: Good }) {
 
   useEffect(() => {
     if (result?.ok) {
-      setCartId(result.cartId);
+      queueMicrotask(() => setCartId(result.cartId));
     }
   }, [result, setCartId]);
 
@@ -86,7 +90,11 @@ export function AddToCart({ good }: { good: Good }) {
         await actionWithVariant();
       }}
     >
-      <SubmitButton availableForSale={true} selectedVariantId={good.id} />
+      <SubmitButton
+        availableForSale={true}
+        selectedVariantId={good.id}
+        isPending={isPending}
+      />
       <p aria-live="polite" className="sr-only" role="status">
         {result?.ok === false ? result.message : ''}
       </p>

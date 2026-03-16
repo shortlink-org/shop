@@ -30,6 +30,7 @@ export function AddToCartBlock({ good }: { good: Good }) {
       if (!result.ok) {
         updateCartItem(good.id, 'minus');
         toast.error(result.message);
+        setIsAdding(false);
         return;
       }
       setCartId(result.cartId);
@@ -37,9 +38,8 @@ export function AddToCartBlock({ good }: { good: Good }) {
     } catch {
       updateCartItem(good.id, 'minus');
       toast.error('Error adding item to cart');
-    } finally {
-      setIsAdding(false);
     }
+    setIsAdding(false);
   };
 
   return (

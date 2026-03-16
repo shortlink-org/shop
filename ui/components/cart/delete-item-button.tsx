@@ -1,18 +1,21 @@
 'use client';
 
+import clsx from 'clsx';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { removeItem } from 'components/cart/actions';
 import type { CartItem } from 'lib/shopify/types';
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
+
+type UpdateType = 'plus' | 'minus' | 'delete';
 
 export function DeleteItemButton({
   item,
   optimisticUpdate
 }: {
   item: CartItem;
-  optimisticUpdate: any;
+  optimisticUpdate: (merchandiseId: string, updateType: UpdateType) => void;
 }) {
-  const [message, formAction] = useFormState(removeItem, null);
+  const [message, formAction, isPending] = useActionState(removeItem, null);
   const merchandiseId = item.merchandise.id;
   const actionWithVariant = formAction.bind(null, merchandiseId);
 
@@ -26,9 +29,15 @@ export function DeleteItemButton({
       <button
         type="submit"
         aria-label="Remove cart item"
-        className="flex h-[24px] w-[24px] items-center justify-center rounded-full bg-neutral-500"
+        disabled={isPending}
+        className="flex h-[24px] w-[24px] items-center justify-center rounded-full bg-neutral-500 disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        <XMarkIcon className="mx-[1px] h-4 w-4 text-white dark:text-black" />
+        <XMarkIcon
+          className={clsx(
+            'mx-[1px] h-4 w-4 text-white dark:text-black',
+            isPending && 'animate-pulse'
+          )}
+        />
       </button>
       <p aria-live="polite" className="sr-only" role="status">
         {message}

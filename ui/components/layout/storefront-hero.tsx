@@ -90,6 +90,7 @@ export function StorefrontHero({ goods }: { goods: Good[] }) {
 
         <div className="grid gap-3">
           <div className="rounded-[1.5rem] border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_90%,transparent)] p-3 shadow-[0_28px_70px_-52px_rgba(15,23,42,0.45)]">
+            {/* eslint-disable-next-line @next/next/no-img-element -- dynamic artwork URL from getStorefrontArtwork */}
             <img
               src={artwork}
               alt={`${featuredGood.name} artwork`}

@@ -17,6 +17,7 @@ export default async function OrderConfirmationPage({ params }: OrderConfirmatio
 
   return (
     <OrderTrackingView
+      key={orderId}
       orderId={orderId}
       order={data?.order ?? null}
       initialTracking={data?.tracking ?? null}

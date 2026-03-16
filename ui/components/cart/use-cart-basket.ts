@@ -53,9 +53,8 @@ export function useCartBasket() {
       }
     } catch {
       toast.error('Error removing item from cart');
-    } finally {
-      setItemPending(merchandiseId, false);
     }
+    setItemPending(merchandiseId, false);
   };
 
   const handleQuantityChange = async (itemId: number | string, quantity: number) => {
@@ -86,9 +85,8 @@ export function useCartBasket() {
     } catch {
       updateCartItem(merchandiseId, getReverseUpdateType(updateType));
       toast.error('Error updating item quantity');
-    } finally {
-      setItemPending(merchandiseId, false);
     }
+    setItemPending(merchandiseId, false);
   };
 
   return {

@@ -93,23 +93,24 @@ export default async function GoodPage(props: { params: Promise<{ id: string }> 
   };
 
   return (
-    <GoodProvider>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: sanitizeJsonLd(goodJsonLd)
-        }}
-      />
-      <div className="mx-auto max-w-screen-2xl px-4 pb-16">
-        <Suspense fallback={null}>
+    <Suspense fallback={<div className="mx-auto max-w-screen-2xl px-4 pb-16 animate-pulse h-96 bg-[var(--color-muted)] rounded-lg" />}>
+      <GoodProvider>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: sanitizeJsonLd(goodJsonLd)
+          }}
+        />
+        <div className="mx-auto max-w-screen-2xl px-4 pb-16">
           <GoodProductPage good={good} images={galleryImages} />
-        </Suspense>
-        {/*<RelatedGoods id={good.id} />*/}
-      </div>
-    </GoodProvider>
+          {/*<RelatedGoods id={good.id} />*/}
+        </div>
+      </GoodProvider>
+    </Suspense>
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- used when RelatedGoods is uncommented in JSX
 async function RelatedGoods({ id }: { id: string }) {
   const authHeader = (await headers()).get('authorization') ?? undefined;
   const relatedGoods = await getGoodRecommendations(id, {

@@ -1,5 +1,7 @@
 'use client';
 
+'use no memo'; // react-hook-form's setValue in useCallback is incompatible with React Compiler
+
 import { Button } from '@shortlink-org/ui-kit';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,6 +10,10 @@ import { useSession } from '@/contexts/SessionContext';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { fetchRandomAddress as fetchRandomAddressAction } from './actions';
+import { DeliveryAddressSection } from './checkout-form/delivery-address-section';
+import { DeliveryPeriodSection } from './checkout-form/delivery-period-section';
+import { PrioritySection } from './checkout-form/priority-section';
+import { RecipientContactsSection } from './checkout-form/recipient-contacts-section';
 
 const TIME_SLOTS = [
   { label: '09:00 - 12:00', start: '09:00', end: '12:00' },
@@ -192,7 +198,7 @@ const checkoutFormInputSchema = z
   });
 
 export type CheckoutFormData = z.output<typeof checkoutFormInputSchema>;
-type CheckoutFormInput = z.input<typeof checkoutFormInputSchema>;
+export type CheckoutFormInput = z.input<typeof checkoutFormInputSchema>;
 
 interface CheckoutFormProps {
   onSubmit: (data: CheckoutFormData) => Promise<void>;
@@ -222,23 +228,6 @@ export default function CheckoutForm({
   submitError = null
 }: CheckoutFormProps) {
   const { session } = useSession();
-  const {
-    register,
-    handleSubmit: rhfHandleSubmit,
-    setValue,
-    watch,
-    formState: { errors }
-  } = useForm<CheckoutFormInput>({
-    resolver: zodResolver(checkoutFormInputSchema) as never,
-    defaultValues: sessionDefaults
-  });
-
-  const selectedTimeSlot = watch('selectedTimeSlot');
-  const selectedDeliveryDate = watch('deliveryDate');
-  const tomorrowDate = getMinDate();
-  const maxDeliveryDate = getMaxDate();
-  const [randomAddressLoading, setRandomAddressLoading] = useState(false);
-
   const sessionDefaults = useMemo(() => {
     const traits: Record<string, unknown> =
       (session?.identity?.traits as Record<string, unknown> | undefined) ?? {};
@@ -257,12 +246,31 @@ export default function CheckoutForm({
     };
   }, [session]);
 
+  const {
+    register,
+    handleSubmit: rhfHandleSubmit,
+    setValue,
+    watch,
+    formState: { errors }
+  } = useForm<CheckoutFormInput>({
+    resolver: zodResolver(checkoutFormInputSchema) as never,
+    defaultValues: sessionDefaults
+  });
+
+  // eslint-disable-next-line react-hooks/incompatible-library -- react-hook-form watch() not memoizable; acceptable for form UI
+  const selectedTimeSlot = watch('selectedTimeSlot');
+  const selectedDeliveryDate = watch('deliveryDate');
+  const tomorrowDate = getMinDate();
+  const maxDeliveryDate = getMaxDate();
+  const [randomAddressLoading, setRandomAddressLoading] = useState(false);
+
   const handleRandomAddress = useCallback(async () => {
     setRandomAddressLoading(true);
     try {
       const result = await fetchRandomAddressAction();
       if (!result.ok) {
         toast.error(result.message);
+        setRandomAddressLoading(false);
         return;
       }
 
@@ -280,9 +288,10 @@ export default function CheckoutForm({
           shouldTouch: true
         }
       );
-    } finally {
-      setRandomAddressLoading(false);
+    } catch {
+      // Ignore - user can retry
     }
+    setRandomAddressLoading(false);
   }, [setValue]);
 
   const onValid = async (data: CheckoutFormData) => {
@@ -294,277 +303,26 @@ export default function CheckoutForm({
       onSubmit={rhfHandleSubmit((data) => onValid(data as unknown as CheckoutFormData))}
       className="space-y-6"
     >
-      {/* Delivery Address Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-[var(--color-foreground)]">Delivery Address</h3>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleRandomAddress}
-            loading={randomAddressLoading}
-          >
-            Random address
-          </Button>
-        </div>
+      <DeliveryAddressSection
+        register={register}
+        errors={errors}
+        onRandomAddress={handleRandomAddress}
+        randomAddressLoading={randomAddressLoading}
+      />
 
-        <div>
-          <label
-            htmlFor="street"
-            className="block text-sm font-medium text-[var(--color-muted-foreground)]"
-          >
-            Street Address *
-          </label>
-          <input
-            type="text"
-            id="street"
-            {...register('deliveryAddress.street')}
-            className={`mt-1 block w-full rounded-md border bg-[var(--color-surface)] px-3 py-2 text-[var(--color-foreground)] shadow-sm focus:ring-2 focus:ring-[var(--color-primary)] focus:outline-none ${
-              errors.deliveryAddress?.street
-                ? 'border-[var(--color-destructive)]'
-                : 'border-[var(--color-border)]'
-            }`}
-            placeholder="123 Main Street, Apt 4"
-          />
-          {errors.deliveryAddress?.street && (
-            <p className="mt-1 text-sm text-[var(--color-destructive)]">
-              {errors.deliveryAddress.street.message}
-            </p>
-          )}
-        </div>
+      <RecipientContactsSection register={register} errors={errors} />
 
-        <div>
-          <label
-            htmlFor="city"
-            className="block text-sm font-medium text-[var(--color-muted-foreground)]"
-          >
-            City *
-          </label>
-          <input
-            type="text"
-            id="city"
-            {...register('deliveryAddress.city')}
-            className={`mt-1 block w-full rounded-md border bg-[var(--color-surface)] px-3 py-2 text-[var(--color-foreground)] shadow-sm focus:ring-2 focus:ring-[var(--color-primary)] focus:outline-none ${
-              errors.deliveryAddress?.city
-                ? 'border-[var(--color-destructive)]'
-                : 'border-[var(--color-border)]'
-            }`}
-            placeholder="Berlin"
-          />
-          {errors.deliveryAddress?.city && (
-            <p className="mt-1 text-sm text-[var(--color-destructive)]">
-              {errors.deliveryAddress.city.message}
-            </p>
-          )}
-        </div>
+      <DeliveryPeriodSection
+        register={register}
+        setValue={setValue}
+        selectedTimeSlot={selectedTimeSlot}
+        selectedDeliveryDate={selectedDeliveryDate}
+        errors={errors}
+        tomorrowDate={tomorrowDate}
+        maxDeliveryDate={maxDeliveryDate}
+      />
 
-        <div>
-          <label
-            htmlFor="country"
-            className="block text-sm font-medium text-[var(--color-muted-foreground)]"
-          >
-            Country *
-          </label>
-          <select
-            id="country"
-            {...register('deliveryAddress.country')}
-            className={`mt-1 block w-full rounded-md border bg-[var(--color-surface)] px-3 py-2 text-[var(--color-foreground)] shadow-sm focus:ring-2 focus:ring-[var(--color-primary)] focus:outline-none ${
-              errors.deliveryAddress?.country
-                ? 'border-[var(--color-destructive)]'
-                : 'border-[var(--color-border)]'
-            }`}
-          >
-            <option value="Germany">Germany</option>
-            <option value="Austria">Austria</option>
-            <option value="Switzerland">Switzerland</option>
-            <option value="Netherlands">Netherlands</option>
-            <option value="Belgium">Belgium</option>
-            <option value="France">France</option>
-          </select>
-          {errors.deliveryAddress?.country && (
-            <p className="mt-1 text-sm text-[var(--color-destructive)]">
-              {errors.deliveryAddress.country.message}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Recipient Contacts Section */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-[var(--color-foreground)]">Recipient Contacts</h3>
-
-        <div>
-          <label
-            htmlFor="recipientName"
-            className="block text-sm font-medium text-[var(--color-muted-foreground)]"
-          >
-            Recipient Name
-          </label>
-          <input
-            type="text"
-            id="recipientName"
-            {...register('recipientContacts.recipientName')}
-            className="mt-1 block w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[var(--color-foreground)] shadow-sm focus:ring-2 focus:ring-[var(--color-primary)] focus:outline-none"
-            placeholder="John Doe"
-          />
-        </div>
-
-        <div>
-          <label
-            htmlFor="recipientPhone"
-            className="block text-sm font-medium text-[var(--color-muted-foreground)]"
-          >
-            Phone *
-          </label>
-          <input
-            type="tel"
-            id="recipientPhone"
-            {...register('recipientContacts.recipientPhone')}
-            className={`mt-1 block w-full rounded-md border bg-[var(--color-surface)] px-3 py-2 text-[var(--color-foreground)] shadow-sm focus:ring-2 focus:ring-[var(--color-primary)] focus:outline-none ${
-              errors.recipientContacts?.recipientPhone
-                ? 'border-[var(--color-destructive)]'
-                : 'border-[var(--color-border)]'
-            }`}
-            placeholder="+49 123 456 7890"
-          />
-          {errors.recipientContacts?.recipientPhone && (
-            <p className="mt-1 text-sm text-[var(--color-destructive)]">
-              {errors.recipientContacts.recipientPhone.message}
-            </p>
-          )}
-        </div>
-
-        <div>
-          <label
-            htmlFor="recipientEmail"
-            className="block text-sm font-medium text-[var(--color-muted-foreground)]"
-          >
-            Email
-          </label>
-          <input
-            type="email"
-            id="recipientEmail"
-            {...register('recipientContacts.recipientEmail')}
-            className={`mt-1 block w-full rounded-md border bg-[var(--color-surface)] px-3 py-2 text-[var(--color-foreground)] shadow-sm focus:ring-2 focus:ring-[var(--color-primary)] focus:outline-none ${
-              errors.recipientContacts?.recipientEmail
-                ? 'border-[var(--color-destructive)]'
-                : 'border-[var(--color-border)]'
-            }`}
-            placeholder="recipient@example.com"
-          />
-          {errors.recipientContacts?.recipientEmail && (
-            <p className="mt-1 text-sm text-[var(--color-destructive)]">
-              {errors.recipientContacts.recipientEmail.message}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Delivery Period Section */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-[var(--color-foreground)]">Delivery Time</h3>
-
-        <div>
-          <div className="flex items-center justify-between">
-            <label
-              htmlFor="deliveryDate"
-              className="block text-sm font-medium text-[var(--color-muted-foreground)]"
-            >
-              Delivery Date *
-            </label>
-            <button
-              type="button"
-              onClick={() =>
-                setValue('deliveryDate', tomorrowDate, {
-                  shouldDirty: true,
-                  shouldTouch: true,
-                  shouldValidate: true
-                })
-              }
-              className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                selectedDeliveryDate === tomorrowDate
-                  ? 'border-[var(--color-primary)] bg-[var(--color-primary)] text-white'
-                  : 'border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]'
-              }`}
-            >
-              Tomorrow
-            </button>
-          </div>
-          <input
-            type="date"
-            id="deliveryDate"
-            {...register('deliveryDate')}
-            min={tomorrowDate}
-            max={maxDeliveryDate}
-            className={`mt-1 block w-full rounded-md border bg-[var(--color-surface)] px-3 py-2 text-[var(--color-foreground)] shadow-sm focus:ring-2 focus:ring-[var(--color-primary)] focus:outline-none ${
-              errors.deliveryDate
-                ? 'border-[var(--color-destructive)]'
-                : 'border-[var(--color-border)]'
-            }`}
-          />
-          {errors.deliveryDate && (
-            <p className="mt-1 text-sm text-[var(--color-destructive)]">
-              {errors.deliveryDate.message}
-            </p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-[var(--color-muted-foreground)]">
-            Time Slot *
-          </label>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            {TIME_SLOTS.map((slot) => (
-              <button
-                key={slot.label}
-                type="button"
-                onClick={() => setValue('selectedTimeSlot', slot.label, { shouldValidate: true })}
-                className={`rounded-md border px-4 py-2 text-sm font-medium transition-colors ${
-                  selectedTimeSlot === slot.label
-                    ? 'border-sky-600 bg-sky-600 text-white shadow-sm hover:bg-sky-700'
-                    : 'border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]'
-                }`}
-              >
-                {slot.label}
-              </button>
-            ))}
-          </div>
-          {errors.selectedTimeSlot && (
-            <p className="mt-1 text-sm text-[var(--color-destructive)]">
-              {errors.selectedTimeSlot.message}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Priority Section */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-[var(--color-foreground)]">Delivery Priority</h3>
-        <div className="flex gap-4">
-          <label className="flex cursor-pointer items-center">
-            <input
-              type="radio"
-              value="NORMAL"
-              {...register('priority')}
-              className="h-4 w-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-            />
-            <span className="ml-2 text-sm text-[var(--color-muted-foreground)]">
-              Normal Delivery
-            </span>
-          </label>
-          <label className="flex cursor-pointer items-center">
-            <input
-              type="radio"
-              value="URGENT"
-              {...register('priority')}
-              className="h-4 w-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-            />
-            <span className="ml-2 text-sm text-[var(--color-muted-foreground)]">
-              Urgent Delivery (+$10)
-            </span>
-          </label>
-        </div>
-      </div>
+      <PrioritySection register={register} />
 
       {/* Submit Button */}
       {submitError ? (

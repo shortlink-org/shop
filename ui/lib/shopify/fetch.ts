@@ -65,6 +65,7 @@ export async function shopifyFetch<T>({
   tags?: string[];
   variables?: ExtractVariables<T>;
 }): Promise<{ status: number; body: T } | never> {
+  void tags; // reserved for future cache tagging
   const endpoint = getGraphqlEndpoint();
   const upstreamUnavailableMessage =
     'Service temporarily unavailable. Please try again in a moment.';

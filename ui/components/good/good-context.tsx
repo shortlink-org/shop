@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import React, { createContext, useContext, useMemo, useOptimistic } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useOptimistic, Suspense } from 'react';
 
 type GoodState = {
   [key: string]: string;
@@ -17,7 +17,7 @@ type GoodContextType = {
 
 const GoodContext = createContext<GoodContextType | undefined>(undefined);
 
-export function GoodProvider({ children }: { children: React.ReactNode }) {
+function GoodProviderContent({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
 
   const getInitialState = () => {
@@ -36,17 +36,23 @@ export function GoodProvider({ children }: { children: React.ReactNode }) {
     })
   );
 
-  const updateOption = (name: string, value: string) => {
-    const newState = { [name]: value };
-    setOptimisticState(newState);
-    return { ...state, ...newState };
-  };
+  const updateOption = useCallback(
+    (name: string, value: string) => {
+      const newState = { [name]: value };
+      setOptimisticState(newState);
+      return { ...state, ...newState };
+    },
+    [state, setOptimisticState]
+  );
 
-  const updateImage = (index: string) => {
-    const newState = { image: index };
-    setOptimisticState(newState);
-    return { ...state, ...newState };
-  };
+  const updateImage = useCallback(
+    (index: string) => {
+      const newState = { image: index };
+      setOptimisticState(newState);
+      return { ...state, ...newState };
+    },
+    [state, setOptimisticState]
+  );
 
   const value = useMemo(
     () => ({
@@ -54,10 +60,18 @@ export function GoodProvider({ children }: { children: React.ReactNode }) {
       updateOption,
       updateImage
     }),
-    [state]
+    [state, updateOption, updateImage]
   );
 
   return <GoodContext.Provider value={value}>{children}</GoodContext.Provider>;
+}
+
+export function GoodProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={null}>
+      <GoodProviderContent>{children}</GoodProviderContent>
+    </Suspense>
+  );
 }
 
 export function useGood() {

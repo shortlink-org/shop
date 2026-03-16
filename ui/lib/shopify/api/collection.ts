@@ -70,9 +70,7 @@ export async function getCollectionProducts(
   }
 }
 
-export async function getCollections(
-  _options?: RequestOptions
-): Promise<Collection[] | typeof GOODS_UNAVAILABLE> {
+export async function getCollections(): Promise<Collection[] | typeof GOODS_UNAVAILABLE> {
   // BFF has no Collection type / collections query; return default "All" only.
   return DEFAULT_COLLECTIONS;
 }

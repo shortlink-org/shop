@@ -106,7 +106,7 @@ export async function addItem(
   }
 }
 
-export async function removeItem(prevState: any, merchandiseId: string) {
+export async function removeItem(prevState: unknown, merchandiseId: string) {
   const cartId = await getExistingCustomerId();
 
   if (!cartId || !merchandiseId) {
@@ -122,13 +122,13 @@ export async function removeItem(prevState: any, merchandiseId: string) {
       userId
     });
     revalidateTag(TAGS.cart, 'max');
-  } catch (e) {
+  } catch {
     return 'Error removing item from cart';
   }
 }
 
 export async function updateItemQuantity(
-  prevState: any,
+  prevState: unknown,
   payload: {
     merchandiseId: string;
     quantity: number;

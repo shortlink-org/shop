@@ -16,6 +16,7 @@
     "start:dev": "cp .env.dev .env && pnpm dev",
     "start:prod": "cp .env.prod .env && pnpm dev",
     "build": "NODE_ENV=production pnpm next build",
+    "lint": "eslint .",
     "prettier": "pnpm dlx prettier --write --ignore-unknown .",
     "prettier:check": "pnpm dlx prettier --check --ignore-unknown .",
     "test": "vitest run",
@@ -48,6 +49,8 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.1.6",
     "@shortlink-org/ui-kit": "^0.20260316.123250",
     "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/postcss": "^4.2.1",

@@ -19,6 +19,7 @@ export const metadata = {
 export default async function HomePage(_props: {
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  void _props; // Page signature; searchParams not used for homepage
   const authHeader = (await headers()).get('authorization') ?? undefined;
   // Never pass searchParams.page (or any URL param) into getCollectionProducts — BFF expects Int.
   // If we ever add pagination, parse page from searchParams and pass only a normalized integer.

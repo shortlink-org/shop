@@ -47,7 +47,7 @@ function HeaderLink({
   );
 }
 
-export function Navbar() {
+function NavbarContent() {
   const { session, hasSession, isLoading } = useSession();
   const pathname = usePathname();
   const router = useRouter();
@@ -174,5 +174,13 @@ export function Navbar() {
         </Suspense>
       </div>
     </div>
+  );
+}
+
+export function Navbar() {
+  return (
+    <Suspense fallback={<div className="min-h-[5.5rem] border-b border-[var(--color-border)]" />}>
+      <NavbarContent />
+    </Suspense>
   );
 }

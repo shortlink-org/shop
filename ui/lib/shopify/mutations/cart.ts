@@ -1,5 +1,3 @@
-import cartFragment from '../fragments/cart';
-
 export const addToCartMutation = /* GraphQL */ `
   mutation AddToCart($addRequest: ItemRequest!) {
     addItem(addRequest: $addRequest) {

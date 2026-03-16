@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isObject, isShopifyError, ShopifyErrorLike } from '../type-guards';
+import { isObject, isShopifyError } from '../type-guards';
 
 describe('isObject', () => {
   it('should return true for plain objects', () => {

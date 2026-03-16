@@ -27,7 +27,7 @@ export default function MobileMenu({ menu }: { menu: Menu[] }) {
   }, [isOpen]);
 
   useEffect(() => {
-    setIsOpen(false);
+    queueMicrotask(() => setIsOpen(false));
   }, [pathname, searchParams]);
 
   return (

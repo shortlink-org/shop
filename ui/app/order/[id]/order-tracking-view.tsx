@@ -9,7 +9,7 @@ import {
   UserIcon
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
-import { useEffect, useEffectEvent, useState } from 'react';
+import { useEffect, useReducer } from 'react';
 
 import { getDeliveryTracking } from 'lib/shopify';
 import type {
@@ -202,40 +202,69 @@ function isTerminal(status?: string | null): boolean {
   return Boolean(status && TERMINAL_STATUSES.has(status));
 }
 
+type TrackingViewState = {
+  tracking: DeliveryTrackingSummary | null;
+  connectionState: ConnectionState;
+};
+
+type TrackingViewAction =
+  | { type: 'IDLE' }
+  | { type: 'CONNECTING' }
+  | { type: 'LIVE'; payload: DeliveryTrackingSummary | null }
+  | { type: 'RECONNECTING' };
+
+function trackingViewReducer(
+  state: TrackingViewState,
+  action: TrackingViewAction
+): TrackingViewState {
+  switch (action.type) {
+    case 'IDLE':
+      return { ...state, connectionState: 'idle' };
+    case 'CONNECTING':
+      return {
+        ...state,
+        connectionState: state.connectionState === 'live' ? 'reconnecting' : 'connecting'
+      };
+    case 'LIVE':
+      return { tracking: action.payload, connectionState: 'live' };
+    case 'RECONNECTING':
+      return { ...state, connectionState: 'reconnecting' };
+    default:
+      return state;
+  }
+}
+
 export function OrderTrackingView({
   orderId,
   order,
   initialTracking,
   authorization
 }: OrderTrackingViewProps) {
-  const [tracking, setTracking] = useState<DeliveryTrackingSummary | null>(initialTracking);
-  const [connectionState, setConnectionState] = useState<ConnectionState>(
-    authorization && !isTerminal(initialTracking?.status) ? 'connecting' : 'idle'
-  );
-
-  const applyTrackingUpdate = useEffectEvent((nextTracking: DeliveryTrackingSummary | null) => {
-    setTracking(nextTracking);
+  const [state, dispatch] = useReducer(trackingViewReducer, {
+    tracking: initialTracking,
+    connectionState:
+      authorization && !isTerminal(initialTracking?.status) ? 'connecting' : 'idle'
   });
+  const tracking = state.tracking;
+  const connectionState = state.connectionState;
 
   useEffect(() => {
     if (!authorization || isTerminal(tracking?.status)) {
-      setConnectionState('idle');
+      queueMicrotask(() => dispatch({ type: 'IDLE' }));
       return;
     }
 
     let pollTimer: ReturnType<typeof setTimeout> | undefined;
     let disposed = false;
     const poll = async () => {
-      setConnectionState((current) => (current === 'live' ? 'reconnecting' : 'connecting'));
+      dispatch({ type: 'CONNECTING' });
       try {
         const nextTracking = await getDeliveryTracking(orderId, { authorization });
         if (disposed) return;
-
-        applyTrackingUpdate(nextTracking);
-        setConnectionState('live');
+        dispatch({ type: 'LIVE', payload: nextTracking });
       } catch {
         if (disposed) return;
-        setConnectionState('reconnecting');
+        dispatch({ type: 'RECONNECTING' });
       }
       pollTimer = setTimeout(poll, 10000);
     };
@@ -246,7 +275,7 @@ export function OrderTrackingView({
       disposed = true;
       if (pollTimer) clearTimeout(pollTimer);
     };
-  }, [applyTrackingUpdate, authorization, orderId, tracking?.status]);
+  }, [authorization, orderId, tracking?.status]);
 
   const deliveryAddress = order?.deliveryInfo?.deliveryAddress ?? null;
   const deliveryPeriod = order?.deliveryInfo?.deliveryPeriod ?? null;
