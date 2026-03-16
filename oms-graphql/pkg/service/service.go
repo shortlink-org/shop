@@ -13,8 +13,6 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/h2c"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
@@ -23,6 +21,9 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
+	oteltrace "go.opentelemetry.io/otel/trace"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc"
 	grpccodes "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
@@ -107,7 +108,7 @@ func Start(ctx context.Context) error {
 
 	server := &http.Server{
 		Addr:              listenAddr,
-		Handler:           otelhttp.NewHandler(h2c.NewHandler(mux, &http2.Server{}), "oms-graphql"),
+		Handler:           otelhttp.NewHandler(withRequestLogging(logger, h2c.NewHandler(mux, &http2.Server{})), "oms-graphql"),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
@@ -497,6 +498,59 @@ func normalizeGRPCTarget(raw string) (string, error) {
 	}
 
 	return raw, nil
+}
+
+func withRequestLogging(logger *slog.Logger, next http.Handler) http.Handler {
+	if logger == nil {
+		logger = slog.Default()
+	}
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		startedAt := time.Now()
+		recorder := &statusRecorder{ResponseWriter: w, statusCode: http.StatusOK}
+
+		next.ServeHTTP(recorder, r)
+
+		logger.Info(
+			"oms-graphql request completed",
+			"method", r.Method,
+			"path", r.URL.Path,
+			"status", recorder.statusCode,
+			"duration_ms", time.Since(startedAt).Milliseconds(),
+			"trace_id", traceIDFromRequest(r),
+			"request_trace_id", strings.TrimSpace(r.Header.Get(traceIDHeader)),
+			"has_traceparent", strings.TrimSpace(r.Header.Get(traceparentHeader)) != "",
+		)
+	})
+}
+
+type statusRecorder struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (r *statusRecorder) WriteHeader(statusCode int) {
+	r.statusCode = statusCode
+	r.ResponseWriter.WriteHeader(statusCode)
+}
+
+func traceIDFromRequest(r *http.Request) string {
+	if spanCtx := oteltrace.SpanContextFromContext(r.Context()); spanCtx.IsValid() {
+		return spanCtx.TraceID().String()
+	}
+
+	if traceID := strings.TrimSpace(r.Header.Get(traceIDHeader)); traceID != "" {
+		return traceID
+	}
+
+	if traceparent := strings.TrimSpace(r.Header.Get(traceparentHeader)); traceparent != "" {
+		parts := strings.Split(traceparent, "-")
+		if len(parts) >= 2 && len(parts[1]) == 32 {
+			return parts[1]
+		}
+	}
+
+	return ""
 }
 
 func okEmpty() *servicepb.Empty {

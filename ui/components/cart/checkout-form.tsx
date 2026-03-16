@@ -1,7 +1,6 @@
 'use client';
 
 import { Button } from '@shortlink-org/ui-kit';
-import { Temporal } from '@js-temporal/polyfill';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -30,39 +29,97 @@ const COUNTRY_VALUES = [
 const MIN_DELIVERY_OFFSET_DAYS = 1;
 const MAX_DELIVERY_OFFSET_DAYS = 14;
 
-function getToday(): Temporal.PlainDate {
-  return Temporal.Now.plainDateISO();
+type CalendarDate = {
+  year: number;
+  month: number;
+  day: number;
+};
+
+function formatCalendarDate(value: CalendarDate): string {
+  const month = String(value.month).padStart(2, '0');
+  const day = String(value.day).padStart(2, '0');
+  return `${value.year}-${month}-${day}`;
+}
+
+function getToday(): CalendarDate {
+  const now = new Date();
+  return {
+    year: now.getFullYear(),
+    month: now.getMonth() + 1,
+    day: now.getDate()
+  };
+}
+
+function addDays(value: CalendarDate, days: number): CalendarDate {
+  const next = new Date(value.year, value.month - 1, value.day);
+  next.setDate(next.getDate() + days);
+  return {
+    year: next.getFullYear(),
+    month: next.getMonth() + 1,
+    day: next.getDate()
+  };
+}
+
+function compareCalendarDates(left: CalendarDate, right: CalendarDate): number {
+  if (left.year !== right.year) return left.year - right.year;
+  if (left.month !== right.month) return left.month - right.month;
+  return left.day - right.day;
 }
 
 function getMinDate(): string {
-  return getToday().add({ days: MIN_DELIVERY_OFFSET_DAYS }).toString();
+  return formatCalendarDate(addDays(getToday(), MIN_DELIVERY_OFFSET_DAYS));
 }
 
 function getMaxDate(): string {
-  return getToday().add({ days: MAX_DELIVERY_OFFSET_DAYS }).toString();
+  return formatCalendarDate(addDays(getToday(), MAX_DELIVERY_OFFSET_DAYS));
 }
 
-function parseDeliveryDate(value: string): Temporal.PlainDate | null {
-  try {
-    return Temporal.PlainDate.from(value);
-  } catch {
+function parseDeliveryDate(value: string): CalendarDate | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) {
     return null;
   }
+
+  const [, yearRaw, monthRaw, dayRaw] = match;
+  const year = Number(yearRaw);
+  const month = Number(monthRaw);
+  const day = Number(dayRaw);
+  const date = new Date(year, month - 1, day);
+
+  if (
+    Number.isNaN(date.getTime()) ||
+    date.getFullYear() !== year ||
+    date.getMonth() + 1 !== month ||
+    date.getDate() !== day
+  ) {
+    return null;
+  }
+
+  return { year, month, day };
 }
 
 function createDeliveryTimestamp(deliveryDate: string, time: string): string {
-  const plainDate = Temporal.PlainDate.from(deliveryDate);
-  const [hour, minute] = time.split(':').map(Number);
-  const zonedDateTime = Temporal.ZonedDateTime.from({
-    timeZone: Temporal.Now.timeZoneId(),
-    year: plainDate.year,
-    month: plainDate.month,
-    day: plainDate.day,
-    hour,
-    minute
-  });
+  const parsedDate = parseDeliveryDate(deliveryDate);
+  const timeMatch = /^(\d{2}):(\d{2})$/.exec(time);
 
-  return zonedDateTime.toInstant().toString();
+  if (!parsedDate || !timeMatch) {
+    return '';
+  }
+
+  const [, hourRaw, minuteRaw] = timeMatch;
+  const hour = Number(hourRaw);
+  const minute = Number(minuteRaw);
+  const localDateTime = new Date(
+    parsedDate.year,
+    parsedDate.month - 1,
+    parsedDate.day,
+    hour,
+    minute,
+    0,
+    0
+  );
+
+  return localDateTime.toISOString();
 }
 
 const countrySchema = z.enum(COUNTRY_VALUES);
@@ -108,10 +165,10 @@ const checkoutFormInputSchema = z
       if (!date) return false;
 
       const today = getToday();
-      const tomorrow = today.add({ days: MIN_DELIVERY_OFFSET_DAYS });
-      const max = today.add({ days: MAX_DELIVERY_OFFSET_DAYS });
+      const tomorrow = addDays(today, MIN_DELIVERY_OFFSET_DAYS);
+      const max = addDays(today, MAX_DELIVERY_OFFSET_DAYS);
 
-      return Temporal.PlainDate.compare(date, tomorrow) >= 0 && Temporal.PlainDate.compare(date, max) <= 0;
+      return compareCalendarDates(date, tomorrow) >= 0 && compareCalendarDates(date, max) <= 0;
     },
     {
       message: 'Delivery date must be between tomorrow and 14 days from now',

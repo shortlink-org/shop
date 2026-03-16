@@ -16,11 +16,14 @@ import Search, { SearchSkeleton } from './search';
 
 const { SITE_NAME } = process.env;
 const headerSlotClassNames = {
-  header: 'min-h-[5.25rem] py-4',
-  controlsRail: 'gap-3',
-  search: 'mr-0 w-full max-w-[30rem]',
-  searchForm: 'shadow-[0_16px_36px_-32px_rgba(15,23,42,0.24)]',
-  themeToggle: 'inline-flex items-center',
+  container: 'mx-auto max-w-7xl px-3 sm:px-4 lg:px-6',
+  header: 'min-h-[5rem] gap-3 py-3 md:min-h-[5.5rem] md:gap-4',
+  brandRail: 'min-w-0 gap-3',
+  controlsRail: 'min-w-0 gap-2 md:gap-3',
+  search: 'mr-0 min-w-0 flex-1 max-w-[24rem] lg:max-w-[28rem] xl:max-w-[32rem]',
+  searchForm:
+    'rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[0_16px_36px_-32px_rgba(15,23,42,0.24)]',
+  themeToggle: 'hidden xl:inline-flex items-center',
   notifications: 'ml-0',
   notificationsButton: 'min-h-[2.75rem] px-0 py-2.5',
   profile: 'ml-0',
@@ -99,14 +102,14 @@ export function Navbar() {
           name: SITE_NAME || 'Shortlink Shop',
           href: '/',
           render: ({ href, className }) => (
-            <Link href={href} prefetch={true} className={className}>
-              <span className="inline-flex items-center gap-3 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2 shadow-[0_18px_44px_-36px_rgba(15,23,42,0.26)]">
+            <Link href={href} prefetch={true} className={`${className ?? ''} min-w-0`}>
+              <span className="inline-flex min-w-0 items-center gap-2.5 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] py-2 pr-4 pl-3 shadow-[0_18px_44px_-36px_rgba(15,23,42,0.26)]">
                 <LogoSquare size="sm" />
-                <span className="min-w-0">
+                <span className="min-w-0 max-w-[12rem] sm:max-w-none">
                   <span className="block text-sm font-semibold tracking-tight text-[var(--color-foreground)]">
                     {SITE_NAME || 'Shortlink Shop'}
                   </span>
-                  <span className="block text-[11px] font-semibold tracking-[0.18em] text-[var(--color-muted-foreground)] uppercase">
+                  <span className="hidden text-[11px] font-semibold tracking-[0.18em] text-[var(--color-muted-foreground)] uppercase sm:block">
                     Curated storefront
                   </span>
                 </span>
@@ -114,8 +117,6 @@ export function Navbar() {
             </Link>
           )
         }}
-        workspaceLabel="Commerce"
-        statusBadge={{ label: 'Live', tone: 'accent' }}
         navigation={menu}
         currentPath={pathname}
         LinkComponent={HeaderLink}
@@ -164,7 +165,7 @@ export function Navbar() {
         fullWidth={true}
         slotClassNames={headerSlotClassNames}
       />
-      <div className="mx-auto max-w-7xl px-3 pt-2 pb-4 sm:px-4 md:hidden lg:px-6">
+      <div className="mx-auto max-w-7xl px-3 pt-1 pb-3 sm:px-4 md:hidden lg:px-6">
         <Suspense fallback={<SearchSkeleton />}>
           <Search
             className="max-w-md"

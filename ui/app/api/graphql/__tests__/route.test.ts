@@ -3,12 +3,23 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const activeSpan = {
   setAttribute: vi.fn(),
   setStatus: vi.fn(),
-  recordException: vi.fn()
+  recordException: vi.fn(),
+  spanContext: vi.fn(() => ({
+    traceId: '4bf92f3577b34da6a3ce929d0e0e4736'
+  }))
 };
 
 vi.mock('@opentelemetry/api', () => ({
   SpanStatusCode: {
     ERROR: 2
+  },
+  context: {
+    active: () => ({})
+  },
+  propagation: {
+    inject: (_ctx: unknown, carrier: Record<string, string>) => {
+      carrier.traceparent = '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01';
+    }
   },
   trace: {
     getActiveSpan: () => activeSpan
@@ -23,6 +34,7 @@ describe('POST /api/graphql sanitize goods page variable', () => {
     activeSpan.setAttribute.mockClear();
     activeSpan.setStatus.mockClear();
     activeSpan.recordException.mockClear();
+    activeSpan.spanContext.mockClear();
   });
 
   it('coerces UUID-like page value to 1 for GetGoodsList', async () => {
@@ -168,6 +180,35 @@ describe('POST /api/graphql sanitize goods page variable', () => {
       headers: new Headers({
         'content-type': 'application/json',
         traceparent: '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01'
+      }),
+      text: vi.fn().mockResolvedValue(
+        JSON.stringify({
+          query: 'query GetGoodsList { goods { count } }'
+        })
+      )
+    } as never;
+
+    const response = await POST(req);
+
+    const forwardedHeaders = new Headers(fetchMock.mock.calls[0]?.[1]?.headers);
+    expect(forwardedHeaders.get('traceparent')).toBe(
+      '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01'
+    );
+    expect(forwardedHeaders.get('trace-id')).toBe('4bf92f3577b34da6a3ce929d0e0e4736');
+    expect(response.headers.get('trace-id')).toBe('4bf92f3577b34da6a3ce929d0e0e4736');
+  });
+
+  it('injects traceparent from the active span when the request has none', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ data: { goods: { results: [] } } }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    );
+
+    const req = {
+      headers: new Headers({
+        'content-type': 'application/json'
       }),
       text: vi.fn().mockResolvedValue(
         JSON.stringify({

@@ -1,4 +1,4 @@
-import { SpanStatusCode, trace } from '@opentelemetry/api';
+import { SpanStatusCode, context as otelContext, propagation, trace } from '@opentelemetry/api';
 import { NextRequest, NextResponse } from 'next/server';
 
 const BFF_GRAPHQL_URL =
@@ -16,24 +16,44 @@ function normalizePage(value: unknown): number {
   return 1;
 }
 
+function parseTraceIdFromTraceparent(traceparent: string | undefined): string | undefined {
+  if (!traceparent) {
+    return undefined;
+  }
+
+  const parts = traceparent.split('-');
+  const traceId = parts[1];
+  return traceId && traceId.length === 32 ? traceId : undefined;
+}
+
 function getTraceContext(request: NextRequest): { traceId?: string; traceparent?: string } {
-  const traceparent = request.headers.get(TRACEPARENT_HEADER) ?? undefined;
+  const requestTraceparent = request.headers.get(TRACEPARENT_HEADER) ?? undefined;
   const headerTraceId =
     request.headers.get(TRACE_ID_HEADER) ??
     request.headers.get('x-trace-id') ??
     request.headers.get('x-request-id');
 
-  if (headerTraceId) {
-    return { traceId: headerTraceId, traceparent };
+  if (requestTraceparent || headerTraceId) {
+    return {
+      traceparent: requestTraceparent,
+      traceId: headerTraceId ?? parseTraceIdFromTraceparent(requestTraceparent)
+    };
   }
 
-  if (!traceparent) {
-    return {};
+  const carrier: Record<string, string> = {};
+  propagation.inject(otelContext.active(), carrier);
+
+  const activeTraceparent = carrier[TRACEPARENT_HEADER];
+  const activeSpanTraceId = trace.getActiveSpan()?.spanContext?.().traceId;
+
+  if (activeTraceparent || activeSpanTraceId) {
+    return {
+      traceparent: activeTraceparent,
+      traceId: activeSpanTraceId ?? parseTraceIdFromTraceparent(activeTraceparent)
+    };
   }
 
-  const parts = traceparent.split('-');
-  const traceId = parts[1];
-  return traceId && traceId.length === 32 ? { traceId, traceparent } : { traceparent };
+  return {};
 }
 
 function annotateActiveSpan(
