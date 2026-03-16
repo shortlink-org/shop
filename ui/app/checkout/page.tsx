@@ -2,11 +2,12 @@
 
 import { BasketItem, Button, FeedbackPanel } from '@shortlink-org/ui-kit';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useSyncExternalStore, useState } from 'react';
 import { toast } from 'sonner';
 import CheckoutForm, { CheckoutFormData } from 'components/cart/checkout-form';
 import { submitCheckout } from 'components/cart/actions';
 import { useCart } from 'components/cart/cart-context';
+import { useSession } from '@/contexts/SessionContext';
 import { useCartBasket } from 'components/cart/use-cart-basket';
 import { formatCartMoney } from 'components/cart/ui-kit';
 import { RATE_LIMIT_MESSAGE } from 'lib/constants';
@@ -36,11 +37,12 @@ export default function CheckoutPage() {
   const { items, handleRemoveItem, handleQuantityChange } = useCartBasket();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+  const { session } = useSession();
 
   const handleSubmit = async (formData: CheckoutFormData) => {
     setIsLoading(true);
@@ -219,7 +221,12 @@ export default function CheckoutPage() {
         {/* Checkout Form */}
         <div className="order-1 lg:order-2">
           <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
-            <CheckoutForm onSubmit={handleSubmit} isLoading={isLoading} submitError={error} />
+            <CheckoutForm
+            key={session?.id ?? 'anonymous'}
+            onSubmit={handleSubmit}
+            isLoading={isLoading}
+            submitError={error}
+          />
           </div>
         </div>
       </div>

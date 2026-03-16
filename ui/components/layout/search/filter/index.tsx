@@ -6,11 +6,15 @@ import { FilterItem } from './item';
 export type ListItem = SortFilterItem | PathFilterItem;
 export type PathFilterItem = { title: string; path: string };
 
+function getItemKey(item: ListItem): string {
+  return 'path' in item ? item.path : item.slug ?? item.title;
+}
+
 function FilterItemList({ list }: { list: ListItem[] }) {
   return (
     <>
-      {list.map((item: ListItem, i) => (
-        <FilterItem key={i} item={item} />
+      {list.map((item: ListItem) => (
+        <FilterItem key={getItemKey(item)} item={item} />
       ))}
     </>
   );

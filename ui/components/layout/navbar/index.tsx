@@ -67,7 +67,7 @@ export function Navbar() {
 
   useEffect(() => {
     if (!hasSession) {
-      setLogoutToken('');
+      queueMicrotask(() => setLogoutToken(''));
       return;
     }
 

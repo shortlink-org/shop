@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useSession } from '@/contexts/SessionContext';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { fetchRandomAddress as fetchRandomAddressAction } from './actions';
 
@@ -230,17 +230,32 @@ export default function CheckoutForm({
     formState: { errors }
   } = useForm<CheckoutFormInput>({
     resolver: zodResolver(checkoutFormInputSchema) as never,
-    defaultValues
+    defaultValues: sessionDefaults
   });
 
   const selectedTimeSlot = watch('selectedTimeSlot');
   const selectedDeliveryDate = watch('deliveryDate');
-  const recipientName = watch('recipientContacts.recipientName');
-  const recipientPhone = watch('recipientContacts.recipientPhone');
-  const recipientEmail = watch('recipientContacts.recipientEmail');
   const tomorrowDate = getMinDate();
   const maxDeliveryDate = getMaxDate();
   const [randomAddressLoading, setRandomAddressLoading] = useState(false);
+
+  const sessionDefaults = useMemo(() => {
+    const traits: Record<string, unknown> =
+      (session?.identity?.traits as Record<string, unknown> | undefined) ?? {};
+    const nameTraits = (traits.name as Record<string, string> | undefined) ?? {};
+    const fullName = `${nameTraits.first ?? ''} ${nameTraits.last ?? ''}`.trim();
+    const email = typeof traits.email === 'string' ? traits.email : '';
+    const phone = typeof traits.phone === 'string' ? traits.phone : '';
+    return {
+      ...defaultValues,
+      recipientContacts: {
+        ...defaultValues.recipientContacts,
+        recipientName: fullName || defaultValues.recipientContacts.recipientName,
+        recipientPhone: phone || defaultValues.recipientContacts.recipientPhone,
+        recipientEmail: email || defaultValues.recipientContacts.recipientEmail
+      }
+    };
+  }, [session]);
 
   const handleRandomAddress = useCallback(async () => {
     setRandomAddressLoading(true);
@@ -269,25 +284,6 @@ export default function CheckoutForm({
       setRandomAddressLoading(false);
     }
   }, [setValue]);
-
-  useEffect(() => {
-    const traits: Record<string, unknown> =
-      (session?.identity?.traits as Record<string, unknown> | undefined) ?? {};
-    const nameTraits = (traits.name as Record<string, string> | undefined) ?? {};
-    const fullName = `${nameTraits.first ?? ''} ${nameTraits.last ?? ''}`.trim();
-    const email = typeof traits.email === 'string' ? traits.email : '';
-    const phone = typeof traits.phone === 'string' ? traits.phone : '';
-
-    if (!recipientName && fullName) {
-      setValue('recipientContacts.recipientName', fullName, { shouldDirty: false });
-    }
-    if (!recipientPhone && phone) {
-      setValue('recipientContacts.recipientPhone', phone, { shouldDirty: false });
-    }
-    if (!recipientEmail && email) {
-      setValue('recipientContacts.recipientEmail', email, { shouldDirty: false });
-    }
-  }, [recipientEmail, recipientName, recipientPhone, session, setValue]);
 
   const onValid = async (data: CheckoutFormData) => {
     await onSubmit(data);

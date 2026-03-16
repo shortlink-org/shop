@@ -8,7 +8,7 @@
  * Supports static export (deferred client-side rendering)
  */
 
-import React, { ReactNode, useState, useEffect } from 'react';
+import React, { ReactNode, useSyncExternalStore } from 'react';
 import { SessionProvider } from '@/contexts/SessionContext';
 import { useOptionalSessionQuery } from '@/lib/datalayer';
 
@@ -38,11 +38,11 @@ function SessionContent({ children }: { children: ReactNode }) {
  * Note: Protected pages will fetch session via withAuthSync HOC
  */
 export function SessionWrapper({ children }: { children: ReactNode }) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   // During SSR/static export, render children without session
   if (!mounted) {
