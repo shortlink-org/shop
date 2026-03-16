@@ -80,7 +80,6 @@ const checkoutFormInputSchema = z
         .string()
         .min(1, 'City is required')
         .transform((s) => s.trim()),
-      postalCode: z.string().default(''),
       country: countrySchema
     }),
     recipientContacts: z.object({
@@ -124,10 +123,7 @@ const checkoutFormInputSchema = z
     const startTime = slot ? createDeliveryTimestamp(data.deliveryDate, slot.start) : '';
     const endTime = slot ? createDeliveryTimestamp(data.deliveryDate, slot.end) : '';
     return {
-      deliveryAddress: {
-        ...data.deliveryAddress,
-        postalCode: data.deliveryAddress.postalCode ?? ''
-      },
+      deliveryAddress: data.deliveryAddress,
       recipientContacts: {
         recipientName: data.recipientContacts.recipientName ?? '',
         recipientPhone: data.recipientContacts.recipientPhone,
@@ -151,7 +147,6 @@ const defaultValues: CheckoutFormInput = {
   deliveryAddress: {
     street: '',
     city: '',
-    postalCode: '',
     country: 'Germany'
   },
   recipientContacts: {
@@ -205,10 +200,6 @@ export default function CheckoutForm({
         shouldTouch: true
       });
       setValue('deliveryAddress.city', addr.city ?? '', { shouldDirty: true, shouldTouch: true });
-      setValue('deliveryAddress.postalCode', addr.postalCode ?? '', {
-        shouldDirty: true,
-        shouldTouch: true
-      });
       setValue(
         'deliveryAddress.country',
         (addr.country ?? 'Germany') as CheckoutFormInput['deliveryAddress']['country'],
@@ -289,47 +280,29 @@ export default function CheckoutForm({
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label
-              htmlFor="city"
-              className="block text-sm font-medium text-[var(--color-muted-foreground)]"
-            >
-              City *
-            </label>
-            <input
-              type="text"
-              id="city"
-              {...register('deliveryAddress.city')}
-              className={`mt-1 block w-full rounded-md border bg-[var(--color-surface)] px-3 py-2 text-[var(--color-foreground)] shadow-sm focus:ring-2 focus:ring-[var(--color-primary)] focus:outline-none ${
-                errors.deliveryAddress?.city
-                  ? 'border-[var(--color-destructive)]'
-                  : 'border-[var(--color-border)]'
-              }`}
-              placeholder="Berlin"
-            />
-            {errors.deliveryAddress?.city && (
-              <p className="mt-1 text-sm text-[var(--color-destructive)]">
-                {errors.deliveryAddress.city.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label
-              htmlFor="postalCode"
-              className="block text-sm font-medium text-[var(--color-muted-foreground)]"
-            >
-              Postal Code
-            </label>
-            <input
-              type="text"
-              id="postalCode"
-              {...register('deliveryAddress.postalCode')}
-              className="mt-1 block w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-[var(--color-foreground)] shadow-sm focus:ring-2 focus:ring-[var(--color-primary)] focus:outline-none"
-              placeholder="10115"
-            />
-          </div>
+        <div>
+          <label
+            htmlFor="city"
+            className="block text-sm font-medium text-[var(--color-muted-foreground)]"
+          >
+            City *
+          </label>
+          <input
+            type="text"
+            id="city"
+            {...register('deliveryAddress.city')}
+            className={`mt-1 block w-full rounded-md border bg-[var(--color-surface)] px-3 py-2 text-[var(--color-foreground)] shadow-sm focus:ring-2 focus:ring-[var(--color-primary)] focus:outline-none ${
+              errors.deliveryAddress?.city
+                ? 'border-[var(--color-destructive)]'
+                : 'border-[var(--color-border)]'
+            }`}
+            placeholder="Berlin"
+          />
+          {errors.deliveryAddress?.city && (
+            <p className="mt-1 text-sm text-[var(--color-destructive)]">
+              {errors.deliveryAddress.city.message}
+            </p>
+          )}
         </div>
 
         <div>
@@ -495,7 +468,7 @@ export default function CheckoutForm({
                 onClick={() => setValue('selectedTimeSlot', slot.label, { shouldValidate: true })}
                 className={`rounded-md border px-4 py-2 text-sm font-medium transition-colors ${
                   selectedTimeSlot === slot.label
-                    ? 'border-[var(--color-primary)] bg-[var(--color-primary)] text-white'
+                    ? 'border-sky-600 bg-sky-600 text-white shadow-sm hover:bg-sky-700'
                     : 'border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]'
                 }`}
               >
@@ -545,7 +518,7 @@ export default function CheckoutForm({
         <div
           role="alert"
           aria-live="assertive"
-          className="rounded-lg border border-[var(--color-border)] bg-[var(--color-muted)] p-3 text-sm text-[var(--color-foreground)]"
+          className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/50 dark:text-red-200"
         >
           {submitError}
         </div>

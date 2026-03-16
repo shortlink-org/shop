@@ -63,6 +63,10 @@ declare module '@shortlink-org/ui-kit' {
 
   export interface FooterProps {
     className?: string;
+    contained?: boolean;
+    rounded?: boolean;
+    withTopMargin?: boolean;
+    contentClassName?: string;
     links?: FooterLink[];
     socialLinks?: SocialLink[];
     copyright?: ReactNode;
@@ -152,6 +156,17 @@ declare module '@shortlink-org/ui-kit' {
     className?: string;
     gridClassName?: string;
     productClassName?: string;
+    cardSlotClassNames?: Partial<{
+      image: string;
+      badges: string;
+      info: string;
+      title: string;
+      description: string;
+      rating: string;
+      footer: string;
+      price: string;
+      cta: string;
+    }>;
     columns?: { sm?: number; md?: number; lg?: number; xl?: number };
     spacingY?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
     spacingX?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
@@ -398,6 +413,7 @@ declare module '@shortlink-org/ui-kit' {
 
   export interface SidebarProps {
     mode?: 'full' | 'mini';
+    density?: 'default' | 'compact';
     sections?: SidebarSection[];
     activePath?: string;
     collapsed?: boolean;
@@ -431,6 +447,22 @@ declare module '@shortlink-org/ui-kit' {
   export interface AppHeaderStatusBadge {
     label: string;
     tone?: 'neutral' | 'accent' | 'success' | 'warning';
+  }
+
+  export interface AppHeaderSlotClassNames {
+    container?: string;
+    header?: string;
+    brandRail?: string;
+    navigation?: string;
+    controlsRail?: string;
+    search?: string;
+    searchForm?: string;
+    themeToggle?: string;
+    notifications?: string;
+    notificationsButton?: string;
+    profile?: string;
+    profileButton?: string;
+    loginButton?: string;
   }
 
   export interface AppHeaderMenuItem {
@@ -512,6 +544,7 @@ declare module '@shortlink-org/ui-kit' {
     themeToggleComponent?: ReactNode;
     sticky?: boolean;
     fullWidth?: boolean;
+    slotClassNames?: AppHeaderSlotClassNames;
   }
 
   export const AppHeader: FC<AppHeaderProps>;

@@ -29,7 +29,7 @@ export function GoodProductPage({
 
   return (
     <ProductPage
-      className="shop-productpage shop-productpage--fashion-ecommerce"
+      className="shop-productpage"
       name={good.name}
       price={formatPrice(good.price)}
       href={`/good/${good.id}`}

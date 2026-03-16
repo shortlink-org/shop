@@ -55,7 +55,6 @@ type DeliveryPeriod {
 
 type PackageInfo {
   weightKg: Float
-  dimensions: String
 }
 
 type RecipientContacts {
@@ -123,7 +122,6 @@ input DeliveryPeriodInput {
 
 input PackageInfoInput {
   weightKg: Float!
-  dimensions: String!
 }
 
 input RecipientContactsInput {

@@ -390,11 +390,6 @@
           "original": "weightKg",
           "mapped": "weight_kg",
           "argumentMappings": []
-        },
-        {
-          "original": "dimensions",
-          "mapped": "dimensions",
-          "argumentMappings": []
         }
       ]
     },
@@ -544,11 +539,6 @@
         {
           "original": "weightKg",
           "mapped": "weight_kg",
-          "argumentMappings": []
-        },
-        {
-          "original": "dimensions",
-          "mapped": "dimensions",
           "argumentMappings": []
         }
       ]

@@ -53,7 +53,7 @@ function formatMoney(value?: number | null): string {
 
 function formatAddress(address?: DeliveryAddress | null): string {
   if (!address) return '—';
-  return [address.street, address.city, address.postalCode, address.country].filter(Boolean).join(', ') || '—';
+  return [address.street, address.city, address.country].filter(Boolean).join(', ') || '—';
 }
 
 function formatDateTimeShort(value?: string | null): string {

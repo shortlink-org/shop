@@ -15,6 +15,18 @@ import { Suspense } from 'react';
 import Search, { SearchSkeleton } from './search';
 
 const { SITE_NAME } = process.env;
+const headerSlotClassNames = {
+  header: 'min-h-[5.25rem] py-4',
+  controlsRail: 'gap-3',
+  search: 'mr-0 w-full max-w-[30rem]',
+  searchForm: 'shadow-[0_16px_36px_-32px_rgba(15,23,42,0.24)]',
+  themeToggle: 'inline-flex items-center',
+  notifications: 'ml-0',
+  notificationsButton: 'min-h-[2.75rem] px-0 py-2.5',
+  profile: 'ml-0',
+  profileButton: 'min-h-[2.75rem]',
+  loginButton: 'min-h-[2.75rem] py-2.5'
+};
 
 function HeaderLink({
   href,
@@ -82,7 +94,7 @@ export function Navbar() {
   return (
     <div className="shop-navbar relative border-b border-[var(--color-border)] bg-[linear-gradient(180deg,var(--color-background)_0%,color-mix(in_srgb,var(--color-surface)_78%,transparent)_100%)]">
       <AppHeader
-        className="shop-navbar__header mx-auto max-w-7xl px-3 py-3 sm:px-4 lg:px-6"
+        className="shop-navbar__header"
         brand={{
           name: SITE_NAME || 'Shortlink Shop',
           href: '/',
@@ -150,6 +162,7 @@ export function Navbar() {
         loginButton={{ href: loginUrl, label: 'Sign in' }}
         sticky={false}
         fullWidth={true}
+        slotClassNames={headerSlotClassNames}
       />
       <div className="mx-auto max-w-7xl px-3 pt-2 pb-4 sm:px-4 md:hidden lg:px-6">
         <Suspense fallback={<SearchSkeleton />}>

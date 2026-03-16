@@ -190,7 +190,6 @@ message DeliveryPeriod {
 
 message PackageInfo {
   google.protobuf.DoubleValue weight_kg = 1;
-  google.protobuf.StringValue dimensions = 2;
 }
 
 message RecipientContacts {
@@ -246,7 +245,6 @@ message DeliveryPeriodInput {
 
 message PackageInfoInput {
   double weight_kg = 1;
-  string dimensions = 2;
 }
 
 message RecipientContactsInput {

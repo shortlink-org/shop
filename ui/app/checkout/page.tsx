@@ -2,7 +2,7 @@
 
 import { BasketItem, Button, FeedbackPanel } from '@shortlink-org/ui-kit';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import CheckoutForm, { CheckoutFormData } from 'components/cart/checkout-form';
 import { submitCheckout } from 'components/cart/actions';
@@ -18,7 +18,6 @@ import Link from 'next/link';
 const PICKUP_ADDRESS = {
   street: '100 Warehouse Street',
   city: 'Berlin',
-  postalCode: '10115',
   country: 'Germany',
   latitude: 52.52,
   longitude: 13.405
@@ -38,17 +37,10 @@ export default function CheckoutPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
-  const formErrorRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  useEffect(() => {
-    if (error) {
-      formErrorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, [error]);
 
   const handleSubmit = async (formData: CheckoutFormData) => {
     setIsLoading(true);
@@ -167,16 +159,6 @@ export default function CheckoutPage() {
         </Link>
         <h1 className="text-2xl font-bold text-[var(--color-foreground)]">Checkout</h1>
       </div>
-
-      {error && (
-        <div
-          ref={formErrorRef}
-          className="mb-6 rounded-lg border border-red-300 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950/50 dark:text-red-200"
-          role="alert"
-        >
-          {error}
-        </div>
-      )}
 
       <div className="grid gap-8 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.2fr)] xl:gap-10">
         {/* Order Summary */}

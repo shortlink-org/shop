@@ -224,8 +224,7 @@
     },
     "PackageInfo": {
       "fields": {
-        "weightKg": 1,
-        "dimensions": 2
+        "weightKg": 1
       }
     },
     "RecipientContacts": {
@@ -271,8 +270,7 @@
     },
     "PackageInfoInput": {
       "fields": {
-        "weightKg": 1,
-        "dimensions": 2
+        "weightKg": 1
       }
     },
     "RecipientContactsInput": {

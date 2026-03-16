@@ -16,7 +16,6 @@ export const GET_ORDER_LOOKUP = gql`
           pickupAddress {
             street
             city
-            postalCode
             country
             latitude
             longitude
@@ -24,7 +23,6 @@ export const GET_ORDER_LOOKUP = gql`
           deliveryAddress {
             street
             city
-            postalCode
             country
             latitude
             longitude

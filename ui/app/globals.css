@@ -33,6 +33,16 @@ body {
   color: var(--color-foreground);
 }
 
+button:not(:disabled),
+[role='button']:not([aria-disabled='true']) {
+  cursor: pointer;
+}
+
+button:disabled,
+[aria-disabled='true'] {
+  cursor: not-allowed;
+}
+
 /* Focus visible: ring only on keyboard focus, not click */
 .focus-ring:focus {
   outline: none;
@@ -112,57 +122,10 @@ body {
   @apply text-neutral-600 dark:text-neutral-300;
 }
 
-/* Shop product page — fashion-ecommerce: hide empty color/size selectors */
-.shop-productpage--fashion-ecommerce form > div:first-child,
-.shop-productpage--fashion-ecommerce form > div:nth-child(2) {
-  display: none;
-}
-
-/* Shop product quick view — high-rating: hide empty color/size selectors */
-.shop-productquickview--high-rating form > div:first-child,
-.shop-productquickview--high-rating form > div:nth-child(2) {
-  display: none;
-}
-
-/* --- Navbar: height, padding, overflow, search width, cart/profile spacing --- */
+/* --- Navbar: shell spacing --- */
 .shop-navbar {
   padding-top: 0.5rem;
   padding-bottom: 0.25rem;
-}
-.shop-navbar__header {
-  overflow: visible;
-}
-.shop-navbar__header [class*='search'] {
-  max-width: 30rem;
-}
-/* Header wrappers: allow badges and dropdowns to show outside bounds */
-.shop-navbar__header > div,
-.shop-navbar__header > div > div,
-.shop-navbar__header > div > div > div,
-.shop-navbar__header > div > div > div > div {
-  overflow: visible;
-}
-.shop-navbar__header > div > div > div {
-  min-height: 5.25rem;
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-}
-.shop-navbar [class*='notification'] + [class*='profile'],
-.shop-navbar [class*='notifications'] + [class*='profile'] {
-  margin-left: 1rem;
-}
-/* Header actions (cart, profile): ensure buttons fit and align vertically */
-.shop-navbar [class*='notification'] button,
-.shop-navbar [class*='notifications'] button,
-.shop-navbar [class*='profile'] button,
-.shop-navbar [class*='profile'] a[role='button'] {
-  min-height: 2.75rem;
-  padding-top: 0.625rem;
-  padding-bottom: 0.625rem;
-}
-.shop-navbar__header [data-component='toggle-dark-mode'] {
-  display: inline-flex;
-  align-items: center;
 }
 
 .shop-panel {
@@ -180,7 +143,7 @@ body {
   opacity: 0.7;
 }
 
-/* --- Product grid: card size, description clamp, price/CTA alignment, no overflow --- */
+/* --- Product grid: card shell and artwork --- */
 .shop-productgrid__card {
   display: flex;
   flex-direction: column;
@@ -197,45 +160,11 @@ body {
   box-shadow: 0 28px 70px -56px rgba(15, 23, 42, 0.55);
   overflow: hidden;
 }
-.shop-productgrid__card [class*='description'] {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-  min-height: 2.5rem;
-}
-.shop-productgrid__card > *:last-child {
-  margin-top: auto;
-  min-width: 0;
-}
-.shop-productgrid__card [class*='footer'],
-.shop-productgrid__card [class*='price'] {
-  margin-top: auto;
-}
-/* Footer row: price + add-to-cart — keep button visible, allow price to shrink */
-.shop-productgrid__card > div:last-child > div.mt-auto {
-  gap: 0.5rem;
-  min-width: 0;
-  padding-right: 0.125rem;
-}
-.shop-productgrid__card > div:last-child > div.mt-auto > div:first-child {
-  min-width: 0;
-}
-.shop-productgrid__card [class*='footer'] > *,
-.shop-productgrid__card [class*='price'] + * {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-.shop-productgrid__card [class*='badge'] {
-  margin-left: 0.375rem;
-}
 .shop-productgrid__card:hover {
   transform: translateY(-2px);
   box-shadow: 0 32px 80px -52px rgba(15, 23, 42, 0.52);
 }
-.shop-productgrid__card .product-image-container {
+.shop-productgrid__card [data-slot='image'] {
   flex-shrink: 0;
   aspect-ratio: 3 / 4;
   max-height: 14rem;
@@ -243,7 +172,7 @@ body {
     radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 32%),
     linear-gradient(180deg, rgba(15, 23, 42, 0.04), rgba(15, 23, 42, 0.14));
 }
-.shop-productgrid__card .product-image-container img {
+.shop-productgrid__card [data-slot='image'] img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -254,25 +183,7 @@ body {
   padding-right: 0;
 }
 
-/* --- Sidebar: compact collapsible, chevron, spacing --- */
-.shop-sidebar [class*='collapsible'] > [class*='trigger'],
-.shop-sidebar [class*='collapsible'] > button {
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-  min-height: auto;
-}
-.shop-sidebar [class*='collapsible'] [class*='chevron'],
-.shop-sidebar [class*='collapsible'] svg[class*='chevron'] {
-  width: 1rem;
-  height: 1rem;
-  flex-shrink: 0;
-}
-.shop-sidebar [class*='section'] + [class*='section'] {
-  margin-top: 0.75rem;
-}
-.shop-sidebar [class*='footer'] {
-  padding-top: 0.75rem;
-}
+/* --- Sidebar: storefront surface styling --- */
 .shop-sidebar aside > div {
   background: linear-gradient(
     180deg,

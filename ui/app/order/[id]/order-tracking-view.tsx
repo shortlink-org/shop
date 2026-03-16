@@ -511,7 +511,6 @@ export function OrderTrackingView({
                       ? [
                           deliveryAddress.street,
                           deliveryAddress.city,
-                          deliveryAddress.postalCode,
                           deliveryAddress.country
                         ]
                           .filter(Boolean)

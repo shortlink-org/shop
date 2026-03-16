@@ -60,6 +60,7 @@ export function ShopSidebar() {
     <Sidebar
       sections={sections}
       activePath={pathname}
+      density="compact"
       variant="sticky"
       height="calc(100vh - 6.5rem)"
       className="shop-sidebar top-8"

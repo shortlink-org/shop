@@ -14,14 +14,14 @@ export type CheckoutActionResult =
 export type RandomAddressResult =
   | {
       ok: true;
-      address: { street?: string; city?: string; postalCode?: string; country?: string };
+      address: { street?: string; city?: string; country?: string };
     }
   | { ok: false; message: string };
 
 type RandomAddressOperation = {
   data?: {
     randomAddress?: {
-      address?: { street?: string; city?: string; postalCode?: string; country?: string };
+      address?: { street?: string; city?: string; country?: string };
     };
   };
 };
@@ -232,7 +232,6 @@ export async function fetchRandomAddress(): Promise<RandomAddressResult> {
             address {
               street
               city
-              postalCode
               country
             }
           }

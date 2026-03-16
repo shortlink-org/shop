@@ -7,7 +7,6 @@ export type OrderItem = {
 export type DeliveryAddress = {
   street?: string | null;
   city?: string | null;
-  postalCode?: string | null;
   country?: string | null;
   latitude?: number | null;
   longitude?: number | null;

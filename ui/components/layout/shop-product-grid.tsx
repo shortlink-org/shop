@@ -12,6 +12,13 @@ import { getStorefrontArtwork, getStorefrontCategory } from 'lib/storefront-art'
 import { toast } from 'sonner';
 import type { ProductGridProduct, ProductQuickViewProduct } from '@shortlink-org/ui-kit';
 
+const productCardSlotClassNames = {
+  description: 'min-h-[2.5rem]',
+  footer: 'gap-2',
+  price: 'min-w-0',
+  cta: 'shrink-0'
+};
+
 function placeholderImage(good: Good, variant = 0): string {
   return getStorefrontArtwork(good.name, good.id, {
     width: 720,
@@ -160,6 +167,7 @@ export function ShopProductGrid({
         className={clsx('shop-productgrid', 'shop-productgrid--with-add-to-cart', className)}
         gridClassName={clsx('gap-3 sm:gap-4 lg:gap-6', gridClassName)}
         productClassName="shop-productgrid__card"
+        cardSlotClassNames={productCardSlotClassNames}
         spacingX="lg"
         spacingY="lg"
         products={products}
@@ -167,10 +175,7 @@ export function ShopProductGrid({
         onProductClick={(product) => router.push(product.href)}
       />
       <ProductQuickView
-        className={clsx(
-          'shop-productquickview',
-          isQuickViewAdding && 'pointer-events-none opacity-80'
-        )}
+        className={clsx(isQuickViewAdding && 'pointer-events-none opacity-80')}
         open={!!quickViewGood}
         onClose={() => {
           if (!isQuickViewAdding) {

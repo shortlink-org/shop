@@ -50,7 +50,10 @@ export function Footer() {
   return (
     <div className="border-t border-[var(--color-border)] bg-[linear-gradient(180deg,var(--color-background)_0%,color-mix(in_srgb,var(--color-surface)_82%,transparent)_100%)] pt-10 pb-8">
       <UiKitFooter
-        className="mt-0 w-full max-w-none rounded-none border-x-0 border-b-0 border-[var(--color-border)]/80 bg-[color-mix(in_srgb,var(--color-surface)_88%,transparent)] shadow-none backdrop-blur-xl"
+        className="w-full border-x-0 border-b-0 border-[var(--color-border)]/80 bg-[color-mix(in_srgb,var(--color-surface)_88%,transparent)] shadow-none backdrop-blur-xl"
+        contained={false}
+        rounded={false}
+        withTopMargin={false}
         links={footerLinks}
         socialLinks={socialLinks}
         LinkComponent={FooterLink}

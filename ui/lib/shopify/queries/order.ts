@@ -8,7 +8,6 @@ export const getOrderTrackingPageQuery = /* GraphQL */ `
           deliveryAddress {
             street
             city
-            postalCode
             country
             latitude
             longitude

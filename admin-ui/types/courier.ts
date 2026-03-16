@@ -28,7 +28,6 @@ export interface WorkHours {
 export interface Address {
   street: string;
   city: string;
-  postalCode?: string;
   country: string;
   latitude?: number;
   longitude?: number;

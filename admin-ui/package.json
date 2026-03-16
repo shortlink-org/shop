@@ -20,7 +20,7 @@
   "dependencies": {
     "@apollo/client": "^4.1.6",
     "@ory/client": "^1.22.28",
-    "@shortlink-org/ui-kit": "^0.20260307.184018",
+    "@shortlink-org/ui-kit": "^0.20260316.123250",
     "@urql/core": "^6.0.1",
     "graphql": "^16.13.1",
     "graphql-tag": "^2.12.6",
