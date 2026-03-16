@@ -83,7 +83,13 @@ where
             .ok_or(GetCourierError::NotFound(query.courier_id))?;
 
         // 2. Get state from cache
-        let state = self.cache.get_state(query.courier_id).await.ok().flatten();
+        let state = self
+            .cache
+            .get_state(query.courier_id)
+            .await
+            .ok()
+            .flatten()
+            .or_else(|| Some(CachedCourierState::from(&courier)));
 
         // 3. TODO: Optionally fetch location from Geolocation Service
         // if query.include_location { ... }

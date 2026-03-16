@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/ThreeDotsLabs/watermill/message"
+	"github.com/google/uuid"
 	"github.com/shortlink-org/go-sdk/logger"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -40,9 +41,10 @@ var (
 
 // DeliveryStatusEvent represents a delivery status update from the Delivery service.
 type DeliveryStatusEvent struct {
-	PackageID           string                              `json:"package_id"`
-	OrderID             string                              `json:"order_id"`
-	CourierID           string                              `json:"courier_id"`
+	MessageID           string                              `json:"-"`
+	PackageID           uuid.UUID                           `json:"package_id"`
+	OrderID             uuid.UUID                           `json:"order_id"`
+	CourierID           uuid.UUID                           `json:"courier_id"`
 	Status              string                              `json:"status"`
 	EventType           DeliveryEventType                   `json:"event_type"`
 	Reason              string                              `json:"reason,omitempty"`
@@ -142,12 +144,14 @@ func (c *DeliveryConsumer) processMessage(ctx context.Context, msg *message.Mess
 		return
 	}
 
+	event.MessageID = msg.UUID
+
 	err = c.handler.HandleDeliveryStatus(ctx, event)
 	if err != nil {
 		c.log.Error("Failed to handle delivery event",
 			slog.Any("error", err),
-			slog.String("package_id", event.PackageID),
-			slog.String("order_id", event.OrderID))
+			slog.String("package_id", event.PackageID.String()),
+			slog.String("order_id", event.OrderID.String()))
 		msg.Nack()
 
 		return
@@ -155,8 +159,8 @@ func (c *DeliveryConsumer) processMessage(ctx context.Context, msg *message.Mess
 
 	msg.Ack()
 	c.log.Info("Processed delivery event",
-		slog.String("package_id", event.PackageID),
-		slog.String("order_id", event.OrderID),
+		slog.String("package_id", event.PackageID.String()),
+		slog.String("order_id", event.OrderID.String()),
 		slog.String("status", event.Status))
 }
 
@@ -175,7 +179,10 @@ func (c *DeliveryConsumer) unmarshalDeliveryEvent(eventType string, payload []by
 			return event, fmt.Errorf("proto unmarshal PackageAcceptedEvent: %w", err)
 		}
 
-		event = mapAcceptedToStatusEvent(&e)
+		event, err = mapAcceptedToStatusEvent(&e)
+		if err != nil {
+			return event, err
+		}
 	case "PackageAssignedEvent":
 		var e deliveryevents.PackageAssignedEvent
 
@@ -184,7 +191,10 @@ func (c *DeliveryConsumer) unmarshalDeliveryEvent(eventType string, payload []by
 			return event, fmt.Errorf("proto unmarshal PackageAssignedEvent: %w", err)
 		}
 
-		event = mapAssignedToStatusEvent(&e)
+		event, err = mapAssignedToStatusEvent(&e)
+		if err != nil {
+			return event, err
+		}
 	case "PackageInTransitEvent":
 		var e deliveryevents.PackageInTransitEvent
 
@@ -193,7 +203,10 @@ func (c *DeliveryConsumer) unmarshalDeliveryEvent(eventType string, payload []by
 			return event, fmt.Errorf("proto unmarshal PackageInTransitEvent: %w", err)
 		}
 
-		event = mapInTransitToStatusEvent(&e)
+		event, err = mapInTransitToStatusEvent(&e)
+		if err != nil {
+			return event, err
+		}
 	case "PackageDeliveredEvent":
 		var e deliveryevents.PackageDeliveredEvent
 
@@ -202,7 +215,10 @@ func (c *DeliveryConsumer) unmarshalDeliveryEvent(eventType string, payload []by
 			return event, fmt.Errorf("proto unmarshal PackageDeliveredEvent: %w", err)
 		}
 
-		event = mapDeliveredToStatusEvent(&e)
+		event, err = mapDeliveredToStatusEvent(&e)
+		if err != nil {
+			return event, err
+		}
 	case "PackageNotDeliveredEvent":
 		var e deliveryevents.PackageNotDeliveredEvent
 
@@ -211,7 +227,10 @@ func (c *DeliveryConsumer) unmarshalDeliveryEvent(eventType string, payload []by
 			return event, fmt.Errorf("proto unmarshal PackageNotDeliveredEvent: %w", err)
 		}
 
-		event = mapNotDeliveredToStatusEvent(&e)
+		event, err = mapNotDeliveredToStatusEvent(&e)
+		if err != nil {
+			return event, err
+		}
 	default:
 		// Ignore other event types.
 		return event, fmt.Errorf("unsupported or non-status event_type %s: %w", eventType, errUnsupportedEventType)
@@ -220,67 +239,153 @@ func (c *DeliveryConsumer) unmarshalDeliveryEvent(eventType string, payload []by
 	return event, nil
 }
 
-func mapAcceptedToStatusEvent(e *deliveryevents.PackageAcceptedEvent) DeliveryStatusEvent {
+func mapAcceptedToStatusEvent(e *deliveryevents.PackageAcceptedEvent) (DeliveryStatusEvent, error) {
+	packageID, err := parseRequiredUUID(e.GetPackageId(), "package_id")
+	if err != nil {
+		return DeliveryStatusEvent{}, err
+	}
+
+	orderID, err := parseRequiredUUID(e.GetOrderId(), "order_id")
+	if err != nil {
+		return DeliveryStatusEvent{}, err
+	}
+
 	return DeliveryStatusEvent{
-		PackageID:  e.GetPackageId(),
-		OrderID:    e.GetOrderId(),
+		PackageID:  packageID,
+		OrderID:    orderID,
 		Status:     deliverycommon.PackageStatus_name[int32(e.GetStatus())],
 		EventType:  EventTypePackageAccepted,
 		OccurredAt: timestampToTime(e.GetOccurredAt()),
-	}
+	}, nil
 }
 
-func mapAssignedToStatusEvent(e *deliveryevents.PackageAssignedEvent) DeliveryStatusEvent {
+func mapAssignedToStatusEvent(e *deliveryevents.PackageAssignedEvent) (DeliveryStatusEvent, error) {
+	packageID, err := parseRequiredUUID(e.GetPackageId(), "package_id")
+	if err != nil {
+		return DeliveryStatusEvent{}, err
+	}
+
+	courierID, err := parseRequiredUUID(e.GetCourierId(), "courier_id")
+	if err != nil {
+		return DeliveryStatusEvent{}, err
+	}
+
 	return DeliveryStatusEvent{
-		PackageID:  e.GetPackageId(),
-		CourierID:  e.GetCourierId(),
+		PackageID:  packageID,
+		CourierID:  courierID,
 		Status:     deliverycommon.PackageStatus_name[int32(e.GetStatus())],
 		EventType:  EventTypePackageAssigned,
 		OccurredAt: timestampToTime(e.GetOccurredAt()),
-	}
+	}, nil
 }
 
-func mapInTransitToStatusEvent(e *deliveryevents.PackageInTransitEvent) DeliveryStatusEvent {
+func mapInTransitToStatusEvent(e *deliveryevents.PackageInTransitEvent) (DeliveryStatusEvent, error) {
+	packageID, err := parseRequiredUUID(e.GetPackageId(), "package_id")
+	if err != nil {
+		return DeliveryStatusEvent{}, err
+	}
+
+	orderID, err := parseOptionalUUID(e.GetOrderId(), "order_id")
+	if err != nil {
+		return DeliveryStatusEvent{}, err
+	}
+
+	courierID, err := parseRequiredUUID(e.GetCourierId(), "courier_id")
+	if err != nil {
+		return DeliveryStatusEvent{}, err
+	}
+
 	return DeliveryStatusEvent{
-		PackageID:  e.GetPackageId(),
-		OrderID:    e.GetOrderId(),
-		CourierID:  e.GetCourierId(),
+		PackageID:  packageID,
+		OrderID:    orderID,
+		CourierID:  courierID,
 		Status:     deliverycommon.PackageStatus_name[int32(e.GetStatus())],
 		EventType:  EventTypePackageInTransit,
 		OccurredAt: timestampToTime(e.GetOccurredAt()),
-	}
+	}, nil
 }
 
-func mapDeliveredToStatusEvent(e *deliveryevents.PackageDeliveredEvent) DeliveryStatusEvent {
+func mapDeliveredToStatusEvent(e *deliveryevents.PackageDeliveredEvent) (DeliveryStatusEvent, error) {
+	packageID, err := parseRequiredUUID(e.GetPackageId(), "package_id")
+	if err != nil {
+		return DeliveryStatusEvent{}, err
+	}
+
+	orderID, err := parseOptionalUUID(e.GetOrderId(), "order_id")
+	if err != nil {
+		return DeliveryStatusEvent{}, err
+	}
+
+	courierID, err := parseRequiredUUID(e.GetCourierId(), "courier_id")
+	if err != nil {
+		return DeliveryStatusEvent{}, err
+	}
+
 	return DeliveryStatusEvent{
-		PackageID:        e.GetPackageId(),
-		OrderID:          e.GetOrderId(),
-		CourierID:        e.GetCourierId(),
+		PackageID:        packageID,
+		OrderID:          orderID,
+		CourierID:        courierID,
 		Status:           deliverycommon.PackageStatus_name[int32(e.GetStatus())],
 		EventType:        EventTypePackageDelivered,
 		OccurredAt:       timestampToTime(e.GetOccurredAt()),
 		DeliveryLocation: e.GetDeliveryLocation(),
-	}
+	}, nil
 }
 
-func mapNotDeliveredToStatusEvent(e *deliveryevents.PackageNotDeliveredEvent) DeliveryStatusEvent {
+func mapNotDeliveredToStatusEvent(e *deliveryevents.PackageNotDeliveredEvent) (DeliveryStatusEvent, error) {
 	var reasonStr, desc string
 	if d := e.GetNotDeliveredDetails(); d != nil {
 		reasonStr = deliverycommon.NotDeliveredReason_name[int32(d.GetReason())]
 		desc = d.GetDescription()
 	}
 
+	packageID, err := parseRequiredUUID(e.GetPackageId(), "package_id")
+	if err != nil {
+		return DeliveryStatusEvent{}, err
+	}
+
+	orderID, err := parseOptionalUUID(e.GetOrderId(), "order_id")
+	if err != nil {
+		return DeliveryStatusEvent{}, err
+	}
+
+	courierID, err := parseRequiredUUID(e.GetCourierId(), "courier_id")
+	if err != nil {
+		return DeliveryStatusEvent{}, err
+	}
+
 	return DeliveryStatusEvent{
-		PackageID:           e.GetPackageId(),
-		OrderID:             e.GetOrderId(),
-		CourierID:           e.GetCourierId(),
+		PackageID:           packageID,
+		OrderID:             orderID,
+		CourierID:           courierID,
 		Status:              deliverycommon.PackageStatus_name[int32(e.GetStatus())],
 		EventType:           EventTypePackageNotDelivered,
 		Reason:              reasonStr,
 		Description:         desc,
 		OccurredAt:          timestampToTime(e.GetOccurredAt()),
 		NotDeliveredDetails: e.GetNotDeliveredDetails(),
+	}, nil
+}
+
+func parseRequiredUUID(value, fieldName string) (uuid.UUID, error) {
+	if value == "" {
+		return uuid.Nil, fmt.Errorf("%s is required", fieldName)
 	}
+
+	return parseOptionalUUID(value, fieldName)
+}
+
+func parseOptionalUUID(value, fieldName string) (uuid.UUID, error) {
+	if value == "" {
+		return uuid.Nil, nil
+	}
+
+	parsed, err := uuid.Parse(value)
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("invalid %s: %w", fieldName, err)
+	}
+
+	return parsed, nil
 }
 
 func timestampToTime(ts *timestamppb.Timestamp) time.Time {

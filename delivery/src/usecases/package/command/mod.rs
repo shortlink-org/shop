@@ -17,7 +17,9 @@ pub use assign_order::{
     Response as AssignOrderResponse,
 };
 pub use deliver_order::{
-    Command as DeliverOrderCommand, DeliverOrderError, Handler as DeliverOrderHandler,
+    ConfirmDelivered as ConfirmDeliveredOrderCommand,
+    ConfirmNotDelivered as ConfirmNotDeliveredOrderCommand, DeliverOrderError,
+    Handler as DeliverOrderHandler,
 };
 pub use pick_up_order::{
     Command as PickUpOrderCommand, Handler as PickUpOrderHandler, PickUpOrderError,

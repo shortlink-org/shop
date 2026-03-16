@@ -9,12 +9,15 @@ use sea_orm::{
 };
 use uuid::Uuid;
 
-use crate::domain::model::package::{Package, PackageId, PackageStatus};
+use crate::domain::model::{
+    courier::Courier,
+    package::{Package, PackageId, PackageStatus},
+};
 use crate::domain::ports::{DomainEvent, PackageFilter, PackageRepository, RepositoryError};
 use crate::infrastructure::repository::entities::package::{
     self, ActiveModel, Entity as PackageEntity,
 };
-use crate::infrastructure::repository::OutboxPostgresRepository;
+use crate::infrastructure::repository::{CourierPostgresRepository, OutboxPostgresRepository};
 
 /// PostgreSQL implementation of PackageRepository using Sea-ORM
 pub struct PackagePostgresRepository {
@@ -93,6 +96,29 @@ impl PackageRepository for PackagePostgresRepository {
             .map_err(|e| RepositoryError::ConnectionError(e.to_string()))?;
 
         self.save_with_conn(&tx, package).await?;
+        OutboxPostgresRepository::insert_events_in_tx(&tx, events).await?;
+
+        tx.commit()
+            .await
+            .map_err(|e| RepositoryError::ConnectionError(e.to_string()))?;
+
+        Ok(())
+    }
+
+    async fn save_courier_with_package_and_events(
+        &self,
+        courier: &Courier,
+        package: &Package,
+        events: &[DomainEvent],
+    ) -> Result<(), RepositoryError> {
+        let tx = self
+            .db
+            .begin()
+            .await
+            .map_err(|e| RepositoryError::ConnectionError(e.to_string()))?;
+
+        self.save_with_conn(&tx, package).await?;
+        CourierPostgresRepository::save_with_conn(&tx, courier).await?;
         OutboxPostgresRepository::insert_events_in_tx(&tx, events).await?;
 
         tx.commit()

@@ -105,7 +105,9 @@ pub async fn build_order_tracking_response(
         phone: courier.phone().to_string(),
         transport_type: domain_to_proto_transport(courier.transport_type()).into(),
         status: courier_status.into(),
-        current_location: current_location.as_ref().map(|location| location.location().into()),
+        current_location: current_location
+            .as_ref()
+            .map(|location| location.location().into()),
         last_active_at: current_location
             .as_ref()
             .map(|location| datetime_to_timestamp(location.recorded_at())),

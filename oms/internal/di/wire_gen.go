@@ -161,7 +161,7 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	deliveryConsumer, cleanup8, err := NewDeliveryConsumer(context, configConfig, loggerLogger, uoW, postgresStore, eventPublisher)
+	deliveryConsumer, cleanup8, err := NewDeliveryConsumer(context, configConfig, loggerLogger, uoW, postgresStore, postgresStore, eventPublisher)
 	if err != nil {
 		cleanup7()
 		cleanup6()
@@ -565,7 +565,7 @@ var OMSSet = wire.NewSet(
 
 	CustomDefaultSet, flight_trace.New, grpc.InitServer, config.New, logger.NewDefault, tracing.New, metrics.New, db.New, newDBOptions, wire.FieldsOf(new(*metrics.Monitoring), "Metrics", "Prometheus"), newRedisClient,
 
-	newUnitOfWork, wire.Bind(new(ports.UnitOfWork), new(*postgres3.UoW)), postgres.New, postgres2.New, wire.Bind(new(ports.CartRepository), new(*postgres.Store)), wire.Bind(new(ports.OrderRepository), new(*postgres2.Store)), cart_goods_index.New, wire.Bind(new(ports.CartGoodsIndex), new(*cart_goods_index.Store)), leaderboard.New, wire.Bind(new(ports.LeaderboardRepository), new(*leaderboard.Store)), newEventBus, bus.NewEventPublisher, wire.Bind(new(ports.EventPublisher), new(*bus.EventPublisher)), NewDeliveryClient,
+	newUnitOfWork, wire.Bind(new(ports.UnitOfWork), new(*postgres3.UoW)), postgres.New, postgres2.New, wire.Bind(new(ports.CartRepository), new(*postgres.Store)), wire.Bind(new(ports.OrderRepository), new(*postgres2.Store)), wire.Bind(new(ports.DeliveryInboxRepository), new(*postgres2.Store)), cart_goods_index.New, wire.Bind(new(ports.CartGoodsIndex), new(*cart_goods_index.Store)), leaderboard.New, wire.Bind(new(ports.LeaderboardRepository), new(*leaderboard.Store)), newEventBus, bus.NewEventPublisher, wire.Bind(new(ports.EventPublisher), new(*bus.EventPublisher)), NewDeliveryClient,
 	NewDeliveryConsumer,
 	NewLeaderboardConsumer,
 

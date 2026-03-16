@@ -7,13 +7,11 @@ use rust_decimal::Decimal;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::domain::model::courier::{
-    Courier, CourierCapacity, CourierId, CourierStatus, WorkHours,
-};
+use crate::domain::model::courier::{Courier, CourierId, CourierStatus, WorkHours};
 use crate::domain::model::vo::TransportType;
 
 /// Courier database model
-#[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
 #[sea_orm(table_name = "couriers", schema_name = "delivery")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
@@ -30,6 +28,11 @@ pub struct Model {
     pub work_hours_end: NaiveTime,
     pub work_days: Vec<i32>,
     pub push_token: Option<String>,
+    pub status: String,
+    pub current_load: i32,
+    pub rating: f64,
+    pub successful_deliveries: i32,
+    pub failed_deliveries: i32,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub version: i32,
@@ -64,6 +67,11 @@ impl From<&Courier> for ActiveModel {
                 .map(|&d| d as i32)
                 .collect()),
             push_token: Set(courier.push_token().map(String::from)),
+            status: Set(status_to_string(courier.status())),
+            current_load: Set(courier.current_load() as i32),
+            rating: Set(courier.rating()),
+            successful_deliveries: Set(courier.successful_deliveries() as i32),
+            failed_deliveries: Set(courier.failed_deliveries() as i32),
             created_at: Set(courier.created_at()),
             updated_at: Set(courier.updated_at()),
             version: Set(courier.version() as i32),
@@ -84,18 +92,7 @@ impl TryFrom<Model> for Courier {
         let work_hours = WorkHours::new(model.work_hours_start, model.work_hours_end, work_days)
             .map_err(|e| e.to_string())?;
 
-        // Determine max_load based on transport type
-        let max_load = match transport_type {
-            TransportType::Walking => 1,
-            TransportType::Bicycle => 2,
-            TransportType::Motorcycle => 3,
-            TransportType::Car => 5,
-        };
-
-        // Reconstitute the domain entity
-        // Note: status, current_load, rating, etc. are stored in Redis cache
-        // Here we use default values; the actual values should be loaded from cache
-        Ok(Courier::reconstitute(
+        Courier::reconstitute(
             CourierId::from_uuid(model.id),
             model.name,
             model.phone,
@@ -108,15 +105,16 @@ impl TryFrom<Model> for Courier {
             model.work_zone,
             work_hours,
             model.push_token,
-            CourierStatus::Unavailable, // Default, load from cache
-            CourierCapacity::new(max_load),
-            0.0, // Rating from cache
-            0,   // Successful deliveries from cache
-            0,   // Failed deliveries from cache
+            string_to_status(&model.status)?,
+            model.current_load as u32,
+            model.rating,
+            model.successful_deliveries as u32,
+            model.failed_deliveries as u32,
             model.created_at,
             model.updated_at,
             model.version as u32,
-        ))
+        )
+        .map_err(|e| e.to_string())
     }
 }
 
@@ -138,6 +136,25 @@ fn string_to_transport_type(s: &str) -> Result<TransportType, String> {
         "motorcycle" => Ok(TransportType::Motorcycle),
         "car" => Ok(TransportType::Car),
         _ => Err(format!("Unknown transport type: {}", s)),
+    }
+}
+
+fn status_to_string(status: CourierStatus) -> String {
+    match status {
+        CourierStatus::Unavailable => "unavailable".to_string(),
+        CourierStatus::Free => "free".to_string(),
+        CourierStatus::Busy => "busy".to_string(),
+        CourierStatus::Archived => "archived".to_string(),
+    }
+}
+
+fn string_to_status(s: &str) -> Result<CourierStatus, String> {
+    match s.to_lowercase().as_str() {
+        "unavailable" => Ok(CourierStatus::Unavailable),
+        "free" => Ok(CourierStatus::Free),
+        "busy" => Ok(CourierStatus::Busy),
+        "archived" => Ok(CourierStatus::Archived),
+        _ => Err(format!("Unknown courier status: {}", s)),
     }
 }
 

@@ -55,10 +55,10 @@ tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 
 # Temporal SDK (pre-alpha, Git dependency)
-temporalio-sdk = { git = "https://github.com/temporalio/sdk-core", rev = "05077672867822042737bc44bd9b0c9aa6aee993", package = "temporalio-sdk" }
-temporalio-sdk-core = { git = "https://github.com/temporalio/sdk-core", rev = "05077672867822042737bc44bd9b0c9aa6aee993", package = "temporalio-sdk-core" }
-temporalio-common = { git = "https://github.com/temporalio/sdk-core", rev = "05077672867822042737bc44bd9b0c9aa6aee993", package = "temporalio-common" }
-temporalio-client = { git = "https://github.com/temporalio/sdk-core", rev = "05077672867822042737bc44bd9b0c9aa6aee993", package = "temporalio-client" }
+temporalio-sdk = { git = "https://github.com/temporalio/sdk-core", rev = "c6b601dee511d603a7e379a69d2ae5438f077fd5", package = "temporalio-sdk" }
+temporalio-sdk-core = { git = "https://github.com/temporalio/sdk-core", rev = "c6b601dee511d603a7e379a69d2ae5438f077fd5", package = "temporalio-sdk-core" }
+temporalio-common = { git = "https://github.com/temporalio/sdk-core", rev = "c6b601dee511d603a7e379a69d2ae5438f077fd5", package = "temporalio-common" }
+temporalio-client = { git = "https://github.com/temporalio/sdk-core", rev = "c6b601dee511d603a7e379a69d2ae5438f077fd5", package = "temporalio-client" }
 
 # Additional dependencies for Temporal
 futures = "0.3.32"

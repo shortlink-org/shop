@@ -22,6 +22,7 @@ FROM chef AS planner
 
 COPY Cargo.toml Cargo.lock* ./
 COPY migration ./migration
+COPY generated ./generated
 COPY src ./src
 COPY build.rs ./
 COPY .cargo ./.cargo
@@ -54,10 +55,12 @@ COPY --from=planner /app/recipe.json recipe.json
 COPY Cargo.toml Cargo.lock* ./
 COPY .cargo ./.cargo
 COPY migration ./migration
+COPY generated ./generated
 RUN cargo chef cook --release --recipe-path recipe.json
 
 # Copy source and build application
 COPY migration ./migration
+COPY generated ./generated
 COPY src ./src
 COPY build.rs ./
 

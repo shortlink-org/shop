@@ -5,7 +5,7 @@
 
 use std::sync::Arc;
 
-use rdkafka::consumer::{Consumer, StreamConsumer};
+use rdkafka::consumer::{CommitMode, Consumer, StreamConsumer};
 use rdkafka::message::Message;
 use rdkafka::ClientConfig;
 use serde::Deserialize;
@@ -146,8 +146,7 @@ where
         let consumer: StreamConsumer = ClientConfig::new()
             .set("bootstrap.servers", &config.brokers)
             .set("group.id", &config.group_id)
-            .set("enable.auto.commit", "true")
-            .set("auto.commit.interval.ms", "5000")
+            .set("enable.auto.commit", "false")
             .set("auto.offset.reset", "latest")
             .set("session.timeout.ms", "30000")
             .create()
@@ -192,9 +191,39 @@ where
                 message = self.consumer.recv() => {
                     match message {
                         Ok(msg) => {
-                            if let Some(payload) = msg.payload() {
-                                if let Err(err) = self.process_message(msg.topic(), payload).await {
-                                    error!(topic = msg.topic(), error = %err, "Failed to process emulation event");
+                            let processing_result = match msg.payload() {
+                                Some(payload) => self.process_message(msg.topic(), payload).await,
+                                None => {
+                                    info!(
+                                        topic = msg.topic(),
+                                        partition = msg.partition(),
+                                        offset = msg.offset(),
+                                        "Skipping empty emulation event payload"
+                                    );
+                                    Ok(())
+                                }
+                            };
+
+                            match processing_result {
+                                Ok(()) => {
+                                    if let Err(err) = self.consumer.commit_message(&msg, CommitMode::Sync) {
+                                        error!(
+                                            topic = msg.topic(),
+                                            partition = msg.partition(),
+                                            offset = msg.offset(),
+                                            error = %err,
+                                            "Failed to commit emulation consumer offset"
+                                        );
+                                    }
+                                }
+                                Err(err) => {
+                                    error!(
+                                        topic = msg.topic(),
+                                        partition = msg.partition(),
+                                        offset = msg.offset(),
+                                        error = %err,
+                                        "Failed to process emulation event"
+                                    );
                                 }
                             }
                         }
@@ -265,24 +294,6 @@ where
         let courier_id = parse_uuid("courier_id", &event.courier_id)?;
         let confirmation_location = to_domain_location(&event.current_location)?;
 
-        let cmd = match event.status.as_str() {
-            "DELIVERED" => deliver_order::Command::delivered(
-                package_id,
-                courier_id,
-                confirmation_location,
-                None,
-                None,
-            ),
-            "NOT_DELIVERED" => deliver_order::Command::not_delivered(
-                package_id,
-                courier_id,
-                confirmation_location,
-                map_not_delivered_reason(event.reason.as_deref())?,
-                None,
-            ),
-            status => return Err(format!("Unsupported delivery status: {status}")),
-        };
-
         let handler = DeliverOrderHandler::new(
             self.courier_repo.clone(),
             self.courier_cache.clone(),
@@ -290,7 +301,32 @@ where
             self.geolocation_service.clone(),
         );
 
-        match handler.handle(cmd).await {
+        let result = match event.status.as_str() {
+            "DELIVERED" => {
+                handler
+                    .handle(deliver_order::ConfirmDelivered::new(
+                        package_id,
+                        courier_id,
+                        confirmation_location,
+                        None,
+                        None,
+                    ))
+                    .await
+            }
+            "NOT_DELIVERED" => {
+                handler
+                    .handle(deliver_order::ConfirmNotDelivered::new(
+                        package_id,
+                        courier_id,
+                        confirmation_location,
+                        map_not_delivered_reason(event.reason.as_deref())?,
+                    ))
+                    .await
+            }
+            status => return Err(format!("Unsupported delivery status: {status}")),
+        };
+
+        match result {
             Ok(_) => {
                 self.notify_tracking_for_package(package_id).await;
                 info!(package_id = %package_id, courier_id = %courier_id, "Processed delivery event from courier-emulation");

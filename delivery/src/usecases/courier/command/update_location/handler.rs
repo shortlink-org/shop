@@ -288,7 +288,7 @@ mod tests {
             work_hours,
             None,
             CourierStatus::Free,
-            crate::domain::model::courier::CourierCapacity::new(5),
+            0,
             5.0,
             100,
             0,
@@ -296,6 +296,7 @@ mod tests {
             Utc::now(),
             1,
         )
+        .unwrap()
     }
 
     // Mock LocationCache

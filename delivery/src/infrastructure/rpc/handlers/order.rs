@@ -22,7 +22,8 @@ use crate::usecases::package::command::assign_order::{
     AssignmentMode, Command as AssignCommand, Handler as AssignHandler,
 };
 use crate::usecases::package::command::deliver_order::{
-    Command as DeliverCommand, DeliverOrderError, Handler as DeliverHandler, NotDeliveredReason,
+    ConfirmDelivered, ConfirmNotDelivered, DeliverOrderError, Handler as DeliverHandler,
+    NotDeliveredReason,
 };
 use crate::usecases::package::command::pick_up_order::{
     Command as PickUpCommand, Handler as PickUpHandler, PickUpOrderError,
@@ -378,49 +379,6 @@ pub async fn deliver_order(
     let confirmation_location = DomainLocation::new(location.latitude, location.longitude, 10.0)
         .map_err(|e| Status::invalid_argument(format!("invalid location: {}", e)))?;
 
-    // Build command based on delivery result
-    let cmd = if req.is_delivered {
-        DeliverCommand::delivered(
-            package_id,
-            courier_id,
-            confirmation_location,
-            if req.photo_proof.is_empty() {
-                None
-            } else {
-                Some(String::from_utf8_lossy(&req.photo_proof).to_string())
-            },
-            if req.signature.is_empty() {
-                None
-            } else {
-                Some(String::from_utf8_lossy(&req.signature).to_string())
-            },
-        )
-    } else {
-        let details = req.not_delivered_details.as_ref().ok_or_else(|| {
-            Status::invalid_argument("not_delivered_details is required for failed delivery")
-        })?;
-        // OTHER requires non-empty description
-        if ProtoNotDeliveredReason::try_from(details.reason) == Ok(ProtoNotDeliveredReason::Other)
-            && details.description.trim().is_empty()
-        {
-            return Err(Status::invalid_argument("OTHER requires description"));
-        }
-        let reason = proto_to_domain_reason(details.reason, details.description.clone())
-            .ok_or_else(|| Status::invalid_argument("invalid not_delivered_details.reason"))?;
-
-        DeliverCommand::not_delivered(
-            package_id,
-            courier_id,
-            confirmation_location,
-            reason,
-            if req.notes.is_empty() {
-                None
-            } else {
-                Some(req.notes)
-            },
-        )
-    };
-
     // Execute handler
     let handler = DeliverHandler::new(
         state.courier_repo.clone(),
@@ -429,7 +387,46 @@ pub async fn deliver_order(
         state.geolocation_service.clone(),
     );
 
-    let result = handler.handle(cmd).await.map_err(|e| {
+    let result = if req.is_delivered {
+        handler
+            .handle(ConfirmDelivered::new(
+                package_id,
+                courier_id,
+                confirmation_location,
+                if req.photo_proof.is_empty() {
+                    None
+                } else {
+                    Some(String::from_utf8_lossy(&req.photo_proof).to_string())
+                },
+                if req.signature.is_empty() {
+                    None
+                } else {
+                    Some(String::from_utf8_lossy(&req.signature).to_string())
+                },
+            ))
+            .await
+    } else {
+        let details = req.not_delivered_details.as_ref().ok_or_else(|| {
+            Status::invalid_argument("not_delivered_details is required for failed delivery")
+        })?;
+        if ProtoNotDeliveredReason::try_from(details.reason) == Ok(ProtoNotDeliveredReason::Other)
+            && details.description.trim().is_empty()
+        {
+            return Err(Status::invalid_argument("OTHER requires description"));
+        }
+        let reason = proto_to_domain_reason(details.reason, details.description.clone())
+            .ok_or_else(|| Status::invalid_argument("invalid not_delivered_details.reason"))?;
+
+        handler
+            .handle(ConfirmNotDelivered::new(
+                package_id,
+                courier_id,
+                confirmation_location,
+                reason,
+            ))
+            .await
+    }
+    .map_err(|e| {
         error!(error = %e, "Failed to deliver order");
         match e {
             DeliverOrderError::PackageNotFound(_) => Status::not_found(e.to_string()),
@@ -438,11 +435,13 @@ pub async fn deliver_order(
             DeliverOrderError::InvalidPackageStatus(_) => {
                 Status::failed_precondition(e.to_string())
             }
-            DeliverOrderError::MissingNotDeliveredReason => Status::invalid_argument(e.to_string()),
             DeliverOrderError::OtherReasonRequiresDescription => {
                 Status::invalid_argument(e.to_string())
             }
             DeliverOrderError::AlreadyDelivered(_) => Status::already_exists(e.to_string()),
+            DeliverOrderError::CourierStateTransition(_) => {
+                Status::failed_precondition(e.to_string())
+            }
             DeliverOrderError::RepositoryError(_) => Status::internal(e.to_string()),
         }
     })?;

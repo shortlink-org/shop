@@ -148,7 +148,10 @@ impl MigrationTrait for Migration {
                     )
                     .col(ColumnDef::new(Packages::AssignedAt).timestamp_with_time_zone())
                     .col(ColumnDef::new(Packages::DeliveredAt).timestamp_with_time_zone())
-                    .col(ColumnDef::new(Packages::NotDeliveredReason).text())
+                    .col(
+                        ColumnDef::new(Packages::NotDeliveredReasonCode).string_len(50),
+                    )
+                    .col(ColumnDef::new(Packages::NotDeliveredReasonDescription).text())
                     .col(
                         ColumnDef::new(Packages::Version)
                             .integer()
@@ -272,6 +275,7 @@ pub enum Packages {
     UpdatedAt,
     AssignedAt,
     DeliveredAt,
-    NotDeliveredReason,
+    NotDeliveredReasonCode,
+    NotDeliveredReasonDescription,
     Version,
 }

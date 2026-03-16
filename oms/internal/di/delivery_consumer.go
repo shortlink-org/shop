@@ -20,12 +20,13 @@ func NewDeliveryConsumer(
 	log logger.Logger,
 	uow ports.UnitOfWork,
 	orderRepo ports.OrderRepository,
+	inboxRepo ports.DeliveryInboxRepository,
 	publisher ports.EventPublisher,
 ) (*kafka.DeliveryConsumer, func(), error) {
 	cfg.SetDefault("WATERMILL_KAFKA_CONSUMER_GROUP", kafka.ConsumerGroupOMSDelivery)
 
 	// Create event handler
-	handler, err := on_delivery_status.NewHandler(log, uow, orderRepo, publisher)
+	handler, err := on_delivery_status.NewHandler(log, uow, orderRepo, inboxRepo, publisher)
 	if err != nil {
 		return nil, func() {}, err
 	}

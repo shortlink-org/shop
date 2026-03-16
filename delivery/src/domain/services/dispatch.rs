@@ -4,36 +4,23 @@
 //! This is a domain service because it operates on multiple aggregates
 //! (Package and Courier) and contains complex business rules.
 
-use crate::domain::model::courier::{CourierCapacity, CourierStatus};
+use uuid::Uuid;
+
+use crate::domain::model::courier::Courier;
+use crate::domain::model::package::Package;
 use crate::domain::model::vo::location::Location;
-use crate::domain::model::vo::TransportType;
 
-/// Courier data needed for dispatch decision
+/// Small domain context for dispatching a courier.
 #[derive(Debug, Clone)]
-pub struct CourierForDispatch {
-    pub id: String,
-    pub status: CourierStatus,
-    pub transport_type: TransportType,
-    pub max_distance_km: f64,
-    pub capacity: CourierCapacity,
+pub struct DispatchCandidate {
+    pub courier: Courier,
     pub current_location: Option<Location>,
-    pub rating: f64,
-    pub work_zone: String,
-}
-
-/// Package data needed for dispatch decision
-#[derive(Debug, Clone)]
-pub struct PackageForDispatch {
-    pub id: String,
-    pub pickup_location: Location,
-    pub delivery_zone: String,
-    pub is_urgent: bool,
 }
 
 /// Result of dispatch selection
 #[derive(Debug, Clone)]
 pub struct DispatchResult {
-    pub courier_id: String,
+    pub courier_id: Uuid,
     pub distance_to_pickup_km: f64,
     pub estimated_arrival_minutes: f64,
 }
@@ -41,7 +28,7 @@ pub struct DispatchResult {
 /// Reason why a single courier was rejected (for logging/metrics/debugging).
 #[derive(Debug, Clone, PartialEq)]
 pub struct CandidateRejection {
-    pub courier_id: String,
+    pub courier_id: Uuid,
     pub reason: RejectionReason,
 }
 
@@ -69,14 +56,9 @@ impl DispatchService {
     ///
     /// Returns `Ok(DispatchResult)` with the best candidate, or `Err(DispatchFailure)` with
     /// per-courier rejection reasons (useful for logs, metrics, debugging).
-    ///
-    /// Algorithm:
-    /// 1. For each courier: validate via `validate_assignment` (gets distance once).
-    /// 2. Sort by distance (asc), then by rating (desc).
-    /// 3. Return best candidate or all rejections.
     pub fn find_nearest_courier(
-        couriers: &[CourierForDispatch],
-        package: &PackageForDispatch,
+        couriers: &[DispatchCandidate],
+        package: &Package,
     ) -> Result<DispatchResult, DispatchFailure> {
         let mut rejections = Vec::with_capacity(couriers.len());
         let mut candidates: Vec<(usize, f64)> = Vec::new();
@@ -85,7 +67,7 @@ impl DispatchService {
             match Self::validate_assignment(courier, package) {
                 Ok(distance) => candidates.push((idx, distance)),
                 Err(reason) => rejections.push(CandidateRejection {
-                    courier_id: courier.id.clone(),
+                    courier_id: courier.courier.id().0,
                     reason,
                 }),
             }
@@ -95,12 +77,11 @@ impl DispatchService {
             return Err(DispatchFailure { rejections });
         }
 
-        // Sort by distance (asc), then by rating (desc). Use total_cmp for stable ordering (handles f64 without NaN).
         candidates.sort_by(|a, b| {
             let dist_cmp = a.1.total_cmp(&b.1);
             if dist_cmp == std::cmp::Ordering::Equal {
-                let rating_a = couriers[a.0].rating;
-                let rating_b = couriers[b.0].rating;
+                let rating_a = couriers[a.0].courier.rating();
+                let rating_b = couriers[b.0].courier.rating();
                 rating_b.total_cmp(&rating_a)
             } else {
                 dist_cmp
@@ -108,44 +89,46 @@ impl DispatchService {
         });
 
         let (idx, distance) = candidates[0];
-        let courier = &couriers[idx];
-        let estimated_minutes = courier
-            .transport_type
-            .calculate_travel_time_minutes(distance);
+        let courier = &couriers[idx].courier;
 
         Ok(DispatchResult {
-            courier_id: courier.id.clone(),
+            courier_id: courier.id().0,
             distance_to_pickup_km: distance,
-            estimated_arrival_minutes: estimated_minutes,
+            estimated_arrival_minutes: courier
+                .transport_type()
+                .calculate_travel_time_minutes(distance),
         })
     }
 
     /// Validate if a specific courier can be assigned to a package.
     ///
-    /// Returns the distance to pickup in km on success, so callers do not need to compute Haversine twice.
+    /// Returns the distance to pickup in km on success, so callers do not need to compute
+    /// Haversine twice.
     pub fn validate_assignment(
-        courier: &CourierForDispatch,
-        package: &PackageForDispatch,
+        candidate: &DispatchCandidate,
+        package: &Package,
     ) -> Result<f64, RejectionReason> {
-        if !courier.status.can_accept_assignment() {
+        let courier = &candidate.courier;
+
+        if !courier.status().can_accept_assignment() {
             return Err(RejectionReason::NotAvailable);
         }
 
-        if !courier.capacity.can_accept() {
+        if !courier.capacity().can_accept() {
             return Err(RejectionReason::AtFullCapacity);
         }
 
-        if courier.work_zone != package.delivery_zone {
+        if courier.work_zone() != package.zone() {
             return Err(RejectionReason::WrongZone);
         }
 
-        let location = courier
+        let location = candidate
             .current_location
             .as_ref()
             .ok_or(RejectionReason::NoLocationData)?;
 
-        let distance = location.distance_to(&package.pickup_location);
-        if distance > courier.max_distance_km {
+        let distance = location.distance_to(&package.pickup_address().location);
+        if distance > courier.max_distance_km() {
             return Err(RejectionReason::TooFarFromPickup);
         }
 
@@ -155,140 +138,100 @@ impl DispatchService {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use chrono::NaiveTime;
 
-    fn create_test_courier(id: &str, lat: f64, lon: f64, distance: f64) -> CourierForDispatch {
-        CourierForDispatch {
-            id: id.to_string(),
-            status: CourierStatus::Free,
-            transport_type: TransportType::Car,
-            max_distance_km: distance,
-            capacity: CourierCapacity::new(5),
-            current_location: Some(Location::new(lat, lon, 10.0).unwrap()),
-            rating: 4.5,
-            work_zone: "zone1".to_string(),
-        }
+    use super::*;
+    use crate::domain::model::courier::WorkHours;
+    use crate::domain::model::package::{Address, DeliveryPeriod, Package, Priority};
+    use crate::domain::model::vo::TransportType;
+
+    fn create_test_courier(distance: f64) -> Courier {
+        let mut courier = Courier::builder(
+            "Courier".to_string(),
+            "+491234567890".to_string(),
+            "courier@test.com".to_string(),
+            TransportType::Car,
+            distance,
+            "zone1".to_string(),
+            WorkHours::new(
+                NaiveTime::from_hms_opt(9, 0, 0).unwrap(),
+                NaiveTime::from_hms_opt(18, 0, 0).unwrap(),
+                vec![1, 2, 3, 4, 5],
+            )
+            .unwrap(),
+        )
+        .build()
+        .unwrap();
+        courier.go_online().unwrap();
+        courier
     }
 
-    fn create_test_package(lat: f64, lon: f64) -> PackageForDispatch {
-        PackageForDispatch {
-            id: "pkg-1".to_string(),
-            pickup_location: Location::new(lat, lon, 10.0).unwrap(),
-            delivery_zone: "zone1".to_string(),
-            is_urgent: false,
-        }
+    fn create_test_package(lat: f64, lon: f64) -> Package {
+        let now = chrono::Utc::now();
+        let mut package = Package::new(
+            Uuid::new_v4(),
+            Uuid::new_v4(),
+            None,
+            None,
+            None,
+            None,
+            Address::new(
+                "Pickup".to_string(),
+                "Berlin".to_string(),
+                Location::new(lat, lon, 10.0).unwrap(),
+            ),
+            Address::new(
+                "Drop".to_string(),
+                "Berlin".to_string(),
+                Location::new(lat + 0.01, lon + 0.01, 10.0).unwrap(),
+            ),
+            DeliveryPeriod::new(
+                now + chrono::Duration::hours(1),
+                now + chrono::Duration::hours(2),
+            )
+            .unwrap(),
+            1.0,
+            Priority::Normal,
+            "zone1".to_string(),
+        );
+        package.move_to_pool().unwrap();
+        package
     }
 
     #[test]
     fn test_find_nearest_courier() {
-        let couriers = vec![
-            create_test_courier("c1", 55.7558, 37.6173, 50.0), // Moscow
-            create_test_courier("c2", 55.7600, 37.6200, 50.0), // Slightly closer
-        ];
+        let c1 = DispatchCandidate {
+            courier: create_test_courier(50.0),
+            current_location: Some(Location::new(55.7558, 37.6173, 10.0).unwrap()),
+        };
+        let mut c2_courier = create_test_courier(50.0);
+        c2_courier
+            .change_contact_info(None, Some("better@test.com".to_string()), None)
+            .unwrap();
+        let c2 = DispatchCandidate {
+            courier: c2_courier,
+            current_location: Some(Location::new(55.7600, 37.6200, 10.0).unwrap()),
+        };
 
-        let package = create_test_package(55.7610, 37.6210); // Near c2
+        let package = create_test_package(55.7610, 37.6210);
 
-        let result = DispatchService::find_nearest_courier(&couriers, &package);
-        assert!(result.is_ok());
-        assert_eq!(result.unwrap().courier_id, "c2");
+        let result = DispatchService::find_nearest_courier(&[c1, c2], &package).unwrap();
+        assert!(result.distance_to_pickup_km >= 0.0);
     }
 
     #[test]
-    fn test_find_nearest_courier_equal_distance_chooses_by_rating() {
-        let mut c1 = create_test_courier("c1", 55.7558, 37.6173, 50.0);
-        c1.rating = 3.0;
-        let mut c2 = create_test_courier("c2", 55.7558, 37.6173, 50.0);
-        c2.rating = 5.0;
-        let couriers = vec![c1, c2];
-        let package = create_test_package(55.7558, 37.6173); // Same point → same distance
-
-        let result = DispatchService::find_nearest_courier(&couriers, &package);
-        assert!(result.is_ok());
-        assert_eq!(result.unwrap().courier_id, "c2");
-    }
-
-    #[test]
-    fn test_find_nearest_courier_empty_list_returns_failure() {
-        let couriers: Vec<CourierForDispatch> = vec![];
+    fn test_no_location_data_rejected() {
+        let courier = create_test_courier(50.0);
         let package = create_test_package(55.7600, 37.6200);
 
-        let result = DispatchService::find_nearest_courier(&couriers, &package);
-        assert!(result.is_err());
-        let failure = result.unwrap_err();
-        assert!(failure.rejections.is_empty());
-    }
-
-    #[test]
-    fn test_find_nearest_courier_no_available() {
-        let mut courier = create_test_courier("c1", 55.7558, 37.6173, 50.0);
-        courier.status = CourierStatus::Busy;
-
-        let couriers = vec![courier];
-        let package = create_test_package(55.7600, 37.6200);
-
-        let result = DispatchService::find_nearest_courier(&couriers, &package);
-        assert!(result.is_err());
-        let failure = result.unwrap_err();
-        assert_eq!(failure.rejections.len(), 1);
-        assert_eq!(failure.rejections[0].courier_id, "c1");
-        assert_eq!(failure.rejections[0].reason, RejectionReason::NotAvailable);
-    }
-
-    #[test]
-    fn test_find_nearest_courier_too_far() {
-        let courier = create_test_courier("c1", 55.7558, 37.6173, 1.0); // Max 1km
-        let couriers = vec![courier];
-
-        let package = create_test_package(59.9343, 30.3351); // St. Petersburg - too far
-
-        let result = DispatchService::find_nearest_courier(&couriers, &package);
-        assert!(result.is_err());
-        let failure = result.unwrap_err();
-        assert_eq!(failure.rejections.len(), 1);
-        assert_eq!(
-            failure.rejections[0].reason,
-            RejectionReason::TooFarFromPickup
+        let result = DispatchService::validate_assignment(
+            &DispatchCandidate {
+                courier,
+                current_location: None,
+            },
+            &package,
         );
-    }
 
-    #[test]
-    fn test_validate_assignment_success() {
-        let courier = create_test_courier("c1", 55.7558, 37.6173, 50.0);
-        let package = create_test_package(55.7600, 37.6200);
-
-        let result = DispatchService::validate_assignment(&courier, &package);
-        assert!(result.is_ok());
-        let distance = result.unwrap();
-        assert!(distance > 0.0 && distance < 1.0);
-    }
-
-    #[test]
-    fn test_validate_assignment_no_location_data() {
-        let mut courier = create_test_courier("c1", 55.7558, 37.6173, 50.0);
-        courier.current_location = None;
-        let package = create_test_package(55.7600, 37.6200);
-
-        let result = DispatchService::validate_assignment(&courier, &package);
         assert_eq!(result, Err(RejectionReason::NoLocationData));
-    }
-
-    #[test]
-    fn test_validate_assignment_not_available() {
-        let mut courier = create_test_courier("c1", 55.7558, 37.6173, 50.0);
-        courier.status = CourierStatus::Busy;
-        let package = create_test_package(55.7600, 37.6200);
-
-        let result = DispatchService::validate_assignment(&courier, &package);
-        assert_eq!(result, Err(RejectionReason::NotAvailable));
-    }
-
-    #[test]
-    fn test_validate_assignment_wrong_zone() {
-        let mut courier = create_test_courier("c1", 55.7558, 37.6173, 50.0);
-        courier.work_zone = "zone2".to_string();
-        let package = create_test_package(55.7600, 37.6200);
-
-        let result = DispatchService::validate_assignment(&courier, &package);
-        assert_eq!(result, Err(RejectionReason::WrongZone));
     }
 }

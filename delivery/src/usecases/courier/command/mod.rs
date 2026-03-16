@@ -3,8 +3,10 @@
 //! Commands that modify courier state.
 
 // Lifecycle commands
+pub mod accept_package;
 pub mod activate;
 pub mod archive;
+pub mod complete_delivery;
 pub mod deactivate;
 pub mod register;
 
@@ -15,6 +17,10 @@ pub mod update_location;
 pub mod update_work_schedule;
 
 // Re-export main types - Lifecycle
+pub use accept_package::{
+    AcceptPackageError, Command as AcceptPackageCommand, Handler as AcceptPackageHandler,
+    Response as AcceptPackageResponse,
+};
 pub use activate::{
     ActivateCourierError, Command as ActivateCommand, Handler as ActivateHandler,
     Response as ActivateResponse,
@@ -22,6 +28,10 @@ pub use activate::{
 pub use archive::{
     ArchiveCourierError, Command as ArchiveCommand, Handler as ArchiveHandler,
     Response as ArchiveResponse,
+};
+pub use complete_delivery::{
+    Command as CompleteCourierDeliveryCommand, CompleteCourierDeliveryError,
+    Handler as CompleteCourierDeliveryHandler, Response as CompleteCourierDeliveryResponse,
 };
 pub use deactivate::{
     Command as DeactivateCommand, DeactivateCourierError, Handler as DeactivateHandler,

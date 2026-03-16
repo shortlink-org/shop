@@ -16,7 +16,7 @@ use chrono::{DateTime, Utc};
 use thiserror::Error;
 use uuid::Uuid;
 
-use crate::domain::model::courier::CourierStatus;
+use crate::domain::model::courier::{CourierError, CourierStatus};
 use crate::domain::ports::{
     CacheError, CommandHandlerWithResult, CourierCache, CourierRepository, RepositoryError,
 };
@@ -45,6 +45,10 @@ pub enum ArchiveCourierError {
     /// Cache error
     #[error("Cache error: {0}")]
     CacheError(#[from] CacheError),
+
+    /// Domain error
+    #[error("Domain error: {0}")]
+    DomainError(#[from] CourierError),
 }
 
 /// Response from archiving a courier
@@ -89,35 +93,24 @@ where
     /// Handle the ArchiveCourier command
     async fn handle(&self, cmd: Command) -> Result<Response, Self::Error> {
         // 1. Validate courier exists
-        let courier = self
+        let mut courier = self
             .repository
             .find_by_id(cmd.courier_id)
             .await?
             .ok_or(ArchiveCourierError::NotFound(cmd.courier_id))?;
 
-        // 2. Check current status from cache
-        if let Ok(Some(state)) = self.cache.get_state(cmd.courier_id).await {
-            if state.status == CourierStatus::Archived {
-                return Err(ArchiveCourierError::AlreadyArchived(cmd.courier_id));
-            }
-            // Check if courier has active deliveries
-            if state.current_load > 0 {
-                return Err(ArchiveCourierError::HasActiveDeliveries(cmd.courier_id));
-            }
+        // 2. Check current aggregate state
+        if courier.is_archived() {
+            return Err(ArchiveCourierError::AlreadyArchived(cmd.courier_id));
         }
 
-        // 3. Update status to ARCHIVED in cache
-        self.cache
-            .update_status(cmd.courier_id, CourierStatus::Archived)
-            .await?;
+        if courier.current_load() > 0 {
+            return Err(ArchiveCourierError::HasActiveDeliveries(cmd.courier_id));
+        }
 
-        // 4. Mark as archived in repository
-        self.repository.archive(cmd.courier_id).await?;
-
-        // 5. Remove from all pools
-        self.cache
-            .remove_from_free_pool(cmd.courier_id, courier.work_zone())
-            .await?;
+        courier.archive()?;
+        self.repository.save(&courier).await?;
+        self.cache.cache(&courier).await?;
 
         let archived_at = Utc::now();
 

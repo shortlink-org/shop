@@ -357,7 +357,10 @@ mod tests {
         let response = result.unwrap();
         assert!(response.location.is_some());
         assert!(response.from_cache);
-        assert_eq!(response.location.unwrap().reported_position().latitude(), 52.52);
+        assert_eq!(
+            response.location.unwrap().reported_position().latitude(),
+            52.52
+        );
     }
 
     #[tokio::test]

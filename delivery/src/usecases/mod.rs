@@ -21,8 +21,10 @@ pub mod package;
 
 // Re-export courier command types
 pub use courier::command::{
-    RegisterCommand, RegisterCourierError, RegisterHandler, RegisterResponse,
-    UpdateCourierLocationError, UpdateLocationCommand, UpdateLocationHandler,
+    AcceptPackageCommand, AcceptPackageError, AcceptPackageHandler, AcceptPackageResponse,
+    CompleteCourierDeliveryCommand, CompleteCourierDeliveryError, CompleteCourierDeliveryHandler,
+    CompleteCourierDeliveryResponse, RegisterCommand, RegisterCourierError, RegisterHandler,
+    RegisterResponse, UpdateCourierLocationError, UpdateLocationCommand, UpdateLocationHandler,
 };
 
 // Re-export courier query types
@@ -35,7 +37,8 @@ pub use courier::query::{
 pub use package::command::{
     AcceptOrderCommand, AcceptOrderError, AcceptOrderHandler, AcceptOrderResponse,
     AssignOrderCommand, AssignOrderError, AssignOrderHandler, AssignOrderResponse,
-    DeliverOrderCommand, DeliverOrderError, DeliverOrderHandler,
+    ConfirmDeliveredOrderCommand, ConfirmNotDeliveredOrderCommand, DeliverOrderError,
+    DeliverOrderHandler,
 };
 
 // Re-export package query types

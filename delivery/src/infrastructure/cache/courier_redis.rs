@@ -12,7 +12,7 @@ use redis::aio::ConnectionManager;
 use redis::AsyncCommands;
 use uuid::Uuid;
 
-use crate::domain::model::courier::CourierStatus;
+use crate::domain::model::courier::{Courier, CourierStatus};
 use crate::domain::ports::{CacheError, CachedCourierState, CourierCache};
 
 /// Redis key prefix for courier state
@@ -67,16 +67,18 @@ impl CourierRedisCache {
 
 #[async_trait]
 impl CourierCache for CourierRedisCache {
-    async fn initialize_state(
-        &self,
-        courier_id: Uuid,
-        state: CachedCourierState,
-        work_zone: &str,
-    ) -> Result<(), CacheError> {
+    async fn cache(&self, courier: &Courier) -> Result<(), CacheError> {
         let mut conn = self.conn.clone();
+        let courier_id = courier.id().0;
+        let courier_id_str = courier_id.to_string();
+        let work_zone = courier.work_zone();
         let key = Self::state_key(courier_id);
+        let previous_zone: Option<String> = conn
+            .hget(&key, "work_zone")
+            .await
+            .map_err(|e| CacheError::OperationError(e.to_string()))?;
+        let state = CachedCourierState::from(courier);
 
-        // Store state as hash
         let _: () = redis::pipe()
             .hset(&key, "status", Self::status_to_string(state.status))
             .hset(&key, "current_load", state.current_load)
@@ -89,14 +91,33 @@ impl CourierCache for CourierRedisCache {
             .await
             .map_err(|e| CacheError::OperationError(e.to_string()))?;
 
-        // Add to free sets if status is Free
-        if state.status == CourierStatus::Free {
-            let _: () = redis::pipe()
-                .sadd(FREE_COURIERS_KEY, courier_id.to_string())
-                .sadd(Self::zone_free_key(work_zone), courier_id.to_string())
-                .query_async(&mut conn)
-                .await
-                .map_err(|e| CacheError::OperationError(e.to_string()))?;
+        if let Some(previous_zone) = previous_zone {
+            if previous_zone != work_zone {
+                let _: () = redis::pipe()
+                    .srem(Self::zone_free_key(&previous_zone), &courier_id_str)
+                    .query_async(&mut conn)
+                    .await
+                    .map_err(|e| CacheError::OperationError(e.to_string()))?;
+            }
+        }
+
+        match state.status {
+            CourierStatus::Free => {
+                let _: () = redis::pipe()
+                    .sadd(FREE_COURIERS_KEY, &courier_id_str)
+                    .sadd(Self::zone_free_key(work_zone), &courier_id_str)
+                    .query_async(&mut conn)
+                    .await
+                    .map_err(|e| CacheError::OperationError(e.to_string()))?;
+            }
+            _ => {
+                let _: () = redis::pipe()
+                    .srem(FREE_COURIERS_KEY, &courier_id_str)
+                    .srem(Self::zone_free_key(work_zone), &courier_id_str)
+                    .query_async(&mut conn)
+                    .await
+                    .map_err(|e| CacheError::OperationError(e.to_string()))?;
+            }
         }
 
         Ok(())
@@ -158,48 +179,6 @@ impl CourierCache for CourierRedisCache {
         }
     }
 
-    async fn set_status(
-        &self,
-        courier_id: Uuid,
-        status: CourierStatus,
-        work_zone: &str,
-    ) -> Result<(), CacheError> {
-        let mut conn = self.conn.clone();
-        let key = Self::state_key(courier_id);
-        let courier_id_str = courier_id.to_string();
-        let zone_key = Self::zone_free_key(work_zone);
-
-        // Update status in hash
-        let _: () = conn
-            .hset(&key, "status", Self::status_to_string(status))
-            .await
-            .map_err(|e| CacheError::OperationError(e.to_string()))?;
-
-        // Update free sets
-        match status {
-            CourierStatus::Free => {
-                // Add to free sets
-                let _: () = redis::pipe()
-                    .sadd(FREE_COURIERS_KEY, &courier_id_str)
-                    .sadd(&zone_key, &courier_id_str)
-                    .query_async(&mut conn)
-                    .await
-                    .map_err(|e| CacheError::OperationError(e.to_string()))?;
-            }
-            _ => {
-                // Remove from free sets
-                let _: () = redis::pipe()
-                    .srem(FREE_COURIERS_KEY, &courier_id_str)
-                    .srem(&zone_key, &courier_id_str)
-                    .query_async(&mut conn)
-                    .await
-                    .map_err(|e| CacheError::OperationError(e.to_string()))?;
-            }
-        }
-
-        Ok(())
-    }
-
     async fn get_status(&self, courier_id: Uuid) -> Result<Option<CourierStatus>, CacheError> {
         let mut conn = self.conn.clone();
         let key = Self::state_key(courier_id);
@@ -210,46 +189,6 @@ impl CourierCache for CourierRedisCache {
             .map_err(|e| CacheError::OperationError(e.to_string()))?;
 
         Ok(result.and_then(|s| Self::string_to_status(&s)))
-    }
-
-    async fn update_load(
-        &self,
-        courier_id: Uuid,
-        current_load: u32,
-        max_load: u32,
-    ) -> Result<(), CacheError> {
-        let mut conn = self.conn.clone();
-        let key = Self::state_key(courier_id);
-
-        let _: () = redis::pipe()
-            .hset(&key, "current_load", current_load)
-            .hset(&key, "max_load", max_load)
-            .query_async(&mut conn)
-            .await
-            .map_err(|e| CacheError::OperationError(e.to_string()))?;
-
-        Ok(())
-    }
-
-    async fn update_stats(
-        &self,
-        courier_id: Uuid,
-        rating: f64,
-        successful_deliveries: u32,
-        failed_deliveries: u32,
-    ) -> Result<(), CacheError> {
-        let mut conn = self.conn.clone();
-        let key = Self::state_key(courier_id);
-
-        let _: () = redis::pipe()
-            .hset(&key, "rating", rating.to_string())
-            .hset(&key, "successful_deliveries", successful_deliveries)
-            .hset(&key, "failed_deliveries", failed_deliveries)
-            .query_async(&mut conn)
-            .await
-            .map_err(|e| CacheError::OperationError(e.to_string()))?;
-
-        Ok(())
     }
 
     async fn get_free_couriers_in_zone(&self, zone: &str) -> Result<Vec<Uuid>, CacheError> {
@@ -317,76 +256,17 @@ impl CourierCache for CourierRedisCache {
 
         Ok(result)
     }
-
-    async fn update_status(
-        &self,
-        courier_id: Uuid,
-        status: CourierStatus,
-    ) -> Result<(), CacheError> {
-        let mut conn = self.conn.clone();
-        let key = Self::state_key(courier_id);
-
-        let _: () = conn
-            .hset(&key, "status", Self::status_to_string(status))
-            .await
-            .map_err(|e| CacheError::OperationError(e.to_string()))?;
-
-        Ok(())
-    }
-
-    async fn update_max_load(&self, courier_id: Uuid, max_load: u32) -> Result<(), CacheError> {
-        let mut conn = self.conn.clone();
-        let key = Self::state_key(courier_id);
-
-        let _: () = conn
-            .hset(&key, "max_load", max_load)
-            .await
-            .map_err(|e| CacheError::OperationError(e.to_string()))?;
-
-        Ok(())
-    }
-
-    async fn add_to_free_pool(&self, courier_id: Uuid, work_zone: &str) -> Result<(), CacheError> {
-        let mut conn = self.conn.clone();
-        let courier_id_str = courier_id.to_string();
-        let zone_key = Self::zone_free_key(work_zone);
-
-        let _: () = redis::pipe()
-            .sadd(FREE_COURIERS_KEY, &courier_id_str)
-            .sadd(&zone_key, &courier_id_str)
-            .query_async(&mut conn)
-            .await
-            .map_err(|e| CacheError::OperationError(e.to_string()))?;
-
-        Ok(())
-    }
-
-    async fn remove_from_free_pool(
-        &self,
-        courier_id: Uuid,
-        work_zone: &str,
-    ) -> Result<(), CacheError> {
-        let mut conn = self.conn.clone();
-        let courier_id_str = courier_id.to_string();
-        let zone_key = Self::zone_free_key(work_zone);
-
-        let _: () = redis::pipe()
-            .srem(FREE_COURIERS_KEY, &courier_id_str)
-            .srem(&zone_key, &courier_id_str)
-            .query_async(&mut conn)
-            .await
-            .map_err(|e| CacheError::OperationError(e.to_string()))?;
-
-        Ok(())
-    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use chrono::{NaiveTime, Utc};
     use testcontainers::{runners::AsyncRunner, ImageExt};
     use testcontainers_modules::redis::Redis;
 
+    use crate::domain::model::courier::{Courier, CourierId, WorkHours};
+    use crate::domain::model::vo::TransportType;
     use crate::test_support::ManagedAsyncContainer;
 
     async fn setup_redis() -> (ManagedAsyncContainer<Redis>, CourierRedisCache) {
@@ -412,6 +292,47 @@ mod tests {
             successful_deliveries: 0,
             failed_deliveries: 0,
         }
+    }
+
+    fn test_courier(courier_id: Uuid, zone: &str, state: CachedCourierState) -> Courier {
+        let work_hours = WorkHours::new(
+            NaiveTime::from_hms_opt(9, 0, 0).unwrap(),
+            NaiveTime::from_hms_opt(18, 0, 0).unwrap(),
+            vec![1, 2, 3, 4, 5],
+        )
+        .unwrap();
+
+        let transport_type = match state.max_load {
+            1 => TransportType::Walking,
+            2 => TransportType::Bicycle,
+            3 => TransportType::Motorcycle,
+            5 => TransportType::Car,
+            other => panic!("unsupported max_load for test courier: {other}"),
+        };
+
+        Courier::reconstitute(
+            CourierId::from_uuid(courier_id),
+            "Test Courier".to_string(),
+            format!("+1{:010}", (courier_id.as_u128() % 10_000_000_000) as u64),
+            format!(
+                "courier-{}@example.com",
+                &courier_id.simple().to_string()[..8]
+            ),
+            transport_type,
+            transport_type.max_recommended_distance_km(),
+            zone.to_string(),
+            work_hours,
+            None,
+            state.status,
+            state.current_load,
+            state.rating,
+            state.successful_deliveries,
+            state.failed_deliveries,
+            Utc::now(),
+            Utc::now(),
+            1,
+        )
+        .unwrap()
     }
 
     // ==================== Status Conversion Tests ====================
@@ -492,15 +413,13 @@ mod tests {
     // ==================== Integration Tests with Redis Container ====================
 
     #[tokio::test]
-    async fn test_initialize_and_get_state() {
+    async fn test_cache_and_get_state() {
         let (_container, cache) = setup_redis().await;
         let courier_id = Uuid::new_v4();
         let state = test_state();
+        let courier = test_courier(courier_id, "Berlin-Mitte", state.clone());
 
-        cache
-            .initialize_state(courier_id, state.clone(), "Berlin-Mitte")
-            .await
-            .unwrap();
+        cache.cache(&courier).await.unwrap();
 
         let retrieved = cache.get_state(courier_id).await.unwrap();
         assert!(retrieved.is_some());
@@ -519,72 +438,92 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_update_status() {
+    async fn test_cache_overwrites_status() {
         let (_container, cache) = setup_redis().await;
         let courier_id = Uuid::new_v4();
-        let state = test_state();
+        let initial = test_courier(courier_id, "Berlin-Mitte", test_state());
 
-        cache
-            .initialize_state(courier_id, state, "Berlin-Mitte")
-            .await
-            .unwrap();
+        cache.cache(&initial).await.unwrap();
 
-        // Update status to Free
-        cache
-            .update_status(courier_id, CourierStatus::Free)
-            .await
-            .unwrap();
+        let updated = test_courier(
+            courier_id,
+            "Berlin-Mitte",
+            CachedCourierState {
+                status: CourierStatus::Free,
+                ..test_state()
+            },
+        );
+        cache.cache(&updated).await.unwrap();
 
         let retrieved = cache.get_state(courier_id).await.unwrap().unwrap();
         assert_eq!(retrieved.status, CourierStatus::Free);
     }
 
     #[tokio::test]
-    async fn test_update_status_to_archived() {
+    async fn test_cache_removes_archived_courier_from_free_pool() {
         let (_container, cache) = setup_redis().await;
         let courier_id = Uuid::new_v4();
-        let state = test_state();
+        let free = test_courier(
+            courier_id,
+            "Berlin-Mitte",
+            CachedCourierState {
+                status: CourierStatus::Free,
+                ..test_state()
+            },
+        );
+        cache.cache(&free).await.unwrap();
 
-        cache
-            .initialize_state(courier_id, state, "Berlin-Mitte")
-            .await
-            .unwrap();
-
-        cache
-            .update_status(courier_id, CourierStatus::Archived)
-            .await
-            .unwrap();
+        let archived = test_courier(
+            courier_id,
+            "Berlin-Mitte",
+            CachedCourierState {
+                status: CourierStatus::Archived,
+                ..test_state()
+            },
+        );
+        cache.cache(&archived).await.unwrap();
 
         let retrieved = cache.get_state(courier_id).await.unwrap().unwrap();
         assert_eq!(retrieved.status, CourierStatus::Archived);
+        assert!(!cache
+            .get_all_free_couriers()
+            .await
+            .unwrap()
+            .contains(&courier_id));
     }
 
     #[tokio::test]
-    async fn test_update_max_load() {
+    async fn test_cache_stores_transport_capacity() {
         let (_container, cache) = setup_redis().await;
         let courier_id = Uuid::new_v4();
-        let state = test_state();
-
-        cache
-            .initialize_state(courier_id, state, "Berlin-Mitte")
-            .await
-            .unwrap();
-
-        cache.update_max_load(courier_id, 5).await.unwrap();
+        let courier = test_courier(
+            courier_id,
+            "Berlin-Mitte",
+            CachedCourierState {
+                max_load: 5,
+                ..test_state()
+            },
+        );
+        cache.cache(&courier).await.unwrap();
 
         let retrieved = cache.get_state(courier_id).await.unwrap().unwrap();
         assert_eq!(retrieved.max_load, 5);
     }
 
     #[tokio::test]
-    async fn test_add_to_free_pool() {
+    async fn test_cache_adds_free_courier_to_free_pool() {
         let (_container, cache) = setup_redis().await;
         let courier_id = Uuid::new_v4();
+        let courier = test_courier(
+            courier_id,
+            "Berlin-Mitte",
+            CachedCourierState {
+                status: CourierStatus::Free,
+                ..test_state()
+            },
+        );
 
-        cache
-            .add_to_free_pool(courier_id, "Berlin-Mitte")
-            .await
-            .unwrap();
+        cache.cache(&courier).await.unwrap();
 
         let all_free = cache.get_all_free_couriers().await.unwrap();
         assert!(all_free.contains(&courier_id));
@@ -597,21 +536,28 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_remove_from_free_pool() {
+    async fn test_cache_removes_busy_courier_from_free_pool() {
         let (_container, cache) = setup_redis().await;
         let courier_id = Uuid::new_v4();
-
-        // Add first
-        cache
-            .add_to_free_pool(courier_id, "Berlin-Mitte")
-            .await
-            .unwrap();
-
-        // Then remove
-        cache
-            .remove_from_free_pool(courier_id, "Berlin-Mitte")
-            .await
-            .unwrap();
+        let free = test_courier(
+            courier_id,
+            "Berlin-Mitte",
+            CachedCourierState {
+                status: CourierStatus::Free,
+                ..test_state()
+            },
+        );
+        cache.cache(&free).await.unwrap();
+        let busy = test_courier(
+            courier_id,
+            "Berlin-Mitte",
+            CachedCourierState {
+                status: CourierStatus::Busy,
+                current_load: 1,
+                ..test_state()
+            },
+        );
+        cache.cache(&busy).await.unwrap();
 
         let all_free = cache.get_all_free_couriers().await.unwrap();
         assert!(!all_free.contains(&courier_id));
@@ -632,11 +578,8 @@ mod tests {
         let exists = cache.exists(courier_id).await.unwrap();
         assert!(!exists);
 
-        // Initialize state
-        cache
-            .initialize_state(courier_id, test_state(), "Berlin-Mitte")
-            .await
-            .unwrap();
+        let courier = test_courier(courier_id, "Berlin-Mitte", test_state());
+        cache.cache(&courier).await.unwrap();
 
         // Should exist now
         let exists = cache.exists(courier_id).await.unwrap();
@@ -648,17 +591,15 @@ mod tests {
         let (_container, cache) = setup_redis().await;
         let courier_id = Uuid::new_v4();
 
-        // Initialize state and add to free pool
-        let mut state = test_state();
-        state.status = CourierStatus::Free;
-        cache
-            .initialize_state(courier_id, state, "Berlin-Mitte")
-            .await
-            .unwrap();
-        cache
-            .add_to_free_pool(courier_id, "Berlin-Mitte")
-            .await
-            .unwrap();
+        let courier = test_courier(
+            courier_id,
+            "Berlin-Mitte",
+            CachedCourierState {
+                status: CourierStatus::Free,
+                ..test_state()
+            },
+        );
+        cache.cache(&courier).await.unwrap();
 
         // Remove
         cache.remove(courier_id, "Berlin-Mitte").await.unwrap();

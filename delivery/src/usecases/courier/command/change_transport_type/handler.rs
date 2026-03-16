@@ -16,7 +16,7 @@ use chrono::{DateTime, Utc};
 use thiserror::Error;
 use uuid::Uuid;
 
-use crate::domain::model::courier::CourierStatus;
+use crate::domain::model::courier::CourierError;
 use crate::domain::model::vo::TransportType;
 use crate::domain::ports::{
     CacheError, CommandHandlerWithResult, CourierCache, CourierRepository, RepositoryError,
@@ -50,6 +50,10 @@ pub enum ChangeTransportTypeError {
     /// Cache error
     #[error("Cache error: {0}")]
     CacheError(#[from] CacheError),
+
+    /// Domain error
+    #[error("Domain error: {0}")]
+    DomainError(#[from] CourierError),
 }
 
 /// Response from changing transport type
@@ -108,30 +112,22 @@ where
         }
 
         // 2. Check courier is not archived and has no active deliveries
-        if let Ok(Some(state)) = self.cache.get_state(cmd.courier_id).await {
-            if state.status == CourierStatus::Archived {
-                return Err(ChangeTransportTypeError::CourierArchived(cmd.courier_id));
-            }
-            // Cannot change transport type while having active deliveries
-            // because max_load will change
-            if state.current_load > 0 {
-                return Err(ChangeTransportTypeError::HasActiveDeliveries(
-                    cmd.courier_id,
-                ));
-            }
+        if courier.is_archived() {
+            return Err(ChangeTransportTypeError::CourierArchived(cmd.courier_id));
+        }
+        if courier.current_load() > 0 {
+            return Err(ChangeTransportTypeError::HasActiveDeliveries(
+                cmd.courier_id,
+            ));
         }
 
         // 3. Update transport type (this recalculates max_load internally)
-        courier.change_transport_type(cmd.transport_type);
+        courier.change_transport_type(cmd.transport_type)?;
         let new_max_load = courier.max_load();
 
-        // 4. Save to repository
+        // 4. Save to repository and refresh cache snapshot
         self.repository.save(&courier).await?;
-
-        // 5. Update max_load in cache
-        self.cache
-            .update_max_load(cmd.courier_id, new_max_load)
-            .await?;
+        self.cache.cache(&courier).await?;
 
         let updated_at = Utc::now();
 

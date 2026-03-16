@@ -28,7 +28,9 @@ use crate::infrastructure::repository::{
     CourierPostgresRepository, LocationPostgresRepository, OutboxPostgresRepository,
     PackagePostgresRepository,
 };
-use crate::usecases::courier::command::register::Handler as RegisterHandler;
+use crate::usecases::courier::command::{
+    AcceptPackageHandler, CompleteCourierDeliveryHandler, RegisterHandler,
+};
 use crate::usecases::courier::query::get_pool::Handler as GetPoolHandler;
 use crate::workers::courier::CourierActivities;
 use crate::workers::delivery::DeliveryActivities;
@@ -347,10 +349,20 @@ impl AppState {
             self.courier_repo.clone(),
             self.courier_cache.clone(),
         ));
+        let accept_package_handler = Arc::new(AcceptPackageHandler::new(
+            self.courier_repo.clone(),
+            self.courier_cache.clone(),
+        ));
+        let complete_delivery_handler = Arc::new(CompleteCourierDeliveryHandler::new(
+            self.courier_repo.clone(),
+            self.courier_cache.clone(),
+        ));
 
         Arc::new(CourierActivities::new(
             register_handler,
             get_pool_handler,
+            accept_package_handler,
+            complete_delivery_handler,
             self.courier_repo.clone(),
             self.courier_cache.clone(),
         ))
@@ -364,10 +376,19 @@ impl AppState {
             self.courier_repo.clone(),
             self.courier_cache.clone(),
         ));
+        let accept_package_handler = Arc::new(AcceptPackageHandler::new(
+            self.courier_repo.clone(),
+            self.courier_cache.clone(),
+        ));
+        let complete_delivery_handler = Arc::new(CompleteCourierDeliveryHandler::new(
+            self.courier_repo.clone(),
+            self.courier_cache.clone(),
+        ));
 
         Arc::new(DeliveryActivities::new(
             get_pool_handler,
-            self.courier_cache.clone(),
+            accept_package_handler,
+            complete_delivery_handler,
         ))
     }
 }

@@ -6,15 +6,6 @@ use uuid::Uuid;
 
 use crate::domain::model::vo::location::Location;
 
-/// Result of the delivery attempt
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum DeliveryResult {
-    /// Package delivered successfully
-    Delivered,
-    /// Package not delivered
-    NotDelivered,
-}
-
 /// Reason for failed delivery
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NotDeliveredReason {
@@ -30,30 +21,24 @@ pub enum NotDeliveredReason {
     Other(String),
 }
 
-/// Command to confirm delivery
+/// Command to confirm a successful delivery.
 #[derive(Debug, Clone)]
-pub struct Command {
+pub struct ConfirmDelivered {
     /// The package ID
-    pub package_id: Uuid,
+    package_id: Uuid,
     /// The courier ID
-    pub courier_id: Uuid,
-    /// Delivery result
-    pub result: DeliveryResult,
-    /// Reason for failed delivery (required if result is NotDelivered)
-    pub not_delivered_reason: Option<NotDeliveredReason>,
+    courier_id: Uuid,
     /// Location where delivery was confirmed
-    pub confirmation_location: Location,
+    confirmation_location: Location,
     /// Optional photo proof (URL or base64)
-    pub photo_proof: Option<String>,
+    photo_proof: Option<String>,
     /// Optional signature (base64 encoded)
-    pub signature: Option<String>,
-    /// Optional notes from courier
-    pub notes: Option<String>,
+    signature: Option<String>,
 }
 
-impl Command {
-    /// Create a successful delivery command
-    pub fn delivered(
+impl ConfirmDelivered {
+    /// Create a successful delivery command.
+    pub fn new(
         package_id: Uuid,
         courier_id: Uuid,
         confirmation_location: Location,
@@ -63,32 +48,109 @@ impl Command {
         Self {
             package_id,
             courier_id,
-            result: DeliveryResult::Delivered,
-            not_delivered_reason: None,
             confirmation_location,
             photo_proof,
             signature,
-            notes: None,
         }
     }
 
-    /// Create a failed delivery command
-    pub fn not_delivered(
+    pub fn package_id(&self) -> Uuid {
+        self.package_id
+    }
+
+    pub fn courier_id(&self) -> Uuid {
+        self.courier_id
+    }
+
+    pub fn confirmation_location(&self) -> Location {
+        self.confirmation_location
+    }
+
+    pub fn photo_proof(&self) -> Option<&str> {
+        self.photo_proof.as_deref()
+    }
+
+    pub fn signature(&self) -> Option<&str> {
+        self.signature.as_deref()
+    }
+}
+
+/// Command to confirm a failed delivery.
+#[derive(Debug, Clone)]
+pub struct ConfirmNotDelivered {
+    /// The package ID
+    package_id: Uuid,
+    /// The courier ID
+    courier_id: Uuid,
+    /// Location where delivery was confirmed
+    confirmation_location: Location,
+    /// Reason for failed delivery
+    reason: NotDeliveredReason,
+}
+
+impl ConfirmNotDelivered {
+    /// Create a failed delivery command.
+    pub fn new(
         package_id: Uuid,
         courier_id: Uuid,
         confirmation_location: Location,
         reason: NotDeliveredReason,
-        notes: Option<String>,
     ) -> Self {
         Self {
             package_id,
             courier_id,
-            result: DeliveryResult::NotDelivered,
-            not_delivered_reason: Some(reason),
             confirmation_location,
-            photo_proof: None,
-            signature: None,
-            notes,
+            reason,
         }
+    }
+
+    pub fn package_id(&self) -> Uuid {
+        self.package_id
+    }
+
+    pub fn courier_id(&self) -> Uuid {
+        self.courier_id
+    }
+
+    pub fn confirmation_location(&self) -> Location {
+        self.confirmation_location
+    }
+
+    pub fn reason(&self) -> &NotDeliveredReason {
+        &self.reason
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn confirm_delivered_carries_delivery_fields() {
+        let cmd = ConfirmDelivered::new(
+            Uuid::new_v4(),
+            Uuid::new_v4(),
+            Location::new(52.52, 13.405, 10.0).unwrap(),
+            Some("photo".to_string()),
+            Some("signature".to_string()),
+        );
+
+        assert_eq!(cmd.photo_proof(), Some("photo"));
+        assert_eq!(cmd.signature(), Some("signature"));
+    }
+
+    #[test]
+    fn confirm_not_delivered_always_has_reason() {
+        let cmd = ConfirmNotDelivered::new(
+            Uuid::new_v4(),
+            Uuid::new_v4(),
+            Location::new(52.52, 13.405, 10.0).unwrap(),
+            NotDeliveredReason::CustomerUnavailable,
+        );
+
+        assert!(matches!(
+            cmd.reason(),
+            NotDeliveredReason::CustomerUnavailable
+        ));
     }
 }

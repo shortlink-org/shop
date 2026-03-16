@@ -40,8 +40,9 @@ func TestHandleDeliveryStatus_Integration(t *testing.T) {
 			name: "delivered completes order",
 			buildTerminalEvent: func(packageID, courierID uuid.UUID, occurredAt time.Time) kafkaevent.DeliveryStatusEvent {
 				return kafkaevent.DeliveryStatusEvent{
-					PackageID:  packageID.String(),
-					CourierID:  courierID.String(),
+					MessageID:  uuid.NewString(),
+					PackageID:  packageID,
+					CourierID:  courierID,
 					Status:     "PACKAGE_STATUS_DELIVERED",
 					EventType:  kafkaevent.EventTypePackageDelivered,
 					OccurredAt: occurredAt,
@@ -58,8 +59,9 @@ func TestHandleDeliveryStatus_Integration(t *testing.T) {
 			name: "not delivered cancels order",
 			buildTerminalEvent: func(packageID, courierID uuid.UUID, occurredAt time.Time) kafkaevent.DeliveryStatusEvent {
 				return kafkaevent.DeliveryStatusEvent{
-					PackageID:  packageID.String(),
-					CourierID:  courierID.String(),
+					MessageID:  uuid.NewString(),
+					PackageID:  packageID,
+					CourierID:  courierID,
 					Status:     "PACKAGE_STATUS_NOT_DELIVERED",
 					EventType:  kafkaevent.EventTypePackageNotDelivered,
 					OccurredAt: occurredAt,
@@ -86,8 +88,9 @@ func TestHandleDeliveryStatus_Integration(t *testing.T) {
 			require.Equal(t, int64(1), env.outboxCount(t))
 
 			require.NoError(t, env.deliveryHandler.HandleDeliveryStatus(ctx, kafkaevent.DeliveryStatusEvent{
-				OrderID:    orderID.String(),
-				PackageID:  packageID.String(),
+				MessageID:  uuid.NewString(),
+				OrderID:    orderID,
+				PackageID:  packageID,
 				Status:     "PACKAGE_STATUS_ACCEPTED",
 				EventType:  kafkaevent.EventTypePackageAccepted,
 				OccurredAt: time.Date(2026, time.March, 11, 10, 1, 0, 0, time.UTC),
@@ -95,8 +98,9 @@ func TestHandleDeliveryStatus_Integration(t *testing.T) {
 			require.Equal(t, int64(2), env.outboxCount(t))
 
 			require.NoError(t, env.deliveryHandler.HandleDeliveryStatus(ctx, kafkaevent.DeliveryStatusEvent{
-				PackageID:  packageID.String(),
-				CourierID:  courierID.String(),
+				MessageID:  uuid.NewString(),
+				PackageID:  packageID,
+				CourierID:  courierID,
 				Status:     "PACKAGE_STATUS_ASSIGNED",
 				EventType:  kafkaevent.EventTypePackageAssigned,
 				OccurredAt: time.Date(2026, time.March, 11, 10, 2, 0, 0, time.UTC),
@@ -104,8 +108,9 @@ func TestHandleDeliveryStatus_Integration(t *testing.T) {
 			require.Equal(t, int64(3), env.outboxCount(t))
 
 			require.NoError(t, env.deliveryHandler.HandleDeliveryStatus(ctx, kafkaevent.DeliveryStatusEvent{
-				PackageID:  packageID.String(),
-				CourierID:  courierID.String(),
+				MessageID:  uuid.NewString(),
+				PackageID:  packageID,
+				CourierID:  courierID,
 				Status:     "PACKAGE_STATUS_IN_TRANSIT",
 				EventType:  kafkaevent.EventTypePackageInTransit,
 				OccurredAt: time.Date(2026, time.March, 11, 10, 3, 0, 0, time.UTC),
@@ -163,7 +168,7 @@ func setupDeliveryLifecycleTestEnv(t *testing.T) *deliveryLifecycleTestEnv {
 	requestHandler, err := requestdelivery.NewHandler(log, uow, store, publisher)
 	require.NoError(t, err)
 
-	deliveryHandler, err := NewHandler(log, uow, store, publisher)
+	deliveryHandler, err := NewHandler(log, uow, store, store, publisher)
 	require.NoError(t, err)
 
 	return &deliveryLifecycleTestEnv{
@@ -173,6 +178,32 @@ func setupDeliveryLifecycleTestEnv(t *testing.T) *deliveryLifecycleTestEnv {
 		deliveryHandler: deliveryHandler,
 		postgres:        pc,
 	}
+}
+
+func TestHandleDeliveryStatus_Integration_DuplicateMessageIDIsIgnored(t *testing.T) {
+	env := setupDeliveryLifecycleTestEnv(t)
+	ctx := context.Background()
+
+	orderID, packageID := env.createOrderWithRequestedDelivery(t, ctx)
+	messageID := uuid.NewString()
+	event := kafkaevent.DeliveryStatusEvent{
+		MessageID:  messageID,
+		OrderID:    orderID,
+		PackageID:  packageID,
+		Status:     "PACKAGE_STATUS_ACCEPTED",
+		EventType:  kafkaevent.EventTypePackageAccepted,
+		OccurredAt: time.Date(2026, time.March, 11, 10, 1, 0, 0, time.UTC),
+	}
+
+	require.Equal(t, int64(1), env.outboxCount(t))
+	require.NoError(t, env.deliveryHandler.HandleDeliveryStatus(ctx, event))
+	require.Equal(t, int64(2), env.outboxCount(t))
+
+	require.NoError(t, env.deliveryHandler.HandleDeliveryStatus(ctx, event))
+	require.Equal(t, int64(2), env.outboxCount(t))
+
+	order := env.loadOrder(t, orderID)
+	require.Equal(t, ordercommon.DeliveryStatus_DELIVERY_STATUS_ACCEPTED, order.GetDeliveryStatus())
 }
 
 func newTxAwareEventBus(t *testing.T) ports.EventPublisher {

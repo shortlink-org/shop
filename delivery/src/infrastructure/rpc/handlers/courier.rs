@@ -8,13 +8,36 @@ use tonic::{Response, Status};
 use tracing::{error, info};
 
 use crate::di::AppState;
-use crate::domain::model::courier::CourierStatus as DomainCourierStatus;
 use crate::domain::ports::{
-    CommandHandlerWithResult, CourierCache, CourierRepository, GeolocationService, PackageFilter,
+    CommandHandlerWithResult, CourierRepository, GeolocationService, PackageFilter,
     PackageRepository, QueryHandler,
+};
+use crate::usecases::courier::command::activate::{
+    ActivateCourierError, Command as ActivateCommand, Handler as ActivateHandler,
+};
+use crate::usecases::courier::command::archive::{
+    ArchiveCourierError, Command as ArchiveCommand, Handler as ArchiveHandler,
+};
+use crate::usecases::courier::command::change_transport_type::{
+    ChangeTransportTypeError, Command as ChangeTransportTypeCommand,
+    Handler as ChangeTransportTypeHandler,
+};
+use crate::usecases::courier::command::deactivate::{
+    Command as DeactivateCommand, DeactivateCourierError, Handler as DeactivateHandler,
 };
 use crate::usecases::courier::command::register::{
     Command as RegisterCommand, Handler as RegisterHandler,
+};
+use crate::usecases::courier::command::update_contact_info::{
+    Command as UpdateContactInfoCommand, Handler as UpdateContactInfoHandler,
+    UpdateContactInfoError,
+};
+use crate::usecases::courier::command::update_work_schedule::{
+    Command as UpdateWorkScheduleCommand, Handler as UpdateWorkScheduleHandler,
+    UpdateWorkScheduleError,
+};
+use crate::usecases::courier::query::get_courier::{
+    GetCourierError, Handler as GetCourierHandler, Query as GetCourierQuery,
 };
 use crate::usecases::courier::query::get_pool::{
     CourierFilter, Handler as GetPoolHandler, Query as GetPoolQuery,
@@ -184,21 +207,14 @@ pub async fn get_courier(
     let courier_id = uuid::Uuid::parse_str(&req.courier_id)
         .map_err(|_| Status::invalid_argument("invalid courier_id format"))?;
 
-    // Get courier from repository
-    let courier = state
-        .courier_repo
-        .find_by_id(courier_id)
+    let handler = GetCourierHandler::new(state.courier_repo.clone(), state.courier_cache.clone());
+    let result = handler
+        .handle(GetCourierQuery::new(courier_id, true))
         .await
-        .map_err(|e| Status::internal(e.to_string()))?
-        .ok_or_else(|| Status::not_found("Courier not found"))?;
-
-    // Get state from cache
-    let cached_state = state
-        .courier_cache
-        .get_state(courier_id)
-        .await
-        .ok()
-        .flatten();
+        .map_err(|e| match e {
+            GetCourierError::NotFound(_) => Status::not_found("Courier not found"),
+            _ => Status::internal(e.to_string()),
+        })?;
 
     // Optionally get current location from GeolocationService
     let current_location = state
@@ -208,8 +224,11 @@ pub async fn get_courier(
         .ok()
         .flatten();
 
-    let proto_courier =
-        courier_to_proto(&courier, cached_state.as_ref(), current_location.as_ref());
+    let proto_courier = courier_to_proto(
+        &result.courier,
+        result.state.as_ref(),
+        current_location.as_ref(),
+    );
 
     Ok(Response::new(GetCourierResponse {
         courier: Some(proto_courier),
@@ -226,27 +245,15 @@ pub async fn activate_courier(
     let courier_id = uuid::Uuid::parse_str(&req.courier_id)
         .map_err(|_| Status::invalid_argument("invalid courier_id format"))?;
 
-    // Get courier to verify it exists and get work_zone
-    let courier = state
-        .courier_repo
-        .find_by_id(courier_id)
+    let handler = ActivateHandler::new(state.courier_repo.clone(), state.courier_cache.clone());
+    handler
+        .handle(ActivateCommand::new(courier_id))
         .await
-        .map_err(|e| Status::internal(e.to_string()))?
-        .ok_or_else(|| Status::not_found("Courier not found"))?;
-
-    // Update status in cache
-    state
-        .courier_cache
-        .update_status(courier_id, DomainCourierStatus::Free)
-        .await
-        .map_err(|e| Status::internal(e.to_string()))?;
-
-    // Add to free pool
-    state
-        .courier_cache
-        .add_to_free_pool(courier_id, courier.work_zone())
-        .await
-        .map_err(|e| Status::internal(e.to_string()))?;
+        .map_err(|e| match e {
+            ActivateCourierError::NotFound(_) => Status::not_found("Courier not found"),
+            ActivateCourierError::CourierArchived(_) => Status::failed_precondition(e.to_string()),
+            _ => Status::internal(e.to_string()),
+        })?;
 
     Ok(Response::new(ActivateCourierResponse {
         courier_id: courier_id.to_string(),
@@ -265,27 +272,18 @@ pub async fn deactivate_courier(
     let courier_id = uuid::Uuid::parse_str(&req.courier_id)
         .map_err(|_| Status::invalid_argument("invalid courier_id format"))?;
 
-    // Get courier to verify it exists and get work_zone
-    let courier = state
-        .courier_repo
-        .find_by_id(courier_id)
+    let handler = DeactivateHandler::new(state.courier_repo.clone(), state.courier_cache.clone());
+    handler
+        .handle(DeactivateCommand::new(courier_id, req.reason))
         .await
-        .map_err(|e| Status::internal(e.to_string()))?
-        .ok_or_else(|| Status::not_found("Courier not found"))?;
-
-    // Update status in cache
-    state
-        .courier_cache
-        .update_status(courier_id, DomainCourierStatus::Unavailable)
-        .await
-        .map_err(|e| Status::internal(e.to_string()))?;
-
-    // Remove from free pool
-    state
-        .courier_cache
-        .remove_from_free_pool(courier_id, courier.work_zone())
-        .await
-        .map_err(|e| Status::internal(e.to_string()))?;
+        .map_err(|e| match e {
+            DeactivateCourierError::NotFound(_) => Status::not_found("Courier not found"),
+            DeactivateCourierError::CourierArchived(_)
+            | DeactivateCourierError::HasActiveDeliveries(_) => {
+                Status::failed_precondition(e.to_string())
+            }
+            _ => Status::internal(e.to_string()),
+        })?;
 
     Ok(Response::new(DeactivateCourierResponse {
         courier_id: courier_id.to_string(),
@@ -304,34 +302,18 @@ pub async fn archive_courier(
     let courier_id = uuid::Uuid::parse_str(&req.courier_id)
         .map_err(|_| Status::invalid_argument("invalid courier_id format"))?;
 
-    // Get courier to verify it exists and get work_zone
-    let courier = state
-        .courier_repo
-        .find_by_id(courier_id)
+    let handler = ArchiveHandler::new(state.courier_repo.clone(), state.courier_cache.clone());
+    handler
+        .handle(ArchiveCommand::new(courier_id, req.reason))
         .await
-        .map_err(|e| Status::internal(e.to_string()))?
-        .ok_or_else(|| Status::not_found("Courier not found"))?;
-
-    // Update status in cache to Archived
-    state
-        .courier_cache
-        .update_status(courier_id, DomainCourierStatus::Archived)
-        .await
-        .map_err(|e| Status::internal(e.to_string()))?;
-
-    // Remove from free pool
-    state
-        .courier_cache
-        .remove_from_free_pool(courier_id, courier.work_zone())
-        .await
-        .map_err(|e| Status::internal(e.to_string()))?;
-
-    // Archive in repository
-    state
-        .courier_repo
-        .archive(courier_id)
-        .await
-        .map_err(|e| Status::internal(e.to_string()))?;
+        .map_err(|e| match e {
+            ArchiveCourierError::NotFound(_) => Status::not_found("Courier not found"),
+            ArchiveCourierError::AlreadyArchived(_)
+            | ArchiveCourierError::HasActiveDeliveries(_) => {
+                Status::failed_precondition(e.to_string())
+            }
+            _ => Status::internal(e.to_string()),
+        })?;
 
     Ok(Response::new(ArchiveCourierResponse {
         courier_id: courier_id.to_string(),
@@ -350,40 +332,29 @@ pub async fn update_contact_info(
     let courier_id = uuid::Uuid::parse_str(&req.courier_id)
         .map_err(|_| Status::invalid_argument("invalid courier_id format"))?;
 
-    // Get courier
-    let mut courier = state
-        .courier_repo
-        .find_by_id(courier_id)
-        .await
-        .map_err(|e| Status::internal(e.to_string()))?
-        .ok_or_else(|| Status::not_found("Courier not found"))?;
-
-    // Update fields if provided
-    if let Some(ref phone) = req.phone {
-        if !phone.is_empty() {
-            courier.update_phone(phone.clone());
+    let cmd = UpdateContactInfoCommand::new(
+        courier_id,
+        req.phone.filter(|value| !value.is_empty()),
+        req.email.filter(|value| !value.is_empty()),
+        req.push_token,
+    );
+    let handler =
+        UpdateContactInfoHandler::new(state.courier_repo.clone(), state.courier_cache.clone());
+    let result = handler.handle(cmd).await.map_err(|e| match e {
+        UpdateContactInfoError::NotFound(_) => Status::not_found("Courier not found"),
+        UpdateContactInfoError::CourierArchived(_) | UpdateContactInfoError::NoFieldsToUpdate => {
+            Status::failed_precondition(e.to_string())
         }
-    }
-    if let Some(ref email) = req.email {
-        if !email.is_empty() {
-            courier.update_email(email.clone());
+        UpdateContactInfoError::EmailExists(_) | UpdateContactInfoError::PhoneExists(_) => {
+            Status::already_exists(e.to_string())
         }
-    }
-    if let Some(ref push_token) = req.push_token {
-        courier.update_push_token(Some(push_token.clone()));
-    }
-
-    // Save
-    state
-        .courier_repo
-        .save(&courier)
-        .await
-        .map_err(|e| Status::internal(e.to_string()))?;
+        _ => Status::internal(e.to_string()),
+    })?;
 
     Ok(Response::new(UpdateContactInfoResponse {
         courier_id: courier_id.to_string(),
-        phone: courier.phone().to_string(),
-        email: courier.email().to_string(),
+        phone: result.phone,
+        email: result.email,
         updated_at: Some(now_timestamp()),
     }))
 }
@@ -398,46 +369,33 @@ pub async fn update_work_schedule(
     let courier_id = uuid::Uuid::parse_str(&req.courier_id)
         .map_err(|_| Status::invalid_argument("invalid courier_id format"))?;
 
-    // Get courier
-    let mut courier = state
-        .courier_repo
-        .find_by_id(courier_id)
-        .await
-        .map_err(|e| Status::internal(e.to_string()))?
-        .ok_or_else(|| Status::not_found("Courier not found"))?;
-
-    // Update work hours if provided
-    if let Some(ref wh) = req.work_hours {
-        let work_hours = parse_work_hours(Some(wh.clone()))?;
-        courier.update_work_hours(work_hours);
-    }
-
-    // Update work zone if provided
-    if let Some(ref zone) = req.work_zone {
-        if !zone.is_empty() {
-            courier.update_work_zone(zone.clone());
+    let work_hours = match req.work_hours {
+        Some(work_hours) => Some(parse_work_hours(Some(work_hours))?),
+        None => None,
+    };
+    let cmd = UpdateWorkScheduleCommand::new(
+        courier_id,
+        work_hours,
+        req.work_zone.filter(|value| !value.is_empty()),
+        req.max_distance_km,
+    );
+    let handler =
+        UpdateWorkScheduleHandler::new(state.courier_repo.clone(), state.courier_cache.clone());
+    let result = handler.handle(cmd).await.map_err(|e| match e {
+        UpdateWorkScheduleError::NotFound(_) => Status::not_found("Courier not found"),
+        UpdateWorkScheduleError::CourierArchived(_)
+        | UpdateWorkScheduleError::NoFieldsToUpdate
+        | UpdateWorkScheduleError::InvalidWorkHours(_) => {
+            Status::failed_precondition(e.to_string())
         }
-    }
-
-    // Update max distance if provided
-    if let Some(max_dist) = req.max_distance_km {
-        if max_dist > 0.0 {
-            courier.update_max_distance(max_dist);
-        }
-    }
-
-    // Save
-    state
-        .courier_repo
-        .save(&courier)
-        .await
-        .map_err(|e| Status::internal(e.to_string()))?;
+        _ => Status::internal(e.to_string()),
+    })?;
 
     Ok(Response::new(UpdateWorkScheduleResponse {
         courier_id: courier_id.to_string(),
-        work_hours: Some(domain_to_proto_work_hours(courier.work_hours())),
-        work_zone: courier.work_zone().to_string(),
-        max_distance_km: courier.max_distance_km(),
+        work_hours: Some(domain_to_proto_work_hours(&result.work_hours)),
+        work_zone: result.work_zone,
+        max_distance_km: result.max_distance_km,
         updated_at: Some(now_timestamp()),
     }))
 }
@@ -452,41 +410,30 @@ pub async fn change_transport_type(
     let courier_id = uuid::Uuid::parse_str(&req.courier_id)
         .map_err(|_| Status::invalid_argument("invalid courier_id format"))?;
 
-    // Get courier
-    let mut courier = state
-        .courier_repo
-        .find_by_id(courier_id)
-        .await
-        .map_err(|e| Status::internal(e.to_string()))?
-        .ok_or_else(|| Status::not_found("Courier not found"))?;
-
     // Convert transport type
     let new_transport = proto_to_domain_transport(
         TransportType::try_from(req.transport_type).unwrap_or(TransportType::Unspecified),
     );
 
-    // Update transport type (this recalculates max_load)
-    courier.change_transport_type(new_transport);
-    let new_max_load = courier.max_load();
-
-    // Save
-    state
-        .courier_repo
-        .save(&courier)
+    let handler =
+        ChangeTransportTypeHandler::new(state.courier_repo.clone(), state.courier_cache.clone());
+    let result = handler
+        .handle(ChangeTransportTypeCommand::new(courier_id, new_transport))
         .await
-        .map_err(|e| Status::internal(e.to_string()))?;
-
-    // Update max_load in cache
-    state
-        .courier_cache
-        .update_max_load(courier_id, new_max_load)
-        .await
-        .map_err(|e| Status::internal(e.to_string()))?;
+        .map_err(|e| match e {
+            ChangeTransportTypeError::NotFound(_) => Status::not_found("Courier not found"),
+            ChangeTransportTypeError::CourierArchived(_)
+            | ChangeTransportTypeError::HasActiveDeliveries(_)
+            | ChangeTransportTypeError::SameTransportType => {
+                Status::failed_precondition(e.to_string())
+            }
+            _ => Status::internal(e.to_string()),
+        })?;
 
     Ok(Response::new(ChangeTransportTypeResponse {
         courier_id: courier_id.to_string(),
-        transport_type: domain_to_proto_transport(new_transport).into(),
-        max_load: new_max_load as i32,
+        transport_type: domain_to_proto_transport(result.transport_type).into(),
+        max_load: result.max_load as i32,
         updated_at: Some(now_timestamp()),
     }))
 }

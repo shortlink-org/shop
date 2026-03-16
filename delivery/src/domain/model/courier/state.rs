@@ -39,6 +39,8 @@ pub enum CapacityError {
     AtFullCapacity,
     /// No packages to release
     NoPackagesToRelease,
+    /// Persisted load is invalid for the configured capacity
+    InvalidLoad { current: u32, max: u32 },
 }
 
 impl fmt::Display for CapacityError {
@@ -46,6 +48,13 @@ impl fmt::Display for CapacityError {
         match self {
             CapacityError::AtFullCapacity => write!(f, "Courier is at full capacity"),
             CapacityError::NoPackagesToRelease => write!(f, "No packages to release"),
+            CapacityError::InvalidLoad { current, max } => {
+                write!(
+                    f,
+                    "Invalid courier load: current {} exceeds max {}",
+                    current, max
+                )
+            }
         }
     }
 }
@@ -59,6 +68,21 @@ impl CourierCapacity {
             current_load: 0,
             max_load,
         }
+    }
+
+    /// Recreate courier capacity from persisted state.
+    pub fn reconstitute(current_load: u32, max_load: u32) -> Result<Self, CapacityError> {
+        if current_load > max_load {
+            return Err(CapacityError::InvalidLoad {
+                current: current_load,
+                max: max_load,
+            });
+        }
+
+        Ok(Self {
+            current_load,
+            max_load,
+        })
     }
 
     /// Get current load
@@ -79,6 +103,19 @@ impl CourierCapacity {
     /// Get available capacity
     pub fn available_capacity(&self) -> u32 {
         self.max_load - self.current_load
+    }
+
+    /// Reconfigure the max load while preserving the current assignment count.
+    pub fn update_max_load(&mut self, max_load: u32) -> Result<(), CapacityError> {
+        if self.current_load > max_load {
+            return Err(CapacityError::InvalidLoad {
+                current: self.current_load,
+                max: max_load,
+            });
+        }
+
+        self.max_load = max_load;
+        Ok(())
     }
 
     /// Add a package to courier's load

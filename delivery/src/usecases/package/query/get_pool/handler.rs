@@ -234,7 +234,7 @@ where
                 created_at: p.created_at(),
                 assigned_at: p.assigned_at(),
                 delivered_at: p.delivered_at(),
-                not_delivered_reason: p.not_delivered_reason().map(|s| s.to_string()),
+                not_delivered_reason: p.not_delivered_reason(),
             })
             .collect();
 

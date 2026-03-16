@@ -15,7 +15,7 @@ use mockall::automock;
 use thiserror::Error;
 use uuid::Uuid;
 
-use crate::domain::model::courier::CourierStatus;
+use crate::domain::model::courier::{Courier, CourierStatus};
 
 /// Cached courier state (hot data that changes frequently)
 #[derive(Debug, Clone)]
@@ -32,6 +32,19 @@ pub struct CachedCourierState {
     pub successful_deliveries: u32,
     /// Number of failed deliveries
     pub failed_deliveries: u32,
+}
+
+impl From<&Courier> for CachedCourierState {
+    fn from(courier: &Courier) -> Self {
+        Self {
+            status: courier.status(),
+            current_load: courier.current_load(),
+            max_load: courier.max_load(),
+            rating: courier.rating(),
+            successful_deliveries: courier.successful_deliveries(),
+            failed_deliveries: courier.failed_deliveries(),
+        }
+    }
 }
 
 /// Errors that can occur during cache operations
@@ -61,48 +74,17 @@ pub enum CacheError {
 #[cfg_attr(test, automock)]
 #[async_trait]
 pub trait CourierCache: Send + Sync {
-    /// Initialize courier state in cache
+    /// Cache a full courier snapshot.
     ///
-    /// Called when a new courier is registered.
-    async fn initialize_state(
-        &self,
-        courier_id: Uuid,
-        state: CachedCourierState,
-        work_zone: &str,
-    ) -> Result<(), CacheError>;
+    /// Redis is a cache only; writes should originate from the aggregate and be
+    /// mirrored here as a complete snapshot.
+    async fn cache(&self, courier: &Courier) -> Result<(), CacheError>;
 
     /// Get courier state from cache
     async fn get_state(&self, courier_id: Uuid) -> Result<Option<CachedCourierState>, CacheError>;
 
-    /// Update courier status
-    ///
-    /// Also updates the free courier sets accordingly.
-    async fn set_status(
-        &self,
-        courier_id: Uuid,
-        status: CourierStatus,
-        work_zone: &str,
-    ) -> Result<(), CacheError>;
-
     /// Get courier status
     async fn get_status(&self, courier_id: Uuid) -> Result<Option<CourierStatus>, CacheError>;
-
-    /// Update courier load (current packages count)
-    async fn update_load(
-        &self,
-        courier_id: Uuid,
-        current_load: u32,
-        max_load: u32,
-    ) -> Result<(), CacheError>;
-
-    /// Update courier rating and delivery stats
-    async fn update_stats(
-        &self,
-        courier_id: Uuid,
-        rating: f64,
-        successful_deliveries: u32,
-        failed_deliveries: u32,
-    ) -> Result<(), CacheError>;
 
     /// Get all free courier IDs in a zone
     ///
@@ -119,32 +101,4 @@ pub trait CourierCache: Send + Sync {
 
     /// Check if courier exists in cache
     async fn exists(&self, courier_id: Uuid) -> Result<bool, CacheError>;
-
-    /// Update courier status only
-    ///
-    /// Updates only the status field in the cached state.
-    async fn update_status(
-        &self,
-        courier_id: Uuid,
-        status: CourierStatus,
-    ) -> Result<(), CacheError>;
-
-    /// Update courier max_load only
-    ///
-    /// Updates only the max_load field in the cached state.
-    async fn update_max_load(&self, courier_id: Uuid, max_load: u32) -> Result<(), CacheError>;
-
-    /// Add courier to free pool for a zone
-    ///
-    /// Called when courier becomes available (status = Free).
-    async fn add_to_free_pool(&self, courier_id: Uuid, work_zone: &str) -> Result<(), CacheError>;
-
-    /// Remove courier from free pool for a zone
-    ///
-    /// Called when courier becomes unavailable or archived.
-    async fn remove_from_free_pool(
-        &self,
-        courier_id: Uuid,
-        work_zone: &str,
-    ) -> Result<(), CacheError>;
 }

@@ -8,6 +8,7 @@ use std::fmt;
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
+use super::not_delivered::NotDeliveredDetails;
 use super::state::{InvalidTransitionError, PackageStatus};
 use crate::domain::model::vo::location::Location;
 
@@ -189,8 +190,8 @@ pub struct Package {
     assigned_at: Option<DateTime<Utc>>,
     /// Delivered at timestamp
     delivered_at: Option<DateTime<Utc>>,
-    /// Not delivered reason
-    not_delivered_reason: Option<String>,
+    /// Structured details for failed delivery.
+    not_delivered_details: Option<NotDeliveredDetails>,
     /// Version for optimistic locking
     version: u32,
 }
@@ -233,7 +234,7 @@ impl Package {
             updated_at: now,
             assigned_at: None,
             delivered_at: None,
-            not_delivered_reason: None,
+            not_delivered_details: None,
             version: 1,
         }
     }
@@ -260,7 +261,7 @@ impl Package {
         updated_at: DateTime<Utc>,
         assigned_at: Option<DateTime<Utc>>,
         delivered_at: Option<DateTime<Utc>>,
-        not_delivered_reason: Option<String>,
+        not_delivered_details: Option<NotDeliveredDetails>,
         version: u32,
     ) -> Self {
         Self {
@@ -283,7 +284,7 @@ impl Package {
             updated_at,
             assigned_at,
             delivered_at,
-            not_delivered_reason,
+            not_delivered_details,
             version,
         }
     }
@@ -366,8 +367,12 @@ impl Package {
         self.delivered_at
     }
 
-    pub fn not_delivered_reason(&self) -> Option<&str> {
-        self.not_delivered_reason.as_deref()
+    pub fn not_delivered_details(&self) -> Option<&NotDeliveredDetails> {
+        self.not_delivered_details.as_ref()
+    }
+
+    pub fn not_delivered_reason(&self) -> Option<String> {
+        self.not_delivered_details.as_ref().map(ToString::to_string)
     }
 
     pub fn version(&self) -> u32 {
@@ -406,14 +411,15 @@ impl Package {
     pub fn mark_delivered(&mut self) -> Result<(), PackageError> {
         self.status = self.status.transition_to(PackageStatus::Delivered)?;
         self.delivered_at = Some(Utc::now());
+        self.not_delivered_details = None;
         self.touch();
         Ok(())
     }
 
     /// Mark as not delivered
-    pub fn mark_not_delivered(&mut self, reason: String) -> Result<(), PackageError> {
+    pub fn mark_not_delivered(&mut self, details: NotDeliveredDetails) -> Result<(), PackageError> {
         self.status = self.status.transition_to(PackageStatus::NotDelivered)?;
-        self.not_delivered_reason = Some(reason);
+        self.not_delivered_details = Some(details);
         self.touch();
         Ok(())
     }
@@ -426,7 +432,7 @@ impl Package {
         self.status = self.status.transition_to(PackageStatus::InPool)?;
         self.courier_id = None;
         self.assigned_at = None;
-        self.not_delivered_reason = None;
+        self.not_delivered_details = None;
         self.touch();
         Ok(())
     }
@@ -447,6 +453,7 @@ impl Package {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::domain::model::package::NotDeliveredReasonCode;
 
     fn create_test_address() -> Address {
         Address::new(
@@ -510,6 +517,28 @@ mod tests {
         assert!(package.mark_delivered().is_ok());
         assert_eq!(package.status(), PackageStatus::Delivered);
         assert!(package.delivered_at().is_some());
+    }
+
+    #[test]
+    fn test_mark_not_delivered_keeps_structured_details() {
+        let mut package = create_test_package();
+
+        package.move_to_pool().unwrap();
+        package.assign_to(Uuid::new_v4()).unwrap();
+        package.start_transit().unwrap();
+        package
+            .mark_not_delivered(NotDeliveredDetails::new(
+                NotDeliveredReasonCode::Other,
+                Some("recipient unavailable after repeated calls".to_string()),
+            ))
+            .unwrap();
+
+        let details = package.not_delivered_details().unwrap();
+        assert_eq!(details.code(), NotDeliveredReasonCode::Other);
+        assert_eq!(
+            details.description(),
+            Some("recipient unavailable after repeated calls")
+        );
     }
 
     #[test]

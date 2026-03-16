@@ -152,6 +152,7 @@ var OMSSet = wire.NewSet(
 	orderRepo.New,
 	wire.Bind(new(ports.CartRepository), new(*cartRepo.Store)),
 	wire.Bind(new(ports.OrderRepository), new(*orderRepo.Store)),
+	wire.Bind(new(ports.DeliveryInboxRepository), new(*orderRepo.Store)),
 
 	// Indexes
 	cartGoodsIndex.New,

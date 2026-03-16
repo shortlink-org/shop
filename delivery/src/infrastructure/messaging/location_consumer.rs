@@ -2,9 +2,9 @@
 //!
 //! Consumes courier location updates from Kafka and stores them in cache and database.
 
-use rdkafka::consumer::{Consumer, StreamConsumer};
+use rdkafka::consumer::{CommitMode, Consumer, StreamConsumer};
 use rdkafka::message::Message;
-use rdkafka::{ClientConfig, TopicPartitionList};
+use rdkafka::ClientConfig;
 use serde::Deserialize;
 use std::sync::Arc;
 use tokio::sync::broadcast;
@@ -120,17 +120,13 @@ where
         let consumer: StreamConsumer = ClientConfig::new()
             .set("bootstrap.servers", &config.brokers)
             .set("group.id", &config.group_id)
-            .set("enable.auto.commit", "true")
-            .set("auto.commit.interval.ms", "5000")
+            .set("enable.auto.commit", "false")
             .set("auto.offset.reset", "latest")
             .set("session.timeout.ms", "30000")
             .create()
             .map_err(|e| format!("Failed to create Kafka consumer: {}", e))?;
 
         // Subscribe to topic
-        let mut topics = TopicPartitionList::new();
-        topics.add_partition(&config.topic, 0);
-
         consumer
             .subscribe(&[&config.topic])
             .map_err(|e| format!("Failed to subscribe to topic {}: {}", config.topic, e))?;
@@ -164,9 +160,39 @@ where
                 message = self.consumer.recv() => {
                     match message {
                         Ok(msg) => {
-                            if let Some(payload) = msg.payload() {
-                                if let Err(e) = self.process_message(payload).await {
-                                    error!("Failed to process location message: {}", e);
+                            let processing_result = match msg.payload() {
+                                Some(payload) => self.process_message(payload).await,
+                                None => {
+                                    info!(
+                                        topic = msg.topic(),
+                                        partition = msg.partition(),
+                                        offset = msg.offset(),
+                                        "Skipping empty location message payload"
+                                    );
+                                    Ok(())
+                                }
+                            };
+
+                            match processing_result {
+                                Ok(()) => {
+                                    if let Err(err) = self.consumer.commit_message(&msg, CommitMode::Sync) {
+                                        error!(
+                                            topic = msg.topic(),
+                                            partition = msg.partition(),
+                                            offset = msg.offset(),
+                                            error = %err,
+                                            "Failed to commit location consumer offset"
+                                        );
+                                    }
+                                }
+                                Err(err) => {
+                                    error!(
+                                        topic = msg.topic(),
+                                        partition = msg.partition(),
+                                        offset = msg.offset(),
+                                        error = %err,
+                                        "Failed to process location message"
+                                    );
                                 }
                             }
                         }

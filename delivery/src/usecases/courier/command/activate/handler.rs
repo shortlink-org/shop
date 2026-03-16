@@ -14,7 +14,7 @@ use chrono::{DateTime, Utc};
 use thiserror::Error;
 use uuid::Uuid;
 
-use crate::domain::model::courier::CourierStatus;
+use crate::domain::model::courier::{CourierError, CourierStatus};
 use crate::domain::ports::{
     CacheError, CommandHandlerWithResult, CourierCache, CourierRepository, RepositoryError,
 };
@@ -39,6 +39,10 @@ pub enum ActivateCourierError {
     /// Cache error
     #[error("Cache error: {0}")]
     CacheError(#[from] CacheError),
+
+    /// Domain error
+    #[error("Domain error: {0}")]
+    DomainError(#[from] CourierError),
 }
 
 /// Response from activating a courier
@@ -83,28 +87,20 @@ where
     /// Handle the ActivateCourier command
     async fn handle(&self, cmd: Command) -> Result<Response, Self::Error> {
         // 1. Validate courier exists
-        let courier = self
+        let mut courier = self
             .repository
             .find_by_id(cmd.courier_id)
             .await?
             .ok_or(ActivateCourierError::NotFound(cmd.courier_id))?;
 
-        // 2. Check current status from cache
-        if let Ok(Some(state)) = self.cache.get_state(cmd.courier_id).await {
-            if state.status == CourierStatus::Archived {
-                return Err(ActivateCourierError::CourierArchived(cmd.courier_id));
-            }
+        // 2. Check current aggregate state
+        if courier.is_archived() {
+            return Err(ActivateCourierError::CourierArchived(cmd.courier_id));
         }
 
-        // 3. Update status to FREE in cache
-        self.cache
-            .update_status(cmd.courier_id, CourierStatus::Free)
-            .await?;
-
-        // 4. Add to free couriers set for the zone
-        self.cache
-            .add_to_free_pool(cmd.courier_id, courier.work_zone())
-            .await?;
+        courier.go_online()?;
+        self.repository.save(&courier).await?;
+        self.cache.cache(&courier).await?;
 
         let activated_at = Utc::now();
 

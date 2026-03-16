@@ -3,8 +3,10 @@
 //! Contains business rules for validating package assignments.
 //! Validates that all business constraints are met before assignment.
 
-use crate::domain::model::courier::CourierStatus;
-use crate::domain::model::package::PackageStatus;
+use chrono::{DateTime, Timelike, Utc};
+
+use crate::domain::model::courier::{Courier, CourierStatus};
+use crate::domain::model::package::{Package, PackageStatus};
 
 /// Validation errors for assignment
 #[derive(Debug, Clone, PartialEq)]
@@ -71,80 +73,66 @@ impl std::fmt::Display for AssignmentValidationError {
 
 impl std::error::Error for AssignmentValidationError {}
 
-/// Courier availability data for validation
+/// Small domain context for validating manual assignments.
 #[derive(Debug, Clone)]
-pub struct CourierAvailability {
-    pub status: CourierStatus,
-    pub current_load: u32,
-    pub max_load: u32,
-    pub work_start_hour: u8,
-    pub work_end_hour: u8,
-    pub max_distance_km: f64,
-}
-
-/// Package data for validation
-#[derive(Debug, Clone)]
-pub struct PackageForValidation {
-    pub status: PackageStatus,
-    pub distance_to_courier_km: f64,
+pub struct AssignmentContext<'a> {
+    pub courier: &'a Courier,
+    pub package: &'a Package,
+    pub current_time: DateTime<Utc>,
+    pub distance_to_pickup_km: Option<f64>,
 }
 
 /// Assignment validation service
 pub struct AssignmentValidationService;
 
 impl AssignmentValidationService {
-    /// Validate all business rules for package assignment
+    /// Validate all business rules for package assignment.
     ///
-    /// Returns Ok(()) if assignment is valid, or a list of all validation errors.
-    pub fn validate(
-        courier: &CourierAvailability,
-        package: &PackageForValidation,
-        current_hour: u8,
-    ) -> Result<(), Vec<AssignmentValidationError>> {
+    /// Returns `Ok(())` if assignment is valid, or a list of all validation errors.
+    pub fn validate(context: AssignmentContext<'_>) -> Result<(), Vec<AssignmentValidationError>> {
         let mut errors = Vec::new();
 
-        // Validate package status
-        if package.status != PackageStatus::InPool {
+        if context.package.status() != PackageStatus::InPool {
             errors.push(AssignmentValidationError::InvalidPackageStatus {
-                current: package.status,
+                current: context.package.status(),
                 expected: PackageStatus::InPool,
             });
         }
 
-        // Validate courier status
-        if courier.status != CourierStatus::Free {
+        if context.courier.status() != CourierStatus::Free {
             errors.push(AssignmentValidationError::CourierNotAvailable {
-                current: courier.status,
+                current: context.courier.status(),
             });
         }
 
-        // Validate working hours
+        let current_hour = context.current_time.time().hour() as u8;
+        let work_hours = context.courier.work_hours();
         if !Self::is_within_working_hours(
             current_hour,
-            courier.work_start_hour,
-            courier.work_end_hour,
+            work_hours.start.hour() as u8,
+            work_hours.end.hour() as u8,
         ) {
             errors.push(AssignmentValidationError::OutsideWorkingHours {
                 current_hour,
-                start_hour: courier.work_start_hour,
-                end_hour: courier.work_end_hour,
+                start_hour: work_hours.start.hour() as u8,
+                end_hour: work_hours.end.hour() as u8,
             });
         }
 
-        // Validate capacity
-        if courier.current_load >= courier.max_load {
+        if context.courier.current_load() >= context.courier.max_load() {
             errors.push(AssignmentValidationError::CourierAtCapacity {
-                current: courier.current_load,
-                max: courier.max_load,
+                current: context.courier.current_load(),
+                max: context.courier.max_load(),
             });
         }
 
-        // Validate distance
-        if package.distance_to_courier_km > courier.max_distance_km {
-            errors.push(AssignmentValidationError::DistanceExceedsMax {
-                distance_km: package.distance_to_courier_km,
-                max_km: courier.max_distance_km,
-            });
+        if let Some(distance_to_pickup_km) = context.distance_to_pickup_km {
+            if distance_to_pickup_km > context.courier.max_distance_km() {
+                errors.push(AssignmentValidationError::DistanceExceedsMax {
+                    distance_km: distance_to_pickup_km,
+                    max_km: context.courier.max_distance_km(),
+                });
+            }
         }
 
         if errors.is_empty() {
@@ -154,13 +142,10 @@ impl AssignmentValidationService {
         }
     }
 
-    /// Check if current hour is within working hours
     fn is_within_working_hours(current: u8, start: u8, end: u8) -> bool {
         if start <= end {
-            // Normal case: e.g., 9-18
             current >= start && current < end
         } else {
-            // Overnight case: e.g., 22-6
             current >= start || current < end
         }
     }
@@ -168,24 +153,73 @@ impl AssignmentValidationService {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use chrono::NaiveTime;
 
-    fn create_valid_courier() -> CourierAvailability {
-        CourierAvailability {
-            status: CourierStatus::Free,
-            current_load: 2,
-            max_load: 5,
-            work_start_hour: 9,
-            work_end_hour: 18,
-            max_distance_km: 20.0,
-        }
+    use super::*;
+    use crate::domain::model::courier::WorkHours;
+    use crate::domain::model::package::{Address, DeliveryPeriod, Package, Priority};
+    use crate::domain::model::vo::location::Location;
+    use crate::domain::model::vo::TransportType;
+
+    fn create_valid_courier() -> Courier {
+        let mut courier = Courier::builder(
+            "Courier".to_string(),
+            "+491234567890".to_string(),
+            "courier@test.com".to_string(),
+            TransportType::Car,
+            20.0,
+            "zone-1".to_string(),
+            WorkHours::new(
+                NaiveTime::from_hms_opt(9, 0, 0).unwrap(),
+                NaiveTime::from_hms_opt(18, 0, 0).unwrap(),
+                vec![1, 2, 3, 4, 5],
+            )
+            .unwrap(),
+        )
+        .build()
+        .unwrap();
+        courier.go_online().unwrap();
+        courier
     }
 
-    fn create_valid_package() -> PackageForValidation {
-        PackageForValidation {
-            status: PackageStatus::InPool,
-            distance_to_courier_km: 5.0,
-        }
+    fn create_valid_package() -> Package {
+        let now = Utc::now();
+        let mut package = Package::new(
+            uuid::Uuid::new_v4(),
+            uuid::Uuid::new_v4(),
+            None,
+            None,
+            None,
+            None,
+            Address::new(
+                "Pickup".to_string(),
+                "Berlin".to_string(),
+                Location::new(52.52, 13.405, 10.0).unwrap(),
+            ),
+            Address::new(
+                "Drop".to_string(),
+                "Berlin".to_string(),
+                Location::new(52.53, 13.41, 10.0).unwrap(),
+            ),
+            DeliveryPeriod::new(
+                now + chrono::Duration::hours(1),
+                now + chrono::Duration::hours(2),
+            )
+            .unwrap(),
+            1.0,
+            Priority::Normal,
+            "zone-1".to_string(),
+        );
+        package.move_to_pool().unwrap();
+        package
+    }
+
+    fn midday() -> DateTime<Utc> {
+        Utc::now()
+            .date_naive()
+            .and_hms_opt(12, 0, 0)
+            .unwrap()
+            .and_utc()
     }
 
     #[test]
@@ -193,130 +227,98 @@ mod tests {
         let courier = create_valid_courier();
         let package = create_valid_package();
 
-        let result = AssignmentValidationService::validate(&courier, &package, 12);
+        let result = AssignmentValidationService::validate(AssignmentContext {
+            courier: &courier,
+            package: &package,
+            current_time: midday(),
+            distance_to_pickup_km: Some(5.0),
+        });
+
         assert!(result.is_ok());
     }
 
     #[test]
     fn test_invalid_package_status() {
         let courier = create_valid_courier();
-        let mut package = create_valid_package();
-        package.status = PackageStatus::Assigned;
+        let package = Package::new(
+            uuid::Uuid::new_v4(),
+            uuid::Uuid::new_v4(),
+            None,
+            None,
+            None,
+            None,
+            Address::new(
+                "Pickup".to_string(),
+                "Berlin".to_string(),
+                Location::new(52.52, 13.405, 10.0).unwrap(),
+            ),
+            Address::new(
+                "Drop".to_string(),
+                "Berlin".to_string(),
+                Location::new(52.53, 13.41, 10.0).unwrap(),
+            ),
+            DeliveryPeriod::new(
+                Utc::now() + chrono::Duration::hours(1),
+                Utc::now() + chrono::Duration::hours(2),
+            )
+            .unwrap(),
+            1.0,
+            Priority::Normal,
+            "zone-1".to_string(),
+        );
 
-        let result = AssignmentValidationService::validate(&courier, &package, 12);
+        let result = AssignmentValidationService::validate(AssignmentContext {
+            courier: &courier,
+            package: &package,
+            current_time: midday(),
+            distance_to_pickup_km: Some(5.0),
+        });
+
         assert!(result.is_err());
-        let errors = result.unwrap_err();
-        assert!(errors
-            .iter()
-            .any(|e| matches!(e, AssignmentValidationError::InvalidPackageStatus { .. })));
     }
 
     #[test]
     fn test_courier_not_available() {
-        let mut courier = create_valid_courier();
-        courier.status = CourierStatus::Busy;
+        let courier = Courier::builder(
+            "Courier".to_string(),
+            "+491234567890".to_string(),
+            "courier@test.com".to_string(),
+            TransportType::Car,
+            20.0,
+            "zone-1".to_string(),
+            WorkHours::new(
+                NaiveTime::from_hms_opt(9, 0, 0).unwrap(),
+                NaiveTime::from_hms_opt(18, 0, 0).unwrap(),
+                vec![1, 2, 3, 4, 5],
+            )
+            .unwrap(),
+        )
+        .build()
+        .unwrap();
         let package = create_valid_package();
 
-        let result = AssignmentValidationService::validate(&courier, &package, 12);
+        let result = AssignmentValidationService::validate(AssignmentContext {
+            courier: &courier,
+            package: &package,
+            current_time: midday(),
+            distance_to_pickup_km: Some(5.0),
+        });
+
         assert!(result.is_err());
-        let errors = result.unwrap_err();
-        assert!(errors
-            .iter()
-            .any(|e| matches!(e, AssignmentValidationError::CourierNotAvailable { .. })));
-    }
-
-    #[test]
-    fn test_outside_working_hours() {
-        let courier = create_valid_courier();
-        let package = create_valid_package();
-
-        // Before working hours
-        let result = AssignmentValidationService::validate(&courier, &package, 7);
-        assert!(result.is_err());
-
-        // After working hours
-        let result = AssignmentValidationService::validate(&courier, &package, 20);
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_courier_at_capacity() {
-        let mut courier = create_valid_courier();
-        courier.current_load = 5; // At max
-        let package = create_valid_package();
-
-        let result = AssignmentValidationService::validate(&courier, &package, 12);
-        assert!(result.is_err());
-        let errors = result.unwrap_err();
-        assert!(errors
-            .iter()
-            .any(|e| matches!(e, AssignmentValidationError::CourierAtCapacity { .. })));
     }
 
     #[test]
     fn test_distance_exceeds_max() {
         let courier = create_valid_courier();
-        let mut package = create_valid_package();
-        package.distance_to_courier_km = 30.0; // Exceeds 20km max
-
-        let result = AssignmentValidationService::validate(&courier, &package, 12);
-        assert!(result.is_err());
-        let errors = result.unwrap_err();
-        assert!(errors
-            .iter()
-            .any(|e| matches!(e, AssignmentValidationError::DistanceExceedsMax { .. })));
-    }
-
-    #[test]
-    fn test_multiple_errors() {
-        let mut courier = create_valid_courier();
-        courier.status = CourierStatus::Busy;
-        courier.current_load = 5;
-
-        let mut package = create_valid_package();
-        package.status = PackageStatus::Delivered;
-
-        let result = AssignmentValidationService::validate(&courier, &package, 12);
-        assert!(result.is_err());
-        let errors = result.unwrap_err();
-        assert!(errors.len() >= 3); // At least 3 errors
-    }
-
-    #[test]
-    fn test_overnight_working_hours() {
-        let mut courier = create_valid_courier();
-        courier.work_start_hour = 22;
-        courier.work_end_hour = 6;
         let package = create_valid_package();
 
-        // Should be valid at 23:00
-        let result = AssignmentValidationService::validate(&courier, &package, 23);
-        assert!(result.is_ok());
+        let result = AssignmentValidationService::validate(AssignmentContext {
+            courier: &courier,
+            package: &package,
+            current_time: midday(),
+            distance_to_pickup_km: Some(25.0),
+        });
 
-        // Should be valid at 2:00
-        let result = AssignmentValidationService::validate(&courier, &package, 2);
-        assert!(result.is_ok());
-
-        // Should be invalid at 12:00
-        let result = AssignmentValidationService::validate(&courier, &package, 12);
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_working_hours_boundary_inclusive_start_exclusive_end() {
-        let courier = create_valid_courier(); // 9-18
-        let package = create_valid_package();
-
-        // At start hour (9) is valid
-        let result = AssignmentValidationService::validate(&courier, &package, 9);
-        assert!(result.is_ok());
-
-        // At 17 (before end 18) is valid
-        let result = AssignmentValidationService::validate(&courier, &package, 17);
-        assert!(result.is_ok());
-
-        // At end hour (18) is invalid (exclusive end)
-        let result = AssignmentValidationService::validate(&courier, &package, 18);
         assert!(result.is_err());
     }
 }

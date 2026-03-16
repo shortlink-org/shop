@@ -6,7 +6,10 @@
 use async_trait::async_trait;
 use uuid::Uuid;
 
-use crate::domain::model::package::{Package, PackageId, PackageStatus};
+use crate::domain::model::{
+    courier::Courier,
+    package::{Package, PackageId, PackageStatus},
+};
 
 use super::{DomainEvent, RepositoryError};
 
@@ -82,6 +85,19 @@ pub trait PackageRepository: Send + Sync {
         _events: &[DomainEvent],
     ) -> Result<(), RepositoryError> {
         self.save(package).await
+    }
+
+    /// Save a courier, package, and domain events atomically.
+    ///
+    /// Default implementation falls back to package persistence only for test doubles
+    /// that do not model a shared transaction boundary.
+    async fn save_courier_with_package_and_events(
+        &self,
+        _courier: &Courier,
+        package: &Package,
+        events: &[DomainEvent],
+    ) -> Result<(), RepositoryError> {
+        self.save_with_events(package, events).await
     }
 
     /// Find a package by ID

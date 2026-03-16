@@ -11,6 +11,8 @@ mod m20260131_000004_create_courier_location_history;
 mod m20260205_000005_add_recipient_contacts_to_packages;
 mod m20260311_000006_create_outbox_messages;
 mod m20260311_000007_add_customer_phone_to_packages;
+mod m20260316_000008_persist_courier_runtime_state;
+mod m20260316_000009_drop_legacy_not_delivered_reason;
 
 pub struct Migrator;
 
@@ -25,6 +27,8 @@ impl MigratorTrait for Migrator {
             Box::new(m20260205_000005_add_recipient_contacts_to_packages::Migration),
             Box::new(m20260311_000006_create_outbox_messages::Migration),
             Box::new(m20260311_000007_add_customer_phone_to_packages::Migration),
+            Box::new(m20260316_000008_persist_courier_runtime_state::Migration),
+            Box::new(m20260316_000009_drop_legacy_not_delivered_reason::Migration),
         ]
     }
 }

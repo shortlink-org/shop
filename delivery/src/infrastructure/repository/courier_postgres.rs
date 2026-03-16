@@ -4,12 +4,12 @@
 
 use async_trait::async_trait;
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter,
-    QueryOrder, QuerySelect,
+    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, DbErr, EntityTrait,
+    PaginatorTrait, QueryFilter, QueryOrder, QuerySelect,
 };
 use uuid::Uuid;
 
-use crate::domain::model::courier::Courier;
+use crate::domain::model::courier::{Courier, CourierStatus};
 use crate::domain::ports::{CourierFilter, CourierRepository, RepositoryError};
 use crate::infrastructure::repository::entities::courier::{
     self, ActiveModel, Entity as CourierEntity,
@@ -25,21 +25,46 @@ impl CourierPostgresRepository {
     pub fn new(db: DatabaseConnection) -> Self {
         Self { db }
     }
-}
 
-#[async_trait]
-impl CourierRepository for CourierPostgresRepository {
-    async fn save(&self, courier: &Courier) -> Result<(), RepositoryError> {
+    fn map_insert_error(error: DbErr) -> RepositoryError {
+        let err_str = error.to_string();
+        if err_str.contains("duplicate") || err_str.contains("unique") {
+            if err_str.contains("email") {
+                RepositoryError::DuplicateEntry("email".to_string())
+            } else if err_str.contains("phone") {
+                RepositoryError::DuplicateEntry("phone".to_string())
+            } else {
+                RepositoryError::DuplicateEntry(err_str)
+            }
+        } else {
+            RepositoryError::QueryError(err_str)
+        }
+    }
+
+    fn status_to_string(status: CourierStatus) -> &'static str {
+        match status {
+            CourierStatus::Unavailable => "unavailable",
+            CourierStatus::Free => "free",
+            CourierStatus::Busy => "busy",
+            CourierStatus::Archived => "archived",
+        }
+    }
+
+    pub(crate) async fn save_with_conn<C>(
+        conn: &C,
+        courier: &Courier,
+    ) -> Result<(), RepositoryError>
+    where
+        C: ConnectionTrait,
+    {
         let model = ActiveModel::from(courier);
 
-        // Check if courier exists
         let existing = CourierEntity::find_by_id(courier.id().0)
-            .one(&self.db)
+            .one(conn)
             .await
             .map_err(|e| RepositoryError::QueryError(e.to_string()))?;
 
         if let Some(ref existing_model) = existing {
-            // Update with optimistic locking
             let existing_version = existing_model.version;
             if existing_version != courier.version() as i32 - 1 {
                 return Err(RepositoryError::VersionConflict {
@@ -48,30 +73,22 @@ impl CourierRepository for CourierPostgresRepository {
                 });
             }
 
-            // Update the model
             model
-                .update(&self.db)
+                .update(conn)
                 .await
                 .map_err(|e| RepositoryError::QueryError(e.to_string()))?;
         } else {
-            // Insert new courier
-            model.insert(&self.db).await.map_err(|e| {
-                let err_str = e.to_string();
-                if err_str.contains("duplicate") || err_str.contains("unique") {
-                    if err_str.contains("email") {
-                        RepositoryError::DuplicateEntry("email".to_string())
-                    } else if err_str.contains("phone") {
-                        RepositoryError::DuplicateEntry("phone".to_string())
-                    } else {
-                        RepositoryError::DuplicateEntry(err_str)
-                    }
-                } else {
-                    RepositoryError::QueryError(err_str)
-                }
-            })?;
+            model.insert(conn).await.map_err(Self::map_insert_error)?;
         }
 
         Ok(())
+    }
+}
+
+#[async_trait]
+impl CourierRepository for CourierPostgresRepository {
+    async fn save(&self, courier: &Courier) -> Result<(), RepositoryError> {
+        Self::save_with_conn(&self.db, courier).await
     }
 
     async fn find_by_id(&self, id: Uuid) -> Result<Option<Courier>, RepositoryError> {
@@ -183,10 +200,8 @@ impl CourierRepository for CourierPostgresRepository {
             .map_err(|e| RepositoryError::QueryError(e.to_string()))?
             .ok_or(RepositoryError::NotFound(id))?;
 
-        // Update timestamp to mark as archived
-        // The actual ARCHIVED status is stored in Redis cache
-        // TODO: Add is_archived column in future migration
         let mut model: ActiveModel = existing.into();
+        model.status = Set(Self::status_to_string(CourierStatus::Archived).to_string());
         model.updated_at = Set(chrono::Utc::now());
 
         model
@@ -227,8 +242,21 @@ impl CourierRepository for CourierPostgresRepository {
             query = query.filter(courier::Column::WorkZone.eq(zone.as_str()));
         }
 
-        // status and archived are not stored in PostgreSQL (status/load in cache);
-        // filter by them when DB columns exist in a future migration
+        if let Some(status) = filter.status {
+            query = query.filter(courier::Column::Status.eq(Self::status_to_string(status)));
+        }
+
+        if let Some(archived) = filter.archived {
+            if archived {
+                query = query.filter(
+                    courier::Column::Status.eq(Self::status_to_string(CourierStatus::Archived)),
+                );
+            } else {
+                query = query.filter(
+                    courier::Column::Status.ne(Self::status_to_string(CourierStatus::Archived)),
+                );
+            }
+        }
 
         let results = query
             .order_by_desc(courier::Column::CreatedAt)
@@ -252,6 +280,22 @@ impl CourierRepository for CourierPostgresRepository {
 
         if let Some(ref zone) = filter.work_zone {
             query = query.filter(courier::Column::WorkZone.eq(zone.as_str()));
+        }
+
+        if let Some(status) = filter.status {
+            query = query.filter(courier::Column::Status.eq(Self::status_to_string(status)));
+        }
+
+        if let Some(archived) = filter.archived {
+            if archived {
+                query = query.filter(
+                    courier::Column::Status.eq(Self::status_to_string(CourierStatus::Archived)),
+                );
+            } else {
+                query = query.filter(
+                    courier::Column::Status.ne(Self::status_to_string(CourierStatus::Archived)),
+                );
+            }
         }
 
         let count = query

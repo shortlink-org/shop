@@ -14,10 +14,9 @@ use std::sync::Arc;
 
 use thiserror::Error;
 
-use crate::domain::model::courier::{Courier, CourierError, CourierStatus};
+use crate::domain::model::courier::{Courier, CourierError};
 use crate::domain::ports::{
-    CacheError, CachedCourierState, CommandHandlerWithResult, CourierCache, CourierRepository,
-    RepositoryError,
+    CacheError, CommandHandlerWithResult, CourierCache, CourierRepository, RepositoryError,
 };
 
 use super::Command;
@@ -117,19 +116,8 @@ where
         // 4. Save to PostgreSQL repository
         self.repository.save(&courier).await?;
 
-        // 5. Initialize state in Redis cache
-        let cached_state = CachedCourierState {
-            status: CourierStatus::Unavailable,
-            current_load: 0,
-            max_load: courier.max_load(),
-            rating: 0.0,
-            successful_deliveries: 0,
-            failed_deliveries: 0,
-        };
-
-        self.cache
-            .initialize_state(courier.id().0, cached_state, &cmd.work_zone)
-            .await?;
+        // 5. Mirror aggregate snapshot into Redis cache
+        self.cache.cache(&courier).await?;
 
         // 6. Return registered courier
         Ok(Response { courier })

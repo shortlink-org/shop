@@ -169,13 +169,11 @@ impl CourierTemporalActivities {
 
 #[async_trait]
 trait DeliveryTemporalActivityApi: Send + Sync {
-    async fn get_free_couriers_for_dispatch(&self, zone: &str) -> Result<String, ActivityError>;
-    async fn assign_order(&self, courier_id: Uuid, order_id: Uuid)
-        -> Result<String, ActivityError>;
+    async fn get_dispatch_candidates(&self, zone: &str) -> Result<String, ActivityError>;
+    async fn assign_order(&self, courier_id: Uuid) -> Result<String, ActivityError>;
     async fn complete_delivery(
         &self,
         courier_id: Uuid,
-        order_id: Uuid,
         success: bool,
     ) -> Result<String, ActivityError>;
 }
@@ -186,25 +184,21 @@ where
     R: CourierRepository + Send + Sync + 'static,
     C: CourierCache + Send + Sync + 'static,
 {
-    async fn get_free_couriers_for_dispatch(&self, zone: &str) -> Result<String, ActivityError> {
-        self.get_free_couriers_for_dispatch(zone)
+    async fn get_dispatch_candidates(&self, zone: &str) -> Result<String, ActivityError> {
+        self.get_dispatch_candidates(zone)
             .await
             .map(|couriers| {
                 couriers
                     .iter()
-                    .map(|c| c.id.clone())
+                    .map(|c| c.courier.id().to_string())
                     .collect::<Vec<_>>()
                     .join(",")
             })
             .map_err(activity_err)
     }
 
-    async fn assign_order(
-        &self,
-        courier_id: Uuid,
-        order_id: Uuid,
-    ) -> Result<String, ActivityError> {
-        self.assign_order(courier_id, order_id)
+    async fn assign_order(&self, courier_id: Uuid) -> Result<String, ActivityError> {
+        self.assign_order(courier_id)
             .await
             .map(|_| "ok".to_string())
             .map_err(activity_err)
@@ -213,10 +207,9 @@ where
     async fn complete_delivery(
         &self,
         courier_id: Uuid,
-        order_id: Uuid,
         success: bool,
     ) -> Result<String, ActivityError> {
-        self.complete_delivery(courier_id, order_id, success)
+        self.complete_delivery(courier_id, success)
             .await
             .map(|_| "ok".to_string())
             .map_err(activity_err)
@@ -231,13 +224,13 @@ struct DeliveryTemporalActivities {
 #[activities]
 impl DeliveryTemporalActivities {
     #[allow(dead_code)]
-    #[activity(name = "get_free_couriers_for_dispatch")]
-    async fn get_free_couriers_for_dispatch(
+    #[activity(name = "get_dispatch_candidates")]
+    async fn get_dispatch_candidates(
         self: Arc<Self>,
         _ctx: ActivityContext,
         zone: String,
     ) -> Result<String, ActivityError> {
-        self.inner.get_free_couriers_for_dispatch(&zone).await
+        self.inner.get_dispatch_candidates(&zone).await
     }
 
     #[allow(dead_code)]
@@ -245,19 +238,10 @@ impl DeliveryTemporalActivities {
     async fn assign_order(
         self: Arc<Self>,
         _ctx: ActivityContext,
-        input: String,
+        courier_id: String,
     ) -> Result<String, ActivityError> {
-        let parts: Vec<&str> = input.split(':').collect();
-        if parts.len() != 2 {
-            return Err(ActivityError::from(anyhow!(
-                "Invalid input format, expected 'courier_id:order_id'"
-            )));
-        }
-
-        let courier_id = parse_uuid(parts[0], "courier")?;
-        let order_id = parse_uuid(parts[1], "order")?;
-
-        self.inner.assign_order(courier_id, order_id).await
+        let courier_id = parse_uuid(&courier_id, "courier")?;
+        self.inner.assign_order(courier_id).await
     }
 
     #[allow(dead_code)]
@@ -268,19 +252,16 @@ impl DeliveryTemporalActivities {
         input: String,
     ) -> Result<String, ActivityError> {
         let parts: Vec<&str> = input.split(':').collect();
-        if parts.len() != 3 {
+        if parts.len() != 2 {
             return Err(ActivityError::from(anyhow!(
-                "Invalid input format, expected 'courier_id:order_id:success'"
+                "Invalid input format, expected 'courier_id:success'"
             )));
         }
 
         let courier_id = parse_uuid(parts[0], "courier")?;
-        let order_id = parse_uuid(parts[1], "order")?;
-        let success = parts[2] == "true";
+        let success = parts[1] == "true";
 
-        self.inner
-            .complete_delivery(courier_id, order_id, success)
-            .await
+        self.inner.complete_delivery(courier_id, success).await
     }
 }
 

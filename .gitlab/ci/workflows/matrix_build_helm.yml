@@ -31,7 +31,7 @@
 
       # OSRM Routing Server
       - HELM_CHART_NAME: osrm
-        HELM_CHART_PATH: courier-emulation/ops/Helm/$HELM_CHART_NAME
+        HELM_CHART_PATH: osrm/ops/Helm/$HELM_CHART_NAME
 
       # Admin GraphQL Subgraph
       - HELM_CHART_NAME: admin-graphql

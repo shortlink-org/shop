@@ -15,7 +15,7 @@ use chrono::{DateTime, Utc};
 use thiserror::Error;
 use uuid::Uuid;
 
-use crate::domain::model::courier::CourierStatus;
+use crate::domain::model::courier::{CourierError, CourierStatus};
 use crate::domain::ports::{
     CacheError, CommandHandlerWithResult, CourierCache, CourierRepository, RepositoryError,
 };
@@ -44,6 +44,10 @@ pub enum DeactivateCourierError {
     /// Cache error
     #[error("Cache error: {0}")]
     CacheError(#[from] CacheError),
+
+    /// Domain error
+    #[error("Domain error: {0}")]
+    DomainError(#[from] CourierError),
 }
 
 /// Response from deactivating a courier
@@ -88,32 +92,24 @@ where
     /// Handle the DeactivateCourier command
     async fn handle(&self, cmd: Command) -> Result<Response, Self::Error> {
         // 1. Validate courier exists
-        let courier = self
+        let mut courier = self
             .repository
             .find_by_id(cmd.courier_id)
             .await?
             .ok_or(DeactivateCourierError::NotFound(cmd.courier_id))?;
 
-        // 2. Check current status from cache
-        if let Ok(Some(state)) = self.cache.get_state(cmd.courier_id).await {
-            if state.status == CourierStatus::Archived {
-                return Err(DeactivateCourierError::CourierArchived(cmd.courier_id));
-            }
-            // Check if courier has active deliveries
-            if state.current_load > 0 {
-                return Err(DeactivateCourierError::HasActiveDeliveries(cmd.courier_id));
-            }
+        // 2. Check current aggregate state
+        if courier.is_archived() {
+            return Err(DeactivateCourierError::CourierArchived(cmd.courier_id));
         }
 
-        // 3. Update status to UNAVAILABLE in cache
-        self.cache
-            .update_status(cmd.courier_id, CourierStatus::Unavailable)
-            .await?;
+        if courier.current_load() > 0 {
+            return Err(DeactivateCourierError::HasActiveDeliveries(cmd.courier_id));
+        }
 
-        // 4. Remove from free pool
-        self.cache
-            .remove_from_free_pool(cmd.courier_id, courier.work_zone())
-            .await?;
+        courier.go_offline()?;
+        self.repository.save(&courier).await?;
+        self.cache.cache(&courier).await?;
 
         let deactivated_at = Utc::now();
 

@@ -12,7 +12,6 @@
 use std::sync::Arc;
 
 use thiserror::Error;
-use uuid::Uuid;
 
 use crate::domain::model::courier::{Courier, CourierStatus};
 use crate::domain::ports::{
@@ -71,31 +70,18 @@ where
         Self { repository, cache }
     }
 
-    /// Get courier IDs based on filter
-    async fn get_filtered_ids(&self, query: &Query) -> Result<Vec<Uuid>, GetCourierPoolError> {
-        let filter = &query.filter;
+    fn to_repo_filter(query: &Query) -> crate::domain::ports::CourierFilter {
+        let effective_status = if query.filter.available_only {
+            Some(CourierStatus::Free)
+        } else {
+            query.filter.status
+        };
 
-        // If filtering by status = Free and zone is specified, use cache
-        if filter.status == Some(CourierStatus::Free) {
-            if let Some(ref zone) = filter.work_zone {
-                return Ok(self.cache.get_free_couriers_in_zone(zone).await?);
-            } else {
-                return Ok(self.cache.get_all_free_couriers().await?);
-            }
+        crate::domain::ports::CourierFilter {
+            work_zone: query.filter.work_zone.clone(),
+            status: effective_status,
+            archived: Some(false),
         }
-
-        // Filter by work zone
-        if let Some(ref zone) = filter.work_zone {
-            let couriers = self.repository.find_by_work_zone(zone).await?;
-            return Ok(couriers.iter().map(|c| c.id().0).collect());
-        }
-
-        // No filters - return all couriers with pagination
-        let couriers = self
-            .repository
-            .list(query.limit.unwrap_or(50), query.offset.unwrap_or(0))
-            .await?;
-        Ok(couriers.iter().map(|c| c.id().0).collect())
     }
 }
 
@@ -108,35 +94,34 @@ where
 
     /// Handle the GetCourierPool query
     async fn handle(&self, query: Query) -> Result<Response, Self::Error> {
-        // Strategy depends on filters
-        let courier_ids = self.get_filtered_ids(&query).await?;
+        let repo_filter = Self::to_repo_filter(&query);
+        let couriers = self
+            .repository
+            .find_by_filter(
+                repo_filter,
+                query.limit.unwrap_or(50),
+                query.offset.unwrap_or(0),
+            )
+            .await?;
 
-        // Load couriers from repository and enrich with cache data
-        let mut couriers_with_state = Vec::with_capacity(courier_ids.len());
+        let mut couriers_with_state = Vec::with_capacity(couriers.len());
 
-        for id in courier_ids {
-            if let Some(courier) = self.repository.find_by_id(id).await? {
-                // Apply additional filters
-                if let Some(ref transport) = query.filter.transport_type {
-                    if courier.transport_type() != *transport {
-                        continue;
-                    }
+        for courier in couriers {
+            if let Some(ref transport) = query.filter.transport_type {
+                if courier.transport_type() != *transport {
+                    continue;
                 }
-
-                // Get state from cache
-                let state = self.cache.get_state(id).await.ok().flatten();
-
-                // Apply availability filter
-                if query.filter.available_only {
-                    if let Some(ref s) = state {
-                        if s.current_load >= s.max_load {
-                            continue;
-                        }
-                    }
-                }
-
-                couriers_with_state.push(CourierWithState { courier, state });
             }
+
+            let state = self
+                .cache
+                .get_state(courier.id().0)
+                .await
+                .ok()
+                .flatten()
+                .or_else(|| Some(CachedCourierState::from(&courier)));
+
+            couriers_with_state.push(CourierWithState { courier, state });
         }
 
         let total_count = couriers_with_state.len();
@@ -153,7 +138,7 @@ mod tests {
     use super::*;
     use crate::domain::model::courier::WorkHours;
     use crate::domain::model::vo::TransportType;
-    use crate::domain::ports::{CachedCourierState, QueryHandler};
+    use crate::domain::ports::QueryHandler;
     use crate::infrastructure::cache::CourierRedisCache;
     use crate::infrastructure::repository::CourierPostgresRepository;
     use chrono::NaiveTime;
@@ -333,30 +318,12 @@ mod tests {
         let env = setup_test_env().await;
 
         // Create and save a courier
-        let courier =
+        let mut courier =
             create_test_courier("Free Courier", "+49111000033", "free@test.de", "FreeZone");
+        courier.go_online().unwrap();
         let courier_id = courier.id().0;
         env.repository.save(&courier).await.unwrap();
-
-        // Add courier to free pool in Redis cache
-        env.cache
-            .add_to_free_pool(courier_id, "FreeZone")
-            .await
-            .unwrap();
-
-        // Initialize state in cache
-        let state = CachedCourierState {
-            status: CourierStatus::Free,
-            current_load: 0,
-            max_load: 2,
-            rating: 0.0,
-            successful_deliveries: 0,
-            failed_deliveries: 0,
-        };
-        env.cache
-            .initialize_state(courier_id, state, "FreeZone")
-            .await
-            .unwrap();
+        env.cache.cache(&courier).await.unwrap();
 
         let handler = Handler::new(env.repository.clone(), env.cache.clone());
         let query = Query::new(super::super::CourierFilter {

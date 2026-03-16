@@ -15,7 +15,7 @@ use chrono::{DateTime, Utc};
 use thiserror::Error;
 use uuid::Uuid;
 
-use crate::domain::model::courier::{CourierStatus, WorkHours};
+use crate::domain::model::courier::{CourierError, WorkHours};
 use crate::domain::ports::{
     CacheError, CommandHandlerWithResult, CourierCache, CourierRepository, RepositoryError,
 };
@@ -48,6 +48,10 @@ pub enum UpdateWorkScheduleError {
     /// Cache error
     #[error("Cache error: {0}")]
     CacheError(#[from] CacheError),
+
+    /// Domain error
+    #[error("Domain error: {0}")]
+    DomainError(#[from] CourierError),
 }
 
 /// Response from updating work schedule
@@ -108,46 +112,16 @@ where
             .ok_or(UpdateWorkScheduleError::NotFound(cmd.courier_id))?;
 
         // 2. Check courier is not archived
-        let current_status = if let Ok(Some(state)) = self.cache.get_state(cmd.courier_id).await {
-            if state.status == CourierStatus::Archived {
-                return Err(UpdateWorkScheduleError::CourierArchived(cmd.courier_id));
-            }
-            Some(state.status)
-        } else {
-            None
-        };
-
-        let old_zone = courier.work_zone().to_string();
+        if courier.is_archived() {
+            return Err(UpdateWorkScheduleError::CourierArchived(cmd.courier_id));
+        }
 
         // 3. Update courier fields
-        if let Some(work_hours) = cmd.work_hours {
-            courier.update_work_hours(work_hours);
-        }
-        if let Some(ref work_zone) = cmd.work_zone {
-            courier.update_work_zone(work_zone.clone());
-        }
-        if let Some(max_distance_km) = cmd.max_distance_km {
-            courier.update_max_distance(max_distance_km);
-        }
+        courier.change_work_profile(cmd.work_hours, cmd.work_zone, cmd.max_distance_km)?;
 
-        // 4. If work zone changed and courier is FREE, update cache pools
-        if let Some(ref new_zone) = cmd.work_zone {
-            if new_zone != &old_zone {
-                if let Some(CourierStatus::Free) = current_status {
-                    // Remove from old zone pool
-                    self.cache
-                        .remove_from_free_pool(cmd.courier_id, &old_zone)
-                        .await?;
-                    // Add to new zone pool
-                    self.cache
-                        .add_to_free_pool(cmd.courier_id, new_zone)
-                        .await?;
-                }
-            }
-        }
-
-        // 5. Save to repository
+        // 4. Save and refresh cache snapshot
         self.repository.save(&courier).await?;
+        self.cache.cache(&courier).await?;
 
         let updated_at = Utc::now();
 

@@ -11,6 +11,15 @@ use crate::domain::model::vo::TransportType;
 
 use super::{CapacityError, CourierCapacity, CourierStatus};
 
+fn max_load_for_transport(transport_type: TransportType) -> u32 {
+    match transport_type {
+        TransportType::Walking => 1,
+        TransportType::Bicycle => 2,
+        TransportType::Motorcycle => 3,
+        TransportType::Car => 5,
+    }
+}
+
 /// Unique identifier for a Courier
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct CourierId(pub uuid::Uuid);
@@ -120,6 +129,10 @@ pub enum CourierError {
     },
     /// Courier not available for assignment
     NotAvailable,
+    /// Transport type or archival changes are blocked while active deliveries exist
+    ActiveDeliveriesPresent(u32),
+    /// Courier is already archived
+    AlreadyArchived,
 }
 
 impl fmt::Display for CourierError {
@@ -134,6 +147,10 @@ impl fmt::Display for CourierError {
                 write!(f, "Invalid status transition from {} to {}", from, to)
             }
             CourierError::NotAvailable => write!(f, "Courier is not available"),
+            CourierError::ActiveDeliveriesPresent(count) => {
+                write!(f, "Courier has {} active deliveries", count)
+            }
+            CourierError::AlreadyArchived => write!(f, "Courier is already archived"),
         }
     }
 }
@@ -229,34 +246,9 @@ impl CourierBuilder {
 
     /// Build the Courier aggregate
     pub fn build(self) -> Result<Courier, CourierError> {
-        // Validate email format (basic validation)
-        if !self.email.contains('@') || !self.email.contains('.') {
-            return Err(CourierError::InvalidEmail(
-                "Invalid email format".to_string(),
-            ));
-        }
-
-        // Validate phone (basic validation - should start with +)
-        if !self.phone.starts_with('+') || self.phone.len() < 10 {
-            return Err(CourierError::InvalidPhone(
-                "Phone must be in international format starting with +".to_string(),
-            ));
-        }
-
-        // Validate max distance
-        if self.max_distance_km <= 0.0 {
-            return Err(CourierError::InvalidMaxDistance(
-                "Max distance must be positive".to_string(),
-            ));
-        }
-
-        // Determine max load based on transport type
-        let max_load = match self.transport_type {
-            TransportType::Walking => 1,
-            TransportType::Bicycle => 2,
-            TransportType::Motorcycle => 3,
-            TransportType::Car => 5,
-        };
+        Courier::validate_phone(&self.phone)?;
+        Courier::validate_email(&self.email)?;
+        Courier::validate_max_distance(self.max_distance_km)?;
 
         let now = chrono::Utc::now();
 
@@ -271,7 +263,7 @@ impl CourierBuilder {
             work_hours: self.work_hours,
             push_token: self.push_token,
             status: CourierStatus::Unavailable, // Initial status
-            capacity: CourierCapacity::new(max_load),
+            capacity: CourierCapacity::new(max_load_for_transport(self.transport_type)),
             rating: 0.0,
             successful_deliveries: 0,
             failed_deliveries: 0,
@@ -317,15 +309,19 @@ impl Courier {
         work_hours: WorkHours,
         push_token: Option<String>,
         status: CourierStatus,
-        capacity: CourierCapacity,
+        current_load: u32,
         rating: f64,
         successful_deliveries: u32,
         failed_deliveries: u32,
         created_at: chrono::DateTime<chrono::Utc>,
         updated_at: chrono::DateTime<chrono::Utc>,
         version: u32,
-    ) -> Self {
-        Self {
+    ) -> Result<Self, CourierError> {
+        Self::validate_phone(&phone)?;
+        Self::validate_email(&email)?;
+        Self::validate_max_distance(max_distance_km)?;
+
+        Ok(Self {
             id,
             name,
             phone,
@@ -336,14 +332,17 @@ impl Courier {
             work_hours,
             push_token,
             status,
-            capacity,
+            capacity: CourierCapacity::reconstitute(
+                current_load,
+                max_load_for_transport(transport_type),
+            )?,
             rating,
             successful_deliveries,
             failed_deliveries,
             created_at,
             updated_at,
             version,
-        }
+        })
     }
 
     // === Getters ===
@@ -523,59 +522,157 @@ impl Courier {
         self.status.can_accept_assignment() && self.capacity.can_accept()
     }
 
-    /// Update push token
-    pub fn update_push_token(&mut self, token: Option<String>) {
-        self.push_token = token;
-        self.touch();
+    /// Check whether courier is archived.
+    pub fn is_archived(&self) -> bool {
+        self.status == CourierStatus::Archived
     }
 
-    /// Update work hours
-    pub fn update_work_hours(&mut self, work_hours: WorkHours) {
-        self.work_hours = work_hours;
-        self.touch();
+    /// Check whether courier is on shift at the provided time.
+    pub fn is_working_at(&self, at: chrono::DateTime<chrono::Utc>) -> bool {
+        self.work_hours.is_working_at(at.naive_utc())
     }
 
-    /// Update phone number
-    pub fn update_phone(&mut self, phone: String) {
-        self.phone = phone;
-        self.touch();
+    /// Change contact information in one invariant-preserving operation.
+    pub fn change_contact_info(
+        &mut self,
+        phone: Option<String>,
+        email: Option<String>,
+        push_token: Option<String>,
+    ) -> Result<(), CourierError> {
+        let mut changed = false;
+
+        if let Some(phone) = phone {
+            Self::validate_phone(&phone)?;
+            if self.phone != phone {
+                self.phone = phone;
+                changed = true;
+            }
+        }
+
+        if let Some(email) = email {
+            Self::validate_email(&email)?;
+            if self.email != email {
+                self.email = email;
+                changed = true;
+            }
+        }
+
+        if let Some(push_token) = push_token {
+            if self.push_token.as_deref() != Some(push_token.as_str()) {
+                self.push_token = Some(push_token);
+                changed = true;
+            }
+        }
+
+        if changed {
+            self.touch();
+        }
+
+        Ok(())
     }
 
-    /// Update email address
-    pub fn update_email(&mut self, email: String) {
-        self.email = email;
-        self.touch();
-    }
+    /// Change work profile in one invariant-preserving operation.
+    pub fn change_work_profile(
+        &mut self,
+        work_hours: Option<WorkHours>,
+        work_zone: Option<String>,
+        max_distance_km: Option<f64>,
+    ) -> Result<(), CourierError> {
+        let mut changed = false;
 
-    /// Update work zone
-    pub fn update_work_zone(&mut self, work_zone: String) {
-        self.work_zone = work_zone;
-        self.touch();
-    }
+        if let Some(work_hours) = work_hours {
+            if self.work_hours != work_hours {
+                self.work_hours = work_hours;
+                changed = true;
+            }
+        }
 
-    /// Update max distance
-    pub fn update_max_distance(&mut self, max_distance_km: f64) {
-        self.max_distance_km = max_distance_km;
-        self.touch();
+        if let Some(work_zone) = work_zone {
+            if self.work_zone != work_zone {
+                self.work_zone = work_zone;
+                changed = true;
+            }
+        }
+
+        if let Some(max_distance_km) = max_distance_km {
+            Self::validate_max_distance(max_distance_km)?;
+            if (self.max_distance_km - max_distance_km).abs() > f64::EPSILON {
+                self.max_distance_km = max_distance_km;
+                changed = true;
+            }
+        }
+
+        if changed {
+            self.touch();
+        }
+
+        Ok(())
     }
 
     /// Change transport type and recalculate max load
-    pub fn change_transport_type(&mut self, transport_type: TransportType) {
+    pub fn change_transport_type(
+        &mut self,
+        transport_type: TransportType,
+    ) -> Result<(), CourierError> {
+        if self.current_load() > 0 {
+            return Err(CourierError::ActiveDeliveriesPresent(self.current_load()));
+        }
+
         self.transport_type = transport_type;
-
-        // Recalculate max load based on new transport type
-        let new_max_load = match transport_type {
-            TransportType::Walking => 1,
-            TransportType::Bicycle => 2,
-            TransportType::Motorcycle => 3,
-            TransportType::Car => 5,
-        };
-
-        self.capacity = CourierCapacity::new(new_max_load);
+        self.capacity
+            .update_max_load(max_load_for_transport(transport_type))?;
         self.touch();
+
+        Ok(())
+    }
+
+    /// Archive a courier profile once it no longer has active deliveries.
+    pub fn archive(&mut self) -> Result<(), CourierError> {
+        if self.is_archived() {
+            return Err(CourierError::AlreadyArchived);
+        }
+
+        if self.current_load() > 0 {
+            return Err(CourierError::ActiveDeliveriesPresent(self.current_load()));
+        }
+
+        self.status = CourierStatus::Archived;
+        self.touch();
+
+        Ok(())
     }
 
     // === Private Methods ===
+
+    fn validate_phone(phone: &str) -> Result<(), CourierError> {
+        if !phone.starts_with('+') || phone.len() < 10 {
+            return Err(CourierError::InvalidPhone(
+                "Phone must be in international format starting with +".to_string(),
+            ));
+        }
+
+        Ok(())
+    }
+
+    fn validate_email(email: &str) -> Result<(), CourierError> {
+        if !email.contains('@') || !email.contains('.') {
+            return Err(CourierError::InvalidEmail(
+                "Invalid email format".to_string(),
+            ));
+        }
+
+        Ok(())
+    }
+
+    fn validate_max_distance(max_distance_km: f64) -> Result<(), CourierError> {
+        if max_distance_km <= 0.0 {
+            return Err(CourierError::InvalidMaxDistance(
+                "Max distance must be positive".to_string(),
+            ));
+        }
+
+        Ok(())
+    }
 
     /// Update the updated_at timestamp and increment version
     fn touch(&mut self) {

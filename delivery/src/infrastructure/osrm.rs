@@ -46,8 +46,8 @@ impl OsrmClient {
     ) -> Result<Self, OsrmError> {
         let mut default_headers = HeaderMap::new();
         if let (Some(name), Some(value)) = (auth_header_name, auth_header_value) {
-            let header_name =
-                HeaderName::from_bytes(name.as_bytes()).map_err(|e| OsrmError::ClientBuild(e.to_string()))?;
+            let header_name = HeaderName::from_bytes(name.as_bytes())
+                .map_err(|e| OsrmError::ClientBuild(e.to_string()))?;
             let header_value =
                 HeaderValue::from_str(value).map_err(|e| OsrmError::ClientBuild(e.to_string()))?;
             default_headers.insert(header_name, header_value);
@@ -79,11 +79,18 @@ impl OsrmClient {
             osrm.profile = "driving",
             osrm.coordinates = %coordinates
         );
-        let response =
-            nearest_api::nearest(&self.configuration, "driving", &coordinates, None, None, None, Some(1))
-                .instrument(span)
-                .await
-                .map_err(|e| OsrmError::Request(e.to_string()))?;
+        let response = nearest_api::nearest(
+            &self.configuration,
+            "driving",
+            &coordinates,
+            None,
+            None,
+            None,
+            Some(1),
+        )
+        .instrument(span)
+        .await
+        .map_err(|e| OsrmError::Request(e.to_string()))?;
 
         if response.code != "Ok" {
             return Err(OsrmError::InvalidCode(response.code));
@@ -143,7 +150,13 @@ mod tests {
             stream.write_all(response.as_bytes()).await.unwrap();
         });
 
-        let client = OsrmClient::new(format!("http://{address}"), Duration::from_secs(3), None, None).unwrap();
+        let client = OsrmClient::new(
+            format!("http://{address}"),
+            Duration::from_secs(3),
+            None,
+            None,
+        )
+        .unwrap();
         let result = client.nearest_driving(52.52, 13.405).await.unwrap();
 
         assert_eq!(result.street.as_deref(), Some("Unter den Linden"));
@@ -170,7 +183,13 @@ mod tests {
             stream.write_all(response.as_bytes()).await.unwrap();
         });
 
-        let client = OsrmClient::new(format!("http://{address}"), Duration::from_secs(3), None, None).unwrap();
+        let client = OsrmClient::new(
+            format!("http://{address}"),
+            Duration::from_secs(3),
+            None,
+            None,
+        )
+        .unwrap();
         let result = client.nearest_driving(52.52, 13.405).await;
 
         assert!(matches!(result, Err(OsrmError::InvalidCode(code)) if code == "NoSegment"));

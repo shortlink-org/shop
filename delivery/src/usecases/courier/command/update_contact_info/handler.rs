@@ -15,7 +15,7 @@ use chrono::{DateTime, Utc};
 use thiserror::Error;
 use uuid::Uuid;
 
-use crate::domain::model::courier::CourierStatus;
+use crate::domain::model::courier::CourierError;
 use crate::domain::ports::{
     CacheError, CommandHandlerWithResult, CourierCache, CourierRepository, RepositoryError,
 };
@@ -52,6 +52,10 @@ pub enum UpdateContactInfoError {
     /// Cache error
     #[error("Cache error: {0}")]
     CacheError(#[from] CacheError),
+
+    /// Domain error
+    #[error("Domain error: {0}")]
+    DomainError(#[from] CourierError),
 }
 
 /// Response from updating contact info
@@ -110,10 +114,8 @@ where
             .ok_or(UpdateContactInfoError::NotFound(cmd.courier_id))?;
 
         // 2. Check courier is not archived
-        if let Ok(Some(state)) = self.cache.get_state(cmd.courier_id).await {
-            if state.status == CourierStatus::Archived {
-                return Err(UpdateContactInfoError::CourierArchived(cmd.courier_id));
-            }
+        if courier.is_archived() {
+            return Err(UpdateContactInfoError::CourierArchived(cmd.courier_id));
         }
 
         // 3. Validate uniqueness for email if changing
@@ -131,17 +133,10 @@ where
         }
 
         // 4. Update courier
-        if let Some(phone) = cmd.phone {
-            courier.update_phone(phone);
-        }
-        if let Some(email) = cmd.email {
-            courier.update_email(email);
-        }
-        if let Some(push_token) = cmd.push_token {
-            courier.update_push_token(Some(push_token));
-        }
+        courier.change_contact_info(cmd.phone, cmd.email, cmd.push_token)?;
 
         self.repository.save(&courier).await?;
+        self.cache.cache(&courier).await?;
 
         let updated_at = Utc::now();
 

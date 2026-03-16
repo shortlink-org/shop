@@ -5,10 +5,12 @@
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use sea_orm::entity::prelude::*;
+use std::str::FromStr;
 use uuid::Uuid;
 
 use crate::domain::model::package::{
-    Address, DeliveryPeriod, Package, PackageError, PackageId, PackageStatus, Priority,
+    Address, DeliveryPeriod, NotDeliveredDetails, NotDeliveredReasonCode, Package, PackageError,
+    PackageId, PackageStatus, Priority,
 };
 use crate::domain::model::vo::location::Location;
 
@@ -50,7 +52,8 @@ pub struct Model {
     pub updated_at: DateTime<Utc>,
     pub assigned_at: Option<DateTime<Utc>>,
     pub delivered_at: Option<DateTime<Utc>>,
-    pub not_delivered_reason: Option<String>,
+    pub not_delivered_reason_code: Option<String>,
+    pub not_delivered_reason_description: Option<String>,
     pub version: i32,
 }
 
@@ -96,7 +99,12 @@ impl From<&Package> for ActiveModel {
             updated_at: Set(package.updated_at()),
             assigned_at: Set(package.assigned_at()),
             delivered_at: Set(package.delivered_at()),
-            not_delivered_reason: Set(package.not_delivered_reason().map(|s| s.to_string())),
+            not_delivered_reason_code: Set(package
+                .not_delivered_details()
+                .map(|details| details.code().to_string())),
+            not_delivered_reason_description: Set(package
+                .not_delivered_details()
+                .and_then(|details| details.description().map(|value| value.to_string()))),
             version: Set(package.version() as i32),
         }
     }
@@ -112,11 +120,7 @@ impl TryFrom<Model> for Package {
             Location::new(model.delivery_latitude, model.delivery_longitude, 10.0)
                 .map_err(|e| e.to_string())?;
 
-        let pickup_address = Address::new(
-            model.pickup_street,
-            model.pickup_city,
-            pickup_location,
-        );
+        let pickup_address = Address::new(model.pickup_street, model.pickup_city, pickup_location);
 
         let delivery_address = Address::new(
             model.delivery_street,
@@ -127,6 +131,10 @@ impl TryFrom<Model> for Package {
         let delivery_period =
             DeliveryPeriod::new(model.delivery_period_start, model.delivery_period_end)
                 .map_err(|e: PackageError| e.to_string())?;
+        let not_delivered_details = to_not_delivered_details(
+            model.not_delivered_reason_code.as_deref(),
+            model.not_delivered_reason_description.as_deref(),
+        )?;
 
         let priority = string_to_priority(&model.priority);
         let status = string_to_status(&model.status);
@@ -155,10 +163,25 @@ impl TryFrom<Model> for Package {
             model.updated_at,
             model.assigned_at,
             model.delivered_at,
-            model.not_delivered_reason,
+            not_delivered_details,
             model.version as u32,
         ))
     }
+}
+
+fn to_not_delivered_details(
+    code: Option<&str>,
+    description: Option<&str>,
+) -> Result<Option<NotDeliveredDetails>, String> {
+    let Some(code) = code else {
+        return Ok(None);
+    };
+
+    let code = NotDeliveredReasonCode::from_str(code)?;
+    Ok(Some(NotDeliveredDetails::new(
+        code,
+        description.map(|value| value.to_string()),
+    )))
 }
 
 fn priority_to_string(priority: Priority) -> String {

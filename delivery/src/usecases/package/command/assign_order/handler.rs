@@ -15,7 +15,7 @@
 
 use std::sync::Arc;
 
-use chrono::{Timelike, Utc};
+use chrono::Utc;
 use thiserror::Error;
 use tracing::{info, warn};
 use uuid::Uuid;
@@ -29,9 +29,9 @@ use crate::domain::ports::{
     NotificationService, OrderAssignedNotification, PackageRepository, RepositoryError,
 };
 use crate::domain::services::assignment_validation::{
-    AssignmentValidationService, CourierAvailability, PackageForValidation,
+    AssignmentContext, AssignmentValidationService,
 };
-use crate::domain::services::dispatch::{CourierForDispatch, DispatchService, PackageForDispatch};
+use crate::domain::services::dispatch::{DispatchCandidate, DispatchService};
 
 use super::command::AssignmentMode;
 use super::Command;
@@ -128,11 +128,11 @@ where
         }
     }
 
-    /// Convert Courier entity to CourierForDispatch with location from cache
-    async fn courier_to_dispatch_with_location(
+    /// Build a dispatch candidate using cached location when available.
+    async fn courier_to_dispatch_candidate(
         &self,
-        courier: &crate::domain::model::courier::Courier,
-    ) -> CourierForDispatch {
+        courier: crate::domain::model::courier::Courier,
+    ) -> DispatchCandidate {
         // Try to get location from cache
         let current_location = match self.location_cache.get_location(courier.id().0).await {
             Ok(Some(loc)) => Some(*loc.reported_position()),
@@ -147,21 +147,10 @@ where
             }
         };
 
-        CourierForDispatch {
-            id: courier.id().0.to_string(),
-            status: courier.status(),
-            transport_type: courier.transport_type(),
-            max_distance_km: courier.max_distance_km(),
-            capacity: courier.capacity().clone(),
+        DispatchCandidate {
+            courier,
             current_location,
-            rating: courier.rating(),
-            work_zone: courier.work_zone().to_string(),
         }
-    }
-
-    /// Get current hour for working hours validation
-    fn current_hour() -> u8 {
-        Utc::now().time().hour() as u8
     }
 }
 
@@ -192,62 +181,38 @@ where
         // 3. Find courier based on assignment mode
         let (courier_id, estimated_minutes) = match cmd.mode {
             AssignmentMode::Auto => {
-                // Get available couriers from cache
                 let zone = package.zone();
-                let free_courier_ids = self
-                    .courier_cache
-                    .get_free_couriers_in_zone(zone)
-                    .await
-                    .map_err(|e| {
-                        AssignOrderError::RepositoryError(RepositoryError::QueryError(
-                            e.to_string(),
-                        ))
-                    })?;
+                let available_couriers = self
+                    .courier_repo
+                    .find_by_filter(
+                        crate::domain::ports::CourierFilter::available_in_zone(zone).not_archived(),
+                        500,
+                        0,
+                    )
+                    .await?;
 
-                if free_courier_ids.is_empty() {
+                if available_couriers.is_empty() {
                     return Err(AssignOrderError::NoAvailableCourier(zone.to_string()));
                 }
 
-                // Load courier details with locations from cache
                 let mut couriers_for_dispatch = Vec::new();
-                for id in free_courier_ids {
-                    if let Some(courier) = self.courier_repo.find_by_id(id).await? {
-                        couriers_for_dispatch
-                            .push(self.courier_to_dispatch_with_location(&courier).await);
-                    }
+                for courier in available_couriers {
+                    couriers_for_dispatch.push(self.courier_to_dispatch_candidate(courier).await);
                 }
 
-                // Create PackageForDispatch
-                let package_for_dispatch = PackageForDispatch {
-                    id: package.id().0.to_string(),
-                    pickup_location: package.pickup_address().location,
-                    delivery_zone: zone.to_string(),
-                    is_urgent: package.priority()
-                        == crate::domain::model::package::Priority::Urgent,
-                };
-
-                // Use DispatchService to find nearest courier
-                let dispatch_result = DispatchService::find_nearest_courier(
-                    &couriers_for_dispatch,
-                    &package_for_dispatch,
-                )
-                .map_err(|failure| {
-                    tracing::debug!(
-                        zone = %zone,
-                        rejections = ?failure.rejections,
-                        "No courier available for dispatch"
-                    );
-                    AssignOrderError::NoAvailableCourier(zone.to_string())
-                })?;
-
-                let courier_uuid = Uuid::parse_str(&dispatch_result.courier_id).map_err(|_| {
-                    AssignOrderError::RepositoryError(RepositoryError::QueryError(
-                        "Invalid courier ID from dispatch".to_string(),
-                    ))
-                })?;
+                let dispatch_result =
+                    DispatchService::find_nearest_courier(&couriers_for_dispatch, &package)
+                        .map_err(|failure| {
+                            tracing::debug!(
+                                zone = %zone,
+                                rejections = ?failure.rejections,
+                                "No courier available for dispatch"
+                            );
+                            AssignOrderError::NoAvailableCourier(zone.to_string())
+                        })?;
 
                 (
-                    courier_uuid,
+                    dispatch_result.courier_id,
                     dispatch_result.estimated_arrival_minutes as u32,
                 )
             }
@@ -261,7 +226,6 @@ where
                     .await?
                     .ok_or(AssignOrderError::CourierNotFound(courier_id))?;
 
-                // Check courier status
                 if courier.status() != CourierStatus::Free {
                     return Err(AssignOrderError::CourierNotAvailable(format!(
                         "Courier status is {:?}",
@@ -269,70 +233,45 @@ where
                     )));
                 }
 
-                // Get distance from location cache for validation
                 let distance_to_courier = match self.location_cache.get_location(courier_id).await {
-                    Ok(Some(loc)) => loc
-                        .reported_position()
-                        .distance_to(&package.pickup_address().location),
-                    _ => 0.0, // Default to 0 if location not available
+                    Ok(Some(loc)) => Some(
+                        loc.reported_position()
+                            .distance_to(&package.pickup_address().location),
+                    ),
+                    _ => None,
                 };
 
-                // Validate using AssignmentValidationService
-                let work_hours = courier.work_hours();
-                let courier_availability = CourierAvailability {
-                    status: courier.status(),
-                    current_load: courier.current_load(),
-                    max_load: courier.max_load(),
-                    work_start_hour: work_hours.start.hour() as u8,
-                    work_end_hour: work_hours.end.hour() as u8,
-                    max_distance_km: courier.max_distance_km(),
-                };
-
-                let package_for_validation = PackageForValidation {
-                    status: package.status(),
-                    distance_to_courier_km: distance_to_courier,
-                };
-
-                AssignmentValidationService::validate(
-                    &courier_availability,
-                    &package_for_validation,
-                    Self::current_hour(),
-                )
+                AssignmentValidationService::validate(AssignmentContext {
+                    courier: &courier,
+                    package: &package,
+                    current_time: Utc::now(),
+                    distance_to_pickup_km: distance_to_courier,
+                })
                 .map_err(|errors| {
                     let error_msgs: Vec<String> = errors.iter().map(|e| e.to_string()).collect();
                     AssignOrderError::ValidationFailed(error_msgs.join("; "))
                 })?;
 
-                // Estimate delivery time based on transport type
-                let estimated = courier.transport_type().calculate_travel_time_minutes(
-                    if distance_to_courier > 0.0 {
-                        distance_to_courier
-                    } else {
-                        5.0
-                    },
-                );
+                let estimated = courier
+                    .transport_type()
+                    .calculate_travel_time_minutes(distance_to_courier.unwrap_or(5.0));
                 (courier_id, estimated as u32)
             }
         };
 
-        // 4. Assign package to courier (transitions to ASSIGNED status)
-        package.assign_to(courier_id).map_err(|e| {
-            AssignOrderError::ValidationFailed(format!("Failed to assign package: {}", e))
-        })?;
-
-        // 5. Update courier load in cache
-        let courier = self
+        // 4. Apply both aggregate mutations before persisting.
+        let mut courier = self
             .courier_repo
             .find_by_id(courier_id)
             .await?
             .ok_or(AssignOrderError::CourierNotFound(courier_id))?;
 
-        self.courier_cache
-            .update_load(courier_id, courier.current_load() + 1, courier.max_load())
-            .await
-            .map_err(|e| {
-                AssignOrderError::RepositoryError(RepositoryError::QueryError(e.to_string()))
-            })?;
+        package.assign_to(courier_id).map_err(|e| {
+            AssignOrderError::ValidationFailed(format!("Failed to assign package: {}", e))
+        })?;
+        courier.accept_package().map_err(|e| {
+            AssignOrderError::ValidationFailed(format!("Failed to reserve courier capacity: {}", e))
+        })?;
 
         let now = Utc::now();
         let events = vec![DomainEvent::PackageAssigned(PackageAssignedEvent {
@@ -374,10 +313,13 @@ where
             }),
         })];
 
-        // 6. Save package and outbox rows atomically.
+        // 6. Save both aggregates and outbox rows atomically.
         self.package_repo
-            .save_with_events(&package, &events)
+            .save_courier_with_package_and_events(&courier, &package, &events)
             .await?;
+        self.courier_cache.cache(&courier).await.map_err(|e| {
+            AssignOrderError::RepositoryError(RepositoryError::QueryError(e.to_string()))
+        })?;
         info!(
             package_id = %cmd.package_id,
             courier_id = %courier_id,
@@ -438,7 +380,7 @@ mod tests {
         NotificationError, PackageFilter,
     };
     use async_trait::async_trait;
-    use chrono::Utc;
+    use chrono::{Timelike, Utc};
     use std::collections::HashMap;
     use std::sync::Mutex;
 
@@ -540,12 +482,7 @@ mod tests {
 
     #[async_trait]
     impl CourierCache for MockCourierCache {
-        async fn initialize_state(
-            &self,
-            _courier_id: Uuid,
-            _state: CachedCourierState,
-            _work_zone: &str,
-        ) -> Result<(), CacheError> {
+        async fn cache(&self, _courier: &Courier) -> Result<(), CacheError> {
             Ok(())
         }
 
@@ -556,36 +493,8 @@ mod tests {
             Ok(None)
         }
 
-        async fn set_status(
-            &self,
-            _courier_id: Uuid,
-            _status: CourierStatus,
-            _work_zone: &str,
-        ) -> Result<(), CacheError> {
-            Ok(())
-        }
-
         async fn get_status(&self, _courier_id: Uuid) -> Result<Option<CourierStatus>, CacheError> {
             Ok(Some(CourierStatus::Free))
-        }
-
-        async fn update_load(
-            &self,
-            _courier_id: Uuid,
-            _current_load: u32,
-            _max_load: u32,
-        ) -> Result<(), CacheError> {
-            Ok(())
-        }
-
-        async fn update_stats(
-            &self,
-            _courier_id: Uuid,
-            _rating: f64,
-            _successful_deliveries: u32,
-            _failed_deliveries: u32,
-        ) -> Result<(), CacheError> {
-            Ok(())
         }
 
         async fn get_free_couriers_in_zone(&self, _zone: &str) -> Result<Vec<Uuid>, CacheError> {
@@ -604,38 +513,6 @@ mod tests {
 
         async fn exists(&self, _courier_id: Uuid) -> Result<bool, CacheError> {
             Ok(true)
-        }
-
-        async fn update_status(
-            &self,
-            _courier_id: Uuid,
-            _status: CourierStatus,
-        ) -> Result<(), CacheError> {
-            Ok(())
-        }
-
-        async fn update_max_load(
-            &self,
-            _courier_id: Uuid,
-            _max_load: u32,
-        ) -> Result<(), CacheError> {
-            Ok(())
-        }
-
-        async fn add_to_free_pool(
-            &self,
-            _courier_id: Uuid,
-            _work_zone: &str,
-        ) -> Result<(), CacheError> {
-            Ok(())
-        }
-
-        async fn remove_from_free_pool(
-            &self,
-            _courier_id: Uuid,
-            _work_zone: &str,
-        ) -> Result<(), CacheError> {
-            Ok(())
         }
     }
 
@@ -662,6 +539,15 @@ mod tests {
             let mut packages = self.packages.lock().unwrap();
             packages.insert(package.id().0, package.clone());
             Ok(())
+        }
+
+        async fn save_courier_with_package_and_events(
+            &self,
+            _courier: &Courier,
+            package: &Package,
+            _events: &[DomainEvent],
+        ) -> Result<(), RepositoryError> {
+            self.save(package).await
         }
 
         async fn find_by_id(&self, id: PackageId) -> Result<Option<Package>, RepositoryError> {
@@ -839,7 +725,7 @@ mod tests {
             courier.work_hours().clone(),
             None, // push_token
             courier.status(),
-            courier.capacity().clone(),
+            courier.current_load(),
             courier.rating(),
             courier.successful_deliveries(),
             courier.failed_deliveries(),
@@ -847,6 +733,7 @@ mod tests {
             courier.updated_at(),
             courier.version(),
         )
+        .unwrap()
     }
 
     // ==================== Tests ====================

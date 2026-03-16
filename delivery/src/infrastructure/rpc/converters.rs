@@ -109,6 +109,8 @@ pub fn courier_to_proto(
     current_location: Option<&CourierLocation>,
 ) -> ProtoCourier {
     let created_at = courier.created_at();
+    let fallback_state = CachedCourierState::from(courier);
+    let state = state.unwrap_or(&fallback_state);
 
     ProtoCourier {
         courier_id: courier.id().0.to_string(),
@@ -117,18 +119,15 @@ pub fn courier_to_proto(
         email: courier.email().to_string(),
         transport_type: domain_to_proto_transport(courier.transport_type()).into(),
         max_distance_km: courier.max_distance_km(),
-        status: state
-            .map(|s| domain_to_proto_status(s.status))
-            .unwrap_or(CourierStatus::Unavailable)
-            .into(),
-        current_load: state.map(|s| s.current_load as i32).unwrap_or(0),
+        status: domain_to_proto_status(state.status).into(),
+        current_load: state.current_load as i32,
         max_load: courier.max_load() as i32,
-        rating: state.map(|s| s.rating).unwrap_or(0.0),
+        rating: state.rating,
         work_hours: Some(domain_to_proto_work_hours(courier.work_hours())),
         work_zone: courier.work_zone().to_string(),
         current_location: current_location.map(courier_location_to_proto_location),
-        successful_deliveries: state.map(|s| s.successful_deliveries as i32).unwrap_or(0),
-        failed_deliveries: state.map(|s| s.failed_deliveries as i32).unwrap_or(0),
+        successful_deliveries: state.successful_deliveries as i32,
+        failed_deliveries: state.failed_deliveries as i32,
         created_at: Some(prost_types::Timestamp {
             seconds: created_at.timestamp(),
             nanos: created_at.timestamp_subsec_nanos() as i32,

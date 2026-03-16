@@ -21,6 +21,7 @@ type Handler struct {
 	log       logger.Logger
 	uow       ports.UnitOfWork
 	orderRepo ports.OrderRepository
+	inboxRepo ports.DeliveryInboxRepository
 	publisher ports.EventPublisher
 }
 
@@ -29,22 +30,31 @@ func NewHandler(
 	log logger.Logger,
 	uow ports.UnitOfWork,
 	orderRepo ports.OrderRepository,
+	inboxRepo ports.DeliveryInboxRepository,
 	publisher ports.EventPublisher,
 ) (*Handler, error) {
 	return &Handler{
 		log:       log,
 		uow:       uow,
 		orderRepo: orderRepo,
+		inboxRepo: inboxRepo,
 		publisher: publisher,
 	}, nil
 }
 
+const deliveryInboxConsumerName = "oms.delivery-status"
+
 // HandleDeliveryStatus processes a delivery status event.
 // Pattern: Begin -> Load -> Mutate -> Save -> Publish in tx -> Commit.
 func (h *Handler) HandleDeliveryStatus(ctx context.Context, event kafka.DeliveryStatusEvent) error {
+	if event.MessageID == "" {
+		return errors.New("delivery event message_id is required")
+	}
+
 	h.log.Info("Processing delivery status event",
-		slog.String("package_id", event.PackageID),
-		slog.String("order_id", event.OrderID),
+		slog.String("message_id", event.MessageID),
+		slog.String("package_id", event.PackageID.String()),
+		slog.String("order_id", event.OrderID.String()),
 		slog.String("status", event.Status),
 		slog.String("event_type", string(event.EventType)))
 
@@ -65,6 +75,26 @@ func (h *Handler) HandleDeliveryStatus(ctx context.Context, event kafka.Delivery
 		}
 	}()
 
+	inserted, err := h.inboxRepo.TryRecord(ctx, deliveryInboxConsumerName, event.MessageID, kafka.TopicDeliveryPackageStatus)
+	if err != nil {
+		return fmt.Errorf("failed to record delivery inbox message: %w", err)
+	}
+
+	if !inserted {
+		h.log.Info("Ignoring duplicate delivery message by inbox",
+			slog.String("message_id", event.MessageID),
+			slog.String("package_id", event.PackageID.String()),
+			slog.String("order_id", event.OrderID.String()),
+			slog.String("event_type", string(event.EventType)))
+
+		if err := h.uow.Commit(ctx); err != nil {
+			return fmt.Errorf("failed to commit noop transaction: %w", err)
+		}
+		committed = true
+
+		return nil
+	}
+
 	order, err := h.loadOrderForEvent(ctx, event)
 	if err != nil {
 		return err
@@ -72,7 +102,7 @@ func (h *Handler) HandleDeliveryStatus(ctx context.Context, event kafka.Delivery
 
 	if isDuplicateOrStale(order, event.EventType) {
 		h.log.Info("Ignoring duplicate or stale delivery event",
-			slog.String("package_id", event.PackageID),
+			slog.String("package_id", event.PackageID.String()),
 			slog.String("order_id", order.GetOrderID().String()),
 			slog.String("event_type", string(event.EventType)),
 			slog.String("current_delivery_status", order.GetDeliveryStatus().String()))
@@ -114,13 +144,8 @@ func (h *Handler) HandleDeliveryStatus(ctx context.Context, event kafka.Delivery
 }
 
 func (h *Handler) loadOrderForEvent(ctx context.Context, event kafka.DeliveryStatusEvent) (*orderv1.OrderState, error) {
-	if event.OrderID != "" {
-		orderID, err := uuid.Parse(event.OrderID)
-		if err != nil {
-			return nil, fmt.Errorf("invalid order_id: %w", err)
-		}
-
-		order, err := h.orderRepo.Load(ctx, orderID)
+	if event.OrderID != uuid.Nil {
+		order, err := h.orderRepo.Load(ctx, event.OrderID)
 		if err != nil {
 			if errors.Is(err, ports.ErrNotFound) {
 				return nil, fmt.Errorf("order not found for delivery event: %w", err)
@@ -132,15 +157,14 @@ func (h *Handler) loadOrderForEvent(ctx context.Context, event kafka.DeliverySta
 		return order, nil
 	}
 
-	packageID, err := parseRequiredUUID("package_id", event.PackageID)
-	if err != nil {
-		return nil, err
+	if event.PackageID == uuid.Nil {
+		return nil, errors.New("package_id is required")
 	}
 
-	order, err := h.orderRepo.LoadByPackageID(ctx, *packageID)
+	order, err := h.orderRepo.LoadByPackageID(ctx, event.PackageID)
 	if err != nil {
 		if errors.Is(err, ports.ErrNotFound) {
-			return nil, fmt.Errorf("order not found for package_id %s: %w", event.PackageID, err)
+			return nil, fmt.Errorf("order not found for package_id %s: %w", event.PackageID.String(), err)
 		}
 
 		return nil, fmt.Errorf("failed to load order by package_id: %w", err)
@@ -150,14 +174,14 @@ func (h *Handler) loadOrderForEvent(ctx context.Context, event kafka.DeliverySta
 }
 
 func applyDeliveryEvent(order *orderv1.OrderState, event kafka.DeliveryStatusEvent) error {
-	packageID, err := parseOptionalUUID("package_id", event.PackageID)
-	if err != nil {
-		return err
+	var packageID *uuid.UUID
+	if event.PackageID != uuid.Nil {
+		packageID = &event.PackageID
 	}
 
-	courierID, err := parseOptionalUUID("courier_id", event.CourierID)
-	if err != nil {
-		return err
+	var courierID *uuid.UUID
+	if event.CourierID != uuid.Nil {
+		courierID = &event.CourierID
 	}
 
 	switch event.EventType {
@@ -197,17 +221,18 @@ func isDuplicateOrStale(order *orderv1.OrderState, eventType kafka.DeliveryEvent
 		return true
 	}
 
-	if currentStatus == commonv1.DeliveryStatus_DELIVERY_STATUS_DELIVERED &&
-		targetStatus == commonv1.DeliveryStatus_DELIVERY_STATUS_NOT_DELIVERED {
+	allowedSources, ok := allowedDeliveryTransitionSources[targetStatus]
+	if !ok {
 		return false
 	}
 
-	if currentStatus == commonv1.DeliveryStatus_DELIVERY_STATUS_NOT_DELIVERED &&
-		targetStatus == commonv1.DeliveryStatus_DELIVERY_STATUS_DELIVERED {
-		return false
+	for _, allowedSource := range allowedSources {
+		if currentStatus == allowedSource {
+			return false
+		}
 	}
 
-	return deliveryStatusRank(currentStatus) > deliveryStatusRank(targetStatus)
+	return true
 }
 
 func targetDeliveryStatus(eventType kafka.DeliveryEventType) (commonv1.DeliveryStatus, bool) {
@@ -227,41 +252,31 @@ func targetDeliveryStatus(eventType kafka.DeliveryEventType) (commonv1.DeliveryS
 	}
 }
 
-func deliveryStatusRank(status commonv1.DeliveryStatus) int {
-	switch status {
-	case commonv1.DeliveryStatus_DELIVERY_STATUS_ACCEPTED:
-		return 1
-	case commonv1.DeliveryStatus_DELIVERY_STATUS_ASSIGNED:
-		return 2
-	case commonv1.DeliveryStatus_DELIVERY_STATUS_IN_TRANSIT:
-		return 3
-	case commonv1.DeliveryStatus_DELIVERY_STATUS_DELIVERED,
-		commonv1.DeliveryStatus_DELIVERY_STATUS_NOT_DELIVERED:
-		return 4
-	default:
-		return 0
-	}
-}
-
-func parseRequiredUUID(fieldName, value string) (*uuid.UUID, error) {
-	if value == "" {
-		return nil, fmt.Errorf("%s is required", fieldName)
-	}
-
-	return parseOptionalUUID(fieldName, value)
-}
-
-func parseOptionalUUID(fieldName, value string) (*uuid.UUID, error) {
-	if value == "" {
-		return nil, nil
-	}
-
-	parsed, err := uuid.Parse(value)
-	if err != nil {
-		return nil, fmt.Errorf("invalid %s: %w", fieldName, err)
-	}
-
-	return &parsed, nil
+var allowedDeliveryTransitionSources = map[commonv1.DeliveryStatus][]commonv1.DeliveryStatus{
+	commonv1.DeliveryStatus_DELIVERY_STATUS_ACCEPTED: {
+		commonv1.DeliveryStatus_DELIVERY_STATUS_UNSPECIFIED,
+	},
+	commonv1.DeliveryStatus_DELIVERY_STATUS_ASSIGNED: {
+		commonv1.DeliveryStatus_DELIVERY_STATUS_UNSPECIFIED,
+		commonv1.DeliveryStatus_DELIVERY_STATUS_ACCEPTED,
+	},
+	commonv1.DeliveryStatus_DELIVERY_STATUS_IN_TRANSIT: {
+		commonv1.DeliveryStatus_DELIVERY_STATUS_UNSPECIFIED,
+		commonv1.DeliveryStatus_DELIVERY_STATUS_ACCEPTED,
+		commonv1.DeliveryStatus_DELIVERY_STATUS_ASSIGNED,
+	},
+	commonv1.DeliveryStatus_DELIVERY_STATUS_DELIVERED: {
+		commonv1.DeliveryStatus_DELIVERY_STATUS_UNSPECIFIED,
+		commonv1.DeliveryStatus_DELIVERY_STATUS_ACCEPTED,
+		commonv1.DeliveryStatus_DELIVERY_STATUS_ASSIGNED,
+		commonv1.DeliveryStatus_DELIVERY_STATUS_IN_TRANSIT,
+	},
+	commonv1.DeliveryStatus_DELIVERY_STATUS_NOT_DELIVERED: {
+		commonv1.DeliveryStatus_DELIVERY_STATUS_UNSPECIFIED,
+		commonv1.DeliveryStatus_DELIVERY_STATUS_ACCEPTED,
+		commonv1.DeliveryStatus_DELIVERY_STATUS_ASSIGNED,
+		commonv1.DeliveryStatus_DELIVERY_STATUS_IN_TRANSIT,
+	},
 }
 
 func mapDeliveryLocation(location *deliverycommon.Location) *commonv1.DeliveryLocation {

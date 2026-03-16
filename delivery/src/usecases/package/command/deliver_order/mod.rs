@@ -5,5 +5,5 @@
 mod command;
 mod handler;
 
-pub use command::{Command, DeliveryResult, NotDeliveredReason};
+pub use command::{ConfirmDelivered, ConfirmNotDelivered, NotDeliveredReason};
 pub use handler::{DeliverOrderError, Handler, Response};

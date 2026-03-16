@@ -30,8 +30,8 @@ func TestDeliveryConsumer_UnmarshalDeliveryEvent_PackageAssigned(t *testing.T) {
 
 	statusEvent, err := (&DeliveryConsumer{}).unmarshalDeliveryEvent("PackageAssignedEvent", payload)
 	require.NoError(t, err)
-	require.Equal(t, event.GetPackageId(), statusEvent.PackageID)
-	require.Equal(t, event.GetCourierId(), statusEvent.CourierID)
+	require.Equal(t, event.GetPackageId(), statusEvent.PackageID.String())
+	require.Equal(t, event.GetCourierId(), statusEvent.CourierID.String())
 	require.Equal(t, EventTypePackageAssigned, statusEvent.EventType)
 	require.Equal(t, "PACKAGE_STATUS_ASSIGNED", statusEvent.Status)
 	require.Equal(t, occurredAt, statusEvent.OccurredAt)
