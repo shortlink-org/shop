@@ -39,7 +39,7 @@
     "axios": "^1.13.6",
     "clsx": "^2.1.1",
     "geist": "^1.7.0",
-    "next": "16.1.6",
+    "next": "16.1.7",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hook-form": "^7.71.2",
@@ -50,7 +50,7 @@
   },
   "devDependencies": {
     "eslint": "^9.39.4",
-    "eslint-config-next": "^16.1.6",
+    "eslint-config-next": "^16.1.7",
     "@shortlink-org/ui-kit": "^0.20260316.123250",
     "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/postcss": "^4.2.1",
