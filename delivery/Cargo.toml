@@ -52,7 +52,7 @@ dotenvy = "0.15.7"
 
 # Logging
 tracing = "0.1.44"
-tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 
 # Temporal SDK (pre-alpha, Git dependency)
 temporalio-sdk = { git = "https://github.com/temporalio/sdk-core", rev = "c6b601dee511d603a7e379a69d2ae5438f077fd5", package = "temporalio-sdk" }
