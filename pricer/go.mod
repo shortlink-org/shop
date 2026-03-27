@@ -6,7 +6,7 @@ require (
 	github.com/dgraph-io/ristretto/v2 v2.4.0
 	github.com/google/uuid v1.6.0
 	github.com/google/wire v0.7.0
-	github.com/open-policy-agent/opa v1.14.1
+	github.com/open-policy-agent/opa v1.15.0
 	github.com/shopspring/decimal v1.4.0
 	github.com/shortlink-org/go-sdk/config v0.0.0-20260307190635-c49239be411f
 	github.com/shortlink-org/go-sdk/context v0.0.0-20260307190635-c49239be411f
