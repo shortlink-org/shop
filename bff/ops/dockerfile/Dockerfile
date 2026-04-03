@@ -8,7 +8,7 @@
 ARG WGC_VERSION=0.109.0
 ARG COSMO_ROUTER_VERSION=0.300.1
 
-FROM node:24.14.0-alpine AS builder
+FROM node:24.14.1-alpine AS builder
 
 WORKDIR /build
 
