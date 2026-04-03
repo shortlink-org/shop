@@ -184,9 +184,9 @@ django-filter==25.2 \
     --hash=sha256:760e984a931f4468d096f5541787efb8998c61217b73006163bf2f9523fe8f23 \
     --hash=sha256:9c0f8609057309bba611062fe1b720b4a873652541192d232dd28970383633e3
     # via shop-admin (pyproject.toml)
-django-health-check==4.1.2 \
-    --hash=sha256:78c2523ed500e78e55061813abf21a9d8dddded0c74e46a1335c99c87c85ecce \
-    --hash=sha256:e4a9e5996ec40c5ade665363c468228682c42937d5b4a05606dc13621ab74fb9
+django-health-check==4.2.1 \
+    --hash=sha256:7216ba208f82f7587dc0ac0fe4c8f8a1c4d0cebbbae46cff6bd89779b378daf3 \
+    --hash=sha256:aa05f57d6b01fe502842273aaa944e988b85d1f58e3ea67b6f98c5f9808a530a
     # via shop-admin (pyproject.toml)
 django-map-widgets==0.5.2 \
     --hash=sha256:08e20134c93c346d37b5ca9bf80b9a5cb3c76d450752dc31bb8932c3022d3221 \
