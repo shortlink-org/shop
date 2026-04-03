@@ -12,8 +12,8 @@ importers:
         specifier: ^4.1.6
         version: 4.1.6(graphql-ws@6.0.7(graphql@16.13.1)(ws@8.19.0))(graphql@16.13.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(rxjs@7.8.2)
       '@ory/client':
-        specifier: ^1.22.28
-        version: 1.22.28
+        specifier: ^1.22.34
+        version: 1.22.34
       '@shortlink-org/ui-kit':
         specifier: ^0.20260316.123250
         version: 0.20260316.123250(@babel/core@7.29.0)(@mui/system@7.3.9(@types/react@19.2.14)(react@19.2.4))(@types/node@24.12.0)(@types/react-dom@19.2.3(@types/react@19.2.14))(babel-plugin-react-compiler@1.0.0)(date-fns@4.1.0)(postcss@8.5.8)(rollup@4.59.0)(typescript@6.0.2)(vite@7.3.1(@types/node@24.12.0)(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.8.2))
@@ -1404,8 +1404,8 @@ packages:
     resolution: {integrity: sha512-nn5ozdjYQpUCZlWGuxcJY/KpxkWQs4DcbMCmKojjyrYDEAGy4Ce19NN4v5MduafTwJlbKc99UA8YhSVqq9yPZA==}
     engines: {node: '>=12.4.0'}
 
-  '@ory/client@1.22.28':
-    resolution: {integrity: sha512-6AFFn6EcEDLlP/MGQ8IFwl6DcIHCgEMTqCtRsn3FaDGiH1Q/6+NCLiQ0kDT8jt9DsPBhN3FeH4aQj9TmlOZUew==}
+  '@ory/client@1.22.34':
+    resolution: {integrity: sha512-PtqpaU5kHBiw8VmK8mygRCdYbBNmjWz63q2X+PywVulPNGvpurTBvXxYep204zbk55Go7MBvzhsADAoq0njN+Q==}
 
   '@popperjs/core@2.11.8':
     resolution: {integrity: sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==}
@@ -6260,7 +6260,7 @@ snapshots:
 
   '@nolyfill/is-core-module@1.0.39': {}
 
-  '@ory/client@1.22.28':
+  '@ory/client@1.22.34':
     dependencies:
       axios: 1.13.6
     transitivePeerDependencies:
