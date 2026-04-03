@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.22
+# syntax=docker/dockerfile:1.23
 # Multi-stage build for Cosmo Router
 # https://cosmo-docs.wundergraph.com/deployments-and-hosting/docker
 
