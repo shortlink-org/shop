@@ -20,7 +20,7 @@ dependencies = [
   'django-health-check==4.1.2',
   'django-prometheus==2.5.0.dev12',  # Django 6 support (pre-release)
   'django-request-logging==0.7.5',
-  'djangorestframework==3.16.1',
+  'djangorestframework==3.17.1',
   'markdown',
   'django-filter',
   'drf-spectacular==0.29.0',
