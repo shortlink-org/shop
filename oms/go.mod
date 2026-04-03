@@ -40,7 +40,7 @@ require (
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.41.0
 	go.opentelemetry.io/otel/sdk/metric v1.42.0
 	go.opentelemetry.io/otel/trace v1.42.0
-	go.temporal.io/api v1.62.5
+	go.temporal.io/api v1.62.6
 	go.temporal.io/sdk v1.41.1
 	google.golang.org/grpc v1.79.3
 	google.golang.org/protobuf v1.36.11
