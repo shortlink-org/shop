@@ -6,7 +6,7 @@ require (
 	github.com/IBM/sarama v1.47.0
 	github.com/ThreeDotsLabs/watermill v1.5.1
 	github.com/ThreeDotsLabs/watermill-kafka/v3 v3.1.2
-	github.com/ThreeDotsLabs/watermill-sql/v4 v4.1.2
+	github.com/ThreeDotsLabs/watermill-sql/v4 v4.1.3
 	github.com/alicebob/miniredis/v2 v2.37.0
 	github.com/authzed/authzed-go v1.8.0
 	github.com/dgraph-io/ristretto/v2 v2.4.0
