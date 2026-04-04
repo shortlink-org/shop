@@ -25,7 +25,7 @@ dependencies = [
   'django-filter',
   'drf-spectacular==0.29.0',
   'drf-yasg==1.21.15',
-  'googleapis-common-protos==1.73.0',
+  'googleapis-common-protos==1.74.0',
   'grpcio==1.78.0',
   'idna==3.11',
   'importlib-metadata==9.0.0', # TODO: depencies of opentelemetry-api
