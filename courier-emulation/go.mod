@@ -8,7 +8,7 @@ require (
 	github.com/ThreeDotsLabs/watermill-kafka/v3 v3.1.2
 	github.com/dgraph-io/ristretto/v2 v2.4.0
 	github.com/google/wire v0.7.0
-	github.com/oapi-codegen/runtime v1.2.0
+	github.com/oapi-codegen/runtime v1.3.1
 	github.com/shortlink-org/go-sdk/config v0.0.0-20260307200444-15cb7da01fe0
 	github.com/shortlink-org/go-sdk/context v0.0.0-20260307200444-15cb7da01fe0
 	github.com/shortlink-org/go-sdk/flags v0.0.0-20260307200444-15cb7da01fe0
