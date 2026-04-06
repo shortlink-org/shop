@@ -1,9 +1,8 @@
-import { Button } from '@shortlink-org/ui-kit';
+import { Button } from '@/lib/ui-kit';
 import { ClipboardDocumentListIcon, FireIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import { StorefrontHero } from 'components/layout/storefront-hero';
 import { ShopLeaderboard } from 'components/layout/shop-leaderboard';
 import { ShopProductGrid } from 'components/layout/shop-product-grid';
-import { ShopSidebar } from 'components/layout/shop-sidebar';
 import { RetryButton } from 'components/retry-button';
 import { getCollectionProducts, GOODS_UNAVAILABLE } from 'lib/shopify';
 import { headers } from 'next/headers';
@@ -27,10 +26,10 @@ export default async function HomePage(_props: {
 
   if (homepageItems === GOODS_UNAVAILABLE) {
     return (
-      <section className="mx-auto max-w-screen-2xl px-4 pb-4">
-        <div className="flex flex-col items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 py-16 dark:border-neutral-800 dark:bg-neutral-900">
-          <p className="text-lg font-semibold">We couldn&apos;t load products</p>
-          <p className="mt-2 text-center text-sm text-neutral-500 dark:text-neutral-400">
+      <section className="w-full pb-4">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_94%,transparent)] py-16 shadow-[0_16px_40px_-28px_rgba(15,23,42,0.18)] dark:shadow-[0_16px_48px_-28px_rgba(0,0,0,0.45)]">
+          <p className="text-lg font-semibold text-[var(--color-foreground)]">We couldn&apos;t load products</p>
+          <p className="mt-2 max-w-md text-center text-sm text-[var(--color-muted-foreground)]">
             We&apos;ll show them when they&apos;re available again.
           </p>
           <RetryButton />
@@ -63,17 +62,12 @@ export default async function HomePage(_props: {
   ];
 
   return (
-    <section className="mx-auto max-w-7xl px-4 pt-6 pb-14 sm:px-6 lg:px-8">
+    <section className="mx-auto w-full max-w-7xl pt-2 pb-14 sm:pt-4">
       <div className="space-y-8">
         <StorefrontHero goods={homepageItems.slice(0, 6)} />
 
-        <div className="grid gap-8 xl:grid-cols-[17rem_minmax(0,1fr)] xl:items-start">
-          <aside className="hidden xl:block">
-            <ShopSidebar />
-          </aside>
-
-          <div className="space-y-8">
-            <section className="shop-panel rounded-[2rem] border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_92%,transparent)] p-4 shadow-[0_32px_90px_-54px_rgba(15,23,42,0.38)] sm:p-6">
+        <div className="space-y-8">
+          <section className="shop-panel rounded-[2rem] border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_92%,transparent)] p-4 shadow-[0_32px_90px_-54px_rgba(15,23,42,0.38)] sm:p-6">
               <div className="flex flex-col gap-4 border-b border-[var(--color-border)] pb-5 sm:flex-row sm:items-end sm:justify-between">
                 <div className="max-w-2xl">
                   <p className="text-[11px] font-semibold tracking-[0.2em] text-[var(--color-muted-foreground)] uppercase">
@@ -132,7 +126,6 @@ export default async function HomePage(_props: {
             <div id="leaderboard" className="shop-panel">
               <ShopLeaderboard />
             </div>
-          </div>
         </div>
       </div>
     </section>

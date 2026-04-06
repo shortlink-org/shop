@@ -178,3 +178,48 @@ export async function shopifyFetch<T>({
     };
   }
 }
+
+/** For console logging: Error instances and nested errors have no enumerable keys, so `{}` in grouped logs. */
+export function describeFetchFailure(err: unknown): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+
+  if (err instanceof Error) {
+    out.name = err.name;
+    out.message = err.message;
+    if (err.cause !== undefined) {
+      out.cause =
+        err.cause instanceof Error
+          ? { name: err.cause.name, message: err.cause.message }
+          : String(err.cause);
+    }
+    return out;
+  }
+
+  if (typeof err !== 'object' || err === null) {
+    out.message = String(err);
+    return out;
+  }
+
+  const o = err as Record<string, unknown>;
+  for (const key of [
+    'message',
+    'status',
+    'cause',
+    'query',
+    'traceId',
+    'path',
+    'extensions',
+    'retryAfter'
+  ] as const) {
+    if (key in o && o[key] !== undefined) {
+      const v = o[key];
+      out[key] = v instanceof Error ? { name: v.name, message: v.message } : v;
+    }
+  }
+
+  if ('error' in o && o.error !== undefined) {
+    out.error = describeFetchFailure(o.error);
+  }
+
+  return Object.keys(out).length > 0 ? out : { detail: String(err) };
+}

@@ -1,4 +1,4 @@
-declare module '@shortlink-org/ui-kit' {
+declare module '@/lib/ui-kit' {
   import { ButtonHTMLAttributes, ElementType, FC, ReactNode } from 'react';
 
   export type ButtonVariant =

@@ -49,9 +49,9 @@ export default async function GoodPage(props: { params: Promise<{ id: string }> 
   if (good === GOODS_UNAVAILABLE) {
     return (
       <div className="mx-auto max-w-screen-2xl px-4 py-16">
-        <div className="flex flex-col items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 py-16 dark:border-neutral-800 dark:bg-neutral-900">
-          <p className="text-lg font-semibold">We couldn&apos;t load this product</p>
-          <p className="mt-2 text-center text-sm text-neutral-500 dark:text-neutral-400">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_94%,transparent)] py-16 shadow-[0_16px_40px_-28px_rgba(15,23,42,0.18)] dark:shadow-[0_16px_48px_-28px_rgba(0,0,0,0.45)]">
+          <p className="text-lg font-semibold text-[var(--color-foreground)]">We couldn&apos;t load this product</p>
+          <p className="mt-2 max-w-md text-center text-sm text-[var(--color-muted-foreground)]">
             We&apos;ll show it when it&apos;s available again.
           </p>
         </div>
@@ -94,18 +94,20 @@ export default async function GoodPage(props: { params: Promise<{ id: string }> 
 
   return (
     <Suspense fallback={<div className="mx-auto max-w-screen-2xl px-4 pb-16 animate-pulse h-96 bg-[var(--color-muted)] rounded-lg" />}>
-      <GoodProvider>
+      <>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: sanitizeJsonLd(goodJsonLd)
           }}
         />
-        <div className="mx-auto max-w-screen-2xl px-4 pb-16">
-          <GoodProductPage good={good} images={galleryImages} />
-          {/*<RelatedGoods id={good.id} />*/}
-        </div>
-      </GoodProvider>
+        <GoodProvider>
+          <div className="mx-auto max-w-screen-2xl px-4 pb-16">
+            <GoodProductPage good={good} images={galleryImages} />
+            {/*<RelatedGoods id={good.id} />*/}
+          </div>
+        </GoodProvider>
+      </>
     </Suspense>
   );
 }

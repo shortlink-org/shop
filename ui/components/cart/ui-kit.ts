@@ -1,4 +1,4 @@
-import type { BasketItem as BasketItemData } from '@shortlink-org/ui-kit';
+import type { BasketItem as BasketItemData } from '@/lib/ui-kit';
 import { DEFAULT_OPTION } from 'lib/constants';
 import type { Cart, CartItem } from 'lib/shopify/types';
 import { getStorefrontArtwork, getStorefrontCategory } from 'lib/storefront-art';

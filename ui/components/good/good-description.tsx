@@ -1,6 +1,6 @@
 'use client';
 
-import { ProductDescription } from '@shortlink-org/ui-kit';
+import { ProductDescription } from '@/lib/ui-kit';
 import Price from 'components/price';
 import { Good } from 'lib/shopify/types';
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { BasketItem, Button, FeedbackPanel } from '@shortlink-org/ui-kit';
+import { BasketItem, Button, FeedbackPanel } from '@/lib/ui-kit';
 import { useRouter } from 'next/navigation';
 import { useSyncExternalStore, useState } from 'react';
 import { toast } from 'sonner';

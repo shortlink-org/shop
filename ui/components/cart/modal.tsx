@@ -1,6 +1,6 @@
 'use client';
 
-import { Basket, Button, Drawer, FeedbackPanel } from '@shortlink-org/ui-kit';
+import { Basket, Button, Drawer, FeedbackPanel } from '@/lib/ui-kit';
 import { useEffect, useRef, useState } from 'react';
 import { createCartAndSetCookie, redirectToCheckout } from './actions';
 import { useCart } from './cart-context';
@@ -36,24 +36,23 @@ function CartStateDrawer({
       contentClassName="!px-4 !pb-6 !pt-4 sm:!px-6"
     >
       <div className="flex h-full min-h-0 items-center justify-center">
-        <div className="w-full max-w-sm rounded-[1.5rem] border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.28)]">
-          <FeedbackPanel
-            variant={cartUnavailable ? 'error' : 'empty'}
-            eyebrow="Cart status"
-            title={cartUnavailable ? "We couldn't load your cart" : 'Your cart is empty'}
-            message={
-              cartUnavailable
-                ? "We'll show it when it's available again. You can keep browsing in the meantime."
-                : 'Add a few products and come back when you are ready to check out.'
-            }
-            size="sm"
-            action={
-              <Button variant="secondary" size="sm" onClick={() => onClose(false)}>
-                Continue shopping
-              </Button>
-            }
-          />
-        </div>
+        <FeedbackPanel
+          className="w-full max-w-sm"
+          variant={cartUnavailable ? 'error' : 'empty'}
+          eyebrow="Cart status"
+          title={cartUnavailable ? "We couldn't load your cart" : 'Your cart is empty'}
+          message={
+            cartUnavailable
+              ? "We'll show it when it's available again. You can keep browsing in the meantime."
+              : 'Add a few products and come back when you are ready to check out.'
+          }
+          size="sm"
+          action={
+            <Button variant="secondary" size="sm" onClick={() => onClose(false)}>
+              Continue shopping
+            </Button>
+          }
+        />
       </div>
     </Drawer>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { AddToCartButton } from '@shortlink-org/ui-kit';
+import { AddToCartButton } from '@/lib/ui-kit';
 import { addItem } from 'components/cart/actions';
 import { useCart } from 'components/cart/cart-context';
 import { DEFAULT_OPTION } from 'lib/constants';

@@ -2,7 +2,7 @@
 
 'use no memo'; // react-hook-form's setValue in useCallback is incompatible with React Compiler
 
-import { Button } from '@shortlink-org/ui-kit';
+import { Button } from '@/lib/ui-kit';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';

@@ -1,5 +1,6 @@
 'use client';
 
+import '@/lib/temporal-polyfill';
 import { HTTP_STATUS_RATE_LIMIT } from 'lib/constants';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode, useState } from 'react';

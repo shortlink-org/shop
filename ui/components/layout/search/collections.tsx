@@ -1,16 +1,14 @@
 import clsx from 'clsx';
-import { headers } from 'next/headers';
 import { Suspense } from 'react';
 
 import { getCollections, GOODS_UNAVAILABLE } from 'lib/shopify';
 import FilterList from './filter';
 
 async function CollectionList() {
-  const authHeader = (await headers()).get('authorization') ?? undefined;
-  const collections = await getCollections({ authorization: authHeader });
+  const collections = await getCollections();
   if (collections === GOODS_UNAVAILABLE) {
     return (
-      <div className="py-2 text-sm text-neutral-500 dark:text-neutral-400">
+      <div className="py-2 text-sm text-[var(--color-muted-foreground)]">
         Collections unavailable. We&apos;ll show them when available.
       </div>
     );

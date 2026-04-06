@@ -1,5 +1,5 @@
 import { getDeliveryTrackingQuery, getOrderTrackingPageQuery } from '../queries/order';
-import { shopifyFetch } from '../fetch';
+import { describeFetchFailure, shopifyFetch } from '../fetch';
 import type {
   DeliveryTrackingSummary,
   OrderTrackingPageData,
@@ -26,7 +26,10 @@ export async function getOrderTrackingPage(
       tracking: res.body.data.deliveryTracking ?? null
     };
   } catch (err) {
-    console.error('[getOrderTrackingPage] Failed to load order tracking', { id, err });
+    console.error('[getOrderTrackingPage] Failed to load order tracking', {
+      id,
+      ...describeFetchFailure(err)
+    });
     return null;
   }
 }
@@ -45,7 +48,10 @@ export async function getDeliveryTracking(
 
     return res.body.data.deliveryTracking ?? null;
   } catch (err) {
-    console.error('[getDeliveryTracking] Failed to load delivery tracking', { id, err });
+    console.error('[getDeliveryTracking] Failed to load delivery tracking', {
+      id,
+      ...describeFetchFailure(err)
+    });
     throw err;
   }
 }

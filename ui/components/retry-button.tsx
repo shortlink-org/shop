@@ -7,7 +7,7 @@ export function RetryButton({ children = 'Retry' }: { children?: React.ReactNode
   return (
     <button
       type="button"
-      className="mx-auto mt-4 flex cursor-pointer items-center justify-center rounded-full bg-blue-600 px-6 py-3 tracking-wide text-white hover:opacity-90"
+      className="mx-auto mt-4 flex cursor-pointer items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-foreground)] px-6 py-3 font-medium tracking-wide text-[var(--color-background)] shadow-sm transition-opacity hover:opacity-90"
       onClick={() => router.refresh()}
     >
       {children}

@@ -1,6 +1,6 @@
 'use client';
 
-import { ProductGrid, ProductQuickView } from '@shortlink-org/ui-kit';
+import { ProductGrid, ProductQuickView } from '@/lib/ui-kit';
 import clsx from 'clsx';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -10,7 +10,7 @@ import { DEFAULT_OPTION } from 'lib/constants';
 import { Good, GoodVariant } from 'lib/shopify/types';
 import { getStorefrontArtwork, getStorefrontCategory } from 'lib/storefront-art';
 import { toast } from 'sonner';
-import type { ProductGridProduct, ProductQuickViewProduct } from '@shortlink-org/ui-kit';
+import type { ProductGridProduct, ProductQuickViewProduct } from '@/lib/ui-kit';
 
 const productCardSlotClassNames = {
   description: 'min-h-[2.5rem]',

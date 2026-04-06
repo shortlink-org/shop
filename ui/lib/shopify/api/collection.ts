@@ -1,5 +1,5 @@
 import { TAGS } from 'lib/constants';
-import { shopifyFetch } from '../fetch';
+import { describeFetchFailure, shopifyFetch } from '../fetch';
 import { normalizeGood, reshapeCollection } from '../mappers';
 import { GOODS_UNAVAILABLE } from '../sentinels';
 import type {
@@ -38,7 +38,7 @@ export async function getCollection(
 
     return reshapeCollection(res.body.data.collection);
   } catch (err) {
-    console.error('[getCollection] Failed to load collection', { id, err });
+    console.error('[getCollection] Failed to load collection', { id, ...describeFetchFailure(err) });
     return GOODS_UNAVAILABLE;
   }
 }
@@ -65,7 +65,11 @@ export async function getCollectionProducts(
   } catch (err) {
     const errorPath = extractErrorPath(err);
     const traceId = extractTraceId(err);
-    console.error('[getCollectionProducts] Failed to load products', { err, errorPath, traceId });
+    console.error('[getCollectionProducts] Failed to load products', {
+      ...describeFetchFailure(err),
+      errorPath,
+      traceId
+    });
     return GOODS_UNAVAILABLE;
   }
 }

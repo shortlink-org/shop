@@ -1,6 +1,6 @@
 'use client';
 
-import { Breadcrumbs, ProductPage } from '@shortlink-org/ui-kit';
+import { Breadcrumbs, ProductPage } from '@/lib/ui-kit';
 import { AddToCartBlock } from 'components/good/add-to-cart-block';
 import { BackButton } from 'components/good/back-button';
 import { Gallery } from 'components/good/gallery';

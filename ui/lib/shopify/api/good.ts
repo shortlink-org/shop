@@ -1,5 +1,5 @@
 import { TAGS } from 'lib/constants';
-import { shopifyFetch } from '../fetch';
+import { describeFetchFailure, shopifyFetch } from '../fetch';
 import { normalizeGood } from '../mappers';
 import { GOODS_UNAVAILABLE } from '../sentinels';
 import type {
@@ -81,7 +81,7 @@ export async function getGood(
 
     return res.body.data.good ? normalizeGood(res.body.data.good) : undefined;
   } catch (err) {
-    console.error('[getGood] Failed to load good', { id, err });
+    console.error('[getGood] Failed to load good', { id, ...describeFetchFailure(err) });
     return GOODS_UNAVAILABLE;
   }
 }
@@ -99,7 +99,10 @@ export async function getGoodRecommendations(
     const recommendations = res.body.data.goods?.results ?? [];
     return recommendations.filter((good) => good.id !== id).map(normalizeGood);
   } catch (err) {
-    console.error('[getGoodRecommendations] Failed to load recommendations', { id, err });
+    console.error('[getGoodRecommendations] Failed to load recommendations', {
+      id,
+      ...describeFetchFailure(err)
+    });
     return GOODS_UNAVAILABLE;
   }
 }
@@ -129,7 +132,12 @@ export async function getGoods(
 
     return sortGoods(filteredGoods, { sortKey, reverse, query });
   } catch (err) {
-    console.error('[getGoods] Failed to load products', { query, sortKey, reverse, err });
+    console.error('[getGoods] Failed to load products', {
+      query,
+      sortKey,
+      reverse,
+      ...describeFetchFailure(err)
+    });
     return GOODS_UNAVAILABLE;
   }
 }

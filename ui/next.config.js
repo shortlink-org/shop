@@ -7,6 +7,7 @@ console.info('API_URI', API_URI);
 
 /** @type {import('next').NextConfig} */
 module.exports = {
+  transpilePackages: ['temporal-polyfill', 'temporal-spec'],
   output: 'standalone',
   cacheHandler: require.resolve('./cache-handler.js'),
   cacheMaxMemorySize: 0,

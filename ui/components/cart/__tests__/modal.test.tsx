@@ -7,7 +7,7 @@ const { createCartAndSetCookieMock, redirectToCheckoutMock } = vi.hoisted(() => 
   createCartAndSetCookieMock: vi.fn()
 }));
 
-vi.mock('@shortlink-org/ui-kit', () => ({
+vi.mock('@/lib/ui-kit', () => ({
   Basket: ({ open, onCheckout }: { open: boolean; onCheckout: () => void }) =>
     open ? (
       <div data-testid="basket">

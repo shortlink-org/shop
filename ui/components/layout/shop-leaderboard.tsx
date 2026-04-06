@@ -1,9 +1,9 @@
 'use client';
 
-import { Button, MarketplaceLeaderboard } from '@shortlink-org/ui-kit';
+import { Button, MarketplaceLeaderboard } from '@/lib/ui-kit';
 import Link from 'next/link';
 import { useEffect, useReducer, useState } from 'react';
-import type { LeaderboardEntry, LeaderboardStat } from '@shortlink-org/ui-kit';
+import type { LeaderboardEntry, LeaderboardStat } from '@/lib/ui-kit';
 import { leaderboardFilters, loadGoodsLeaderboard } from 'lib/leaderboard';
 
 type LeaderboardState = {

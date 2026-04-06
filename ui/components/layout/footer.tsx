@@ -1,6 +1,6 @@
 'use client';
 
-import { Footer as UiKitFooter } from '@shortlink-org/ui-kit';
+import { Footer as UiKitFooter } from '@/lib/ui-kit';
 import { SORT_SLUGS } from 'lib/constants';
 import Link from 'next/link';
 import type { ReactNode } from 'react';

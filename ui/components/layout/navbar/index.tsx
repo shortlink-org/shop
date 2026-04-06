@@ -1,29 +1,29 @@
 'use client';
 
-import { AppHeader } from '@shortlink-org/ui-kit';
+import { AppHeader } from '@/lib/ui-kit';
 import { AxiosError } from 'axios';
 import CartModal from 'components/cart/modal';
 import LogoSquare from 'components/logo-square';
 import { useSession } from '@/contexts/SessionContext';
 import ory from '@/lib/ory/sdk';
-import { createUrl } from 'lib/utils';
 import Link from 'next/link';
+import { createUrl } from 'lib/utils';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Suspense } from 'react';
-import Search, { SearchSkeleton } from './search';
 
 const { SITE_NAME } = process.env;
 const headerSlotClassNames = {
   container: 'mx-auto max-w-7xl px-3 sm:px-4 lg:px-6',
-  header: 'min-h-[5rem] gap-3 py-3 md:min-h-[5.5rem] md:gap-4',
-  brandRail: 'min-w-0 gap-3',
-  controlsRail: 'min-w-0 gap-2 md:gap-3',
-  search: 'mr-0 min-w-0 flex-1 max-w-[24rem] lg:max-w-[28rem] xl:max-w-[32rem]',
-  searchForm:
-    'rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[0_16px_36px_-32px_rgba(15,23,42,0.24)]',
-  themeToggle: 'hidden xl:inline-flex items-center',
+  header: 'min-h-[4.5rem] gap-3 py-3 md:min-h-[5rem]',
+  brandRail: 'min-w-0 shrink-0 gap-3',
+  // Kill default absolute positioning on small viewports (overlaps brand / creates stacked “ghost” pills).
+  controlsRail:
+    '!static !inset-auto !right-auto z-10 ml-auto flex shrink-0 flex-nowrap items-center justify-end gap-3 pr-2 sm:ml-6 sm:pr-0 xl:ml-0 xl:justify-self-end',
+  themeToggle: 'relative mr-1 hidden shrink-0 overflow-visible xl:flex xl:items-center',
+  navigation: 'hidden',
+  search: 'min-w-0 max-md:max-w-[min(18rem,calc(100vw-10rem))]',
   notifications: 'ml-0',
   notificationsButton: 'min-h-[2.75rem] px-0 py-2.5',
   profile: 'ml-0',
@@ -53,11 +53,23 @@ function NavbarContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [logoutToken, setLogoutToken] = useState('');
-  const menu = [
-    { name: 'Home', href: '/' },
-    { name: 'Shop', href: '/search' }
-  ];
   const loginUrl = process.env.NEXT_PUBLIC_LOGIN_URL || '/auth/login';
+
+  const defaultQuery = searchParams.get('q') ?? '';
+
+  const onHeaderSearch = useCallback(
+    (query: string) => {
+      const trimmed = query.trim();
+      const next = new URLSearchParams(searchParams.toString());
+      if (trimmed) {
+        next.set('q', trimmed);
+      } else {
+        next.delete('q');
+      }
+      router.push(createUrl('/search', next));
+    },
+    [router, searchParams]
+  );
   const traits = (session?.identity?.traits as Record<string, unknown> | undefined) ?? {};
   const nameTraits = traits.name as Record<string, string> | undefined;
   const firstName = nameTraits?.first ?? '';
@@ -82,18 +94,6 @@ function NavbarContent() {
       });
   }, [hasSession]);
 
-  const handleSearch = (query: string) => {
-    const newParams = new URLSearchParams(searchParams?.toString() ?? '');
-
-    if (query) {
-      newParams.set('q', query);
-    } else {
-      newParams.delete('q');
-    }
-
-    router.push(createUrl('/search', newParams));
-  };
-
   return (
     <div className="shop-navbar relative border-b border-[var(--color-border)] bg-[linear-gradient(180deg,var(--color-background)_0%,color-mix(in_srgb,var(--color-surface)_78%,transparent)_100%)]">
       <AppHeader
@@ -117,20 +117,20 @@ function NavbarContent() {
             </Link>
           )
         }}
-        navigation={menu}
+        navigation={[]}
         currentPath={pathname}
         LinkComponent={HeaderLink}
         showMenuButton={false}
         showThemeToggle={true}
         showSearch={true}
+        searchProps={{
+          placeholder: 'Search for products…',
+          defaultQuery,
+          onSearch: onHeaderSearch
+        }}
         showNotifications={true}
         notifications={{
           render: () => <CartModal />
-        }}
-        searchProps={{
-          placeholder: 'Search for products...',
-          defaultQuery: searchParams?.get('q') || '',
-          onSearch: handleSearch
         }}
         showProfile={hasSession && !isLoading}
         profile={
@@ -165,14 +165,6 @@ function NavbarContent() {
         fullWidth={true}
         slotClassNames={headerSlotClassNames}
       />
-      <div className="mx-auto max-w-7xl px-3 pt-1 pb-3 sm:px-4 md:hidden lg:px-6">
-        <Suspense fallback={<SearchSkeleton />}>
-          <Search
-            className="max-w-md"
-            inputClassName="rounded-full border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-3 text-[var(--color-foreground)] shadow-[0_16px_36px_-32px_rgba(15,23,42,0.24)] placeholder:text-[var(--color-muted-foreground)]"
-          />
-        </Suspense>
-      </div>
     </div>
   );
 }

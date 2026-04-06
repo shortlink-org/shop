@@ -1,11 +1,14 @@
+import '@/lib/temporal-polyfill';
 import { CartProvider } from 'components/cart/cart-context';
 import { Navbar } from 'components/layout/navbar';
 import { Footer } from 'components/layout/footer';
 import { Providers } from 'components/providers';
+import { UiKitThemeBridge } from 'components/ui-kit-theme-bridge';
 import { GeistSans } from 'geist/font/sans';
 import { CART_UNAVAILABLE, getCart, type CartLoadResult } from 'lib/shopify';
 import { ensureStartsWith, sanitizeJsonLd } from 'lib/utils';
 import { headers } from 'next/headers';
+import Script from 'next/script';
 import { ReactNode, ViewTransition } from 'react';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from 'next-themes';
@@ -62,20 +65,20 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
 
   return (
     <html lang="en" className={GeistSans.variable} suppressHydrationWarning>
-      <body className="bg-[var(--color-background)] text-[var(--color-foreground)] selection:bg-sky-200 selection:text-slate-950 dark:selection:bg-sky-500 dark:selection:text-slate-950">
-        <script
+      <body
+        className="bg-[var(--color-background)] text-[var(--color-foreground)] selection:bg-sky-200 selection:text-slate-950 dark:selection:bg-sky-500 dark:selection:text-slate-950"
+        suppressHydrationWarning
+      >
+        <Script
+          id="ld-json-website"
           type="application/ld+json"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: sanitizeJsonLd(websiteJsonLd) }}
         />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <UiKitThemeBridge />
           <Providers>
             <CartProvider initialCartResult={initialCartResult}>
-              <a
-                href="#main"
-                className="focus-ring absolute top-4 left-4 z-[100] -translate-y-full rounded-md bg-[var(--color-foreground)] px-4 py-2.5 text-sm font-medium text-[var(--color-background)] transition-transform focus:translate-y-0 focus:outline-2 focus:outline-offset-2"
-              >
-                Skip to main content
-              </a>
               <Navbar />
               <main id="main" className="min-h-screen">
                 <ViewTransition>{children}</ViewTransition>

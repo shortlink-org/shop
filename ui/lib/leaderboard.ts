@@ -3,7 +3,7 @@ import type {
   LeaderboardFilter,
   LeaderboardFilterId,
   LeaderboardStat
-} from '@shortlink-org/ui-kit';
+} from '@/lib/ui-kit';
 import { getGoodsLeaderboard, getGood, GOODS_UNAVAILABLE } from 'lib/shopify';
 
 export const leaderboardFilters: LeaderboardFilter[] = [

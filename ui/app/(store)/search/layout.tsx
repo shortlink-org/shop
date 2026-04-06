@@ -7,12 +7,12 @@ export const dynamic = 'force-dynamic';
 
 export default function SearchLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto flex max-w-screen-2xl flex-col gap-8 px-4 pb-4 text-black md:flex-row dark:text-white">
-      <div className="order-first w-full flex-none md:max-w-[125px] md:pt-6 lg:pt-8">
+    <div className="flex flex-col gap-6 pb-4 text-black md:flex-row md:gap-8 dark:text-white">
+      <div className="order-first w-full flex-none md:max-w-[10rem] md:pt-2">
         <Collections />
       </div>
-      <div className="order-last min-h-screen w-full md:order-none">{children}</div>
-      <div className="order-none flex-none md:order-last md:w-[125px] md:pt-6 lg:pt-8">
+      <div className="order-last min-h-screen min-w-0 flex-1 md:order-none">{children}</div>
+      <div className="order-none flex-none md:order-last md:w-[7.5rem] md:pt-2">
         <FilterList list={sorting} title="Sort by" />
       </div>
     </div>

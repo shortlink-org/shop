@@ -4,6 +4,7 @@ import { defaultSort, sorting } from 'lib/constants';
 import { getGoods, GOODS_UNAVAILABLE } from 'lib/shopify';
 import { getBaseUrl, sanitizeJsonLd } from 'lib/utils';
 import { headers } from 'next/headers';
+import Script from 'next/script';
 
 export const metadata = {
   title: 'Search',
@@ -25,9 +26,9 @@ export default async function SearchPage(props: {
 
   if (goods === GOODS_UNAVAILABLE) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 py-16 dark:border-neutral-800 dark:bg-neutral-900">
-        <p className="text-lg font-semibold">We couldn&apos;t load products</p>
-        <p className="mt-2 text-center text-sm text-neutral-500 dark:text-neutral-400">
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_94%,transparent)] py-16 shadow-[0_16px_40px_-28px_rgba(15,23,42,0.18)] dark:shadow-[0_16px_48px_-28px_rgba(0,0,0,0.45)]">
+        <p className="text-lg font-semibold text-[var(--color-foreground)]">We couldn&apos;t load products</p>
+        <p className="mt-2 max-w-md text-center text-sm text-[var(--color-muted-foreground)]">
           We&apos;ll show them when they&apos;re available again.
         </p>
         <RetryButton />
@@ -55,7 +56,8 @@ export default async function SearchPage(props: {
   return (
     <>
       {itemListJsonLd ? (
-        <script
+        <Script
+          id="ld-json-itemlist"
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: sanitizeJsonLd(itemListJsonLd) }}
         />

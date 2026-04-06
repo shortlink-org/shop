@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@shortlink-org/ui-kit';
+import { Button } from '@/lib/ui-kit';
 import type { UseFormRegister, FieldErrors } from 'react-hook-form';
 import type { CheckoutFormInput } from '../checkout-form';
 

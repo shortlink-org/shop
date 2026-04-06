@@ -1,4 +1,4 @@
-import { Button, StatCard } from '@shortlink-org/ui-kit';
+import { Button, StatCard } from '@/lib/ui-kit';
 import { ArrowTrendingUpIcon, SparklesIcon, SwatchIcon } from '@heroicons/react/24/outline';
 import { Good } from 'lib/shopify/types';
 import { getStorefrontArtwork, getStorefrontCategory } from 'lib/storefront-art';
