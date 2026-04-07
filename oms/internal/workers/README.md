@@ -4,7 +4,7 @@ This directory contains Temporal workflow workers for OMS.
 
 ## Overview
 
-OMS uses [Temporal](https://temporal.io/) for durable workflow orchestration. Each aggregate (Cart, Order) has its own long-running workflow that manages state through signals and queries.
+OMS uses [Temporal](https://temporal.io/) for durable workflow orchestration. The **order** workflow exposes signals and a Query for status. The **cart** workflow orchestrates commands via signals and activities that persist through use cases; it does **not** expose a Temporal Query (cart reads go through the application layer and repository — see [cart use cases README](../usecases/cart/README.md)).
 
 ## Structure
 
@@ -30,7 +30,7 @@ workers/
 
 ## Cart Workflow
 
-Long-running workflow that manages shopping cart state.
+Long-running workflow that reacts to signals by running **activities** which call the same cart command use cases used by gRPC, persisting state in **PostgreSQL**. The workflow does not keep a separate in-memory cart snapshot and **does not register a Query handler** — Temporal Queries cannot run activities or hit the database, so reads are not modeled here.
 
 ### Cart Signals
 
@@ -42,9 +42,7 @@ Long-running workflow that manages shopping cart state.
 
 ### Cart Queries
 
-| Query       | Description            |
-|-------------|------------------------|
-| `EVENT_GET` | Get current cart state |
+None. Use the gRPC `Get` path (repository-backed) or extend the workflow with in-memory state if you intentionally want `SetQueryHandler` (not the current design).
 
 ### Cart Sequence Diagram
 
@@ -53,33 +51,32 @@ Long-running workflow that manages shopping cart state.
 participant Client
 participant "Temporal" as T
 participant "Cart Workflow" as CW
-database "Workflow State" as WS
+participant "Activity" as A
+database "PostgreSQL" as DB
 
 == Start Workflow ==
 Client -> T: StartWorkflow(customerId)
 T -> CW: Initialize
-CW -> WS: Create empty cart
 
 == Add Items ==
-Client -> T: Signal(EVENT_ADD, items)
+Client -> T: Signal(EVENT_ADD, payload)
 T -> CW: Receive signal
-CW -> WS: Update cart state
+CW -> A: ExecuteActivity(AddItem)
+A -> DB: Use case persists cart
+A --> CW: success
 
-== Get Cart ==
-Client -> T: Query(EVENT_GET)
-T -> CW: Execute query
-CW --> T: Return cart state
-T --> Client: CartState
-
-== Remove Items ==
-Client -> T: Signal(EVENT_REMOVE, items)
+== Remove / Reset ==
+Client -> T: Signal(EVENT_REMOVE / EVENT_RESET, ...)
 T -> CW: Receive signal
-CW -> WS: Update cart state
+CW -> A: ExecuteActivity(RemoveItem / ResetCart)
+A -> DB: Use case updates cart
+A --> CW: success
 
-== Reset Cart ==
-Client -> T: Signal(EVENT_RESET)
-T -> CW: Receive signal
-CW -> WS: Reset to empty
+== Read cart (not via this workflow) ==
+note right of Client
+  gRPC Get -> query use case -> CartRepository
+  (no QueryWorkflow for cart)
+end note
 
 @enduml
 ```

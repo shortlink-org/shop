@@ -21,6 +21,9 @@ import (
 // - Integration with external services (stock reservation, etc.)
 //
 // For most use cases, use the cart UseCase directly instead of this workflow.
+//
+// There is no SetQueryHandler: cart reads are served by the query use case and
+// CartRepository, not by Temporal QueryWorkflow (queries cannot execute activities).
 func Workflow(ctx workflow.Context, customerID uuid.UUID) error {
 	logger := workflow.GetLogger(ctx)
 

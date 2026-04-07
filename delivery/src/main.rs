@@ -43,7 +43,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Start Temporal workers (courier and delivery workflows)
-    if let Err(e) = state.start_temporal_workers(&config.temporal).await {
+    if let Err(e) = state.start_temporal_workers(&config.temporal) {
         warn!(error = %e, "Failed to start Temporal workers (continuing without workflow orchestration)");
         warn!(
             "Ensure Temporal server is running at: {}",

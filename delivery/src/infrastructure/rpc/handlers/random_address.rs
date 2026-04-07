@@ -5,7 +5,7 @@
 
 use std::sync::Arc;
 
-use rand::Rng;
+use rand::RngExt;
 use tonic::{Response, Status};
 use tracing::instrument;
 
@@ -22,10 +22,10 @@ pub async fn get_random_address(
     })?;
 
     let (latitude, longitude) = {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         (
-            rng.gen_range(bbox.min_lat..=bbox.max_lat),
-            rng.gen_range(bbox.min_lon..=bbox.max_lon),
+            rng.random_range(bbox.min_lat..=bbox.max_lat),
+            rng.random_range(bbox.min_lon..=bbox.max_lon),
         )
     };
 

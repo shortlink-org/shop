@@ -10,7 +10,7 @@ use redis::aio::ConnectionManager;
 use sea_orm::{Database, DatabaseConnection};
 use thiserror::Error;
 use tokio::sync::broadcast;
-use tracing::{info, warn};
+use tracing::{error, info, warn};
 
 use crate::config::{Config, RandomAddressBbox, TemporalConfig};
 use crate::domain::model::package::{PackageId, PackageStatus};
@@ -300,39 +300,107 @@ impl AppState {
         }
     }
 
-    /// Initialize Temporal worker configuration
+    /// Start Temporal workers (courier and delivery task queues).
     ///
-    /// Validates that the Temporal runtime can be created.
-    /// Note: Due to SDK limitations, workers should be run in dedicated processes.
-    /// Use `run_courier_worker` or `run_delivery_worker` methods directly.
-    pub async fn start_temporal_workers(
+    /// Each worker runs on a dedicated thread with a single-thread Tokio runtime.
+    /// The Temporal Rust SDK worker is not `Send`, so it cannot use the main
+    /// multi-thread executor (`tokio::spawn`).
+    pub fn start_temporal_workers(
         self: &Arc<Self>,
         config: &TemporalConfig,
     ) -> Result<(), DiError> {
-        info!("Initializing Temporal worker configuration...");
+        info!("Starting Temporal workers...");
 
-        // Validate that we can create a worker runner
-        let _runner = TemporalWorkerRunner::new(config.clone())
+        TemporalWorkerRunner::new(config.clone())
             .map_err(|e| DiError::TemporalError(e.to_string()))?;
+
+        let config_courier = config.clone();
+        let state_courier = Arc::clone(self);
+        let mut shutdown_courier = self.shutdown_tx.subscribe();
+
+        let config_delivery = config.clone();
+        let state_delivery = Arc::clone(self);
+        let mut shutdown_delivery = self.shutdown_tx.subscribe();
 
         info!(
             host = %config.host,
             namespace = %config.namespace,
             courier_queue = %config.task_queue_courier,
             delivery_queue = %config.task_queue_delivery,
-            "Temporal configuration validated"
+            "Temporal worker configuration OK; spawning courier and delivery threads"
         );
 
-        // Note: The Temporal Rust SDK pre-alpha has limitations with tokio::spawn
-        // due to RefCell in Worker. Workers should be run in dedicated processes
-        // or using tokio::task::spawn_local on a LocalSet.
-        //
-        // For production, consider:
-        // 1. Running workers as separate binaries
-        // 2. Using tokio::task::LocalSet for worker execution
-        // 3. Waiting for SDK stabilization
+        std::thread::Builder::new()
+            .name("temporal-courier-worker".to_string())
+            .spawn(move || {
+                let rt = match tokio::runtime::Builder::new_current_thread()
+                    .enable_all()
+                    .build()
+                {
+                    Ok(r) => r,
+                    Err(e) => {
+                        error!(error = %e, "Temporal courier worker Tokio runtime failed");
+                        return;
+                    }
+                };
+                rt.block_on(async move {
+                    let runner = match TemporalWorkerRunner::new(config_courier) {
+                        Ok(r) => r,
+                        Err(e) => {
+                            error!(error = %e, "Temporal courier runner init failed");
+                            return;
+                        }
+                    };
+                    let activities = state_courier.create_courier_activities();
+                    tokio::select! {
+                        _ = shutdown_courier.recv() => {
+                            info!("Temporal courier worker stopping (shutdown)");
+                        }
+                        res = runner.run_courier_worker(activities) => {
+                            if let Err(e) = res {
+                                error!(error = %e, "Courier Temporal worker exited with error");
+                            }
+                        }
+                    }
+                });
+            })
+            .map_err(|e| DiError::TemporalError(e.to_string()))?;
 
-        info!("Temporal workers ready (run in dedicated process for production)");
+        std::thread::Builder::new()
+            .name("temporal-delivery-worker".to_string())
+            .spawn(move || {
+                let rt = match tokio::runtime::Builder::new_current_thread()
+                    .enable_all()
+                    .build()
+                {
+                    Ok(r) => r,
+                    Err(e) => {
+                        error!(error = %e, "Temporal delivery worker Tokio runtime failed");
+                        return;
+                    }
+                };
+                rt.block_on(async move {
+                    let runner = match TemporalWorkerRunner::new(config_delivery) {
+                        Ok(r) => r,
+                        Err(e) => {
+                            error!(error = %e, "Temporal delivery runner init failed");
+                            return;
+                        }
+                    };
+                    let activities = state_delivery.create_delivery_activities();
+                    tokio::select! {
+                        _ = shutdown_delivery.recv() => {
+                            info!("Temporal delivery worker stopping (shutdown)");
+                        }
+                        res = runner.run_delivery_worker(activities) => {
+                            if let Err(e) = res {
+                                error!(error = %e, "Delivery Temporal worker exited with error");
+                            }
+                        }
+                    }
+                });
+            })
+            .map_err(|e| DiError::TemporalError(e.to_string()))?;
 
         Ok(())
     }

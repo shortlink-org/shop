@@ -2,13 +2,16 @@
 
 ## Overview
 
-The Cart domain manages shopping cart operations for customers. Each customer has exactly one cart that persists across sessions using Temporal workflows. The cart supports adding, removing, and querying items, as well as automatic cleanup when stock is depleted.
+The Cart domain manages shopping cart operations for customers. Each customer has exactly one cart. **Persistence and the public gRPC API go through application use cases and `CartRepository` (PostgreSQL)** — not through Temporal Queries.
+
+A **Temporal cart workflow** exists in `internal/workers/cart/workflow` for optional orchestration (signals → activities → the same command handlers). It does **not** hold a copy of cart items in workflow memory and **does not register a Temporal Query handler**; reads therefore cannot be served by `QueryWorkflow`. The domain enum value `EVENT_GET` is reserved in protobuf but is **not** wired to a Temporal Query in this codebase.
+
+The cart supports adding, removing, and reading items, as well as automatic cleanup when stock is depleted.
 
 ### Key Features
 
-- **Long-running Workflow**: Cart state is managed by a Temporal workflow per customer
-- **Signal-based Operations**: Add/Remove/Reset operations are sent as signals to the workflow
-- **Query Support**: Cart state can be queried without affecting the workflow
+- **Repository-backed state**: Add/Remove/Reset/Get via use cases and `CartRepository`
+- **Optional Temporal workflow**: Long-running session TTL and signal-driven activities (see [workers README](../../workers/README.md)); same handlers as gRPC, no `QueryWorkflow` for cart
 - **Stock Integration**: Automatic item removal when stock is depleted (see [STOCK_CHANGES.md](STOCK_CHANGES.md))
 
 ## Architecture
@@ -28,7 +31,11 @@ graph TB
         CartUC[Cart UseCase]
     end
 
-    subgraph temporal [Temporal]
+    subgraph persistence [Persistence]
+        CartRepo[CartRepository]
+    end
+
+    subgraph temporal [Temporal optional]
         CartWF[Cart Workflow]
         CartWorker[Cart Worker]
     end
@@ -42,8 +49,8 @@ graph TB
     UI --> CartRPC
     API --> CartRPC
     CartRPC --> CartUC
-    CartUC --> CartWF
-    CartWF --> Cart
+    CartUC --> CartRepo
+    CartRepo --> Cart
     Cart --> CartItem
     Cart --> Events
     CartWorker --> CartWF
@@ -174,38 +181,33 @@ Clears all items from the cart.
 | `EVENT_REMOVE` | `CartEvent` | Remove items from cart |
 | `EVENT_RESET` | `string` (customer_id) | Clear cart |
 
-### Queries
+### Temporal Queries
 
-| Query | Response | Description |
-|-------|----------|-------------|
-| `EVENT_GET` | `CartState` | Get current cart state |
+The cart workflow **does not** expose a Temporal Query (no `SetQueryHandler`). Reading the cart for the gRPC API uses `query/get` → `CartRepository`, not `client.QueryWorkflow`.
 
-### Sequence Diagram
+The protobuf enum `domain.cart.v1.Event.EVENT_GET` is not used as a Temporal Query name in the implementation.
+
+### Sequence Diagrams (gRPC — default path)
 
 ```mermaid
 sequenceDiagram
     participant Client
     participant gRPC as CartService
     participant UC as CartUseCase
-    participant Temporal
-    participant Workflow as CartWorkflow
+    participant Repo as CartRepository
 
-    Note over Client,Workflow: Add Items Flow
+    Note over Client,Repo: Add Items
     Client->>gRPC: Add(AddRequest)
-    gRPC->>UC: Add(ctx, request)
-    UC->>Temporal: SignalWorkflow(EVENT_ADD)
-    Temporal->>Workflow: Receive Signal
-    Workflow->>Workflow: state.AddItem()
+    gRPC->>UC: add_items.Handler.Handle
+    UC->>Repo: Load / Save cart aggregate
     UC-->>gRPC: success
     gRPC-->>Client: Empty
 
-    Note over Client,Workflow: Get Cart Flow
+    Note over Client,Repo: Get Cart
     Client->>gRPC: Get(GetRequest)
-    gRPC->>UC: Get(ctx, request)
-    UC->>Temporal: QueryWorkflow(EVENT_GET)
-    Temporal->>Workflow: Execute Query
-    Workflow-->>Temporal: CartState
-    Temporal-->>UC: CartState
+    gRPC->>UC: get.Handler.Handle
+    UC->>Repo: Load cart aggregate
+    Repo-->>UC: Cart state
     UC-->>gRPC: GetResponse
     gRPC-->>Client: GetResponse
 ```
@@ -217,7 +219,7 @@ sequenceDiagram
 | Code | Description | Recovery |
 |------|-------------|----------|
 | `INVALID_ARGUMENT` | Invalid customer_id or good_id format | Fix UUID format |
-| `NOT_FOUND` | Workflow not found for customer | Create customer first |
+| `NOT_FOUND` | Resource missing (context-dependent) | Verify IDs / permissions |
 | `INTERNAL` | Temporal communication error | Retry with backoff |
 
 ### Domain Validation Rules
