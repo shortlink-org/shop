@@ -1,6 +1,6 @@
 module github.com/shortlink-org/shop/pricer
 
-go 1.26.1
+go 1.26.2
 
 require (
 	github.com/dgraph-io/ristretto/v2 v2.4.0
