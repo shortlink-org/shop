@@ -15,8 +15,8 @@ importers:
         specifier: ^1.22.34
         version: 1.22.34
       '@shortlink-org/ui-kit':
-        specifier: ^0.20260403.190956
-        version: 0.20260403.190956(@babel/core@7.29.0)(@mui/system@7.3.9(@types/react@19.2.14)(react@19.2.4))(@types/node@25.5.2)(@types/react-dom@19.2.3(@types/react@19.2.14))(babel-plugin-react-compiler@1.0.0)(date-fns@4.1.0)(postcss@8.5.9)(rollup@4.60.1)(typescript@6.0.2)(vite@7.3.1(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.8.3))
+        specifier: ^0.20260407.113159
+        version: 0.20260407.113159(@babel/core@7.29.0)(@mui/system@7.3.9(@types/react@19.2.14)(react@19.2.4))(@types/node@25.5.2)(@types/react-dom@19.2.3(@types/react@19.2.14))(babel-plugin-react-compiler@1.0.0)(date-fns@4.1.0)(postcss@8.5.9)(rollup@4.60.1)(typescript@6.0.2)(vite@7.3.1(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.8.3))
       '@urql/core':
         specifier: ^6.0.1
         version: 6.0.1(graphql@16.13.2)
@@ -1807,8 +1807,8 @@ packages:
   '@rushstack/ts-command-line@5.3.4':
     resolution: {integrity: sha512-MLkVKVEN6/2clKTrjN2B2KqKCuPxRwnNsWY7a+FCAq2EMdkj10cM8YgiBSMeGFfzM0mDMzargpHNnNzaBi9Whg==}
 
-  '@shortlink-org/ui-kit@0.20260403.190956':
-    resolution: {integrity: sha1-5VKQ8YQlUxuPk9ujHlzbp1nR7C0=, tarball: https://gitlab.com/api/v4/projects/72466551/packages/npm/@shortlink-org/ui-kit/-/@shortlink-org/ui-kit-0.20260403.190956.tgz}
+  '@shortlink-org/ui-kit@0.20260407.113159':
+    resolution: {integrity: sha1-oBumh24WNlDFE2nHEX6snIa1MRM=, tarball: https://gitlab.com/api/v4/projects/72466551/packages/npm/@shortlink-org/ui-kit/-/@shortlink-org/ui-kit-0.20260407.113159.tgz}
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
@@ -6393,7 +6393,7 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
 
-  '@shortlink-org/ui-kit@0.20260403.190956(@babel/core@7.29.0)(@mui/system@7.3.9(@types/react@19.2.14)(react@19.2.4))(@types/node@25.5.2)(@types/react-dom@19.2.3(@types/react@19.2.14))(babel-plugin-react-compiler@1.0.0)(date-fns@4.1.0)(postcss@8.5.9)(rollup@4.60.1)(typescript@6.0.2)(vite@7.3.1(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.8.3))':
+  '@shortlink-org/ui-kit@0.20260407.113159(@babel/core@7.29.0)(@mui/system@7.3.9(@types/react@19.2.14)(react@19.2.4))(@types/node@25.5.2)(@types/react-dom@19.2.3(@types/react@19.2.14))(babel-plugin-react-compiler@1.0.0)(date-fns@4.1.0)(postcss@8.5.9)(rollup@4.60.1)(typescript@6.0.2)(vite@7.3.1(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.8.3))':
     dependencies:
       '@fontsource/caveat': 5.2.8
       '@fontsource/material-icons': 5.2.7
