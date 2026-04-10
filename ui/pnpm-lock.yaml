@@ -50,7 +50,7 @@ importers:
         version: 2.1.2(@opentelemetry/api-logs@0.214.0)(@opentelemetry/api@1.9.1)(@opentelemetry/instrumentation@0.214.0(@opentelemetry/api@1.9.1))(@opentelemetry/resources@2.6.1(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-logs@0.214.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-metrics@2.6.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.6.0(@opentelemetry/api@1.9.1))
       axios:
         specifier: ^1.14.0
-        version: 1.14.0
+        version: 1.15.0
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -2104,8 +2104,8 @@ packages:
     resolution: {integrity: sha512-byD6KPdvo72y/wj2T/4zGEvvlis+PsZsn/yPS3pEO+sFpcrqRpX/TJCxvVaEsNeMrfQbCr7w163YqoD9IYwHXw==}
     engines: {node: '>=4'}
 
-  axios@1.14.0:
-    resolution: {integrity: sha512-3Y8yrqLSwjuzpXuZ0oIYZ/XGgLwUIBU3uLvbcpb0pidD9ctpShJd43KSlEEkVQg6DS0G9NKyzOvBfUtDKEyHvQ==}
+  axios@1.15.0:
+    resolution: {integrity: sha512-wWyJDlAatxk30ZJer+GeCWS209sA42X+N5jU2jy6oHTp7ufw8uzUTVFBX9+wTfAlhiJXGS0Bq7X6efruWjuK9Q==}
 
   axobject-query@4.1.0:
     resolution: {integrity: sha512-qIj0G9wZbMGNLjLmg1PT6v2mE9AH2zlnADJD/2tC6E00hgmhUOfEB6greHPAfLRSufHqROIUTkw6E+M3lH0PTQ==}
@@ -3723,6 +3723,10 @@ packages:
     resolution: {integrity: sha512-j2Zq4NyQYG5XMST4cbs02Ak8iJUdxRM0XI5QyxXuZOzKOINmWurp3smXu3y5wDcJrptwpSjgXHzIQxR0omXljQ==}
     engines: {node: '>=12.0.0'}
 
+  tinyglobby@0.2.16:
+    resolution: {integrity: sha512-pn99VhoACYR8nFHhxqix+uvsbXineAasWm5ojXoN8xEwK5Kd3/TrhNn1wByuD52UxWRLy8pu+kRMniEi6Eq9Zg==}
+    engines: {node: '>=12.0.0'}
+
   tinyrainbow@3.1.0:
     resolution: {integrity: sha512-Bf+ILmBgretUrdJxzXM0SgXLZ3XfiaUuOj/IKQHuTXip+05Xn+uyEYdVg0kYDipTBcLrCVyUzAPz7QmArb0mmw==}
     engines: {node: '>=14.0.0'}
@@ -4809,7 +4813,7 @@ snapshots:
 
   '@ory/client@1.22.34':
     dependencies:
-      axios: 1.14.0
+      axios: 1.15.0
     transitivePeerDependencies:
       - debug
 
@@ -5796,7 +5800,7 @@ snapshots:
 
   axe-core@4.11.2: {}
 
-  axios@1.14.0:
+  axios@1.15.0:
     dependencies:
       follow-redirects: 1.15.11
       form-data: 4.0.5
@@ -7570,6 +7574,11 @@ snapshots:
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
 
+  tinyglobby@0.2.16:
+    dependencies:
+      fdir: 6.5.0(picomatch@4.0.4)
+      picomatch: 4.0.4
+
   tinyrainbow@3.1.0: {}
 
   tldts-core@7.0.28: {}
@@ -7767,7 +7776,7 @@ snapshots:
       picomatch: 4.0.4
       postcss: 8.5.9
       rollup: 4.60.1
-      tinyglobby: 0.2.15
+      tinyglobby: 0.2.16
     optionalDependencies:
       '@types/node': 25.5.2
       fsevents: 2.3.3
