@@ -10,13 +10,13 @@ importers:
     dependencies:
       '@apollo/client':
         specifier: ^4.1.7
-        version: 4.1.7(graphql-ws@6.0.8(graphql@16.13.2)(ws@8.20.0))(graphql@16.13.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(rxjs@7.8.2)
+        version: 4.1.7(graphql-ws@6.0.8(graphql@16.13.2)(ws@8.20.0))(graphql@16.13.2)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(rxjs@7.8.2)
       '@ory/client':
         specifier: ^1.22.34
         version: 1.22.34
       '@shortlink-org/ui-kit':
         specifier: ^0.20260407.113159
-        version: 0.20260407.113159(@babel/core@7.29.0)(@mui/system@7.3.9(@types/react@19.2.14)(react@19.2.4))(@types/node@25.5.2)(@types/react-dom@19.2.3(@types/react@19.2.14))(babel-plugin-react-compiler@1.0.0)(date-fns@4.1.0)(postcss@8.5.9)(rollup@4.60.1)(typescript@6.0.2)(vite@7.3.1(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.8.3))
+        version: 0.20260407.113159(@babel/core@7.29.0)(@mui/system@7.3.9(@types/react@19.2.14)(react@19.2.5))(@types/node@25.5.2)(@types/react-dom@19.2.3(@types/react@19.2.14))(babel-plugin-react-compiler@1.0.0)(date-fns@4.1.0)(postcss@8.5.9)(rollup@4.60.1)(typescript@6.0.2)(vite@7.3.1(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.8.3))
       '@urql/core':
         specifier: ^6.0.1
         version: 6.0.1(graphql@16.13.2)
@@ -28,22 +28,22 @@ importers:
         version: 2.12.6(graphql@16.13.2)
       next:
         specifier: ^16.2.3
-        version: 16.2.3(@babel/core@7.29.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 16.2.3(@babel/core@7.29.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       next-themes:
         specifier: ^0.4.6
-        version: 0.4.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 0.4.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       react:
-        specifier: ^19.2.4
-        version: 19.2.4
+        specifier: ^19.2.5
+        version: 19.2.5
       react-dom:
-        specifier: ^19.2.4
-        version: 19.2.4(react@19.2.4)
+        specifier: ^19.2.5
+        version: 19.2.5(react@19.2.5)
       sonner:
         specifier: ^2.0.7
-        version: 2.0.7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 2.0.7(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       urql:
         specifier: ^5.0.1
-        version: 5.0.1(@urql/core@6.0.1(graphql@16.13.2))(react@19.2.4)
+        version: 5.0.1(@urql/core@6.0.1(graphql@16.13.2))(react@19.2.5)
     devDependencies:
       '@graphql-codegen/cli':
         specifier: ^6.2.1
@@ -65,7 +65,7 @@ importers:
         version: 6.9.1
       '@testing-library/react':
         specifier: ^16.3.2
-        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@types/node':
         specifier: ^25.5.2
         version: 25.5.2
@@ -3970,6 +3970,11 @@ packages:
     peerDependencies:
       react: ^19.2.4
 
+  react-dom@19.2.5:
+    resolution: {integrity: sha512-J5bAZz+DXMMwW/wV3xzKke59Af6CHY7G4uYLN1OvBcKEsWOs4pQExj86BBKamxl/Ik5bx9whOrvBlSDfWzgSag==}
+    peerDependencies:
+      react: ^19.2.5
+
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
 
@@ -4022,6 +4027,10 @@ packages:
 
   react@19.2.4:
     resolution: {integrity: sha512-9nfp2hYpCwOjAN+8TZFGhtWEwgvWHXqESH8qT89AT/lWklpLON22Lc8pEtnpsZz7VmawabSU0gCjnj8aC0euHQ==}
+    engines: {node: '>=0.10.0'}
+
+  react@19.2.5:
+    resolution: {integrity: sha512-llUJLzz1zTUBrskt2pwZgLq59AemifIftw4aB7JxOqf1HY2FDaGDxgwpAPVzHU1kdWabH7FauP4i1oEeer2WCA==}
     engines: {node: '>=0.10.0'}
 
   redent@3.0.0:
@@ -4783,7 +4792,7 @@ snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
 
-  '@apollo/client@4.1.7(graphql-ws@6.0.8(graphql@16.13.2)(ws@8.20.0))(graphql@16.13.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(rxjs@7.8.2)':
+  '@apollo/client@4.1.7(graphql-ws@6.0.8(graphql@16.13.2)(ws@8.20.0))(graphql@16.13.2)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(rxjs@7.8.2)':
     dependencies:
       '@graphql-typed-document-node/core': 3.2.0(graphql@16.13.2)
       '@wry/caches': 1.0.1
@@ -4796,8 +4805,8 @@ snapshots:
       tslib: 2.8.1
     optionalDependencies:
       graphql-ws: 6.0.8(graphql@16.13.2)(ws@8.20.0)
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
+      react: 19.2.5
+      react-dom: 19.2.5(react@19.2.5)
 
   '@ardatan/relay-compiler@13.0.1(graphql@16.13.2)':
     dependencies:
@@ -5967,6 +5976,20 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.14
 
+  '@mui/system@7.3.9(@types/react@19.2.14)(react@19.2.5)':
+    dependencies:
+      '@babel/runtime': 7.29.2
+      '@mui/private-theming': 7.3.9(@types/react@19.2.14)(react@19.2.4)
+      '@mui/styled-engine': 7.3.9(react@19.2.4)
+      '@mui/types': 7.4.12(@types/react@19.2.14)
+      '@mui/utils': 7.3.9(@types/react@19.2.14)(react@19.2.4)
+      clsx: 2.1.1
+      csstype: 3.2.3
+      prop-types: 15.8.1
+      react: 19.2.5
+    optionalDependencies:
+      '@types/react': 19.2.14
+
   '@mui/types@7.4.12(@types/react@19.2.14)':
     dependencies:
       '@babel/runtime': 7.29.2
@@ -5985,11 +6008,11 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.14
 
-  '@mui/x-date-pickers@8.27.2(@mui/material@7.3.9(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@mui/system@7.3.9(@types/react@19.2.14)(react@19.2.4))(@types/react@19.2.14)(date-fns@4.1.0)(dayjs@1.11.20)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+  '@mui/x-date-pickers@8.27.2(@mui/material@7.3.9(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@mui/system@7.3.9(@types/react@19.2.14)(react@19.2.5))(@types/react@19.2.14)(date-fns@4.1.0)(dayjs@1.11.20)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
       '@babel/runtime': 7.29.2
       '@mui/material': 7.3.9(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@mui/system': 7.3.9(@types/react@19.2.14)(react@19.2.4)
+      '@mui/system': 7.3.9(@types/react@19.2.14)(react@19.2.5)
       '@mui/utils': 7.3.9(@types/react@19.2.14)(react@19.2.4)
       '@mui/x-internals': 8.26.0(@types/react@19.2.14)(react@19.2.4)
       '@types/react-transition-group': 4.4.12(@types/react@19.2.14)
@@ -6393,7 +6416,7 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
 
-  '@shortlink-org/ui-kit@0.20260407.113159(@babel/core@7.29.0)(@mui/system@7.3.9(@types/react@19.2.14)(react@19.2.4))(@types/node@25.5.2)(@types/react-dom@19.2.3(@types/react@19.2.14))(babel-plugin-react-compiler@1.0.0)(date-fns@4.1.0)(postcss@8.5.9)(rollup@4.60.1)(typescript@6.0.2)(vite@7.3.1(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.8.3))':
+  '@shortlink-org/ui-kit@0.20260407.113159(@babel/core@7.29.0)(@mui/system@7.3.9(@types/react@19.2.14)(react@19.2.5))(@types/node@25.5.2)(@types/react-dom@19.2.3(@types/react@19.2.14))(babel-plugin-react-compiler@1.0.0)(date-fns@4.1.0)(postcss@8.5.9)(rollup@4.60.1)(typescript@6.0.2)(vite@7.3.1(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.8.3))':
     dependencies:
       '@fontsource/caveat': 5.2.8
       '@fontsource/material-icons': 5.2.7
@@ -6403,7 +6426,7 @@ snapshots:
       '@mui/icons-material': 7.3.9(@mui/material@7.3.9(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@types/react@19.2.14)(react@19.2.4)
       '@mui/material': 7.3.9(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@mui/types': 7.4.12(@types/react@19.2.14)
-      '@mui/x-date-pickers': 8.27.2(@mui/material@7.3.9(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@mui/system@7.3.9(@types/react@19.2.14)(react@19.2.4))(@types/react@19.2.14)(date-fns@4.1.0)(dayjs@1.11.20)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@mui/x-date-pickers': 8.27.2(@mui/material@7.3.9(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@mui/system@7.3.9(@types/react@19.2.14)(react@19.2.5))(@types/react@19.2.14)(date-fns@4.1.0)(dayjs@1.11.20)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@tailwindcss/postcss': 4.2.2
       '@tailwindcss/typography': 0.5.19(tailwindcss@4.2.2)
       '@tanstack/react-table': 8.21.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -6572,12 +6595,12 @@ snapshots:
       picocolors: 1.1.1
       redent: 3.0.0
 
-  '@testing-library/react@16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+  '@testing-library/react@16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
     dependencies:
       '@babel/runtime': 7.29.2
       '@testing-library/dom': 10.4.1
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
+      react: 19.2.5
+      react-dom: 19.2.5(react@19.2.5)
     optionalDependencies:
       '@types/react': 19.2.14
       '@types/react-dom': 19.2.3(@types/react@19.2.14)
@@ -8512,6 +8535,11 @@ snapshots:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
 
+  next-themes@0.4.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
+    dependencies:
+      react: 19.2.5
+      react-dom: 19.2.5(react@19.2.5)
+
   next@16.2.3(@babel/core@7.29.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@next/env': 16.2.3
@@ -8522,6 +8550,31 @@ snapshots:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
       styled-jsx: 5.1.6(@babel/core@7.29.0)(react@19.2.4)
+    optionalDependencies:
+      '@next/swc-darwin-arm64': 16.2.3
+      '@next/swc-darwin-x64': 16.2.3
+      '@next/swc-linux-arm64-gnu': 16.2.3
+      '@next/swc-linux-arm64-musl': 16.2.3
+      '@next/swc-linux-x64-gnu': 16.2.3
+      '@next/swc-linux-x64-musl': 16.2.3
+      '@next/swc-win32-arm64-msvc': 16.2.3
+      '@next/swc-win32-x64-msvc': 16.2.3
+      babel-plugin-react-compiler: 1.0.0
+      sharp: 0.34.5
+    transitivePeerDependencies:
+      - '@babel/core'
+      - babel-plugin-macros
+
+  next@16.2.3(@babel/core@7.29.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
+    dependencies:
+      '@next/env': 16.2.3
+      '@swc/helpers': 0.5.15
+      baseline-browser-mapping: 2.10.17
+      caniuse-lite: 1.0.30001787
+      postcss: 8.4.31
+      react: 19.2.5
+      react-dom: 19.2.5(react@19.2.5)
+      styled-jsx: 5.1.6(@babel/core@7.29.0)(react@19.2.5)
     optionalDependencies:
       '@next/swc-darwin-arm64': 16.2.3
       '@next/swc-darwin-x64': 16.2.3
@@ -8766,6 +8819,11 @@ snapshots:
       react: 19.2.4
       scheduler: 0.27.0
 
+  react-dom@19.2.5(react@19.2.5):
+    dependencies:
+      react: 19.2.5
+      scheduler: 0.27.0
+
   react-is@16.13.1: {}
 
   react-is@17.0.2: {}
@@ -8813,6 +8871,8 @@ snapshots:
       react: 19.2.4
 
   react@19.2.4: {}
+
+  react@19.2.5: {}
 
   redent@3.0.0:
     dependencies:
@@ -9072,10 +9132,10 @@ snapshots:
       dot-case: 3.0.4
       tslib: 2.8.1
 
-  sonner@2.0.7(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  sonner@2.0.7(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
+      react: 19.2.5
+      react-dom: 19.2.5(react@19.2.5)
 
   source-map-js@1.2.1: {}
 
@@ -9189,6 +9249,13 @@ snapshots:
     dependencies:
       client-only: 0.0.1
       react: 19.2.4
+    optionalDependencies:
+      '@babel/core': 7.29.0
+
+  styled-jsx@5.1.6(@babel/core@7.29.0)(react@19.2.5):
+    dependencies:
+      client-only: 0.0.1
+      react: 19.2.5
     optionalDependencies:
       '@babel/core': 7.29.0
 
@@ -9403,10 +9470,10 @@ snapshots:
 
   urlpattern-polyfill@10.1.0: {}
 
-  urql@5.0.1(@urql/core@6.0.1(graphql@16.13.2))(react@19.2.4):
+  urql@5.0.1(@urql/core@6.0.1(graphql@16.13.2))(react@19.2.5):
     dependencies:
       '@urql/core': 6.0.1(graphql@16.13.2)
-      react: 19.2.4
+      react: 19.2.5
       wonka: 6.3.6
 
   use-callback-ref@1.3.3(@types/react@19.2.14)(react@19.2.4):
