@@ -341,9 +341,9 @@ mimesis==19.1.0 \
     --hash=sha256:af4f14852a97657c5dbfad860be90c0efe97bf3758809e034b6581a45b13814b \
     --hash=sha256:cf2ea4674819eaf386a2b8d28ded450968f1770fcb23f6c6ef884f61727bb4e6
     # via shop-admin (pyproject.toml)
-opentelemetry-api==1.40.0 \
-    --hash=sha256:159be641c0b04d11e9ecd576906462773eb97ae1b657730f0ecf64d32071569f \
-    --hash=sha256:82dd69331ae74b06f6a874704be0cfaa49a1650e1537d4a813b86ecef7d0ecf9
+opentelemetry-api==1.41.0 \
+    --hash=sha256:0e77c806e6a89c9e4f8d372034622f3e1418a11bdbe1c80a50b3d3397ad0fa4f \
+    --hash=sha256:9421d911326ec12dee8bc933f7839090cad7a3f13fcfb0f9e82f8174dc003c09
     # via
     #   shop-admin (pyproject.toml)
     #   opentelemetry-exporter-otlp-proto-grpc
@@ -357,26 +357,26 @@ opentelemetry-api==1.40.0 \
     #   opentelemetry-instrumentation-wsgi
     #   opentelemetry-sdk
     #   opentelemetry-semantic-conventions
-opentelemetry-exporter-otlp==1.40.0 \
-    --hash=sha256:48c87e539ec9afb30dc443775a1334cc5487de2f72a770a4c00b1610bf6c697d \
-    --hash=sha256:7caa0870b95e2fcb59d64e16e2b639ecffb07771b6cd0000b5d12e5e4fef765a
+opentelemetry-exporter-otlp==1.41.0 \
+    --hash=sha256:443b6a45c990ae4c55e147f97049a86c5f5b704f3d78b48b44a073a886ec4d6e \
+    --hash=sha256:97ff847321f8d4c919032a67d20d3137fb7b34eac0c47f13f71112858927fc5b
     # via shop-admin (pyproject.toml)
-opentelemetry-exporter-otlp-proto-common==1.40.0 \
-    --hash=sha256:1cbee86a4064790b362a86601ee7934f368b81cd4cc2f2e163902a6e7818a0fa \
-    --hash=sha256:7081ff453835a82417bf38dccf122c827c3cbc94f2079b03bba02a3165f25149
+opentelemetry-exporter-otlp-proto-common==1.41.0 \
+    --hash=sha256:7a99177bf61f85f4f9ed2072f54d676364719c066f6d11f515acc6c745c7acf0 \
+    --hash=sha256:966bbce537e9edb166154779a7c4f8ab6b8654a03a28024aeaf1a3eacb07d6ee
     # via
     #   shop-admin (pyproject.toml)
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
-opentelemetry-exporter-otlp-proto-grpc==1.40.0 \
-    --hash=sha256:2aa0ca53483fe0cf6405087a7491472b70335bc5c7944378a0a8e72e86995c52 \
-    --hash=sha256:bd4015183e40b635b3dab8da528b27161ba83bf4ef545776b196f0fb4ec47740
+opentelemetry-exporter-otlp-proto-grpc==1.41.0 \
+    --hash=sha256:3a1a86bd24806ccf136ec9737dbfa4c09b069f9130ff66b0acb014f9c5255fd1 \
+    --hash=sha256:f704201251c6f65772b11bddea1c948000554459101bdbb0116e0a01b70592f6
     # via
     #   shop-admin (pyproject.toml)
     #   opentelemetry-exporter-otlp
-opentelemetry-exporter-otlp-proto-http==1.40.0 \
-    --hash=sha256:a8d1dab28f504c5d96577d6509f80a8150e44e8f45f82cdbe0e34c99ab040069 \
-    --hash=sha256:db48f5e0f33217588bbc00274a31517ba830da576e59503507c839b38fa0869c
+opentelemetry-exporter-otlp-proto-http==1.41.0 \
+    --hash=sha256:a9c4ee69cce9c3f4d7ee736ad1b44e3c9654002c0816900abbafd9f3cf289751 \
+    --hash=sha256:dcd6e0686f56277db4eecbadd5262124e8f2cc739cadbc3fae3d08a12c976cf5
     # via
     #   shop-admin (pyproject.toml)
     #   opentelemetry-exporter-otlp
@@ -419,17 +419,17 @@ opentelemetry-instrumentation-wsgi==0.60b1 \
     # via
     #   shop-admin (pyproject.toml)
     #   opentelemetry-instrumentation-django
-opentelemetry-proto==1.40.0 \
-    --hash=sha256:03f639ca129ba513f5819810f5b1f42bcb371391405d99c168fe6937c62febcd \
-    --hash=sha256:266c4385d88923a23d63e353e9761af0f47a6ed0d486979777fe4de59dc9b25f
+opentelemetry-proto==1.41.0 \
+    --hash=sha256:95d2e576f9fb1800473a3e4cfcca054295d06bdb869fda4dc9f4f779dc68f7b6 \
+    --hash=sha256:b970ab537309f9eed296be482c3e7cca05d8aca8165346e929f658dbe153b247
     # via
     #   shop-admin (pyproject.toml)
     #   opentelemetry-exporter-otlp-proto-common
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
-opentelemetry-sdk==1.40.0 \
-    --hash=sha256:18e9f5ec20d859d268c7cb3c5198c8d105d073714db3de50b593b8c1345a48f2 \
-    --hash=sha256:787d2154a71f4b3d81f20524a8ce061b7db667d24e46753f32a7bc48f1c1f3f1
+opentelemetry-sdk==1.41.0 \
+    --hash=sha256:7bddf3961131b318fc2d158947971a8e37e38b1cd23470cfb72b624e7cc108bd \
+    --hash=sha256:a596f5687964a3e0d7f8edfdcf5b79cbca9c93c7025ebf5fb00f398a9443b0bd
     # via
     #   shop-admin (pyproject.toml)
     #   opentelemetry-exporter-otlp-proto-grpc
