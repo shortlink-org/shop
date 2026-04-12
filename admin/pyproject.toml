@@ -51,7 +51,7 @@ dependencies = [
   'opentelemetry-util-http==0.61b0',
   'packaging==26.0',
   'pip==26.0.1',
-  'prometheus-client==0.24.1',
+  'prometheus-client==0.25.0',
   'protobuf>=7.34.1,<7.34.2', # Compatible with googleapis-common-protos, opentelemetry-proto, and gRPC stubs
   'pytz==2026.1.post1',
   'pyyaml==6.0.3',
