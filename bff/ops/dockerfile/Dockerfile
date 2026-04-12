@@ -6,7 +6,7 @@
 # Stage 1: Generate router-config.json (offline composition)
 # =============================================================================
 ARG WGC_VERSION=0.109.0
-ARG COSMO_ROUTER_VERSION=0.301.0
+ARG COSMO_ROUTER_VERSION=0.303.0
 
 FROM node:24.14.1-alpine AS builder
 
