@@ -59,30 +59,30 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	configConfig, err := config.New()
+	config, err := provideOMSConfig()
 	if err != nil {
 		cleanup()
 		return nil, nil, err
 	}
-	loggerLogger, cleanup2, err := logger.NewDefault(context, configConfig)
+	loggerLogger, cleanup2, err := logger.NewDefault(context, config)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
 	}
-	tracerProvider, cleanup3, err := tracing.New(context, loggerLogger, configConfig)
+	tracerProvider, cleanup3, err := tracing.New(context, loggerLogger, config)
 	if err != nil {
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	monitoring, cleanup4, err := metrics.New(context, loggerLogger, tracerProvider, configConfig)
+	monitoring, cleanup4, err := metrics.New(context, loggerLogger, tracerProvider, config)
 	if err != nil {
 		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	pprofEndpoint, err := profiling.New(context, loggerLogger, tracerProvider, configConfig)
+	pprofEndpoint, err := profiling.New(context, loggerLogger, tracerProvider, config)
 	if err != nil {
 		cleanup4()
 		cleanup3()
@@ -90,7 +90,7 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	client, err := permission.New(loggerLogger, tracerProvider, monitoring, configConfig)
+	client, err := permission.New(loggerLogger, tracerProvider, monitoring, config)
 	if err != nil {
 		cleanup4()
 		cleanup3()
@@ -100,7 +100,7 @@ func InitializeOMSService() (*OMSService, func(), error) {
 	}
 	meterProvider := monitoring.Metrics
 	v := newDBOptions()
-	dbDB, err := db.New(context, loggerLogger, tracerProvider, meterProvider, configConfig, v...)
+	dbDB, err := db.New(context, loggerLogger, tracerProvider, meterProvider, config, v...)
 	if err != nil {
 		cleanup4()
 		cleanup3()
@@ -132,7 +132,7 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	rueidisClient, cleanup5, err := newRedisClient(configConfig)
+	rueidisClient, cleanup5, err := newRedisClient(config)
 	if err != nil {
 		cleanup4()
 		cleanup3()
@@ -141,7 +141,7 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		return nil, nil, err
 	}
 	leaderboardStore := leaderboard.New(rueidisClient)
-	eventBus, cleanup6, err := newEventBus(context, configConfig, loggerLogger, dbDB, monitoring)
+	eventBus, cleanup6, err := newEventBus(context, config, loggerLogger, dbDB, monitoring)
 	if err != nil {
 		cleanup5()
 		cleanup4()
@@ -151,7 +151,7 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		return nil, nil, err
 	}
 	eventPublisher := bus.NewEventPublisher(eventBus)
-	deliveryClient, cleanup7, err := NewDeliveryClient(configConfig, loggerLogger)
+	deliveryClient, cleanup7, err := NewDeliveryClient(config, loggerLogger)
 	if err != nil {
 		cleanup6()
 		cleanup5()
@@ -161,7 +161,7 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	deliveryConsumer, cleanup8, err := NewDeliveryConsumer(context, configConfig, loggerLogger, uoW, postgresStore, postgresStore, eventPublisher)
+	deliveryConsumer, cleanup8, err := NewDeliveryConsumer(context, config, loggerLogger, uoW, postgresStore, postgresStore, eventPublisher)
 	if err != nil {
 		cleanup7()
 		cleanup6()
@@ -172,7 +172,7 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	leaderboardConsumer, cleanup9, err := NewLeaderboardConsumer(context, configConfig, loggerLogger, uoW, postgresStore, leaderboardStore)
+	leaderboardConsumer, cleanup9, err := NewLeaderboardConsumer(context, config, loggerLogger, uoW, postgresStore, leaderboardStore)
 	if err != nil {
 		cleanup8()
 		cleanup7()
@@ -184,7 +184,7 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	pricerClient, cleanup10, err := NewPricerClient(configConfig, loggerLogger)
+	pricerClient, cleanup10, err := NewPricerClient(config, loggerLogger)
 	if err != nil {
 		cleanup9()
 		cleanup8()
@@ -198,7 +198,7 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		return nil, nil, err
 	}
 	registry := monitoring.Prometheus
-	recorder, err := flight_trace.New(context, configConfig)
+	recorder, err := flight_trace.New(context, config)
 	if err != nil {
 		cleanup10()
 		cleanup9()
@@ -212,7 +212,7 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	server, err := grpc.InitServer(context, loggerLogger, tracerProvider, registry, recorder, configConfig)
+	server, err := grpc.InitServer(context, loggerLogger, tracerProvider, registry, recorder, config)
 	if err != nil {
 		cleanup10()
 		cleanup9()
@@ -422,7 +422,7 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	clientClient, err := temporal.New(loggerLogger, configConfig, tracerProvider, monitoring)
+	clientClient, err := temporal.New(loggerLogger, config, tracerProvider, monitoring)
 	if err != nil {
 		cleanup10()
 		cleanup9()
@@ -479,7 +479,7 @@ func InitializeOMSService() (*OMSService, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	omsService, err := NewOMSService(loggerLogger, configConfig, monitoring, tracerProvider, pprofEndpoint, client, dbDB, uoW, store, postgresStore, leaderboardStore, eventPublisher, deliveryClient, deliveryConsumer, leaderboardConsumer, pricerClient, response, cartRPC, orderRPC, clientClient, cartWorker, orderWorker)
+	omsService, err := NewOMSService(loggerLogger, config, monitoring, tracerProvider, pprofEndpoint, client, dbDB, uoW, store, postgresStore, leaderboardStore, eventPublisher, deliveryClient, deliveryConsumer, leaderboardConsumer, pricerClient, response, cartRPC, orderRPC, clientClient, cartWorker, orderWorker)
 	if err != nil {
 		cleanup10()
 		cleanup9()
@@ -563,7 +563,7 @@ var CustomDefaultSet = wire.NewSet(
 
 var OMSSet = wire.NewSet(
 
-	CustomDefaultSet, flight_trace.New, grpc.InitServer, config.New, logger.NewDefault, tracing.New, metrics.New, db.New, newDBOptions, wire.FieldsOf(new(*metrics.Monitoring), "Metrics", "Prometheus"), newRedisClient,
+	CustomDefaultSet, flight_trace.New, grpc.InitServer, provideOMSConfig, logger.NewDefault, tracing.New, metrics.New, db.New, newDBOptions, wire.FieldsOf(new(*metrics.Monitoring), "Metrics", "Prometheus"), newRedisClient,
 
 	newUnitOfWork, wire.Bind(new(ports.UnitOfWork), new(*postgres3.UoW)), postgres.New, postgres2.New, wire.Bind(new(ports.CartRepository), new(*postgres.Store)), wire.Bind(new(ports.OrderRepository), new(*postgres2.Store)), wire.Bind(new(ports.DeliveryInboxRepository), new(*postgres2.Store)), cart_goods_index.New, wire.Bind(new(ports.CartGoodsIndex), new(*cart_goods_index.Store)), leaderboard.New, wire.Bind(new(ports.LeaderboardRepository), new(*leaderboard.Store)), newEventBus, bus.NewEventPublisher, wire.Bind(new(ports.EventPublisher), new(*bus.EventPublisher)), NewDeliveryClient,
 	NewDeliveryConsumer,

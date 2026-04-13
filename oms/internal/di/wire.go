@@ -128,7 +128,7 @@ var OMSSet = wire.NewSet(
 	grpc.InitServer,
 
 	// Config & Observability (go-sdk)
-	config.New,
+	provideOMSConfig,
 	logger.NewDefault,
 
 	// Observability (go-sdk)

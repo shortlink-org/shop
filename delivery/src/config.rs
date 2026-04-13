@@ -6,6 +6,7 @@ use std::env;
 use std::time::Duration;
 
 use thiserror::Error;
+use url::Url;
 
 /// Configuration errors
 #[derive(Debug, Error)]
@@ -90,11 +91,69 @@ pub struct TemporalConfig {
     pub worker_build_id: String,
 }
 
+/// Prefer the `delivery` schema for unqualified names (notably SeaORM's `seaql_migrations`).
+///
+/// PostgreSQL 15+ no longer grants `CREATE` on `public` to all roles. The Crunchy `delivery`
+/// user has `CREATE` on schema `delivery` (see `ops/Helm/common/templates/store/configmap.yaml`),
+/// but migration metadata is created as an unqualified table unless `search_path` is set.
+///
+/// If `DATABASE_URL` already sets `search_path` via `options`, it is left unchanged.
+fn database_url_for_delivery_postgres(database_url: &str) -> Result<String, ConfigError> {
+    const SEARCH_PATH_OPT: &str = "-csearch_path=delivery,public";
+
+    let mut url = Url::parse(database_url).map_err(|e| {
+        ConfigError::InvalidValue("DATABASE_URL".to_string(), e.to_string())
+    })?;
+
+    if !matches!(url.scheme(), "postgres" | "postgresql") {
+        return Ok(database_url.to_owned());
+    }
+
+    let pairs: Vec<(String, String)> = url.query_pairs().into_owned().collect();
+    if pairs
+        .iter()
+        .any(|(k, v)| k == "options" && v.contains("search_path"))
+    {
+        return Ok(database_url.to_owned());
+    }
+
+    let mut out: Vec<(String, String)> = Vec::new();
+    let mut merged_options = false;
+    for (k, v) in pairs {
+        if k == "options" {
+            let next = if v.is_empty() {
+                SEARCH_PATH_OPT.to_string()
+            } else {
+                format!("{v} {SEARCH_PATH_OPT}")
+            };
+            out.push((k, next));
+            merged_options = true;
+        } else {
+            out.push((k, v));
+        }
+    }
+    if !merged_options {
+        out.push(("options".to_string(), SEARCH_PATH_OPT.to_string()));
+    }
+
+    url.set_query(None);
+    {
+        let mut q = url.query_pairs_mut();
+        for (k, v) in &out {
+            q.append_pair(k, v);
+        }
+    }
+
+    Ok(url.into())
+}
+
 impl Config {
     /// Load configuration from environment variables
     ///
     /// Required env vars:
-    /// - DATABASE_URL: PostgreSQL connection string
+    /// - DATABASE_URL: PostgreSQL connection string (for `postgres`/`postgresql` URLs, libpq
+    ///   `options=-csearch_path=delivery,public` is merged in unless `options` already sets
+    ///   `search_path`, so SeaORM migration metadata is created in schema `delivery`)
     /// - REDIS_URL: Redis connection string
     ///
     /// Optional env vars:
@@ -137,6 +196,7 @@ impl Config {
 
         let database_url = env::var("DATABASE_URL")
             .map_err(|_| ConfigError::MissingEnv("DATABASE_URL".to_string()))?;
+        let database_url = database_url_for_delivery_postgres(&database_url)?;
 
         let redis_url =
             env::var("REDIS_URL").map_err(|_| ConfigError::MissingEnv("REDIS_URL".to_string()))?;
@@ -290,9 +350,42 @@ impl TemporalConfig {
 
 #[cfg(test)]
 mod tests {
+    use super::database_url_for_delivery_postgres;
+
     #[test]
-    fn test_default_grpc_port() {
-        // This test requires env vars to be set
-        // In practice, use a test helper to set them
+    fn database_url_appends_search_path_options() {
+        let out = database_url_for_delivery_postgres(
+            "postgres://u:p@db.example:5432/shop",
+        )
+        .unwrap();
+        assert!(
+            out.contains("options=") && out.contains("search_path%3Ddelivery%2Cpublic")
+                || out.contains("options=") && out.contains("search_path=delivery%2Cpublic"),
+            "unexpected URL encoding: {out}"
+        );
+    }
+
+    #[test]
+    fn database_url_merges_existing_options() {
+        let out = database_url_for_delivery_postgres(
+            "postgresql://u:p@h:5432/db?options=-ctimezone%3DUTC",
+        )
+        .unwrap();
+        assert!(out.contains("timezone"));
+        assert!(out.contains("search_path"));
+    }
+
+    #[test]
+    fn database_url_respects_existing_search_path() {
+        let input = "postgres://u:p@h:5432/db?options=-csearch_path%3Doms%2Cpublic";
+        let out = database_url_for_delivery_postgres(input).unwrap();
+        assert_eq!(out, input);
+    }
+
+    #[test]
+    fn database_url_non_postgres_unchanged() {
+        let input = "sqlite://./local.db";
+        let out = database_url_for_delivery_postgres(input).unwrap();
+        assert_eq!(out, input);
     }
 }
