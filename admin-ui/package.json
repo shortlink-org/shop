@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@apollo/client": "^4.1.7",
-    "@ory/client": "^1.22.34",
+    "@ory/client": "^1.22.35",
     "@shortlink-org/ui-kit": "^0.20260407.113159",
     "@urql/core": "^6.0.1",
     "graphql": "^16.13.2",
