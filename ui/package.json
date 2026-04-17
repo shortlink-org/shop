@@ -49,7 +49,7 @@
     "react": "19.2.5",
     "react-dom": "19.2.5",
     "react-hook-form": "^7.72.1",
-    "redis": "^5.11.0",
+    "redis": "^5.12.1",
     "sanitize-html": "^2.17.2",
     "sonner": "^2.0.7",
     "temporal-polyfill": "^0.3.2",
