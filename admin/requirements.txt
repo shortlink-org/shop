@@ -204,9 +204,9 @@ django-request-logging==0.7.5 \
     --hash=sha256:4d9e520842303aaf654c6ffd39831b04513ea343574f8579a59ada46ffb95fb6 \
     --hash=sha256:94934d77c2d0fd76fdb9879b874368aa7d55672f0c7e1f59dd39b991c3e123b4
     # via shop-admin (pyproject.toml)
-django-unfold==0.89.0 \
-    --hash=sha256:1ecf73d491f089139ddd0f10aea7680fc6db02ed789db04d8c185be33b581593 \
-    --hash=sha256:34a88b6bde940af01f6813f8f9d15684a16b5d7749226a4139367c7f988a62f8
+django-unfold==0.90.0 \
+    --hash=sha256:e1627e8a0c8d16311b6e43736eaed449204a2f6cb6c323b63e583a07517f4fcd \
+    --hash=sha256:f921804427a705cfaadca941a8ab32da033735acfb4c43de27f39db5a7467001
     # via shop-admin (pyproject.toml)
 djangorestframework==3.17.1 \
     --hash=sha256:a6def5f447fe78ff853bff1d47a3c59bf38f5434b031780b351b0c73a62db1a5 \
