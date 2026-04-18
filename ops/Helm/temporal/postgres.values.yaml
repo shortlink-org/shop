@@ -1,0 +1,37 @@
+# Workflow persistence via Crunchy PostgresCluster (shop-common): user temporal, DBs temporal + temporal_visibility.
+# PgBouncer: shop-postgres-pgbouncer.shortlink-shop.svc.cluster.local:5432
+# Secret in release namespace: templates/credentials-postgres-secret.yaml → existingSecret below.
+# Password must match shop-postgres-pguser-temporal in shortlink-shop (or the value in storeCredentials.temporalPostgresPassword).
+temporal:
+  server:
+    config:
+      persistence:
+        datastores:
+          default:
+            sql:
+              createDatabase: true
+              manageSchema: true
+              pluginName: postgres12
+              driverName: postgres12
+              databaseName: temporal
+              connectAddr: "shop-postgres-pgbouncer.shortlink-shop.svc.cluster.local:5432"
+              connectProtocol: tcp
+              user: temporal
+              existingSecret: temporal-postgres-secret
+              secretKey: password
+              connectAttributes:
+                sslmode: disable
+          visibility:
+            sql:
+              createDatabase: true
+              manageSchema: true
+              pluginName: postgres12
+              driverName: postgres12
+              databaseName: temporal_visibility
+              connectAddr: "shop-postgres-pgbouncer.shortlink-shop.svc.cluster.local:5432"
+              connectProtocol: tcp
+              user: temporal
+              existingSecret: temporal-postgres-secret
+              secretKey: password
+              connectAttributes:
+                sslmode: disable
