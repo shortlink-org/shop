@@ -3,6 +3,25 @@
 # Declare variables to be passed into your templates.
 
 # ==============================================================================
+# Grafana dashboards (Grafana sidecar: label grafana_dashboard + folder annotation).
+# Same list as upstream Temporal Helm README — "Exploring Metrics via Grafana":
+# https://github.com/temporalio/helm-charts/blob/main/README.md#exploring-metrics-via-grafana
+# Pattern: ops/Helm/common/templates/store/grafana/postgres-dashboard.yaml (.json.url → raw JSON).
+grafanaDashboards:
+  enabled: true
+  configMapName: temporal-dashboard
+  folder: Temporal
+  dashboards:
+    "server-general-github.json.url": "https://raw.githubusercontent.com/temporalio/dashboards/helm/server/server-general.json"
+    "sdk-general-github.json.url": "https://raw.githubusercontent.com/temporalio/dashboards/helm/sdk/sdk-general.json"
+    "misc-advanced-visibility-specific-github.json.url": "https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/advanced-visibility-specific.json"
+    "misc-clustermonitoring-kubernetes-github.json.url": "https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/clustermonitoring-kubernetes.json"
+    "misc-frontend-service-specific-github.json.url": "https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/frontend-service-specific.json"
+    "misc-history-service-specific-github.json.url": "https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/history-service-specific.json"
+    "misc-matching-service-specific-github.json.url": "https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/matching-service-specific.json"
+    "misc-worker-service-specific-github.json.url": "https://raw.githubusercontent.com/temporalio/dashboards/helm/misc/worker-service-specific.json"
+
+# ==============================================================================
 # Deploy configuration (required for shortlink-template http_route)
 deploy:
   type: Deployment
@@ -83,7 +102,12 @@ temporal:
         memory: "512Mi"
 
     config:
-      persistence: {}
+      # Upstream chart >= 1.0.0-rc.2 no longer bundles Cassandra/Elasticsearch; configure external stores here.
+      persistence:
+        defaultStore: default
+        visibilityStore: visibility
+        numHistoryShards: 512
+        # Datastores: cassandra.values.yaml (default), elasticsearch.values.yaml (visibility) — merge all three with Helm / Argo CD.
 
     metrics:
       serviceMonitor:
@@ -130,54 +154,10 @@ temporal:
     ingress:
       enabled: false
 
-  elasticsearch:
-    enabled: true
-    replicas: 1
-
-    # Disable Istio sidecar injection
-    podAnnotations:
-      sidecar.istio.io/inject: "false"
-
-    # Resource configuration for Elasticsearch (visibility store)
-    resources:
-      requests:
-        cpu: "100m"
-        memory: "512Mi"
-      limits:
-        cpu: "1000m"
-        memory: "2Gi"
-
-  cassandra:
-    enabled: true
-
-    # Disable Istio sidecar injection
-    podAnnotations:
-      sidecar.istio.io/inject: "false"
-
-    persistence:
-      storageClass: local-path
-      size: 1Gi
-
-    config:
-      cluster_size: 1
-
-    # Resource configuration for Cassandra (workflow persistence)
-    resources:
-      requests:
-        cpu: "100m"
-        memory: "512Mi"
-      limits:
-        cpu: "1000m"
-        memory: "2Gi"
-
-    exporter:
-      enabled: false
-
-  prometheus:
-    enabled: false
-
-  grafana:
-    enabled: false
+  # Compatibility shims for Temporal server 1.30+ images (see upstream chart values).
+  shims:
+    dockerize: false
+    elasticsearchTool: false
 
 # ==============================================================================
 # Temporal Namespace Setup Job

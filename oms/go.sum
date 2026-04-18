@@ -549,8 +549,8 @@ github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 h1:bsUq1dX0N8A
 github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
 github.com/redis/rueidis v1.0.74 h1:J5ZNyxMqX+sDQxQztRI928W6TrERpo+pHSwhftnX7NA=
 github.com/redis/rueidis v1.0.74/go.mod h1:lfdcZzJ1oKGKL37vh9fO3ymwt+0TdjkkUCJxbgpmcgQ=
-github.com/redis/rueidis/rueidisotel v1.0.72 h1:QuqBIdGEd2OsT4fLccpdM5pVDtgXmD1+bs/Jlz4sXfw=
-github.com/redis/rueidis/rueidisotel v1.0.72/go.mod h1:MzJc6dxhDVJpOWjwKlDvVdcsHMo8l1tB17tCK3jy0+k=
+github.com/redis/rueidis/rueidisotel v1.0.74 h1:r5htOMTRelopTCU4+AXQauhANBxcgVXk/01C5RihwQ8=
+github.com/redis/rueidis/rueidisotel v1.0.74/go.mod h1:sGs+LGIl0L11CA6HuFcPMxXXWiqN5CtOxOGJJ/iRhkA=
 github.com/remyoudompheng/bigfft v0.0.0-20190728182440-6a916e37a237/go.mod h1:qqbHyh8v60DhA7CoWK5oRCqLrMHRGoxYCSS9EjAz6Eo=
 github.com/robfig/cron v1.2.0 h1:ZjScXvvxeQ63Dbyxy76Fj3AT3Ut0aKsyd2/tl3DTMuQ=
 github.com/robfig/cron v1.2.0/go.mod h1:JGuDeoQd7Z6yL4zQhZ3OPEVHB7fL6Ka6skscFHfmt2k=

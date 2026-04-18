@@ -19,6 +19,9 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 # Copy package files first (better layer caching)
 COPY package.json pnpm-lock.yaml .npmrc* ./
 
+# postinstall runs during install and needs this script before the rest of the source is copied
+COPY scripts/patch-ui-kit-storefront.cjs scripts/patch-ui-kit-storefront.cjs
+
 # Fetch + offline install using cache mount for pnpm store (no node_modules copy between stages)
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
     pnpm fetch --frozen-lockfile && pnpm install --offline --frozen-lockfile

@@ -1,0 +1,23 @@
+# Visibility store (Elasticsearch). Merge with values.yaml when installing / templating:
+#   helm install ... -f values.yaml -f cassandra.values.yaml -f elasticsearch.values.yaml
+# Argo CD: add all three under spec.source.helm.valueFiles in that order.
+temporal:
+  server:
+    config:
+      persistence:
+        datastores:
+          visibility:
+            elasticsearch:
+              version: v7
+              url:
+                scheme: http
+                host: "elasticsearch.example.com:9200"
+              username: ""
+              # Option 1: password in values (chart creates a secret)
+              password: ""
+              # Option 2: existing Secret (recommended for production)
+              # existingSecret: temporal-es-secret
+              # secretKey: password
+              logLevel: error
+              indices:
+                visibility: temporal_visibility_v1
