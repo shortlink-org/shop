@@ -1300,7 +1300,7 @@ requires-dist = [
     { name = "grpcio", specifier = "==1.80.0" },
     { name = "gunicorn", specifier = ">=25.3.0" },
     { name = "idna", specifier = "==3.11" },
-    { name = "importlib-metadata", specifier = ">=6.0,<8.8" },
+    { name = "importlib-metadata", specifier = ">=6.11.0,<8.8" },
     { name = "inflection", specifier = "==0.5.1" },
     { name = "json-log-formatter", specifier = "==1.1.1" },
     { name = "jsonschema", specifier = "==4.26.0" },
