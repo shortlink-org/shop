@@ -8,11 +8,10 @@ monitoring:
   alerting:
     enabled: true
 
-# Store workloads managed by cluster operators (ECK, K8ssandra). Deploy operators from gitops (elastic-operator, cassandra-operator).
-# Passwords must match shop/ops/Helm/temporal storeCredentials.
+# Store workloads managed by cluster operators (ECK). Deploy operators from gitops (e.g. elastic-operator).
+# Elasticsearch password must match shop/ops/Helm/temporal storeCredentials where used.
 store:
   credentials:
-    cassandraSuperuserPassword: shortlink-dev-cassandra
     elasticsearchElasticPassword: shortlink-dev-elastic
   elasticsearch:
     enabled: true
@@ -25,16 +24,3 @@ store:
     # Greenfield: pre-create elastic user Secret (template elasticsearch-elastic-secret.yaml).
     # Existing cluster: may conflict with ECK-managed Secret — set false and rotate via ECK/API.
     bootstrapElasticSecret: true
-  cassandra:
-    enabled: true
-    # With k8ssandra-operator clusterScoped: false, the CR must live in the operator namespace.
-    namespace: k8ssandra-operator
-    serverVersion: "5.0.4"
-    datacenterName: shop-dc
-    # DC stopped (maintenance / cost); must match live object or Argo diffs on defaulting.
-    stopped: false
-    size: 1
-    storageSize: 1Gi
-    storageClassName: local-path
-    heapSize: 512Mi
-    heapNewGenSize: 256Mi
