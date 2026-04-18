@@ -20,7 +20,7 @@ temporal:
               existingSecret: temporal-postgres-secret
               secretKey: password
               connectAttributes:
-                sslmode: disable
+                sslmode: require
           visibility:
             sql:
               createDatabase: true
@@ -34,4 +34,4 @@ temporal:
               existingSecret: temporal-postgres-secret
               secretKey: password
               connectAttributes:
-                sslmode: disable
+                sslmode: require
