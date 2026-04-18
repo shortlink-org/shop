@@ -1,10 +1,9 @@
 # Common default values for temporal.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
-# Must match shop/ops/Helm/common store.credentials (Cassandra + Elasticsearch elastic).
+# temporalPostgresPassword: must match Secret shop-postgres-pguser-temporal (key password) in shortlink-shop (Crunchy operator).
 storeCredentials:
-  cassandraSuperuserPassword: shortlink-dev-cassandra
-  elasticsearchElasticPassword: shortlink-dev-elastic
+  temporalPostgresPassword: shortlink-dev-temporal
 
 # ==============================================================================
 # Grafana dashboards (Grafana sidecar: label grafana_dashboard + folder annotation).
@@ -111,7 +110,7 @@ temporal:
         defaultStore: default
         visibilityStore: visibility
         numHistoryShards: 512
-        # Datastores: cassandra.values.yaml (default), elasticsearch.values.yaml (visibility) — merge all three with Helm / Argo CD.
+        # Datastores: postgres.values.yaml (default + visibility SQL) — merge with Helm / Argo CD.
 
     metrics:
       serviceMonitor:
