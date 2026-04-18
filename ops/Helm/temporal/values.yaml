@@ -1,6 +1,10 @@
 # Common default values for temporal.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
+# Must match shop/ops/Helm/common store.credentials (Cassandra + Elasticsearch elastic).
+storeCredentials:
+  cassandraSuperuserPassword: shortlink-dev-cassandra
+  elasticsearchElasticPassword: shortlink-dev-elastic
 
 # ==============================================================================
 # Grafana dashboards (Grafana sidecar: label grafana_dashboard + folder annotation).

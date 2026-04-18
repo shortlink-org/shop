@@ -7,6 +7,12 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   version: {{ .Values.store.elasticsearch.version | quote }}
+  {{- if .Values.store.elasticsearch.httpTlsDisabled }}
+  http:
+    tls:
+      selfSignedCertificate:
+        disabled: true
+  {{- end }}
   nodeSets:
     - name: default
       count: {{ .Values.store.elasticsearch.nodeCount }}

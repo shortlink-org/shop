@@ -1,6 +1,5 @@
-# Workflow persistence (Cassandra). Merge with values.yaml (+ elasticsearch.values.yaml):
-#   helm install ... -f values.yaml -f cassandra.values.yaml -f elasticsearch.values.yaml
-# Argo CD: list valueFiles in that order.
+# Workflow persistence. Merge: values.yaml + cassandra.values.yaml + elasticsearch.values.yaml.
+# Cassandra: shop-cassandra (k8ssandra-operator), CQL :9042 — Secret: templates/credentials-cassandra-secret.yaml.
 temporal:
   server:
     config:
@@ -10,13 +9,11 @@ temporal:
             cassandra:
               createDatabase: true
               manageSchema: true
-              hosts: "cassandra1.example.com,cassandra2.example.com"
+              hosts: "shop-cassandra-shop-dc-service.k8ssandra-operator.svc.cluster.local"
               port: 9042
               keyspace: temporal
-              user: cassandra_user
-              # Option 1: password in values (chart creates a secret) — do not commit real passwords
-              # password: your_password
-              # Option 2: existing Secret (recommended for production)
+              user: shop-cassandra-superuser
               existingSecret: temporal-cassandra-secret
               secretKey: password
-              replicationFactor: 3
+              # Single-node shop DC — RF must not exceed node count.
+              replicationFactor: 1

@@ -2,7 +2,7 @@ apiVersion: v2
 appVersion: "1.0.0"
 name: common
 description: ShortLink common services
-version: 0.3.3
+version: 0.3.5
 kubeVersion: ">= 1.30.0 || >= v1.30.0-0"
 keywords:
   - shortlink

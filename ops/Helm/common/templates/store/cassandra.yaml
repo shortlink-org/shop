@@ -8,6 +8,8 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   cassandra:
+    superuserSecretRef:
+      name: shop-cassandra-fixed-credentials
     metadata:
       commonAnnotations:
         sidecar.istio.io/inject: "false"

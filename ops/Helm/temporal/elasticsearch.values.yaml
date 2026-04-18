@@ -1,10 +1,6 @@
-# Visibility store (Elasticsearch). Merge with values.yaml when installing / templating:
-#   helm install ... -f values.yaml -f cassandra.values.yaml -f elasticsearch.values.yaml
-# Argo CD: add all three under spec.source.helm.valueFiles in that order.
-#
-# ECK: shop-elasticsearch @ ES 9.x (image version). Temporal's field below is NOT the ES major:
-#   elasticsearch.version is only v7|v8 = which Temporal index/schema pack to use (v8 for ES 8+ and ES 9).
-# ECK defaults to HTTPS :9200 — ensure Temporal trusts the cluster CA or tune TLS.
+# Visibility (ECK shop-elasticsearch). v8 = Temporal index schema version for ES 8+/9.
+# Requires common store.elasticsearch.httpTlsDisabled: true for plain HTTP; otherwise use https + TLS/CA.
+# Elastic user password Secret: templates/credentials-elasticsearch-elastic-secret.yaml
 temporal:
   server:
     config:
@@ -14,14 +10,11 @@ temporal:
             elasticsearch:
               version: v8
               url:
-                scheme: https
+                scheme: http
                 host: "shop-elasticsearch-es-http.shortlink-shop.svc.cluster.local:9200"
-              username: ""
-              # Option 1: password in values (chart creates a secret)
-              password: ""
-              # Option 2: existing Secret (recommended for production)
-              # existingSecret: temporal-es-secret
-              # secretKey: password
+              username: elastic
+              existingSecret: temporal-elasticsearch-elastic-user
+              secretKey: elastic
               logLevel: error
               indices:
                 visibility: temporal_visibility_v1
