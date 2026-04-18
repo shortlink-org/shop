@@ -7,20 +7,3 @@ monitoring:
 
   alerting:
     enabled: true
-
-# Store workloads managed by cluster operators (ECK). Deploy operators from gitops (e.g. elastic-operator).
-# Elasticsearch password must match shop/ops/Helm/temporal storeCredentials where used.
-store:
-  credentials:
-    elasticsearchElasticPassword: shortlink-dev-elastic
-  elasticsearch:
-    enabled: true
-    version: "9.3.1"
-    nodeCount: 1
-    storageSize: 1Gi
-    storageClassName: local-path
-    # ECK: plain HTTP :9200. For production prefer httpTlsDisabled: false and TLS.
-    httpTlsDisabled: true
-    # Greenfield: pre-create elastic user Secret (template elasticsearch-elastic-secret.yaml).
-    # Existing cluster: may conflict with ECK-managed Secret — set false and rotate via ECK/API.
-    bootstrapElasticSecret: true
