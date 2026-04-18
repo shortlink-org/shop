@@ -146,3 +146,7 @@ spec:
     - name: delivery
       databases:
         - shop
+    - name: temporal
+      databases:
+        - temporal
+        - temporal_visibility
