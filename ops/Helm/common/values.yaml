@@ -22,6 +22,8 @@ store:
     namespace: k8ssandra-operator
     serverVersion: "5.0.4"
     datacenterName: shop-dc
+    # DC stopped (maintenance / cost); must match live object or Argo diffs on defaulting.
+    stopped: false
     size: 1
     storageSize: 1Gi
     storageClassName: local-path

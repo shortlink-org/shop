@@ -27,5 +27,6 @@ spec:
     datacenters:
       - metadata:
           name: {{ .Values.store.cassandra.datacenterName }}
+        stopped: {{ .Values.store.cassandra.stopped | default false }}
         size: {{ .Values.store.cassandra.size }}
 {{- end }}
