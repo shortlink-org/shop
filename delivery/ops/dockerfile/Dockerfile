@@ -9,7 +9,7 @@ ARG BUILDKIT_SBOM_SCAN_CONTEXT=true
 # ==============================================================================
 # Chef stage - install cargo-chef for dependency caching
 # ==============================================================================
-FROM --platform=$BUILDPLATFORM rust:1.94-alpine AS chef
+FROM --platform=$BUILDPLATFORM rust:1.95-alpine AS chef
 
 RUN apk add --no-cache musl-dev
 RUN cargo install cargo-chef --locked
