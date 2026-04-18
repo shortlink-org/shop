@@ -1,0 +1,29 @@
+{{- if .Values.store.elasticsearch.enabled }}
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: shop-elasticsearch
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  version: {{ .Values.store.elasticsearch.version | quote }}
+  nodeSets:
+    - name: default
+      count: {{ .Values.store.elasticsearch.nodeCount }}
+      config:
+        node.store.allow_mmap: false
+      podTemplate:
+        metadata:
+          annotations:
+            sidecar.istio.io/inject: "false"
+      volumeClaimTemplates:
+        - metadata:
+            name: elasticsearch-data
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: {{ .Values.store.elasticsearch.storageSize }}
+            storageClassName: {{ .Values.store.elasticsearch.storageClassName }}
+{{- end }}

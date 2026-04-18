@@ -7,3 +7,23 @@ monitoring:
 
   alerting:
     enabled: true
+
+# Store workloads managed by cluster operators (ECK, K8ssandra). Deploy operators from gitops (elastic-operator, cassandra-operator).
+store:
+  elasticsearch:
+    enabled: true
+    version: "9.3.1"
+    nodeCount: 1
+    storageSize: 1Gi
+    storageClassName: local-path
+  cassandra:
+    enabled: true
+    # With k8ssandra-operator clusterScoped: false, the CR must live in the operator namespace.
+    namespace: k8ssandra-operator
+    serverVersion: "5.0.4"
+    datacenterName: shop-dc
+    size: 1
+    storageSize: 1Gi
+    storageClassName: local-path
+    heapSize: 512Mi
+    heapNewGenSize: 256Mi

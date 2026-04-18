@@ -1,0 +1,31 @@
+{{- if .Values.store.cassandra.enabled }}
+apiVersion: k8ssandra.io/v1alpha1
+kind: K8ssandraCluster
+metadata:
+  name: shop-cassandra
+  namespace: {{ .Values.store.cassandra.namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  cassandra:
+    metadata:
+      commonAnnotations:
+        sidecar.istio.io/inject: "false"
+    serverVersion: {{ .Values.store.cassandra.serverVersion | quote }}
+    storageConfig:
+      cassandraDataVolumeClaimSpec:
+        storageClassName: {{ .Values.store.cassandra.storageClassName }}
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: {{ .Values.store.cassandra.storageSize }}
+    config:
+      jvmOptions:
+        heapSize: {{ .Values.store.cassandra.heapSize }}
+        heapNewGenSize: {{ .Values.store.cassandra.heapNewGenSize }}
+    datacenters:
+      - metadata:
+          name: {{ .Values.store.cassandra.datacenterName }}
+        size: {{ .Values.store.cassandra.size }}
+{{- end }}
