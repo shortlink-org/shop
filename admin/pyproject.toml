@@ -17,7 +17,7 @@ dependencies = [
   'django-crispy-forms>=2.6',
   'django-debug-toolbar==6.3.0',
   'django-environ==0.13.0',
-  'django-health-check==4.3.1',
+  'django-health-check==4.4.0',
   'django-prometheus==2.5.0.dev12',  # Django 6 support (pre-release)
   'django-request-logging==0.7.5',
   'djangorestframework==3.17.1',
