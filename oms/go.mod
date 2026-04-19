@@ -14,7 +14,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/google/wire v0.7.0
 	github.com/gorilla/websocket v1.5.3
-	github.com/jackc/pgx/v5 v5.9.1
+	github.com/jackc/pgx/v5 v5.9.2
 	github.com/redis/rueidis v1.0.74
 	github.com/shopspring/decimal v1.4.0
 	github.com/shortlink-org/go-sdk/auth v0.0.0-20260307190635-c49239be411f
