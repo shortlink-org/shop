@@ -1349,7 +1349,7 @@ requires-dist = [
     { name = "urllib3", specifier = "==2.6.3" },
     { name = "uv", specifier = "==0.11.7" },
     { name = "whitenoise", specifier = ">=6.12.0" },
-    { name = "wrapt", specifier = ">=1.17.3,<3" },
+    { name = "wrapt", specifier = ">=2.1.2,<3" },
     { name = "zipp", specifier = "==3.23.1" },
 ]
 provides-extras = ["dev", "test"]
