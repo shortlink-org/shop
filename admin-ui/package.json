@@ -18,7 +18,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@apollo/client": "^4.1.7",
+    "@apollo/client": "^4.1.9",
     "@ory/client": "^1.22.35",
     "@shortlink-org/ui-kit": "^0.20260407.113159",
     "@urql/core": "^6.0.1",
