@@ -38,7 +38,7 @@
     "@opentelemetry/instrumentation": "^0.215.0",
     "@opentelemetry/resources": "^2.7.0",
     "@opentelemetry/sdk-logs": "^0.215.0",
-    "@ory/client": "^1.22.35",
+    "@ory/client": "^1.22.37",
     "@tanstack/react-query": "^5.99.2",
     "@types/react-dom": "^19.2.3",
     "@vercel/otel": "^2.1.2",
