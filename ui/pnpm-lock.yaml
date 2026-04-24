@@ -37,8 +37,8 @@ importers:
         specifier: ^0.215.0
         version: 0.215.0(@opentelemetry/api@1.9.1)
       '@ory/client':
-        specifier: ^1.22.35
-        version: 1.22.35
+        specifier: ^1.22.37
+        version: 1.22.37
       '@tanstack/react-query':
         specifier: ^5.99.2
         version: 5.99.2(react@19.2.5)
@@ -1106,8 +1106,8 @@ packages:
     resolution: {integrity: sha512-cifvXDhcqMwwTlTK04GBNeIe7yyo28Mfby85QXFe1Yk8nmi36Ab/5UQwptOx84SsoGNRg+EVSjwzfSZMy6pmlw==}
     engines: {node: '>=14'}
 
-  '@ory/client@1.22.35':
-    resolution: {integrity: sha512-WXWSMLqHnSFE503GQjkqCgOAhAq6m9l+K+YYR8RrmBB7hxFzopA1pydorZkN1mtnh2VYSJSnfgMC48pgHUM6WA==}
+  '@ory/client@1.22.37':
+    resolution: {integrity: sha512-UEYHSveRRD3TCT0JB54ZKQoRMEHn7HTsNsMOjz2t3bzCs5aNjgpjYIBK4z5zE2PwNrcInZyQXfRiwK+LIUaOug==}
 
   '@popperjs/core@2.11.8':
     resolution: {integrity: sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==}
@@ -4835,7 +4835,7 @@ snapshots:
 
   '@opentelemetry/semantic-conventions@1.40.0': {}
 
-  '@ory/client@1.22.35':
+  '@ory/client@1.22.37':
     dependencies:
       axios: 1.15.1
     transitivePeerDependencies:
