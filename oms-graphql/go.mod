@@ -3,7 +3,7 @@ module github.com/shortlink-org/shop/oms-graphql
 go 1.26.2
 
 require (
-	connectrpc.com/connect v1.19.1
+	connectrpc.com/connect v1.19.2
 	github.com/google/uuid v1.6.0
 	github.com/prometheus/client_golang v1.23.2
 	github.com/stretchr/testify v1.11.1
