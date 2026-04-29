@@ -3,7 +3,8 @@ kind: ConfigMap
 metadata:
   name: shop-init-sql
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    # Before PostgresCluster (wave 1): databaseInitSQL references this ConfigMap.
+    argocd.argoproj.io/sync-wave: "0"
 data:
   init.sql: |
     -- shop database
