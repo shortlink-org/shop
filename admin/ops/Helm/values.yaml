@@ -75,6 +75,9 @@ deploy:
     DEBUG: true
     CSRF_COOKIE_DOMAIN: shop-admin.shortlink.best
 
+    # OpenTelemetry ---------------------
+    OTEL_PYTHON_EXCLUDED_URLS: "/healthz/?"
+
   envSecret:
     - name: POSTGRES_DB
       secretKeyRef:
