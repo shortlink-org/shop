@@ -142,28 +142,28 @@ deploy:
     # Format: {cluster-name}-pguser-{username}
     - name: DATABASE_URL
       secretKeyRef:
-        name: shop-postgres-pguser-delivery
+        name: shortlink-postgres-pguser-delivery
         key: uri
     # Also expose individual components for flexibility
     - name: DATABASE_HOST
       secretKeyRef:
-        name: shop-postgres-pguser-delivery
+        name: shortlink-postgres-pguser-delivery
         key: host
     - name: DATABASE_PORT
       secretKeyRef:
-        name: shop-postgres-pguser-delivery
+        name: shortlink-postgres-pguser-delivery
         key: port
     - name: DATABASE_NAME
       secretKeyRef:
-        name: shop-postgres-pguser-delivery
+        name: shortlink-postgres-pguser-delivery
         key: dbname
     - name: DATABASE_USER
       secretKeyRef:
-        name: shop-postgres-pguser-delivery
+        name: shortlink-postgres-pguser-delivery
         key: user
     - name: DATABASE_PASSWORD
       secretKeyRef:
-        name: shop-postgres-pguser-delivery
+        name: shortlink-postgres-pguser-delivery
         key: password
 
   # -- define a liveness probe that checks every 5 seconds, starting after 5 seconds

@@ -7,3 +7,6 @@ monitoring:
 
   alerting:
     enabled: true
+
+postgresCluster:
+  enabled: false

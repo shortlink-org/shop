@@ -81,19 +81,19 @@ deploy:
   envSecret:
     - name: POSTGRES_DB
       secretKeyRef:
-        name: shop-postgres-pguser-shop
+        name: shortlink-postgres-pguser-shop
         key: dbname
     - name: POSTGRES_USER
       secretKeyRef:
-        name: shop-postgres-pguser-shop
+        name: shortlink-postgres-pguser-shop
         key: user
     - name: POSTGRES_PASSWORD
       secretKeyRef:
-        name: shop-postgres-pguser-shop
+        name: shortlink-postgres-pguser-shop
         key: password
     - name: POSTGRES_HOST
       secretKeyRef:
-        name: shop-postgres-pguser-shop
+        name: shortlink-postgres-pguser-shop
         key: host
 
   image:
@@ -186,19 +186,19 @@ initContainers:
     envSecret:
       - name: POSTGRES_DB
         secretKeyRef:
-          name: shop-postgres-pguser-shop
+          name: shortlink-postgres-pguser-shop
           key: dbname
       - name: POSTGRES_USER
         secretKeyRef:
-          name: shop-postgres-pguser-shop
+          name: shortlink-postgres-pguser-shop
           key: user
       - name: POSTGRES_PASSWORD
         secretKeyRef:
-          name: shop-postgres-pguser-shop
+          name: shortlink-postgres-pguser-shop
           key: password
       - name: POSTGRES_HOST
         secretKeyRef:
-          name: shop-postgres-pguser-shop
+          name: shortlink-postgres-pguser-shop
           key: host
 
 # ==============================================================================
@@ -215,19 +215,19 @@ jobs:
     envSecret:
       - name: POSTGRES_DB
         secretKeyRef:
-          name: shop-postgres-pguser-shop
+          name: shortlink-postgres-pguser-shop
           key: dbname
       - name: POSTGRES_USER
         secretKeyRef:
-          name: shop-postgres-pguser-shop
+          name: shortlink-postgres-pguser-shop
           key: user
       - name: POSTGRES_PASSWORD
         secretKeyRef:
-          name: shop-postgres-pguser-shop
+          name: shortlink-postgres-pguser-shop
           key: password
       - name: POSTGRES_HOST
         secretKeyRef:
-          name: shop-postgres-pguser-shop
+          name: shortlink-postgres-pguser-shop
           key: host
 
 # ==============================================================================

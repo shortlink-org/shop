@@ -1,7 +1,7 @@
 # Common default values for temporal.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
-# temporalPostgresPassword: must match Secret shop-postgres-pguser-temporal (key password) in shortlink-shop (Crunchy operator).
+# temporalPostgresPassword: must match Secret shortlink-postgres-pguser-temporal (key password) in shortlink-shop (Crunchy operator).
 storeCredentials:
   temporalPostgresPassword: shortlink-dev-temporal
 

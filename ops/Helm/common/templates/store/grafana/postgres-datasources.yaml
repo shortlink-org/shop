@@ -11,7 +11,7 @@ stringData:
       - name: PostgreSQL (shop)
         type: postgres
         uid: shop-postgres-datasource
-        url: shop-postgres-pgbouncer.shortlink-shop:5432
+        url: shortlink-postgres-pgbouncer.postgres-operator:5432
         user: grafana
         database: shop
         access: proxy
