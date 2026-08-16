@@ -28,7 +28,7 @@ dependencies = [
   'googleapis-common-protos==1.74.0',
   'grpcio==1.80.0',
   'idna==3.11',
-  'importlib-metadata>=6.0,<8.8', # opentelemetry-api 1.41 caps at <8.8; keep below for resolver
+  'importlib-metadata>=6.11.0,<8.8', # opentelemetry-api 1.41 caps at <8.8; keep below for resolver
   'inflection==0.5.1',
   'json-log-formatter==1.1.1',
   'jsonschema==4.26.0',
