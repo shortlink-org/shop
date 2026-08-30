@@ -156,9 +156,9 @@ deprecated==1.3.1 \
     --hash=sha256:597bfef186b6f60181535a29fbe44865ce137a5079f295b479886c82729d5f3f \
     --hash=sha256:b1b50e0ff0c1fddaa5708a2c6b0a6588bb09b892825ab2b214ac9ea9d92a5223
     # via shop-admin (pyproject.toml)
-Django==6.0.5 \
-    --hash=sha256:9d58a7cb49244e74c8e161d5e403a46d6209f1009ba40f5a66d6aa0d0786a8f0 \
-    --hash=sha256:bc6d6872e98a2864c836e42edd644b362db311147dd5aa8d5b82ba7a032f5269
+Django==6.0.7 \
+    --hash=sha256:2998503fc083124fb58037084bfa00de323c7c743f05f1b4284e77bff0ab8890 \
+    --hash=sha256:a037427c2288443a8c02a1b02295a31c239663aa682bc50b1976afb7cf6a769e
     # via
     #   shop-admin (pyproject.toml)
     #   django-debug-toolbar
