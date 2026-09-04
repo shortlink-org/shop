@@ -58,7 +58,7 @@ tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 temporalio-sdk = { git = "https://github.com/temporalio/sdk-core", rev = "71a5caa57118848bd60843dd7fa867ed73704108", package = "temporalio-sdk" }
 temporalio-sdk-core = { git = "https://github.com/temporalio/sdk-core", rev = "71a5caa57118848bd60843dd7fa867ed73704108", package = "temporalio-sdk-core" }
 temporalio-common = { git = "https://github.com/temporalio/sdk-core", rev = "71a5caa57118848bd60843dd7fa867ed73704108", package = "temporalio-common" }
-temporalio-client = { git = "https://github.com/temporalio/sdk-core", rev = "71a5caa57118848bd60843dd7fa867ed73704108", package = "temporalio-client" }
+temporalio-client = { git = "https://github.com/temporalio/sdk-core", rev = "399cb7adb40f45eefbef90149e212743e474142c", package = "temporalio-client" }
 
 # Additional dependencies for Temporal
 futures = "0.3.32"
