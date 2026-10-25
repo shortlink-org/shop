@@ -114,7 +114,7 @@ require (
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
 	github.com/johejo/golang-migrate-extra v0.0.0-20211005021153-c17dd75f8b4a // indirect
 	github.com/jzelinskie/stringz v0.0.3 // indirect
-	github.com/klauspost/compress v1.18.5 // indirect
+	github.com/klauspost/compress v1.18.7 // indirect
 	github.com/launchdarkly/eventsource v1.10.0 // indirect
 	github.com/lib/pq v1.11.2 // indirect
 	github.com/lithammer/shortuuid/v3 v3.0.7 // indirect
