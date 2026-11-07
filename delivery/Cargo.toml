@@ -56,7 +56,7 @@ tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 
 # Temporal Rust SDK (pinned git revision)
 temporalio-sdk = { git = "https://github.com/temporalio/sdk-core", rev = "71a5caa57118848bd60843dd7fa867ed73704108", package = "temporalio-sdk" }
-temporalio-sdk-core = { git = "https://github.com/temporalio/sdk-core", rev = "71a5caa57118848bd60843dd7fa867ed73704108", package = "temporalio-sdk-core" }
+temporalio-sdk-core = { git = "https://github.com/temporalio/sdk-core", rev = "38dfee48cdd907cb3e3bd1bb140dd73503224a5e", package = "temporalio-sdk-core" }
 temporalio-common = { git = "https://github.com/temporalio/sdk-core", rev = "71a5caa57118848bd60843dd7fa867ed73704108", package = "temporalio-common" }
 temporalio-client = { git = "https://github.com/temporalio/sdk-core", rev = "71a5caa57118848bd60843dd7fa867ed73704108", package = "temporalio-client" }
 
